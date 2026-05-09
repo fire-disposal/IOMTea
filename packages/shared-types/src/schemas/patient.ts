@@ -1,0 +1,32 @@
+import { z } from 'zod'
+
+export const patientSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+  birthDate: z.string().nullable(),
+  gender: z.enum(['male', 'female', 'other']).nullable(),
+  room: z.string().nullable(),
+  bedNumber: z.string().nullable(),
+  status: z.enum(['active', 'discharged']),
+  createdAt: z.number(),
+})
+
+export const patientCreateSchema = z.object({
+  name: z.string().min(1).max(100),
+  birthDate: z.string().optional(),
+  gender: z.enum(['male', 'female', 'other']).optional(),
+  room: z.string().max(20).optional(),
+  bedNumber: z.string().max(20).optional(),
+})
+
+export const patientUpdateSchema = patientCreateSchema.partial()
+
+export const patientListInputSchema = z.object({
+  page: z.number().int().min(1).default(1),
+  pageSize: z.number().int().min(1).max(100).default(20),
+  status: z.enum(['active', 'discharged']).optional(),
+})
+
+export type Patient = z.infer<typeof patientSchema>
+export type PatientCreateInput = z.infer<typeof patientCreateSchema>
+export type PatientUpdateInput = z.infer<typeof patientUpdateSchema>
