@@ -5,6 +5,7 @@ import { patientRouter } from './patient'
 import { deviceRouter } from './device'
 import { alertRouter } from './alert'
 import { dataRouter } from './data'
+import { simulatorRouter } from '../../../simulator/trpc/simulator'
 
 export const appRouter = router({
   auth: authRouter,
@@ -13,6 +14,7 @@ export const appRouter = router({
   device: deviceRouter,
   alert: alertRouter,
   data: dataRouter,
+  simulator: simulatorRouter,
 })
 
 export type AppRouter = typeof appRouter

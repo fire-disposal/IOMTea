@@ -1,0 +1,54 @@
+import { z } from 'zod'
+import { publicProcedure, router } from '../../core/trpc/index'
+import { createWard, getWardState, pauseWard, resumeWard, setWardSpeed, listWards, setGlobalDb } from '../engine'
+
+export const simulatorRouter = router({
+  createWard: publicProcedure
+    .input(
+      z.object({
+        name: z.string().min(1).max(50),
+        patients: z.array(
+          z.object({
+            profileId: z.string(),
+            count: z.number().int().min(1).max(10).default(1),
+          }),
+        ),
+        speed: z.number().min(0.1).max(60).default(1),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      setGlobalDb(ctx.db)
+      const state = await createWard(ctx.db, input)
+      return state
+    }),
+
+  pause: publicProcedure
+    .input(z.object({ wardId: z.string() }))
+    .mutation(({ input }) => {
+      const ok = pauseWard(input.wardId)
+      return { success: ok }
+    }),
+
+  resume: publicProcedure
+    .input(z.object({ wardId: z.string() }))
+    .mutation(({ ctx, input }) => {
+      const ok = resumeWard(input.wardId, ctx.db)
+      return { success: ok }
+    }),
+
+  setSpeed: publicProcedure
+    .input(z.object({ wardId: z.string(), speed: z.number().min(0.1).max(60) }))
+    .mutation(({ input }) => {
+      const ok = setWardSpeed(input.wardId, input.speed)
+      return { success: ok, speed: input.speed }
+    }),
+
+  status: publicProcedure
+    .input(z.object({ wardId: z.string() }).optional())
+    .query(({ input }) => {
+      if (input?.wardId) {
+        return getWardState(input.wardId) ?? null
+      }
+      return listWards()
+    }),
+})
