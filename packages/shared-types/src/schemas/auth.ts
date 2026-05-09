@@ -14,7 +14,7 @@ export const registerSchema = z.object({
 export const tokenPairSchema = z.object({
   accessToken: z.string(),
   refreshToken: z.string(),
-  expiresAt: z.number(),
+  expiresAt: z.number().int().positive(),
 })
 
 export type LoginInput = z.infer<typeof loginSchema>
