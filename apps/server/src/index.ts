@@ -2,8 +2,8 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { trpcServer } from '@hono/trpc-server'
 import { serve } from '@hono/node-server'
-import { appRouter } from './trpc/routers/_app'
-import { createContext } from './trpc/context'
+import { appRouter } from './core/trpc/routers/_app'
+import { createContext } from './core/trpc/context'
 import { env } from './env'
 import pino from 'pino'
 
@@ -31,4 +31,4 @@ app.get('/health', (c) => c.json({ status: 'ok' }))
 logger.info({ port: env.PORT }, 'starting server')
 serve({ fetch: app.fetch, port: env.PORT })
 
-export type { AppRouter } from './trpc/routers/_app'
+export type { AppRouter } from './core/trpc/routers/_app'

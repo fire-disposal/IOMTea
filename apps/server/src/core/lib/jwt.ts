@@ -1,5 +1,5 @@
 import { SignJWT, jwtVerify } from 'jose'
-import { env } from '../env'
+import { env } from '../../env'
 
 const secret = new TextEncoder().encode(env.JWT_SECRET)
 const alg = 'HS256'
