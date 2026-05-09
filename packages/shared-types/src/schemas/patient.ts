@@ -9,6 +9,7 @@ export const patientSchema = z.object({
   room: z.string().nullable(),
   bedNumber: z.string().nullable(),
   status: z.enum(PATIENT_STATUSES),
+  tags: z.record(z.string(), z.unknown()).default({}),
   createdAt: z.number(),
 })
 
@@ -18,6 +19,7 @@ export const patientCreateSchema = z.object({
   gender: z.enum(GENDERS).optional(),
   room: z.string().max(20).optional(),
   bedNumber: z.string().max(20).optional(),
+  tags: z.record(z.string(), z.unknown()).optional(),
 })
 
 export const patientUpdateSchema = patientCreateSchema.partial()

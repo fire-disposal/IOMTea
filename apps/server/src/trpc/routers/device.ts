@@ -24,13 +24,14 @@ export const deviceRouter = router({
       }
       const rows = await query.limit(input.pageSize).offset(offset).orderBy(devices.createdAt)
 
-      return rows.map((d) => deviceSchema.parse({
+      return rows.map((d) => ({
         id: d.id,
         serialNumber: d.serialNumber,
         deviceType: d.deviceType,
         status: d.status,
         patientId: d.patientId,
         lastSeen: d.lastSeen?.getTime() ?? null,
+        tags: d.tags,
         createdAt: d.createdAt.getTime(),
       }))
     }),
@@ -48,30 +49,32 @@ export const deviceRouter = router({
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Device not found' })
       }
       const d = rows[0]
-      return deviceSchema.parse({
+      return {
         id: d.id,
         serialNumber: d.serialNumber,
         deviceType: d.deviceType,
         status: d.status,
         patientId: d.patientId,
         lastSeen: d.lastSeen?.getTime() ?? null,
+        tags: d.tags,
         createdAt: d.createdAt.getTime(),
-      })
+      }
     }),
 
   create: protectedProcedure
     .input(deviceCreateSchema)
     .mutation(async ({ ctx, input }) => {
       const [created] = await ctx.db.insert(devices).values(input).returning()
-      return deviceSchema.parse({
+      return {
         id: created.id,
         serialNumber: created.serialNumber,
         deviceType: created.deviceType,
         status: created.status,
         patientId: created.patientId,
         lastSeen: created.lastSeen?.getTime() ?? null,
+        tags: created.tags,
         createdAt: created.createdAt.getTime(),
-      })
+      }
     }),
 
   update: protectedProcedure
@@ -86,15 +89,16 @@ export const deviceRouter = router({
       if (!updated) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Device not found' })
       }
-      return deviceSchema.parse({
+      return {
         id: updated.id,
         serialNumber: updated.serialNumber,
         deviceType: updated.deviceType,
         status: updated.status,
         patientId: updated.patientId,
         lastSeen: updated.lastSeen?.getTime() ?? null,
+        tags: updated.tags,
         createdAt: updated.createdAt.getTime(),
-      })
+      }
     }),
 
   delete: protectedProcedure

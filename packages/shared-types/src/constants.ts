@@ -1,7 +1,7 @@
 export const USER_ROLES = ['admin', 'doctor', 'nurse', 'caregiver'] as const
 export type UserRole = (typeof USER_ROLES)[number]
 
-export const DEVICE_TYPES = ['mattress', 'vision', 'imu', 'generic'] as const
+export const DEVICE_TYPES = ['mattress', 'vision', 'imu', 'generic', 'simulator', 'custom'] as const
 export type DeviceType = (typeof DEVICE_TYPES)[number]
 
 export const DEVICE_STATUSES = ['active', 'inactive', 'maintenance'] as const

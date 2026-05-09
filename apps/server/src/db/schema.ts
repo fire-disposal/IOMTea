@@ -7,14 +7,16 @@ import {
   timestamp,
   jsonb,
   pgEnum,
+  index,
 } from 'drizzle-orm/pg-core'
 
 export const roleEnum = pgEnum('role', ['admin', 'doctor', 'nurse', 'caregiver'])
-export const deviceTypeEnum = pgEnum('device_type', ['mattress', 'vision', 'imu', 'generic'])
+export const deviceTypeEnum = pgEnum('device_type', ['mattress', 'vision', 'imu', 'generic', 'simulator', 'custom'])
 export const deviceStatusEnum = pgEnum('device_status', ['active', 'inactive', 'maintenance'])
 export const patientStatusEnum = pgEnum('patient_status', ['active', 'discharged'])
 export const alertSeverityEnum = pgEnum('alert_severity', ['critical', 'warning', 'info'])
 export const alertStatusEnum = pgEnum('alert_status', ['active', 'acknowledged', 'resolved'])
+export const kindEnum = pgEnum('kind', ['observation', 'alert'])
 
 export const users = pgTable('users', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -41,6 +43,7 @@ export const patients = pgTable('patients', {
   room: varchar('room', { length: 20 }),
   bedNumber: varchar('bed_number', { length: 20 }),
   status: patientStatusEnum('status').notNull().default('active'),
+  tags: jsonb('tags').default({}).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 })
 
@@ -51,39 +54,32 @@ export const devices = pgTable('devices', {
   status: deviceStatusEnum('status').notNull().default('active'),
   patientId: uuid('patient_id').references(() => patients.id, { onDelete: 'set null' }),
   lastSeen: timestamp('last_seen', { withTimezone: true }),
+  tags: jsonb('tags').default({}).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 })
 
-export const dataStreams = pgTable('data_streams', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  deviceId: uuid('device_id').notNull().references(() => devices.id, { onDelete: 'cascade' }),
-  patientId: uuid('patient_id').notNull().references(() => patients.id, { onDelete: 'cascade' }),
-  streamType: varchar('stream_type', { length: 20 }).notNull(),
-  dataType: varchar('data_type', { length: 50 }).notNull(),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-})
-
-export const observations = pgTable('observations', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  streamId: uuid('stream_id').notNull().references(() => dataStreams.id, { onDelete: 'cascade' }),
-  valueNumeric: doublePrecision('value_numeric'),
-  valueText: text('value_text'),
-  recordedAt: timestamp('recorded_at', { withTimezone: true }).notNull(),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-})
-
-export const alertEvents = pgTable('alert_events', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  deviceId: uuid('device_id').notNull().references(() => devices.id, { onDelete: 'cascade' }),
-  patientId: uuid('patient_id').notNull().references(() => patients.id, { onDelete: 'cascade' }),
-  streamId: uuid('stream_id').references(() => dataStreams.id, { onDelete: 'set null' }),
-  type: varchar('type', { length: 50 }).notNull(),
-  severity: alertSeverityEnum('severity').notNull(),
-  status: alertStatusEnum('status').notNull().default('active'),
-  payload: jsonb('payload').default({}),
-  recordedAt: timestamp('recorded_at', { withTimezone: true }).notNull(),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-})
+export const events = pgTable(
+  'events',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    patientId: uuid('patient_id').notNull().references(() => patients.id, { onDelete: 'cascade' }),
+    deviceId: uuid('device_id').notNull().references(() => devices.id, { onDelete: 'cascade' }),
+    kind: kindEnum('kind').notNull(),
+    metric: varchar('metric', { length: 50 }).notNull(),
+    value: doublePrecision('value'),
+    unit: varchar('unit', { length: 20 }),
+    severity: alertSeverityEnum('severity'),
+    status: alertStatusEnum('status'),
+    tags: jsonb('tags').default({}).notNull(),
+    recordedAt: timestamp('recorded_at', { withTimezone: true }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => ({
+    patientMetricIdx: index('events_patient_metric_time_idx').on(t.patientId, t.metric, t.recordedAt.desc()),
+    patientKindIdx: index('events_patient_kind_time_idx').on(t.patientId, t.kind, t.recordedAt.desc()),
+    deviceTimeIdx: index('events_device_time_idx').on(t.deviceId, t.recordedAt.desc()),
+  }),
+)
 
 export const ingestRawData = pgTable('ingest_raw_data', {
   id: uuid('id').defaultRandom().primaryKey(),

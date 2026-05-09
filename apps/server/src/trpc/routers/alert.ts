@@ -1,9 +1,9 @@
-import { eq, desc } from 'drizzle-orm'
+import { eq, and, desc } from 'drizzle-orm'
 import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
 import { protectedProcedure, router } from '../index'
 import { ALERT_SEVERITIES, ALERT_STATUSES } from '@iomtea/shared-types'
-import { alertEvents } from '../../db/schema'
+import { events } from '../../db/schema'
 
 export const alertRouter = router({
   list: protectedProcedure
@@ -13,26 +13,34 @@ export const alertRouter = router({
         pageSize: z.number().int().min(1).max(100).default(20),
         status: z.enum(ALERT_STATUSES).optional(),
         severity: z.enum(ALERT_SEVERITIES).optional(),
+        patientId: z.string().uuid().optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
       const offset = (input.page - 1) * input.pageSize
-      let query = ctx.db.select().from(alertEvents).$dynamic()
-      if (input.status) query = query.where(eq(alertEvents.status, input.status))
-      if (input.severity) query = query.where(eq(alertEvents.severity, input.severity))
-      const rows = await query
+      const conditions = [eq(events.kind, 'alert')]
+      if (input.status) conditions.push(eq(events.status, input.status))
+      if (input.severity) conditions.push(eq(events.severity, input.severity))
+      if (input.patientId) conditions.push(eq(events.patientId, input.patientId))
+
+      const rows = await ctx.db
+        .select()
+        .from(events)
+        .where(and(...conditions))
         .limit(input.pageSize)
         .offset(offset)
-        .orderBy(desc(alertEvents.recordedAt))
+        .orderBy(desc(events.recordedAt))
 
       return rows.map((a) => ({
         id: a.id,
-        deviceId: a.deviceId,
         patientId: a.patientId,
-        type: a.type,
+        deviceId: a.deviceId,
+        metric: a.metric,
+        value: a.value,
+        unit: a.unit,
         severity: a.severity,
         status: a.status,
-        payload: a.payload,
+        tags: a.tags,
         recordedAt: a.recordedAt.getTime(),
         createdAt: a.createdAt.getTime(),
       }))
@@ -42,9 +50,9 @@ export const alertRouter = router({
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
       const [updated] = await ctx.db
-        .update(alertEvents)
+        .update(events)
         .set({ status: 'acknowledged' })
-        .where(eq(alertEvents.id, input.id))
+        .where(and(eq(events.id, input.id), eq(events.kind, 'alert')))
         .returning()
 
       if (!updated) {
@@ -57,9 +65,9 @@ export const alertRouter = router({
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
       const [updated] = await ctx.db
-        .update(alertEvents)
+        .update(events)
         .set({ status: 'resolved' })
-        .where(eq(alertEvents.id, input.id))
+        .where(and(eq(events.id, input.id), eq(events.kind, 'alert')))
         .returning()
 
       if (!updated) {

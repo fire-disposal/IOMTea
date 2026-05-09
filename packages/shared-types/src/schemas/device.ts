@@ -8,6 +8,7 @@ export const deviceSchema = z.object({
   status: z.enum(DEVICE_STATUSES),
   patientId: z.string().uuid().nullable(),
   lastSeen: z.number().nullable(),
+  tags: z.record(z.string(), z.unknown()).default({}),
   createdAt: z.number(),
 })
 
@@ -19,6 +20,7 @@ export const deviceCreateSchema = z.object({
 export const deviceUpdateSchema = z.object({
   status: z.enum(DEVICE_STATUSES).optional(),
   patientId: z.string().uuid().nullable().optional(),
+  tags: z.record(z.string(), z.unknown()).optional(),
 })
 
 export const deviceListInputSchema = z.object({

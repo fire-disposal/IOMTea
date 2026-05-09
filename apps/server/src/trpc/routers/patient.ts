@@ -29,6 +29,7 @@ export const patientRouter = router({
         room: p.room,
         bedNumber: p.bedNumber,
         status: p.status,
+        tags: p.tags,
         createdAt: p.createdAt.getTime(),
       }))
     }),
@@ -54,6 +55,7 @@ export const patientRouter = router({
         room: p.room,
         bedNumber: p.bedNumber,
         status: p.status,
+        tags: p.tags,
         createdAt: p.createdAt.getTime(),
       })
     }),
