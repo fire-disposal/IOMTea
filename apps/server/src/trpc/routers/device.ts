@@ -1,5 +1,6 @@
 import { eq } from 'drizzle-orm'
 import { z } from 'zod'
+import { TRPCError } from '@trpc/server'
 import { protectedProcedure, router } from '../index'
 import {
   deviceSchema,
@@ -43,7 +44,9 @@ export const deviceRouter = router({
         .where(eq(devices.id, input.id))
         .limit(1)
 
-      if (rows.length === 0) throw new Error('Device not found')
+      if (rows.length === 0) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Device not found' })
+      }
       const d = rows[0]
       return deviceSchema.parse({
         id: d.id,
@@ -80,7 +83,9 @@ export const deviceRouter = router({
         .where(eq(devices.id, input.id))
         .returning()
 
-      if (!updated) throw new Error('Device not found')
+      if (!updated) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Device not found' })
+      }
       return deviceSchema.parse({
         id: updated.id,
         serialNumber: updated.serialNumber,

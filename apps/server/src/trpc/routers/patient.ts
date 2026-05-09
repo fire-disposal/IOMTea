@@ -1,5 +1,6 @@
 import { eq } from 'drizzle-orm'
 import { z } from 'zod'
+import { TRPCError } from '@trpc/server'
 import { protectedProcedure, router } from '../index'
 import {
   patientSchema,
@@ -41,7 +42,9 @@ export const patientRouter = router({
         .where(eq(patients.id, input.id))
         .limit(1)
 
-      if (rows.length === 0) throw new Error('Patient not found')
+      if (rows.length === 0) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Patient not found' })
+      }
       const p = rows[0]
       return patientSchema.parse({
         id: p.id,
@@ -80,7 +83,9 @@ export const patientRouter = router({
         .where(eq(patients.id, input.id))
         .returning()
 
-      if (!updated) throw new Error('Patient not found')
+      if (!updated) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Patient not found' })
+      }
       return patientSchema.parse({
         id: updated.id,
         name: updated.name,

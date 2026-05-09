@@ -1,5 +1,6 @@
 import { eq, desc } from 'drizzle-orm'
 import { z } from 'zod'
+import { TRPCError } from '@trpc/server'
 import { protectedProcedure, router } from '../index'
 import { ALERT_SEVERITIES, ALERT_STATUSES } from '@iomtea/shared-types'
 import { alertEvents } from '../../db/schema'
@@ -46,6 +47,9 @@ export const alertRouter = router({
         .where(eq(alertEvents.id, input.id))
         .returning()
 
+      if (!updated) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Alert not found' })
+      }
       return { id: updated.id, status: updated.status }
     }),
 
@@ -58,6 +62,9 @@ export const alertRouter = router({
         .where(eq(alertEvents.id, input.id))
         .returning()
 
+      if (!updated) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Alert not found' })
+      }
       return { id: updated.id, status: updated.status }
     }),
 })

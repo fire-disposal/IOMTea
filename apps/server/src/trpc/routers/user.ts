@@ -1,5 +1,6 @@
 import { eq } from 'drizzle-orm'
 import { z } from 'zod'
+import { TRPCError } from '@trpc/server'
 import { protectedProcedure, router } from '../index'
 import { userSchema, userUpdateSchema, userListInputSchema } from '@iomtea/shared-types'
 import { users } from '../../db/schema'
@@ -32,7 +33,9 @@ export const userRouter = router({
       .where(eq(users.id, ctx.userId))
       .limit(1)
 
-    if (rows.length === 0) throw new Error('User not found')
+    if (rows.length === 0) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' })
+    }
     const u = rows[0]
     return userSchema.parse({
       id: u.id,
@@ -52,7 +55,9 @@ export const userRouter = router({
         .where(eq(users.id, input.id))
         .returning()
 
-      if (!updated) throw new Error('User not found')
+      if (!updated) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' })
+      }
       return userSchema.parse({
         id: updated.id,
         username: updated.username,
