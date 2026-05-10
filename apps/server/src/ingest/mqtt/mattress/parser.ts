@@ -39,14 +39,14 @@ export function parseMattressPayload(
   }
 
   // Heart rate
-  if (payload.hb !== undefined && payload.hb !== null && payload.hb !== 255) {
+  if (payload.hb !== undefined && payload.hb !== null && payload.hb !== 255 && payload.hb !== -1) {
     events.push({
       ...base, kind: 'observation', metric: 'heart_rate', value: payload.hb, unit: 'bpm', tags: { ...tags, source: 'mattress_piezo' },
     })
   }
 
   // Breath rate
-  if (payload.br !== undefined && payload.br !== null && payload.br !== 255) {
+  if (payload.br !== undefined && payload.br !== null && payload.br !== 255 && payload.br !== -1) {
     events.push({
       ...base, kind: 'observation', metric: 'resp_rate', value: payload.br, unit: 'rpm', tags: { ...tags, source: 'mattress_piezo' },
     })

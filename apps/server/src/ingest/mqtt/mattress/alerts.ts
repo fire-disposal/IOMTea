@@ -27,7 +27,7 @@ export class AlertEngine {
     const alerts: MattressEvent[] = []
 
     // Heart rate alerts
-    if (payload.hb !== undefined && payload.hb !== 255) {
+    if (payload.hb !== undefined && payload.hb !== 255 && payload.hb !== -1) {
       const hbAbnormal = payload.hb > this.HEART_MAX || payload.hb < this.HEART_MIN
       this.tickCounter(this.heartbeatCounts, sn, 'heart_rate', hbAbnormal)
       if (this.getCount(this.heartbeatCounts, sn) >= this.THRESHOLD_COUNT) {
@@ -38,7 +38,7 @@ export class AlertEngine {
     }
 
     // Breath rate alerts
-    if (payload.br !== undefined && payload.br !== 255) {
+    if (payload.br !== undefined && payload.br !== 255 && payload.br !== -1) {
       const brAbnormal = payload.br > this.BREATH_MAX || payload.br < this.BREATH_MIN
       this.tickCounter(this.breathCounts, sn, 'resp_rate', brAbnormal)
       if (this.getCount(this.breathCounts, sn) >= this.THRESHOLD_COUNT) {

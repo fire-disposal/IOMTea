@@ -102,6 +102,20 @@ function decodeTLV(payload: Buffer): MattressPayload | null {
 
       if (idx >= payload.length) break
 
+      // SN field: skip multi-byte parsing, read as string directly
+      if (key === 'sn') {
+        const snBytes: number[] = [payload[idx]]
+        idx++
+        while (idx < payload.length) {
+          const nb = payload[idx]
+          if (nb >= 0xA1 && nb <= 0xA7) break
+          snBytes.push(nb)
+          idx++
+        }
+        msg.sn = Buffer.from(snBytes).toString('utf8').trim()
+        continue
+      }
+
       // Try multi-byte value first (for fields like hb, br that can exceed 255)
       const mbr = readMultiByte(payload, idx)
       let v: number = 0
@@ -128,18 +142,6 @@ function decodeTLV(payload: Buffer): MattressPayload | null {
         case 'we': msg.we = v === 255 || v === 0xFFFF ? -1 : v; break
         case 'wt': msg.wt = vb === 0xC3 || v === 0xC3 ? '1' : '0'; break
         case 'fv': msg.fv = v; break
-        case 'sn': {
-          // SN is multi-byte string: read until next TLV key or end
-          const snBytes = [vb]
-          while (idx < payload.length) {
-            const nb = payload[idx]
-            if (nb >= 0xA1 && nb <= 0xA7) break
-            snBytes.push(nb)
-            idx++
-          }
-          msg.sn = Buffer.from(snBytes).toString('utf8').trim()
-          break
-        }
       }
     }
   }
@@ -199,17 +201,28 @@ export function startTcpIngest(db: DbClient, config: TcpIngestConfig): void {
     socket.setTimeout(SOCKET_TIMEOUT_MS)
 
     socket.on('data', async (chunk: Buffer) => {
-      // Auth: first bytes must be token if configured
+      // Pre-shared token authentication with fragmented delivery support
       if (!authenticated && config.preSharedToken) {
-        const received = chunk.toString('utf8').trim()
-        if (received === config.preSharedToken) {
-          authenticated = true
-          console.log(`[ingest:tcp] device authenticated from ${socket.remoteAddress}`)
+        buf = Buffer.concat([buf, chunk])
+        if (buf.length >= config.preSharedToken.length) {
+          const candidate = buf.toString('utf8', 0, config.preSharedToken.length)
+          if (candidate === config.preSharedToken) {
+            authenticated = true
+            console.log(`[ingest:tcp] device authenticated from ${socket.remoteAddress}`)
+            buf = buf.subarray(config.preSharedToken.length)
+            msgCount = 0
+            rateWindowStart = Date.now()
+            if (buf.length === 0) return
+          } else {
+            console.warn(`[ingest:tcp] auth failed from ${socket.remoteAddress}`)
+            socket.destroy()
+            return
+          }
+        } else {
           return
         }
-        console.warn(`[ingest:tcp] auth failed from ${socket.remoteAddress}`)
-        socket.destroy()
-        return
+      } else {
+        buf = Buffer.concat([buf, chunk])
       }
 
       // Rate limit per second (simple sliding window)
@@ -219,8 +232,6 @@ export function startTcpIngest(db: DbClient, config: TcpIngestConfig): void {
         rateWindowStart = now
       }
       msgCount++
-
-      buf = Buffer.concat([buf, chunk])
 
       // Buffer overflow protection
       if (buf.length > MAX_BUFFER) {

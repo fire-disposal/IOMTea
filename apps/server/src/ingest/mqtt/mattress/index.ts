@@ -30,8 +30,14 @@ export class MattressModule {
     // Update lastSeen
     await db.update(devices).set({ lastSeen: now }).where(eq(devices.id, deviceId))
 
+    // Skip event insertion when no patient is assigned
+    if (!patientId) {
+      console.warn(`[mattress] device ${sn} has no assigned patient, skipping event insert`)
+      return
+    }
+
     // Parse observations
-    const obsEvents = parseMattressPayload(payload, patientId || '', deviceId, now)
+    const obsEvents = parseMattressPayload(payload, patientId, deviceId, now)
 
     // Sleep state
     const sleepState = this.sleepManager.update(sn, payload.st || 'off', payload.time || now.toISOString())

@@ -13,6 +13,10 @@ export function startMqttIngest(db: DbClient, config: MqttConfig): void {
     username: config.username,
     password: config.password,
     clientId: `iomtea-ingest-${Date.now()}`,
+    reconnectPeriod: 5000,
+    connectTimeout: 30000,
+    keepalive: 60,
+    clean: true,
   })
 
   const mattress = new MattressModule()
