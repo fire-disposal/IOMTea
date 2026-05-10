@@ -1,4 +1,4 @@
-export type ActivityLevel = 'resting' | 'light' | 'moderate' | 'heavy'
+export type { ActivityLevel } from '../types'
 
 const activityMod: Record<ActivityLevel, number> = {
   resting: 0, light: 8, moderate: 20, heavy: 40,

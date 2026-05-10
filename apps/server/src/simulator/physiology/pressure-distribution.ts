@@ -1,6 +1,4 @@
-import type { Posture } from '../types'
-
-export type PressureGrid = number[][]
+import type { Posture, PressureGrid } from '../types'
 
 export function generatePressureDistribution(
   posture: Posture,
