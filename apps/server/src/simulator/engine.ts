@@ -156,3 +156,44 @@ export function setWardSpeed(id: string, speed: number): boolean {
 export function listWards(): WardState[] {
   return Array.from(wards.values()).map((w) => w.state)
 }
+
+export async function injectScenario(wardId: string, type: string): Promise<boolean> {
+  const ward = wards.get(wardId)
+  if (!ward) return false
+
+  const { events } = await import('../core/db/schema')
+  const now = ward.clock.simulatedTime
+  const rows: any[] = []
+
+  for (const patient of ward.patients) {
+    const pt = patient.patientDbId
+    const dev = patient.deviceDbId
+
+    if (type === 'bed_exit') {
+      rows.push(
+        { patientId: pt, deviceId: dev, kind: 'observation', metric: 'bed_status', value: 0, unit: null, tags: { simulated: true, scenario: 'demo_exit', status: 'empty' }, recordedAt: now },
+        { patientId: pt, deviceId: dev, kind: 'alert', metric: 'bed_exit', value: null, unit: null, severity: 'warning', status: 'active', tags: { simulated: true, scenario: 'demo', message: '患者离床' }, recordedAt: now },
+      )
+    } else if (type === 'tachycardia') {
+      rows.push(
+        { patientId: pt, deviceId: dev, kind: 'observation', metric: 'heart_rate', value: 155, unit: 'bpm', tags: { simulated: true, scenario: 'demo' }, recordedAt: now },
+        { patientId: pt, deviceId: dev, kind: 'alert', metric: 'heart_rate', value: 155, unit: 'bpm', severity: 'critical', status: 'active', tags: { simulated: true, scenario: 'demo', message: '心动过速' }, recordedAt: now },
+      )
+    } else if (type === 'fall') {
+      rows.push(
+        { patientId: pt, deviceId: dev, kind: 'observation', metric: 'fall_detected', value: 1, unit: null, tags: { simulated: true, scenario: 'demo' }, recordedAt: now },
+        { patientId: pt, deviceId: dev, kind: 'alert', metric: 'fall_detected', value: 1, unit: null, severity: 'critical', status: 'active', tags: { simulated: true, scenario: 'demo', message: '跌倒检测' }, recordedAt: now },
+      )
+    } else if (type === 'low_spo2') {
+      rows.push(
+        { patientId: pt, deviceId: dev, kind: 'observation', metric: 'spo2', value: 87, unit: '%', tags: { simulated: true, scenario: 'demo' }, recordedAt: now },
+        { patientId: pt, deviceId: dev, kind: 'alert', metric: 'spo2', value: 87, unit: '%', severity: 'critical', status: 'active', tags: { simulated: true, scenario: 'demo', message: '低血氧' }, recordedAt: now },
+      )
+    }
+  }
+
+  if (rows.length > 0) {
+    await ward.db.insert(events).values(rows)
+  }
+  return true
+}

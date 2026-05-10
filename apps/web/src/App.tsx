@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Container, Title, Group, Button, Badge, Card, Text, Grid, Paper, Stack, Loader, Tabs } from '@mantine/core'
+import { Container, Title, Group, Button, Badge, Card, Text, Grid, Paper, Stack, Loader, Tabs, ActionIcon, Tooltip } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
 import { useAuthStore } from './store/auth'
 import { trpc } from './trpc'
@@ -9,64 +9,85 @@ import { DeviceListPage } from './pages/DeviceListPage'
 
 function Dashboard() {
   const logout = useAuthStore((s) => s.logout)
-  const [wardId, setWardId] = useState<string | null>(null)
   const [patientIds, setPatientIds] = useState<string[]>([])
   const [patientNames, setPatientNames] = useState<string[]>([])
-  const [wardReady, setWardReady] = useState(false)
+  const [wardId, setWardId] = useState<string>('')
+  const [ready, setReady] = useState(false)
   const [activeTab, setActiveTab] = useState<string | null>('dashboard')
 
-  const createWard = trpc.simulator.createWard.useMutation()
-  const patientList = trpc.patient.list.useQuery({ pageSize: 20, status: 'active' }, { enabled: !!wardId, refetchInterval: false })
+  // Fetch ward status (auto-started by server in demo mode)
+  const wardStatus = trpc.simulator.status.useQuery(undefined, { refetchInterval: 5000 })
+  const patientList = trpc.patient.list.useQuery({ pageSize: 20, status: 'active' }, { refetchInterval: 10000 })
+  const alertCount = trpc.alert.list.useQuery({ pageSize: 1, status: 'active' }, { refetchInterval: 3000 })
+
+  const inject = trpc.simulator.injectScenario.useMutation({
+    onSuccess: () => notifications.show({ title: '场景已注入', message: '查看告警面板', color: 'orange' }),
+  })
 
   useEffect(() => {
-    createWard.mutate({
-      name: 'ICU 观察病房',
-      patients: [{ profileId: 'elderly-cardiac', count: 3 }],
-      speed: 1,
-    }, {
-      onSuccess: (data) => {
-        setWardId(data.id)
-        notifications.show({ title: '病房已创建', message: `${data.name} — ${data.patientCount} 名患者`, color: 'green' })
-      },
-    })
-  }, [])
-
-  useEffect(() => {
-    if (wardId && patientList.data && patientList.data.length > 0 && !wardReady) {
-      const ids = patientList.data.map((p: any) => p.id)
-      const names = patientList.data.map((p: any) => p.name)
-      setPatientIds(ids)
-      setPatientNames(names)
-      setWardReady(true)
+    if (wardStatus.data && Array.isArray(wardStatus.data) && wardStatus.data.length > 0) {
+      setWardId(wardStatus.data[0].id)
     }
-  }, [wardId, patientList.data, wardReady])
+    if (patientList.data && patientList.data.length > 0 && !ready) {
+      setPatientIds(patientList.data.map((p: any) => p.id))
+      setPatientNames(patientList.data.map((p: any) => p.name))
+      setReady(true)
+    }
+  }, [wardStatus.data, patientList.data, ready])
 
   const latestQueries = [
-    trpc.data.latest.useQuery({ patientId: patientIds[0] || '' }, { enabled: wardReady && !!patientIds[0], refetchInterval: 2000 }),
-    trpc.data.latest.useQuery({ patientId: patientIds[1] || '' }, { enabled: wardReady && !!patientIds[1], refetchInterval: 2000 }),
-    trpc.data.latest.useQuery({ patientId: patientIds[2] || '' }, { enabled: wardReady && !!patientIds[2], refetchInterval: 2000 }),
+    trpc.data.latest.useQuery({ patientId: patientIds[0] || '' }, { enabled: ready && !!patientIds[0], refetchInterval: 2000 }),
+    trpc.data.latest.useQuery({ patientId: patientIds[1] || '' }, { enabled: ready && !!patientIds[1], refetchInterval: 2000 }),
+    trpc.data.latest.useQuery({ patientId: patientIds[2] || '' }, { enabled: ready && !!patientIds[2], refetchInterval: 2000 }),
   ]
 
-  const alerts = trpc.alert.list.useQuery({ pageSize: 10 }, { refetchInterval: 3000 })
+  const alerts = trpc.alert.list.useQuery({ pageSize: 15, status: 'active' }, { refetchInterval: 3000 })
   const pause = trpc.simulator.pause.useMutation()
   const resume = trpc.simulator.resume.useMutation()
 
   const severityColor: Record<string, string> = { critical: 'red', warning: 'orange', info: 'blue' }
+  const wardRunning = wardStatus.data && Array.isArray(wardStatus.data) && wardStatus.data[0]?.running
 
-  if (!wardReady) {
-    return <Container size="xl" py="xl"><Loader /><Text mt="md">正在创建虚拟病房...</Text></Container>
+  if (!ready) {
+    return <Container size="xl" py="xl"><Loader /><Text mt="md">连接服务器...</Text></Container>
   }
+
+  const injectActions = [
+    { label: '离床', type: 'bed_exit' as const, color: 'orange' },
+    { label: '心动过速', type: 'tachycardia' as const, color: 'red' },
+    { label: '跌倒', type: 'fall' as const, color: 'red' },
+    { label: '低血氧', type: 'low_spo2' as const, color: 'red' },
+  ]
 
   const dashboardView = (
     <Container size="xl" py="md">
+      {/* Control bar */}
       <Group justify="space-between" mb="md">
-        <Title order={3}>IOMTea 监护面板</Title>
         <Group>
-          <Badge color="green" size="lg">病房运行中</Badge>
-          <Button size="xs" variant="outline" onClick={() => pause.mutate({ wardId: wardId! })}>暂停</Button>
-          <Button size="xs" variant="outline" onClick={() => resume.mutate({ wardId: wardId! })}>恢复</Button>
+          <Badge color={wardRunning ? 'green' : 'gray'} size="lg" variant="filled">
+            {wardRunning ? '● 运行中' : '○ 已暂停'}
+          </Badge>
+        </Group>
+        <Group gap="xs">
+          {wardRunning
+            ? <Button size="xs" variant="light" color="orange" onClick={() => pause.mutate({ wardId })}>暂停仿真</Button>
+            : <Button size="xs" variant="light" color="green" onClick={() => resume.mutate({ wardId })}>恢复仿真</Button>
+          }
         </Group>
       </Group>
+
+      {/* Inject scenario buttons */}
+      <Paper p="sm" mb="md" withBorder bg="gray.0">
+        <Group gap="xs">
+          <Text size="xs" fw={600} c="dimmed">演示注入:</Text>
+          {injectActions.map(a => (
+            <Button key={a.type} size="compact-xs" variant="filled" color={a.color} loading={inject.isPending}
+              onClick={() => inject.mutate({ wardId, type: a.type })}>
+              {a.label}
+            </Button>
+          ))}
+        </Group>
+      </Paper>
 
       <Grid>
         <Grid.Col span={8}>
@@ -75,56 +96,42 @@ function Dashboard() {
             {patientNames.map((name, i) => {
               const query = latestQueries[i]
               const vitals = query?.data || []
-              const getVital = (metric: string) => vitals.find((v: any) => v.metric === metric)
-              const hr = getVital('heart_rate')
-              const rr = getVital('resp_rate')
-              const spo2 = getVital('spo2')
-              const temp = getVital('temperature')
+              const gv = (m: string) => vitals.find((v: any) => v.metric === m)
+              const hr = gv('heart_rate'), rr = gv('resp_rate'), spo2 = gv('spo2'), temp = gv('temperature')
 
               return (
                 <Grid.Col span={4} key={i}>
                   <Card shadow="sm" padding="md" radius="md" withBorder>
                     <Group justify="space-between" mb="xs">
                       <Text fw={700}>{name}</Text>
+                      <Badge size="xs" variant="dot" color="green">在线</Badge>
                     </Group>
                     <Paper bg="gray.0" p="sm" radius="md">
                       <Grid>
-                        <Grid.Col span={6}>
-                          <Stack gap={0}>
-                            <Text size="xs" c="dimmed">心率</Text>
-                            <Text size="xl" fw={700} c={hr && hr.value != null && hr.value > 120 ? 'red' : 'green'}>
-                              {hr && hr.value != null ? `${hr.value}` : '--'}
-                              <Text component="span" size="sm" fw={400}> bpm</Text>
-                            </Text>
-                          </Stack>
-                        </Grid.Col>
-                        <Grid.Col span={6}>
-                          <Stack gap={0}>
-                            <Text size="xs" c="dimmed">呼吸率</Text>
-                            <Text size="xl" fw={700} c="blue">
-                              {rr && rr.value != null ? `${rr.value}` : '--'}
-                              <Text component="span" size="sm" fw={400}> rpm</Text>
-                            </Text>
-                          </Stack>
-                        </Grid.Col>
-                        <Grid.Col span={6}>
-                          <Stack gap={0}>
-                            <Text size="xs" c="dimmed">血氧</Text>
-                            <Text size="xl" fw={700} c={spo2 && spo2.value != null && spo2.value < 92 ? 'red' : 'green'}>
-                              {spo2 && spo2.value != null ? `${spo2.value}` : '--'}
-                              <Text component="span" size="sm" fw={400}> %</Text>
-                            </Text>
-                          </Stack>
-                        </Grid.Col>
-                        <Grid.Col span={6}>
-                          <Stack gap={0}>
-                            <Text size="xs" c="dimmed">体温</Text>
-                            <Text size="xl" fw={700}>
-                              {temp && temp.value != null ? `${temp.value}` : '--'}
-                              <Text component="span" size="sm" fw={400}> °C</Text>
-                            </Text>
-                          </Stack>
-                        </Grid.Col>
+                        <Grid.Col span={6}><Stack gap={0}>
+                          <Text size="xs" c="dimmed">心率</Text>
+                          <Text size="xl" fw={700} c={hr && hr.value != null && hr.value > 120 ? 'red' : hr && hr.value != null && hr.value < 50 ? 'orange' : 'green'}>
+                            {hr && hr.value != null ? `${hr.value}` : '--'}<Text component="span" size="sm" fw={400}> bpm</Text>
+                          </Text>
+                        </Stack></Grid.Col>
+                        <Grid.Col span={6}><Stack gap={0}>
+                          <Text size="xs" c="dimmed">呼吸率</Text>
+                          <Text size="xl" fw={700} c="blue">
+                            {rr && rr.value != null ? `${rr.value}` : '--'}<Text component="span" size="sm" fw={400}> rpm</Text>
+                          </Text>
+                        </Stack></Grid.Col>
+                        <Grid.Col span={6}><Stack gap={0}>
+                          <Text size="xs" c="dimmed">血氧</Text>
+                          <Text size="xl" fw={700} c={spo2 && spo2.value != null && spo2.value < 92 ? 'red' : 'green'}>
+                            {spo2 && spo2.value != null ? `${spo2.value}` : '--'}<Text component="span" size="sm" fw={400}> %</Text>
+                          </Text>
+                        </Stack></Grid.Col>
+                        <Grid.Col span={6}><Stack gap={0}>
+                          <Text size="xs" c="dimmed">体温</Text>
+                          <Text size="xl" fw={700}>
+                            {temp && temp.value != null ? `${temp.value}` : '--'}<Text component="span" size="sm" fw={400}> °C</Text>
+                          </Text>
+                        </Stack></Grid.Col>
                       </Grid>
                     </Paper>
                   </Card>
@@ -136,15 +143,18 @@ function Dashboard() {
 
         <Grid.Col span={4}>
           <Title order={5} mb="sm">告警时间线</Title>
-          <Paper p="sm" withBorder style={{ maxHeight: 500, overflow: 'auto' }}>
+          <Paper p="sm" withBorder style={{ maxHeight: 520, overflow: 'auto' }}>
             {(!alerts.data || alerts.data.length === 0) && <Text size="sm" c="dimmed" ta="center" py="xl">无活跃告警</Text>}
             {alerts.data?.map((a: any) => (
               <Paper key={a.id} p="xs" mb="xs" bg={`${severityColor[a.severity]}.0`} radius="sm">
-                <Group gap={4}>
-                  <Badge size="xs" color={severityColor[a.severity]}>{a.severity}</Badge>
-                  <Text size="xs">{a.metric}</Text>
+                <Group gap={4} wrap="nowrap">
+                  <Badge size="xs" color={severityColor[a.severity]} variant="filled">{a.severity}</Badge>
+                  <Text size="xs" fw={500}>{a.tags?.message || a.metric}</Text>
                 </Group>
-                <Text size="xs" c="dimmed" mt={4}>{new Date(a.recordedAt).toLocaleTimeString()}{a.status === 'active' && ' · 未处理'}</Text>
+                <Group gap={8} mt={4}>
+                  <Text size="xs" c="dimmed">{new Date(a.recordedAt).toLocaleTimeString()}</Text>
+                  {a.value != null && <Text size="xs" c="dimmed">值: {a.value}{a.unit || ''}</Text>}
+                </Group>
               </Paper>
             ))}
           </Paper>
@@ -158,7 +168,11 @@ function Dashboard() {
       <Group px="md" pt="md" justify="space-between">
         <Tabs value={activeTab} onChange={setActiveTab}>
           <Tabs.List>
-            <Tabs.Tab value="dashboard">监护面板</Tabs.Tab>
+            <Tabs.Tab value="dashboard" rightSection={
+              alertCount.data && alertCount.data.length > 0
+                ? <Badge size="xs" color="red" variant="filled" style={{ minWidth: 18 }}>{alertCount.data.length}</Badge>
+                : undefined
+            }>监护面板</Tabs.Tab>
             <Tabs.Tab value="patients">患者管理</Tabs.Tab>
             <Tabs.Tab value="devices">设备管理</Tabs.Tab>
           </Tabs.List>

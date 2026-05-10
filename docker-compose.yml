@@ -49,6 +49,7 @@ services:
       PORT: "3000"
       MQTT_ENABLED: "true"
       MQTT_BROKER: "mqtt://mosquitto:1883"
+      DEMO_MODE: "true"
     ports:
       - "${SERVER_PORT:-3000}:3000"
     restart: unless-stopped

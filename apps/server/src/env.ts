@@ -10,6 +10,7 @@ const envSchema = z.object({
   MQTT_USERNAME: z.string().optional(),
   MQTT_PASSWORD: z.string().optional(),
   MQTT_ENABLED: z.coerce.boolean().default(false),
+  DEMO_MODE: z.coerce.boolean().default(true),
 })
 
 export const env = envSchema.parse(process.env)

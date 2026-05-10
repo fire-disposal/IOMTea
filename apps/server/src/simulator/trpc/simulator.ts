@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { publicProcedure, router } from '../../core/trpc/index'
-import { createWard, getWardState, pauseWard, resumeWard, setWardSpeed, listWards } from '../engine'
+import { createWard, getWardState, pauseWard, resumeWard, setWardSpeed, listWards, injectScenario } from '../engine'
 
 export const simulatorRouter = router({
   createWard: publicProcedure
@@ -49,5 +49,12 @@ export const simulatorRouter = router({
         return getWardState(input.wardId) ?? null
       }
       return listWards()
+    }),
+
+  injectScenario: publicProcedure
+    .input(z.object({ wardId: z.string(), type: z.enum(['bed_exit', 'tachycardia', 'fall', 'low_spo2']) }))
+    .mutation(async ({ input }) => {
+      const ok = await injectScenario(input.wardId, input.type)
+      return { success: ok }
     }),
 })
