@@ -11,6 +11,8 @@ export interface PatientProfile {
     respiratoryRate: { resting: number; variability: number }
     temperature: { resting: number; variability: number }
     spO2: { resting: number; variability: number }
+    bloodPressure: { systolic: number; diastolic: number; variability: number }
+    bloodGlucose: { fasting: number; variability: number; postprandialSpike: number }
   }
   conditions: string[]
   schedule: {
@@ -29,6 +31,15 @@ export interface PatientProfile {
 }
 
 export type ActivityLevel = 'resting' | 'light' | 'moderate' | 'heavy'
+
+export type Posture = 'lying' | 'sitting' | 'standing' | 'walking'
+
+export interface BPReading {
+  systolic: number
+  diastolic: number
+}
+
+export type PressureGrid = number[][]
 
 export interface PatientInstance {
   id: string
