@@ -10,6 +10,7 @@ const envSchema = z.object({
   MQTT_USERNAME: z.string().optional(),
   MQTT_PASSWORD: z.string().optional(),
   MQTT_ENABLED: z.coerce.boolean().default(false),
+  TCP_INGEST_PORT: z.coerce.number().default(5858),
   DEMO_MODE: z.coerce.boolean().default(false),
   CORS_ORIGIN: z.string().optional(),
 })

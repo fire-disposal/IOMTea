@@ -27,21 +27,6 @@ services:
       - "${MQTT_PORT:-1883}:1883"
     restart: unless-stopped
 
-  gateway:
-    build:
-      context: ./gateway
-      dockerfile: Dockerfile
-    image: ghcr.io/${IMAGE_REPO}/gateway:${IMAGE_TAG:-latest}
-    depends_on:
-      - mosquitto
-    environment:
-      TCP_BIND: "0.0.0.0:5858"
-      MQTT_BROKER: "mqtt://mosquitto:1883"
-      RUST_LOG: info
-    ports:
-      - "${GATEWAY_PORT:-5858}:5858"
-    restart: unless-stopped
-
   server:
     image: ghcr.io/${IMAGE_REPO}/server:${IMAGE_TAG:-latest}
     depends_on:
@@ -57,9 +42,11 @@ services:
       PORT: "3000"
       MQTT_ENABLED: "true"
       MQTT_BROKER: "mqtt://mosquitto:1883"
+      TCP_INGEST_PORT: "5858"
       DEMO_MODE: "${DEMO_MODE:-false}"
     ports:
       - "${SERVER_PORT:-3000}:3000"
+      - "${GATEWAY_PORT:-5858}:5858"
     restart: unless-stopped
 
   web:

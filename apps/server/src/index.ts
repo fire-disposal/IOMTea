@@ -8,7 +8,7 @@ import { createContext } from './core/trpc/context'
 import { db } from './core/db'
 import { users } from './core/db/schema'
 import { env } from './env'
-import { startMqttIngest } from './ingest'
+import { startMqttIngest, startTcpIngest } from './ingest'
 import { createWard } from './simulator'
 import { hashPassword } from './core/lib/password'
 import pino from 'pino'
@@ -71,6 +71,9 @@ bootstrap().then(() => {
     logger.info({ broker: env.MQTT_BROKER }, 'starting MQTT ingest')
     startMqttIngest(db, { broker: env.MQTT_BROKER, username: env.MQTT_USERNAME, password: env.MQTT_PASSWORD })
   }
+
+  startTcpIngest(db, { port: env.TCP_INGEST_PORT })
+
   logger.info({ port: env.PORT, demo: env.DEMO_MODE }, 'server ready')
   serve({ fetch: app.fetch, port: env.PORT })
 })

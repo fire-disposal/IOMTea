@@ -91,13 +91,13 @@
 | 设置页 (MQTT 代理配置) | ✅ | `flutter/lib/pages/settings_page.dart` |
 | MQTT 服务封装 | ✅ | `flutter/lib/services/mqtt_service.dart` |
 
-### Rust 网关
+### TCP 设备接入
 
 | 功能 | 状态 | 入口文件 |
 |------|------|---------|
-| TCP 服务器 (端口 5858) | ✅ | `gateway/src/main.rs` |
-| CLI/环境配置 | ✅ | `gateway/src/config.rs` |
-| 双协议解码 (MessagePack + TLV) | ✅ | `gateway/src/decoder.rs` |
+| TCP 服务器 (端口 5858) | ✅ | `ingest/tcp/index.ts` → `startTcpIngest` |
+| MessagePack 解码 (0xAB 0xCD) | ✅ | `ingest/tcp/index.ts` → `decodeMsgpack` |
+| TLV 解码 (fallback) | ✅ | `ingest/tcp/index.ts` → `decodeTLV` |
 
 ---
 
@@ -167,7 +167,8 @@ src/
     │       ├── parser.ts        # 智能床垫载荷解析器
     │       ├── sleep-state.ts   # 睡眠状态机 (off→on→浅睡→深睡)
     │       └── alerts.ts        # 阈值告警引擎 (连续异常计数器, 压疮风险 120min)
-    └── trpc/                    # (空目录 — 预留 tRPC 路由)
+    └── tcp/
+        └── index.ts             # TCP 设备接入: 端口 5858, MessagePack + TLV 双解码, 直连 MattressModule
 ```
 
 ### `apps/web/` — Web 仪表盘
@@ -237,15 +238,6 @@ lib/
     └── imu_waveform.dart        # 波形绘制组件
 ```
 
-### `gateway/` — Rust 协议网关
-
-```
-src/
-├── main.rs                      # 入口: TCP server (tokio), 连接处理循环, MQTT 转发
-├── config.rs                    # CLI + env 配置 (TCP_PORT, MQTT_BROKER, etc.)
-└── decoder.rs                   # 双协议解码: MessagePack (0xAB 0xCD magic) + TLV fallback
-```
-
 ### `packages/shared-types/` — 共享类型
 
 ```
@@ -263,7 +255,7 @@ src/
 ### 基础设施文件
 
 ```
-├── docker-compose.yml           # Docker 编排: postgres, mosquitto, gateway, server, web
+├── docker-compose.yml           # Docker 编排: postgres, mosquitto, server, web
 ├── turbo.json                   # Turborepo 任务流水线
 ├── biome.json                   # Biome 格式化 + lint 配置
 ├── tsconfig.base.json           # 共享 TypeScript 配置
@@ -273,7 +265,6 @@ src/
 ├── .github/workflows/
 │   ├── deploy-server.yml        # 服务器 CD: build → GHCR → SSH deploy
 │   ├── deploy-web.yml           # Web CD: build → GHCR → SSH deploy
-│   ├── deploy-gateway.yml       # 网关 CD: cargo build → GHCR → SSH deploy
 │   └── deploy-miniapp.yml       # 小程序 CD: pnpm build → artifact upload
 └── docs/
     ├── ARCHITECTURE.md          # DDD-Lite 架构设计文档
@@ -295,6 +286,7 @@ src/
 | 修改仪表盘 UI | `web/src/App.tsx` (主仪表盘) 或 `web/src/pages/` 各页面 |
 | 修改 3D 场景 | `web/src/3d/` 目录: scenes/rooms/entities/layouts |
 | 修改 CI/CD | `.github/workflows/` 对应文件 |
+| 修改 TCP 设备接入 | `ingest/tcp/index.ts` (服务器+解码器), 重连逻辑内置 |
 | 修改 Docker 部署 | `docker-compose.yml` 和各子项目的 `Dockerfile` |
 | 修改环境变量 | `apps/server/src/env.ts` 定义 schema, `.env.example` + `docker-compose.yml` 更新 |
 | 修改认证逻辑 | `core/trpc/middleware/auth.ts` (中间件), `core/lib/jwt.ts` (JWT), `core/lib/password.ts` (密码) |

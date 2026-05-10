@@ -10,7 +10,7 @@
 | Web 前端 | React 19 + Vite 6 + Mantine v8 + React Three Fiber + Three.js 0.184 |
 | 微信小程序 | Taro 4 + React 18 |
 | 实验工具 | Flutter 3.27 + Dart 3.6 |
-| 协议网关 | Rust + Tokio + rumqttc (MQTT) |
+| 协议网关 | Node.js TCP Server (内置于 ingest) |
 | 基础设施 | pnpm monorepo + Turborepo + Docker Compose + Biome |
 
 ## 快速开始
@@ -91,7 +91,6 @@ iomtea/
 │   └── flutter/        # Flutter 实验工具 (MQTT/YOLO/IMU/BLE)
 ├── packages/
 │   └── shared-types/   # Zod 共享类型
-├── gateway/            # Rust TCP→MQTT 协议网关
 ├── docs/
 │   ├── ARCHITECTURE.md   # 架构规范 (DDD-Lite)
 │   └── CODE_MAP.md       # 代码地图 + 功能清单
@@ -115,7 +114,8 @@ iomtea/
 | Web 3D 数字孪生 (R3F 瓦片程序化居家场景) | ✅ |
 | 微信小程序 (6 页面) | ✅ |
 | 智能床垫 MQTT 数据接入 | ✅ |
-| Rust TCP→MQTT 协议网关 | ✅ |
+| 智能床垫 TCP 直接接入 (MessagePack + TLV 解码) | ✅ |
+| Rust TCP→MQTT 协议网关 | ❌ (已合并入 server ingest) |
 | CI/CD (GitHub Actions → Docker → 自托管) | ✅ |
 
 ## 常用命令
@@ -157,7 +157,6 @@ Context 间通过 Domain Event (`events` 表) 或 tRPC 调用通信，禁止跨 
 
 - `deploy-server.yml` — 后端服务
 - `deploy-web.yml` — Web 前端
-- `deploy-gateway.yml` — Rust 协议网关
 - `deploy-miniapp.yml` — 微信小程序
 
 部署前需配置 GitHub Secrets: `SSH_HOST`, `SSH_USER`, `SSH_PRIVATE_KEY`, `DEPLOY_PATH`, `GITHUB_TOKEN`。
