@@ -11,20 +11,16 @@ interface Ward {
   patients: PatientInstance[]
   profileRefs: PatientProfile[]
   intervalId?: ReturnType<typeof setInterval>
-  onEvent?: (event: SimulatedEvent) => void
+  db: any
 }
 
 const wards = new Map<string, Ward>()
-
-function randomBetween(min: number, max: number): number {
-  return Math.floor(Math.random() * (max - min + 1)) + min
-}
 
 function pick<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)]
 }
 
-async function tickWard(ward: Ward, db: any): Promise<void> {
+async function tickWard(ward: Ward): Promise<void> {
   const { events } = await import('../core/db/schema')
   ward.clock.advance()
   const allEvents: SimulatedEvent[] = []
@@ -36,44 +32,18 @@ async function tickWard(ward: Ward, db: any): Promise<void> {
     const hour = ward.clock.hourOfDay
     const profileSchedule = profile.schedule
     const isSleepTime = hour < 6 || hour > 21
-    const isMealTime = profileSchedule.meals.some(
-      (m) => {
-        const [h] = m.time.split(':').map(Number)
-        return Math.abs(hour - h) < 0.5
-      }
-    )
+    const isMealTime = profileSchedule.meals.some((m) => {
+      const [h] = m.time.split(':').map(Number)
+      return Math.abs(hour - h) < 0.5
+    })
 
     patient.activity = isSleepTime ? 'resting' : isMealTime ? 'light' : pick(['resting', 'resting', 'light'] as ActivityLevel[])
 
-    const hr = generateHeartRate(
-      patient.baselines.heartRate.resting,
-      patient.baselines.heartRate.variability,
-      patient.baselines.heartRate.circadianFactor,
-      hour,
-      patient.activity,
-      ward.clock.tick,
-    )
-
-    const rr = generateRespiratoryRate(
-      patient.baselines.respiratoryRate.resting,
-      patient.baselines.respiratoryRate.variability,
-      patient.activity,
-      hr,
-    )
-
-    const temp = generateTemperature(
-      patient.baselines.temperature.resting,
-      patient.baselines.temperature.variability,
-      hour,
-    )
-
-    const spo2 = generateSpO2(
-      patient.baselines.spO2.resting,
-      patient.baselines.spO2.variability,
-    )
-
+    const hr = generateHeartRate(patient.baselines.heartRate.resting, patient.baselines.heartRate.variability, patient.baselines.heartRate.circadianFactor, hour, patient.activity, ward.clock.tick)
+    const rr = generateRespiratoryRate(patient.baselines.respiratoryRate.resting, patient.baselines.respiratoryRate.variability, patient.activity, hr)
+    const temp = generateTemperature(patient.baselines.temperature.resting, patient.baselines.temperature.variability, hour)
+    const spo2 = generateSpO2(patient.baselines.spO2.resting, patient.baselines.spO2.variability)
     const bed = generateBedStatus(patient.activity, hour, profile.schedule.events)
-
     const now = ward.clock.simulatedTime
 
     const obs: SimulatedEvent[] = [
@@ -83,17 +53,13 @@ async function tickWard(ward: Ward, db: any): Promise<void> {
       { patientId: patient.patientDbId, deviceId: patient.deviceDbId, kind: 'observation', metric: 'spo2', value: Math.round(spo2), unit: '%', tags: { simulated: true }, recordedAt: now },
     ]
 
+    const bedObs: SimulatedEvent = bed === 0
+      ? { patientId: patient.patientDbId, deviceId: patient.deviceDbId, kind: 'observation', metric: 'bed_status', value: 0, unit: null, tags: { simulated: true, status: 'empty' }, recordedAt: now }
+      : { patientId: patient.patientDbId, deviceId: patient.deviceDbId, kind: 'observation', metric: 'bed_status', value: 1, unit: null, tags: { simulated: true, status: 'in_bed' }, recordedAt: now }
+    obs.push(bedObs)
+
     if (bed === 0) {
-      obs.push({
-        patientId: patient.patientDbId, deviceId: patient.deviceDbId, kind: 'observation', metric: 'bed_status', value: 0, unit: null, tags: { simulated: true, status: 'empty' }, recordedAt: now,
-      })
-      allEvents.push({
-        patientId: patient.patientDbId, deviceId: patient.deviceDbId, kind: 'alert', metric: 'bed_exit', value: null, unit: null, severity: 'warning', status: 'active', tags: { simulated: true, scenario: 'nocturia' }, recordedAt: now,
-      })
-    } else {
-      obs.push({
-        patientId: patient.patientDbId, deviceId: patient.deviceDbId, kind: 'observation', metric: 'bed_status', value: 1, unit: null, tags: { simulated: true, status: 'in_bed' }, recordedAt: now,
-      })
+      allEvents.push({ patientId: patient.patientDbId, deviceId: patient.deviceDbId, kind: 'alert', metric: 'bed_exit', value: null, unit: null, severity: 'warning', status: 'active', tags: { simulated: true, scenario: 'nocturia' }, recordedAt: now })
     }
 
     allEvents.push(...obs)
@@ -101,39 +67,28 @@ async function tickWard(ward: Ward, db: any): Promise<void> {
     for (const rule of profile.alerts) {
       const obsForMetric = obs.find((o) => o.metric === rule.metric)
       if (!obsForMetric || obsForMetric.value === null) continue
-      const triggered =
-        (rule.condition === 'gt' && obsForMetric.value > rule.threshold) ||
-        (rule.condition === 'lt' && obsForMetric.value < rule.threshold) ||
-        (rule.condition === 'eq' && obsForMetric.value === rule.threshold)
+      const triggered = (rule.condition === 'gt' && obsForMetric.value > rule.threshold) || (rule.condition === 'lt' && obsForMetric.value < rule.threshold) || (rule.condition === 'eq' && obsForMetric.value === rule.threshold)
       if (triggered) {
-        allEvents.push({
-          patientId: patient.patientDbId, deviceId: patient.deviceDbId, kind: 'alert', metric: rule.metric, value: obsForMetric.value, unit: obsForMetric.unit, severity: rule.severity, status: 'active',
-          tags: { simulated: true, rule: rule.message },
-          recordedAt: now,
-        })
+        allEvents.push({ patientId: patient.patientDbId, deviceId: patient.deviceDbId, kind: 'alert', metric: rule.metric, value: obsForMetric.value, unit: obsForMetric.unit, severity: rule.severity, status: 'active', tags: { simulated: true, rule: rule.message }, recordedAt: now })
       }
     }
   }
 
   if (allEvents.length > 0) {
     const rows = allEvents.map((e) => ({
-      patientId: e.patientId,
-      deviceId: e.deviceId,
-      kind: e.kind,
-      metric: e.metric,
-      value: e.value,
-      unit: e.unit,
-      severity: e.severity,
-      status: e.status,
-      tags: e.tags as Record<string, unknown>,
-      recordedAt: e.recordedAt,
+      patientId: e.patientId, deviceId: e.deviceId, kind: e.kind, metric: e.metric, value: e.value, unit: e.unit,
+      severity: e.severity, status: e.status, tags: e.tags as Record<string, unknown>, recordedAt: e.recordedAt,
     }))
-    try {
-      await db.insert(events).values(rows)
-    } catch (err) {
-      // DB might not be available yet
-    }
+    try { await ward.db.insert(events).values(rows) } catch { /* DB unavailable */ }
   }
+}
+
+function startInterval(ward: Ward): void {
+  ward.intervalId = setInterval(() => tickWard(ward), 1000 / ward.clock.speed)
+}
+
+function clearWardInterval(ward: Ward): void {
+  if (ward.intervalId) clearInterval(ward.intervalId)
 }
 
 export async function createWard(
@@ -143,7 +98,6 @@ export async function createWard(
   const id = config.name.toLowerCase().replace(/\s/g, '-')
   const clock = new SimulationClock()
   clock.speed = config.speed ?? 1
-
   const deps: FactoryDeps = { db }
   const patientInstances: PatientInstance[] = []
   const profileRefs: PatientProfile[] = []
@@ -152,29 +106,18 @@ export async function createWard(
     const profile = getProfile(pc.profileId)
     profileRefs.push(profile)
     for (let i = 0; i < pc.count; i++) {
-      const name = `${profile.name} ${i + 1}号`
-      const instance = await createPatientInstance(deps, profile, name)
-      patientInstances.push(instance)
+      patientInstances.push(await createPatientInstance(deps, profile, `${profile.name} ${i + 1}号`))
     }
   }
 
-  const state: WardState = {
-    id, name: config.name, speed: clock.speed, running: false,
-    patientCount: patientInstances.length, startedAt: null, tick: 0,
-  }
+  const state: WardState = { id, name: config.name, speed: clock.speed, running: false, patientCount: patientInstances.length, startedAt: null, tick: 0 }
+  const ward: Ward = { state, clock, patients: patientInstances, profileRefs, db }
 
-  const ward: Ward = { state, clock, patients: patientInstances, profileRefs }
-
-  const startFn = () => {
-    state.running = true
-    state.startedAt = new Date()
-    clock.start()
-    ward.intervalId = setInterval(() => tickWard(ward, db), 1000 / clock.speed)
-  }
-
+  state.running = true
+  state.startedAt = new Date()
+  clock.start()
+  startInterval(ward)
   wards.set(id, ward)
-  startFn()
-
   return state
 }
 
@@ -185,18 +128,18 @@ export function getWardState(id: string): WardState | undefined {
 export function pauseWard(id: string): boolean {
   const ward = wards.get(id)
   if (!ward) return false
-  if (ward.intervalId) clearInterval(ward.intervalId)
+  clearWardInterval(ward)
   ward.clock.pause()
   ward.state.running = false
   return true
 }
 
-export function resumeWard(id: string, db: any): boolean {
+export function resumeWard(id: string): boolean {
   const ward = wards.get(id)
   if (!ward) return false
   ward.clock.start()
   ward.state.running = true
-  ward.intervalId = setInterval(() => tickWard(ward, db), 1000 / ward.clock.speed)
+  startInterval(ward)
   return true
 }
 
@@ -205,20 +148,11 @@ export function setWardSpeed(id: string, speed: number): boolean {
   if (!ward) return false
   ward.clock.speed = speed
   ward.state.speed = speed
-  if (ward.intervalId) {
-    clearInterval(ward.intervalId)
-    const globalDb = (globalThis as Record<string, unknown>).__db as Record<string, unknown> | undefined
-    if (globalDb?.db) {
-      ward.intervalId = setInterval(() => tickWard(ward, globalDb.db), 1000 / speed)
-    }
-  }
+  clearWardInterval(ward)
+  startInterval(ward)
   return true
 }
 
 export function listWards(): WardState[] {
   return Array.from(wards.values()).map((w) => w.state)
-}
-
-export function setGlobalDb(db: any): void {
-  (globalThis as Record<string, unknown>).__db = { db }
 }

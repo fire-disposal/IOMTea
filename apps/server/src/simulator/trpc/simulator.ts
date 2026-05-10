@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { publicProcedure, router } from '../../core/trpc/index'
-import { createWard, getWardState, pauseWard, resumeWard, setWardSpeed, listWards, setGlobalDb } from '../engine'
+import { createWard, getWardState, pauseWard, resumeWard, setWardSpeed, listWards } from '../engine'
 
 export const simulatorRouter = router({
   createWard: publicProcedure
@@ -17,7 +17,6 @@ export const simulatorRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      setGlobalDb(ctx.db)
       const state = await createWard(ctx.db, input)
       return state
     }),
@@ -31,8 +30,8 @@ export const simulatorRouter = router({
 
   resume: publicProcedure
     .input(z.object({ wardId: z.string() }))
-    .mutation(({ ctx, input }) => {
-      const ok = resumeWard(input.wardId, ctx.db)
+    .mutation(({ input }) => {
+      const ok = resumeWard(input.wardId)
       return { success: ok }
     }),
 
