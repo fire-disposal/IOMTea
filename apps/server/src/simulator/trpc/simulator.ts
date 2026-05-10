@@ -1,9 +1,9 @@
 import { z } from 'zod'
-import { publicProcedure, router } from '../../core/trpc/index'
+import { publicProcedure, protectedProcedure, router } from '../../core/trpc/index'
 import { createWard, getWardState, pauseWard, resumeWard, setWardSpeed, listWards, injectScenario } from '../engine'
 
 export const simulatorRouter = router({
-  createWard: publicProcedure
+  createWard: protectedProcedure
     .input(
       z.object({
         name: z.string().min(1).max(50),
@@ -21,21 +21,21 @@ export const simulatorRouter = router({
       return state
     }),
 
-  pause: publicProcedure
+  pause: protectedProcedure
     .input(z.object({ wardId: z.string() }))
     .mutation(({ input }) => {
       const ok = pauseWard(input.wardId)
       return { success: ok }
     }),
 
-  resume: publicProcedure
+  resume: protectedProcedure
     .input(z.object({ wardId: z.string() }))
     .mutation(({ input }) => {
       const ok = resumeWard(input.wardId)
       return { success: ok }
     }),
 
-  setSpeed: publicProcedure
+  setSpeed: protectedProcedure
     .input(z.object({ wardId: z.string(), speed: z.number().min(0.1).max(60) }))
     .mutation(({ input }) => {
       const ok = setWardSpeed(input.wardId, input.speed)
@@ -51,7 +51,7 @@ export const simulatorRouter = router({
       return listWards()
     }),
 
-  injectScenario: publicProcedure
+  injectScenario: protectedProcedure
     .input(z.object({ wardId: z.string(), type: z.enum(['bed_exit', 'tachycardia', 'fall', 'low_spo2', 'hyperglycemia', 'hypoglycemia', 'hypotension', 'arrhythmia', 'respiratory_distress']) }))
     .mutation(async ({ input }) => {
       const ok = await injectScenario(input.wardId, input.type)

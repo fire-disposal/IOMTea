@@ -1,8 +1,8 @@
 import { z } from 'zod'
 
 const envSchema = z.object({
-  DATABASE_URL: z.string().default('postgresql://localhost:5432/iomtea'),
-  JWT_SECRET: z.string().default('dev-secret-change-in-production'),
+  DATABASE_URL: z.string().default('postgresql://127.0.0.1:5432/iomtea'),
+  JWT_SECRET: z.string().min(16, 'JWT_SECRET must be at least 16 characters'),
   JWT_EXPIRES_IN: z.string().default('2h'),
   JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
   PORT: z.coerce.number().default(3000),
@@ -10,7 +10,8 @@ const envSchema = z.object({
   MQTT_USERNAME: z.string().optional(),
   MQTT_PASSWORD: z.string().optional(),
   MQTT_ENABLED: z.coerce.boolean().default(false),
-  DEMO_MODE: z.coerce.boolean().default(true),
+  DEMO_MODE: z.coerce.boolean().default(false),
+  CORS_ORIGIN: z.string().optional(),
 })
 
 export const env = envSchema.parse(process.env)

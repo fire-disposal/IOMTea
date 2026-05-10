@@ -112,7 +112,7 @@ async function tickWard(ward: Ward): Promise<void> {
       patientId: e.patientId, deviceId: e.deviceId, kind: e.kind, metric: e.metric, value: e.value, unit: e.unit,
       severity: e.severity, status: e.status, tags: e.tags as Record<string, unknown>, recordedAt: e.recordedAt,
     }))
-    try { await ward.db.insert(events).values(rows) } catch { /* DB unavailable */ }
+    try { await ward.db.insert(events).values(rows) } catch (err) { console.warn('simulator: failed to persist events', err) }
   }
 }
 

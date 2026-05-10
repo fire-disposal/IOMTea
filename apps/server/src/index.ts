@@ -17,10 +17,14 @@ const logger = pino({
   transport: { target: 'pino-pretty', options: { colorize: true } },
 })
 
+if (env.JWT_SECRET === 'dev-secret-change-in-production') {
+  logger.warn('Using default JWT_SECRET - set JWT_SECRET in production!')
+}
+
 const app = new Hono()
 
-app.use('*', cors({
-  origin: ['http://localhost:5173'],
+app.use('/trpc/*', cors({
+  origin: env.CORS_ORIGIN ? env.CORS_ORIGIN.split(',').map(s => s.trim()) : ['http://localhost:5173'],
   credentials: true,
 }))
 
@@ -58,7 +62,7 @@ async function bootstrap() {
     })
     logger.info({ ward: ward.name, patients: ward.patientCount }, 'demo ward auto-started')
   } catch (err) {
-    logger.warn('demo ward already running or DB unavailable')
+    logger.warn({ err }, 'demo ward auto-start failed')
   }
 }
 

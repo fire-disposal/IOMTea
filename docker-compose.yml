@@ -16,6 +16,11 @@ services:
 
   mosquitto:
     image: eclipse-mosquitto:2
+    healthcheck:
+      test: ["CMD-SHELL", "mosquitto_sub -t '$$SYS/#' -C 1 -i hc-$$ -W 3 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     volumes:
       - mosquitto-data:/mosquitto/data
     ports:
@@ -23,6 +28,9 @@ services:
     restart: unless-stopped
 
   gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
     image: ghcr.io/${IMAGE_REPO}/gateway:latest
     depends_on:
       - mosquitto
@@ -40,16 +48,16 @@ services:
       postgres:
         condition: service_healthy
       mosquitto:
-        condition: service_started
+        condition: service_healthy
     environment:
       DATABASE_URL: postgresql://iomtea:${DB_PASSWORD}@postgres:5432/iomtea
-      JWT_SECRET: ${JWT_SECRET}
+      JWT_SECRET: "${JWT_SECRET:-dev-secret-change-in-production}"
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-2h}
       JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
       PORT: "3000"
       MQTT_ENABLED: "true"
       MQTT_BROKER: "mqtt://mosquitto:1883"
-      DEMO_MODE: "true"
+      DEMO_MODE: "${DEMO_MODE:-false}"
     ports:
       - "${SERVER_PORT:-3000}:3000"
     restart: unless-stopped

@@ -11,7 +11,7 @@ COPY tsconfig.base.json ./
 COPY packages/shared-types/src packages/shared-types/src/
 COPY apps/web/index.html apps/web/
 COPY apps/web/src apps/web/src/
-COPY apps/server/src/trpc/routers/_app.ts apps/server/src/trpc/routers/_app.ts
+COPY apps/server/src/core/trpc/routers/_app.ts apps/server/src/core/trpc/routers/_app.ts
 RUN pnpm --filter @iomtea/web build
 
 FROM nginx:alpine

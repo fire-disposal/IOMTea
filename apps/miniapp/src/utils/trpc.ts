@@ -1,6 +1,6 @@
 import { createTRPCClient, httpLink, TRPCClientError } from '@trpc/client'
 import Taro from '@tarojs/taro'
-import type { AppRouter } from '../../../../server/src/trpc/routers/_app'
+import type { AppRouter } from '@server/core/trpc/routers/_app'
 
 const API_BASE = 'http://localhost:3000'
 
