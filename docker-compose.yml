@@ -17,7 +17,7 @@ services:
   mosquitto:
     image: eclipse-mosquitto:2
     healthcheck:
-      test: ["CMD-SHELL", "mosquitto_sub -t '$$SYS/#' -C 1 -i hc-$$ -W 3 || exit 1"]
+      test: ["CMD", "mosquitto_sub", "-t", "$$SYS/#", "-C", "1", "-i", "healthcheck-$$", "-W", "3"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -51,7 +51,7 @@ services:
         condition: service_healthy
     environment:
       DATABASE_URL: postgresql://iomtea:${DB_PASSWORD}@postgres:5432/iomtea
-      JWT_SECRET: "${JWT_SECRET:-change-me-in-production-32chars-min}"
+      JWT_SECRET: "${JWT_SECRET:-dev-secret-change-in-production}"
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-2h}
       JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
       PORT: "3000"
