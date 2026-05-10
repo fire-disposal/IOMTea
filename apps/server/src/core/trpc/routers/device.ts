@@ -24,7 +24,7 @@ export const deviceRouter = router({
       }
       const rows = await query.limit(input.pageSize).offset(offset).orderBy(devices.createdAt)
 
-      return rows.map((d) => ({
+      return z.array(deviceSchema).parse(rows.map((d) => ({
         id: d.id,
         serialNumber: d.serialNumber,
         deviceType: d.deviceType,
@@ -33,7 +33,7 @@ export const deviceRouter = router({
         lastSeen: d.lastSeen?.getTime() ?? null,
         tags: d.tags,
         createdAt: d.createdAt.getTime(),
-      }))
+      })))
     }),
 
   byId: protectedProcedure
@@ -49,7 +49,7 @@ export const deviceRouter = router({
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Device not found' })
       }
       const d = rows[0]
-      return {
+      return deviceSchema.parse({
         id: d.id,
         serialNumber: d.serialNumber,
         deviceType: d.deviceType,
@@ -58,14 +58,14 @@ export const deviceRouter = router({
         lastSeen: d.lastSeen?.getTime() ?? null,
         tags: d.tags,
         createdAt: d.createdAt.getTime(),
-      }
+      })
     }),
 
   create: protectedProcedure
     .input(deviceCreateSchema)
     .mutation(async ({ ctx, input }) => {
       const [created] = await ctx.db.insert(devices).values(input).returning()
-      return {
+      return deviceSchema.parse({
         id: created.id,
         serialNumber: created.serialNumber,
         deviceType: created.deviceType,
@@ -74,7 +74,7 @@ export const deviceRouter = router({
         lastSeen: created.lastSeen?.getTime() ?? null,
         tags: created.tags,
         createdAt: created.createdAt.getTime(),
-      }
+      })
     }),
 
   update: protectedProcedure
@@ -89,7 +89,7 @@ export const deviceRouter = router({
       if (!updated) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Device not found' })
       }
-      return {
+      return deviceSchema.parse({
         id: updated.id,
         serialNumber: updated.serialNumber,
         deviceType: updated.deviceType,
@@ -98,7 +98,7 @@ export const deviceRouter = router({
         lastSeen: updated.lastSeen?.getTime() ?? null,
         tags: updated.tags,
         createdAt: updated.createdAt.getTime(),
-      }
+      })
     }),
 
   delete: protectedProcedure

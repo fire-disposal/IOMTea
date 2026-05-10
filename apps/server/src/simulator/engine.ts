@@ -1,7 +1,7 @@
 import { SimulationClock } from './clock'
 import type { PatientInstance, SimulatedEvent, WardState, PatientProfile, Posture } from './types'
 import { generateHeartRate, generateRespiratoryRate, generateTemperature, generateSpO2, generateBedStatus } from './physiology/vitals'
-import type { ActivityLevel } from './types'
+import type { ActivityLevel, ScenarioType } from './types'
 import { generateBloodPressure } from './physiology/blood-pressure'
 import { generateGlucose } from './physiology/glucose'
 import { generateMotionIndex } from './physiology/motion'
@@ -190,7 +190,7 @@ export function listWards(): WardState[] {
   return Array.from(wards.values()).map((w) => w.state)
 }
 
-export async function injectScenario(wardId: string, type: string): Promise<boolean> {
+export async function injectScenario(wardId: string, type: ScenarioType): Promise<boolean> {
   const ward = wards.get(wardId)
   if (!ward) return false
 

@@ -10,11 +10,34 @@ export function PatientListPage() {
   const [editId, setEditId] = useState<string | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [form, setForm] = useState({ name: '', gender: '' as Gender | '', room: '', bedNumber: '' })
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({})
+
+  const validateForm = () => {
+    const errs: Record<string, string> = {}
+    if (!form.name?.trim()) errs.name = '姓名为必填项'
+    setFormErrors(errs)
+    return Object.keys(errs).length === 0
+  }
+
+  const resetForm = () => {
+    setForm({ name: '', gender: '', room: '', bedNumber: '' })
+    setFormErrors({})
+  }
+
+  const handleCreate = () => {
+    if (!validateForm()) return
+    create.mutate({ name: form.name, gender: form.gender || undefined, room: form.room || undefined, bedNumber: form.bedNumber || undefined })
+  }
+
+  const handleUpdate = () => {
+    if (!validateForm()) return
+    update.mutate({ id: editId!, data: { name: form.name, gender: form.gender || undefined, room: form.room || undefined, bedNumber: form.bedNumber || undefined } })
+  }
 
   const utils = trpc.useUtils()
   const { data, isLoading } = trpc.patient.list.useQuery({ pageSize: 100 })
   const create = trpc.patient.create.useMutation({
-    onSuccess: () => { utils.patient.list.invalidate(); setCreateOpen(false); setForm({ name: '', gender: '', room: '', bedNumber: '' }); notifications.show({ title: '创建成功', message: '患者已添加', color: 'green' }) },
+    onSuccess: () => { utils.patient.list.invalidate(); setCreateOpen(false); resetForm(); notifications.show({ title: '创建成功', message: '患者已添加', color: 'green' }) },
     onError: (err: any) => notifications.show({ title: '操作失败', message: err.message, color: 'red' }),
   })
   const update = trpc.patient.update.useMutation({
@@ -58,7 +81,7 @@ export function PatientListPage() {
                 <Table.Td>{p.status}</Table.Td>
                 <Table.Td>
                   <Group gap={4}>
-                    <ActionIcon size="sm" variant="subtle" aria-label="编辑患者" onClick={() => { setEditId(p.id); setForm({ name: p.name, gender: p.gender || '', room: p.room || '', bedNumber: p.bedNumber || '' }) }}>✏️</ActionIcon>
+                    <ActionIcon size="sm" variant="subtle" aria-label="编辑患者" onClick={() => { setEditId(p.id); setForm({ name: p.name, gender: p.gender || '', room: p.room || '', bedNumber: p.bedNumber || '' }); setFormErrors({}) }}>✏️</ActionIcon>
                     <ActionIcon size="sm" variant="subtle" color="red" aria-label="删除患者" onClick={() => setDeleteConfirm(p.id)}>🗑</ActionIcon>
                   </Group>
                 </Table.Td>
@@ -78,21 +101,21 @@ export function PatientListPage() {
       </Modal>
 
       {/* Create Modal */}
-      <Modal opened={createOpen} onClose={() => setCreateOpen(false)} title="新增患者">
-        <TextInput label="姓名" required value={form.name} onChange={e => setForm({ ...form, name: e.currentTarget.value })} mb="sm" />
+      <Modal opened={createOpen} onClose={() => { setCreateOpen(false); resetForm() }} title="新增患者">
+        <TextInput label="姓名" required value={form.name} error={formErrors.name} onChange={e => setForm({ ...form, name: e.currentTarget.value })} mb="sm" />
         <Select label="性别" data={['male', 'female', 'other']} value={form.gender || null} onChange={v => setForm({ ...form, gender: (v as Gender | '') || '' })} mb="sm" />
         <TextInput label="房间" value={form.room} onChange={e => setForm({ ...form, room: e.currentTarget.value })} mb="sm" />
         <TextInput label="床位" value={form.bedNumber} onChange={e => setForm({ ...form, bedNumber: e.currentTarget.value })} mb="sm" />
-        <Button fullWidth onClick={() => create.mutate({ name: form.name, gender: form.gender || undefined, room: form.room || undefined, bedNumber: form.bedNumber || undefined })} loading={create.isPending}>创建</Button>
+        <Button fullWidth onClick={handleCreate} loading={create.isPending}>创建</Button>
       </Modal>
 
       {/* Edit Modal */}
-      <Modal opened={!!editId} onClose={() => setEditId(null)} title="编辑患者">
-        <TextInput label="姓名" required value={form.name} onChange={e => setForm({ ...form, name: e.currentTarget.value })} mb="sm" />
+      <Modal opened={!!editId} onClose={() => { setEditId(null); resetForm() }} title="编辑患者">
+        <TextInput label="姓名" required value={form.name} error={formErrors.name} onChange={e => setForm({ ...form, name: e.currentTarget.value })} mb="sm" />
         <Select label="性别" data={['male', 'female', 'other']} value={form.gender || null} onChange={v => setForm({ ...form, gender: (v as Gender | '') || '' })} mb="sm" />
         <TextInput label="房间" value={form.room} onChange={e => setForm({ ...form, room: e.currentTarget.value })} mb="sm" />
         <TextInput label="床位" value={form.bedNumber} onChange={e => setForm({ ...form, bedNumber: e.currentTarget.value })} mb="sm" />
-        <Button fullWidth onClick={() => update.mutate({ id: editId!, data: { name: form.name, gender: form.gender || undefined, room: form.room || undefined, bedNumber: form.bedNumber || undefined } })} loading={update.isPending}>保存</Button>
+        <Button fullWidth onClick={handleUpdate} loading={update.isPending}>保存</Button>
       </Modal>
     </Container>
   )

@@ -30,6 +30,9 @@ export interface PatientProfile {
   }[]
 }
 
+export const SCENARIO_TYPES = ['bed_exit', 'tachycardia', 'fall', 'low_spo2', 'hyperglycemia', 'hypoglycemia', 'hypotension', 'arrhythmia', 'respiratory_distress'] as const
+export type ScenarioType = (typeof SCENARIO_TYPES)[number]
+
 export type ActivityLevel = 'resting' | 'light' | 'moderate' | 'heavy'
 
 export type Posture = 'lying' | 'sitting' | 'standing' | 'walking'

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Container, Title, Group, Button, Badge, Card, Text, Grid, Paper, Stack, Loader, Tabs, ActionIcon, Tooltip, SegmentedControl } from '@mantine/core'
+import { Container, Title, Group, Button, Badge, Card, Text, Grid, Paper, Stack, Loader, Tabs, ActionIcon, Tooltip, SegmentedControl, Skeleton } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
 import { useAuthStore } from './store/auth'
 import { trpc } from './trpc'
@@ -135,6 +135,14 @@ function Dashboard() {
               const vitals = query?.data || []
               const gv = (m: string) => vitals.find((v: any) => v.metric === m)
               const hr = gv('heart_rate'), rr = gv('resp_rate'), spo2 = gv('spo2'), temp = gv('temperature')
+
+              if (query?.isLoading) {
+                return (
+                  <Grid.Col span={{ base: 12, sm: 6, lg: 4 }} key={i}>
+                    <Skeleton height={340} radius="md" />
+                  </Grid.Col>
+                )
+              }
 
               return (
                 <Grid.Col span={{ base: 12, sm: 6, lg: 4 }} key={i}>

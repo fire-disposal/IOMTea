@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { publicProcedure, protectedProcedure, router } from '../../core/trpc/index'
 import { createWard, getWardState, pauseWard, resumeWard, setWardSpeed, listWards, injectScenario } from '../engine'
+import { SCENARIO_TYPES } from '../types'
 
 export const simulatorRouter = router({
   createWard: protectedProcedure
@@ -52,7 +53,7 @@ export const simulatorRouter = router({
     }),
 
   injectScenario: protectedProcedure
-    .input(z.object({ wardId: z.string(), type: z.enum(['bed_exit', 'tachycardia', 'fall', 'low_spo2', 'hyperglycemia', 'hypoglycemia', 'hypotension', 'arrhythmia', 'respiratory_distress']) }))
+    .input(z.object({ wardId: z.string(), type: z.enum(SCENARIO_TYPES) }))
     .mutation(async ({ input }) => {
       const ok = await injectScenario(input.wardId, input.type)
       return { success: ok }

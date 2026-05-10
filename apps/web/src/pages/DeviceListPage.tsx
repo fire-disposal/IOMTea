@@ -12,11 +12,29 @@ export function DeviceListPage() {
   const [createOpen, setCreateOpen] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [form, setForm] = useState({ serialNumber: '', deviceType: 'generic' as DeviceType })
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({})
+
+  const validateForm = () => {
+    const errs: Record<string, string> = {}
+    if (!form.serialNumber?.trim()) errs.serialNumber = '序列号为必填项'
+    setFormErrors(errs)
+    return Object.keys(errs).length === 0
+  }
+
+  const resetForm = () => {
+    setForm({ serialNumber: '', deviceType: 'generic' })
+    setFormErrors({})
+  }
+
+  const handleCreate = () => {
+    if (!validateForm()) return
+    create.mutate(form)
+  }
 
   const utils = trpc.useUtils()
   const { data, isLoading } = trpc.device.list.useQuery({ pageSize: 100 })
   const create = trpc.device.create.useMutation({
-    onSuccess: () => { utils.device.list.invalidate(); setCreateOpen(false); setForm({ serialNumber: '', deviceType: 'generic' }); notifications.show({ title: '创建成功', message: '设备已添加', color: 'green' }) },
+    onSuccess: () => { utils.device.list.invalidate(); setCreateOpen(false); resetForm(); notifications.show({ title: '创建成功', message: '设备已添加', color: 'green' }) },
     onError: (err: any) => notifications.show({ title: '操作失败', message: err.message, color: 'red' }),
   })
   const update = trpc.device.update.useMutation({
@@ -78,10 +96,10 @@ export function DeviceListPage() {
         </Group>
       </Modal>
 
-      <Modal opened={createOpen} onClose={() => setCreateOpen(false)} title="新增设备">
-        <TextInput label="序列号" required value={form.serialNumber} onChange={e => setForm({ ...form, serialNumber: e.currentTarget.value })} mb="sm" />
+      <Modal opened={createOpen} onClose={() => { setCreateOpen(false); resetForm() }} title="新增设备">
+        <TextInput label="序列号" required value={form.serialNumber} error={formErrors.serialNumber} onChange={e => setForm({ ...form, serialNumber: e.currentTarget.value })} mb="sm" />
         <Select label="设备类型" data={['mattress','vision','imu','generic','simulator','custom']} value={form.deviceType} onChange={v => setForm({ ...form, deviceType: (v as DeviceType) || 'generic' })} mb="sm" />
-        <Button fullWidth onClick={() => create.mutate(form)} loading={create.isPending}>创建</Button>
+        <Button fullWidth onClick={handleCreate} loading={create.isPending}>创建</Button>
       </Modal>
     </Container>
   )

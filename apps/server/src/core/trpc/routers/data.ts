@@ -1,7 +1,7 @@
 import { eq, and, gte, lte, desc } from 'drizzle-orm'
 import { z } from 'zod'
 import { protectedProcedure, router } from '../index'
-import { eventTimeSeriesInputSchema, observationIngestSchema } from '@iomtea/shared-types'
+import { eventTimeSeriesInputSchema, observationIngestSchema, observationSchema } from '@iomtea/shared-types'
 import { events } from '../../db/schema'
 
 export const dataRouter = router({
@@ -30,12 +30,12 @@ export const dataRouter = router({
         .orderBy(events.recordedAt)
         .limit(1000)
 
-      return rows.map((r) => ({
+      return z.array(observationSchema.pick({ recordedAt: true, value: true, unit: true, tags: true })).parse(rows.map((r) => ({
         recordedAt: r.recordedAt.getTime(),
         value: r.value,
         unit: r.unit,
         tags: r.tags,
-      }))
+      })))
     }),
 
   latest: protectedProcedure
@@ -57,12 +57,12 @@ export const dataRouter = router({
         )
         .orderBy(events.metric, desc(events.recordedAt))
 
-      return rows.map((r) => ({
+      return z.array(observationSchema.pick({ metric: true, value: true, unit: true, recordedAt: true })).parse(rows.map((r) => ({
         metric: r.metric,
         value: r.value,
         unit: r.unit,
         recordedAt: r.recordedAt.getTime(),
-      }))
+      })))
     }),
 
   ingest: protectedProcedure

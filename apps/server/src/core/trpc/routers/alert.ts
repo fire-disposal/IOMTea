@@ -2,7 +2,7 @@ import { eq, and, desc } from 'drizzle-orm'
 import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
 import { protectedProcedure, router } from '../index'
-import { ALERT_SEVERITIES, ALERT_STATUSES } from '@iomtea/shared-types'
+import { ALERT_SEVERITIES, ALERT_STATUSES, alertSchema } from '@iomtea/shared-types'
 import { events } from '../../db/schema'
 
 export const alertRouter = router({
@@ -31,10 +31,11 @@ export const alertRouter = router({
         .offset(offset)
         .orderBy(desc(events.recordedAt))
 
-      return rows.map((a) => ({
+      return z.array(alertSchema).parse(rows.map((a) => ({
         id: a.id,
         patientId: a.patientId,
         deviceId: a.deviceId,
+        kind: 'alert' as const,
         metric: a.metric,
         value: a.value,
         unit: a.unit,
@@ -43,7 +44,7 @@ export const alertRouter = router({
         tags: a.tags,
         recordedAt: a.recordedAt.getTime(),
         createdAt: a.createdAt.getTime(),
-      }))
+      })))
     }),
 
   acknowledge: protectedProcedure
@@ -58,7 +59,7 @@ export const alertRouter = router({
       if (!updated) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Alert not found' })
       }
-      return { id: updated.id, status: updated.status }
+      return alertSchema.pick({ id: true, status: true }).parse({ id: updated.id, status: updated.status })
     }),
 
   resolve: protectedProcedure
@@ -73,6 +74,6 @@ export const alertRouter = router({
       if (!updated) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Alert not found' })
       }
-      return { id: updated.id, status: updated.status }
+      return alertSchema.pick({ id: true, status: true }).parse({ id: updated.id, status: updated.status })
     }),
 })
