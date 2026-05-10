@@ -13,33 +13,38 @@ export async function createPatientInstance(
   const db = deps.db
   const { patients, devices } = await import('../core/db/schema')
 
-  const [patient] = await db
-    .insert(patients)
-    .values({
-      name,
-      status: 'active',
-      tags: { profileId: profile.id, conditions: profile.conditions, simulated: true },
-    })
-    .returning()
-
   const deviceType = profile.devices[0] || 'simulator'
   const serial = `sim-${name.replace(/\s/g, '-').toLowerCase()}-${Date.now()}`
-  const [device] = await db
-    .insert(devices)
-    .values({
-      serialNumber: serial,
-      deviceType,
-      patientId: patient.id,
-      tags: { simulated: true, profileId: profile.id },
-    })
-    .returning()
+
+  const result = await db.transaction(async (tx: any) => {
+    const [patient] = await tx
+      .insert(patients)
+      .values({
+        name,
+        status: 'active',
+        tags: { profileId: profile.id, conditions: profile.conditions, simulated: true },
+      })
+      .returning()
+
+    const [device] = await tx
+      .insert(devices)
+      .values({
+        serialNumber: serial,
+        deviceType,
+        patientId: patient.id,
+        tags: { simulated: true, profileId: profile.id },
+      })
+      .returning()
+
+    return { patient, device }
+  })
 
   return {
     id: uuid(),
     name,
     profileId: profile.id,
-    patientDbId: patient.id,
-    deviceDbId: device.id,
+    patientDbId: result.patient.id,
+    deviceDbId: result.device.id,
     activity: 'resting',
     baselines: profile.baseline,
     conditions: profile.conditions,

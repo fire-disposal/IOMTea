@@ -29,7 +29,7 @@ export const postSurgeryProfile: PatientProfile = {
   alerts: [
     { metric: 'heart_rate', condition: 'gt', threshold: 120, severity: 'warning', message: '心动过速' },
     { metric: 'temperature', condition: 'gt', threshold: 38.5, severity: 'critical', message: '术后发热' },
-    { metric: 'spO2', condition: 'lt', threshold: 92, severity: 'critical', message: '低血氧' },
+    { metric: 'spo2', condition: 'lt', threshold: 92, severity: 'critical', message: '低血氧' },
     { metric: 'systolic_bp', condition: 'lt', threshold: 90, severity: 'critical', message: '低血压(出血风险)' },
   ],
 }

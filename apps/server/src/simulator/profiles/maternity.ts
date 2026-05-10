@@ -29,6 +29,6 @@ export const maternityProfile: PatientProfile = {
     { metric: 'heart_rate', condition: 'gt', threshold: 140, severity: 'critical', message: '心动过速' },
     { metric: 'heart_rate', condition: 'lt', threshold: 50, severity: 'warning', message: '心动过缓' },
     { metric: 'systolic_bp', condition: 'gt', threshold: 140, severity: 'critical', message: '子痫前期风险' },
-    { metric: 'spO2', condition: 'lt', threshold: 94, severity: 'warning', message: '低血氧' },
+    { metric: 'spo2', condition: 'lt', threshold: 94, severity: 'warning', message: '低血氧' },
   ],
 }

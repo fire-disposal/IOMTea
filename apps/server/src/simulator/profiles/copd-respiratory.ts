@@ -26,7 +26,7 @@ export const copdRespiratoryProfile: PatientProfile = {
   },
   devices: ['mattress'],
   alerts: [
-    { metric: 'spO2', condition: 'lt', threshold: 88, severity: 'critical', message: '严重低血氧' },
+    { metric: 'spo2', condition: 'lt', threshold: 88, severity: 'critical', message: '严重低血氧' },
     { metric: 'resp_rate', condition: 'gt', threshold: 35, severity: 'critical', message: '呼吸窘迫' },
     { metric: 'heart_rate', condition: 'gt', threshold: 120, severity: 'warning', message: '心动过速' },
   ],

@@ -28,7 +28,7 @@ export const elderlyCardiacProfile: PatientProfile = {
   alerts: [
     { metric: 'heart_rate', condition: 'gt', threshold: 130, severity: 'warning', message: '心动过速' },
     { metric: 'heart_rate', condition: 'lt', threshold: 45, severity: 'critical', message: '心动过缓' },
-    { metric: 'spO2', condition: 'lt', threshold: 90, severity: 'critical', message: '低血氧' },
+    { metric: 'spo2', condition: 'lt', threshold: 90, severity: 'critical', message: '低血氧' },
     { metric: 'systolic_bp', condition: 'gt', threshold: 160, severity: 'warning', message: '高血压' },
   ],
 }

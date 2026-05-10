@@ -38,7 +38,11 @@ async function tickWard(ward: Ward): Promise<void> {
 
     const hour = ward.clock.hourOfDay
     const profileSchedule = profile.schedule
-    const isSleepTime = hour < 6 || hour > 21
+    const [sleepStartH] = profileSchedule.sleep.start.split(':').map(Number)
+    const [sleepEndH] = profileSchedule.sleep.end.split(':').map(Number)
+    const isSleepTime = sleepEndH < sleepStartH
+      ? hour >= sleepStartH || hour < sleepEndH
+      : hour >= sleepStartH && hour < sleepEndH
     const isMealTime = profileSchedule.meals.some((m) => {
       const [h] = m.time.split(':').map(Number)
       return Math.abs(hour - h) < 0.5
@@ -91,7 +95,7 @@ async function tickWard(ward: Ward): Promise<void> {
       : { patientId: patient.patientDbId, deviceId: patient.deviceDbId, kind: 'observation', metric: 'bed_status', value: 1, unit: null, tags: { simulated: true, status: 'in_bed' }, recordedAt: now }
     obs.push(bedObs)
 
-    if (bed === 0) {
+    if (bed === 0 && isSleepTime) {
       allEvents.push({ patientId: patient.patientDbId, deviceId: patient.deviceDbId, kind: 'alert', metric: 'bed_exit', value: null, unit: null, severity: 'warning', status: 'active', tags: { simulated: true, scenario: 'nocturia' }, recordedAt: now })
     }
 
@@ -149,6 +153,10 @@ export async function createWard(
   state.running = true
   state.startedAt = new Date()
   clock.start()
+  const existing = wards.get(id)
+  if (existing) {
+    clearWardInterval(existing)
+  }
   startInterval(ward)
   wards.set(id, ward)
   return state
