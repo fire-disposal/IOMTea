@@ -6,6 +6,7 @@ import { trpc } from './trpc'
 import { LoginPage } from './LoginPage'
 import { PatientListPage } from './pages/PatientListPage'
 import { DeviceListPage } from './pages/DeviceListPage'
+import { DigitalTwinPage } from './pages/DigitalTwinPage'
 
 function Dashboard() {
   const logout = useAuthStore((s) => s.logout)
@@ -250,6 +251,7 @@ function Dashboard() {
             }>监护面板</Tabs.Tab>
             <Tabs.Tab value="patients">患者管理</Tabs.Tab>
             <Tabs.Tab value="devices">设备管理</Tabs.Tab>
+            <Tabs.Tab value="digitaltwin">数字孪生</Tabs.Tab>
           </Tabs.List>
         </Tabs>
         <Button size="xs" variant="subtle" color="red" onClick={logout}>退出</Button>
@@ -258,6 +260,7 @@ function Dashboard() {
       {activeTab === 'dashboard' && dashboardView}
       {activeTab === 'patients' && <PatientListPage />}
       {activeTab === 'devices' && <DeviceListPage />}
+      {activeTab === 'digitaltwin' && <DigitalTwinPage />}
     </>
   )
 }
