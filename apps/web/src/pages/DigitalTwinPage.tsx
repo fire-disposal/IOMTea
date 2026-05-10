@@ -23,7 +23,7 @@ export function DigitalTwinPage() {
   }
 
   return (
-    <Container fluid p={0} style={{ height: 'calc(100vh - 120px)' }}>
+    <Container size="responsive" p={0} style={{ height: 'calc(100vh - 120px)' }}>
       <Canvas
         camera={{ position: [15, 12, 15], fov: 50 }}
         shadows

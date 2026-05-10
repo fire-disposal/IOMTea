@@ -24,13 +24,14 @@ function Dashboard() {
 
   const inject = trpc.simulator.injectScenario.useMutation({
     onSuccess: () => notifications.show({ title: '场景已注入', message: '查看告警面板', color: 'orange' }),
+    onError: (err: any) => notifications.show({ title: '注入失败', message: err.message, color: 'red' }),
   })
 
   useEffect(() => {
     if (wardStatus.data && Array.isArray(wardStatus.data) && wardStatus.data.length > 0) {
       setWardId(wardStatus.data[0].id)
     }
-    if (patientList.data && patientList.data.length > 0 && !ready) {
+    if (patientList.data !== undefined && !ready) {
       setPatientIds(patientList.data.map((p: any) => p.id))
       setPatientNames(patientList.data.map((p: any) => p.name))
       setReady(true)
@@ -44,14 +45,27 @@ function Dashboard() {
   ]
 
   const alerts = trpc.alert.list.useQuery({ pageSize: 15, status: 'active' }, { refetchInterval: 3000 })
-  const pause = trpc.simulator.pause.useMutation()
-  const resume = trpc.simulator.resume.useMutation()
+  const pause = trpc.simulator.pause.useMutation({
+    onSuccess: () => notifications.show({ title: '已暂停', message: '', color: 'blue' }),
+    onError: (err: any) => notifications.show({ title: '暂停失败', message: err.message, color: 'red' }),
+  })
+  const resume = trpc.simulator.resume.useMutation({
+    onSuccess: () => notifications.show({ title: '已恢复', message: '', color: 'green' }),
+    onError: (err: any) => notifications.show({ title: '恢复失败', message: err.message, color: 'red' }),
+  })
 
   const severityColor: Record<string, string> = { critical: 'red', warning: 'orange', info: 'blue' }
   const wardRunning = wardStatus.data && Array.isArray(wardStatus.data) && wardStatus.data[0]?.running
 
   if (!ready) {
     return <Container size="xl" py="xl"><Loader /><Text mt="md">连接服务器...</Text></Container>
+  }
+  if (patientNames.length === 0) {
+    return (
+      <Container size="xl" py="xl">
+        <Text ta="center" c="dimmed">暂无患者数据。请确认 Demo 模式已启用或手动添加患者。</Text>
+      </Container>
+    )
   }
 
   const injectActions = [
@@ -87,6 +101,7 @@ function Dashboard() {
       <Group mb="md" gap="xs">
         <Text size="xs" fw={600} c="dimmed">指标切换:</Text>
         <SegmentedControl
+          aria-label="选择监护指标"
           value={selectedMetric}
           onChange={(v) => setSelectedMetric(v)}
           data={[
@@ -103,7 +118,7 @@ function Dashboard() {
         <Group gap="xs">
           <Text size="xs" fw={600} c="dimmed">演示注入:</Text>
           {injectActions.map(a => (
-            <Button key={a.type} size="compact-xs" variant="filled" color={a.color} loading={inject.isPending}
+            <Button key={a.type} size="xs" variant="filled" color={a.color} loading={inject.isPending}
               onClick={() => inject.mutate({ wardId, type: a.type })}>
               {a.label}
             </Button>
@@ -112,7 +127,7 @@ function Dashboard() {
       </Paper>
 
       <Grid>
-        <Grid.Col span={8}>
+        <Grid.Col span={{ base: 12, md: 8 }}>
           <Title order={5} mb="sm">患者监护</Title>
           <Grid>
             {patientNames.map((name, i) => {
@@ -122,7 +137,7 @@ function Dashboard() {
               const hr = gv('heart_rate'), rr = gv('resp_rate'), spo2 = gv('spo2'), temp = gv('temperature')
 
               return (
-                <Grid.Col span={4} key={i}>
+                <Grid.Col span={{ base: 12, sm: 6, lg: 4 }} key={i}>
                   <Card shadow="sm" padding="md" radius="md" withBorder>
                     <Group justify="space-between" mb="xs">
                       <Text fw={700}>{name}</Text>
@@ -217,7 +232,7 @@ function Dashboard() {
           </Grid>
         </Grid.Col>
 
-        <Grid.Col span={4}>
+        <Grid.Col span={{ base: 12, md: 4 }}>
           <Title order={5} mb="sm">告警时间线</Title>
           <Paper p="sm" withBorder style={{ maxHeight: 520, overflow: 'auto' }}>
             {(!alerts.data || alerts.data.length === 0) && <Text size="sm" c="dimmed" ta="center" py="xl">无活跃告警</Text>}

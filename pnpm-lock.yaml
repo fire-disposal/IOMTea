@@ -31,7 +31,7 @@ importers:
         version: 4.2.0(@tarojs/helper@4.2.0)(@types/react@18.3.28)(html-webpack-plugin@5.6.7(webpack@5.91.0(@swc/core@1.3.96)(lightningcss@1.32.0)(postcss@8.5.14)))(postcss@8.5.14)(rollup@3.30.0)(webpack-chain@6.5.1)(webpack-dev-server@4.15.2(webpack@5.91.0(@swc/core@1.3.96)(lightningcss@1.32.0)(postcss@8.5.14)))(webpack@5.91.0(@swc/core@1.3.96)(lightningcss@1.32.0)(postcss@8.5.14))
       '@tarojs/plugin-framework-react':
         specifier: ^4.0.0
-        version: 4.2.0(@tarojs/helper@4.2.0)(@tarojs/runtime@4.2.0)(@tarojs/shared@4.2.0)(@vitejs/plugin-react@4.7.0(vite@6.4.2(@types/node@22.19.18)(jiti@2.7.0)(less@3.13.1)(lightningcss@1.32.0)(sass@1.99.0)(stylus@0.64.0)(terser@5.47.1)(tsx@4.21.0)))(react@18.3.1)(vite@6.4.2(@types/node@22.19.18)(jiti@2.7.0)(less@3.13.1)(lightningcss@1.32.0)(sass@1.99.0)(stylus@0.64.0)(terser@5.47.1)(tsx@4.21.0))(webpack@5.91.0(@swc/core@1.3.96)(lightningcss@1.32.0)(postcss@8.5.14))
+        version: 4.2.0(@tarojs/helper@4.2.0)(@tarojs/runtime@4.2.0)(@tarojs/shared@4.2.0)(@vitejs/plugin-react@4.7.0(vite@6.4.2(@types/node@22.19.18)(jiti@2.7.0)(less@3.13.1)(lightningcss@1.32.0)(sass@1.99.0)(stylus@0.64.0)(sugarss@5.0.1(postcss@8.5.14))(terser@5.47.1)(tsx@4.21.0)))(react@18.3.1)(vite@6.4.2(@types/node@22.19.18)(jiti@2.7.0)(less@3.13.1)(lightningcss@1.32.0)(sass@1.99.0)(stylus@0.64.0)(sugarss@5.0.1(postcss@8.5.14))(terser@5.47.1)(tsx@4.21.0))(webpack@5.91.0(@swc/core@1.3.96)(lightningcss@1.32.0)(postcss@8.5.14))
       '@tarojs/react':
         specifier: ^4.0.0
         version: 4.2.0(react@18.3.1)
@@ -190,13 +190,19 @@ importers:
         version: 0.184.1
       '@vitejs/plugin-react':
         specifier: ^4.3.0
-        version: 4.7.0(vite@6.4.2(@types/node@22.19.18)(jiti@2.7.0)(less@3.13.1)(lightningcss@1.32.0)(sass@1.99.0)(stylus@0.64.0)(terser@5.47.1)(tsx@4.21.0))
+        version: 4.7.0(vite@6.4.2(@types/node@22.19.18)(jiti@2.7.0)(less@3.13.1)(lightningcss@1.32.0)(sass@1.99.0)(stylus@0.64.0)(sugarss@5.0.1(postcss@8.5.14))(terser@5.47.1)(tsx@4.21.0))
+      postcss:
+        specifier: ^8.5.14
+        version: 8.5.14
+      postcss-preset-mantine:
+        specifier: ^1.18.0
+        version: 1.18.0(postcss@8.5.14)
       typescript:
         specifier: ^5.7.0
         version: 5.9.3
       vite:
         specifier: ^6.0.0
-        version: 6.4.2(@types/node@22.19.18)(jiti@2.7.0)(less@3.13.1)(lightningcss@1.32.0)(sass@1.99.0)(stylus@0.64.0)(terser@5.47.1)(tsx@4.21.0)
+        version: 6.4.2(@types/node@22.19.18)(jiti@2.7.0)(less@3.13.1)(lightningcss@1.32.0)(sass@1.99.0)(stylus@0.64.0)(sugarss@5.0.1(postcss@8.5.14))(terser@5.47.1)(tsx@4.21.0)
 
   packages/shared-types:
     dependencies:
@@ -3200,6 +3206,10 @@ packages:
   camel-case@4.1.2:
     resolution: {integrity: sha512-gxGWBrTT1JuMx6R+o5PTXMmUnhnVzLQ9SNutD4YqKtI6ap897t3tKECYla6gCWEkplXnlNybEkZg9GEGxKFCgw==}
 
+  camelcase-css@2.0.1:
+    resolution: {integrity: sha512-QOSvevhslijgYwRx6Rv7zKdMF8lbRmx+uQGx2+vDc+KI/eBnsy9kit5aj23AgGu3pa4t9AgwbnXWqS+iOY+2aA==}
+    engines: {node: '>= 6'}
+
   camera-controls@3.1.2:
     resolution: {integrity: sha512-xkxfpG2ECZ6Ww5/9+kf4mfg1VEYAoe9aDSY+IwF0UEs7qEzwy0aVRfs2grImIECs/PoBtWFrh7RXsQkwG922JA==}
     engines: {node: '>=22.0.0', npm: '>=10.5.1'}
@@ -5476,6 +5486,12 @@ packages:
     peerDependencies:
       postcss: ^8.0.0
 
+  postcss-js@4.1.0:
+    resolution: {integrity: sha512-oIAOTqgIo7q2EOwbhb8UalYePMvYoIeRY2YKntdpFQXNosSu3vLrniGgmH9OKs/qAkfoj5oB3le/7mINW1LCfw==}
+    engines: {node: ^12 || ^14 || >= 16}
+    peerDependencies:
+      postcss: ^8.4.21
+
   postcss-loader@8.2.1:
     resolution: {integrity: sha512-k98jtRzthjj3f76MYTs9JTpRqV1RaaMhEU0Lpw9OTmQZQdppg4B30VZ74BojuBHt3F4KyubHJoXCMUeM8Bqeow==}
     engines: {node: '>= 18.12.0'}
@@ -5525,6 +5541,12 @@ packages:
     peerDependencies:
       postcss: ^8.4.31
 
+  postcss-mixins@12.1.2:
+    resolution: {integrity: sha512-90pSxmZVfbX9e5xCv7tI5RV1mnjdf16y89CJKbf/hD7GyOz1FCxcYMl8ZYA8Hc56dbApTKKmU9HfvgfWdCxlwg==}
+    engines: {node: ^20.0 || ^22.0 || >=24.0}
+    peerDependencies:
+      postcss: ^8.2.14
+
   postcss-modules-extract-imports@3.1.0:
     resolution: {integrity: sha512-k3kNe0aNFQDAZGbin48pL2VNidTF0w4/eASDsxlyspobzU3wZQLOGj7L9gfRe0Jo9/4uud09DsjFNH7winGv8Q==}
     engines: {node: ^10 || ^12 || >= 14}
@@ -5548,6 +5570,12 @@ packages:
     engines: {node: ^10 || ^12 || >= 14}
     peerDependencies:
       postcss: ^8.1.0
+
+  postcss-nested@7.0.2:
+    resolution: {integrity: sha512-5osppouFc0VR9/VYzYxO03VaDa3e8F23Kfd6/9qcZTUI8P58GIYlArOET2Wq0ywSl2o2PjELhYOFI4W7l5QHKw==}
+    engines: {node: '>=18.0'}
+    peerDependencies:
+      postcss: ^8.2.14
 
   postcss-normalize-charset@6.0.2:
     resolution: {integrity: sha512-a8N9czmdnrjPHa3DeFlwqst5eaL5W8jYu3EBbTTkI5FHkfMhFZh1EGbku6jhHhIzTA6tquI2P42NtZ59M/H/kQ==}
@@ -5615,6 +5643,11 @@ packages:
     peerDependencies:
       postcss: ^8
 
+  postcss-preset-mantine@1.18.0:
+    resolution: {integrity: sha512-sP6/s1oC7cOtBdl4mw/IRKmKvYTuzpRrH/vT6v9enMU/EQEQ31eQnHcWtFghOXLH87AAthjL/Q75rLmin1oZoA==}
+    peerDependencies:
+      postcss: '>=8.0.0'
+
   postcss-pxtransform@4.2.0:
     resolution: {integrity: sha512-KjOAP2X43Y9RHvKy8ILy9wzChlNzraLol50pU+Tg8/9+SEdjZ0qEhgKEtAMyRr4Fjf++nlW9oOdRcv7qIxq9Qw==}
     engines: {node: '>= 18'}
@@ -5640,6 +5673,12 @@ packages:
   postcss-selector-parser@7.1.1:
     resolution: {integrity: sha512-orRsuYpJVw8LdAwqqLykBj9ecS5/cRHlI5+nvTo8LcCKmzDmqVORXtOIYEEQuL9D4BxtA1lm5isAqzQZCoQ6Eg==}
     engines: {node: '>=4'}
+
+  postcss-simple-vars@7.0.1:
+    resolution: {integrity: sha512-5GLLXaS8qmzHMOjVxqkk1TZPf1jMqesiI7qLhnlyERalG0sMbHIbJqrcnrpmZdKCLglHnRHoEBB61RtGTsj++A==}
+    engines: {node: '>=14.0'}
+    peerDependencies:
+      postcss: ^8.2.1
 
   postcss-svgo@6.0.3:
     resolution: {integrity: sha512-dlrahRmxP22bX6iKEjOM+c8/1p+81asjKT+V5lrgOH944ryx/OHpclnIbGsKVd3uWOXFLYJwCVf0eEkJGvO96g==}
@@ -6336,6 +6375,12 @@ packages:
     resolution: {integrity: sha512-ZIdT8eUv8tegmqy1tTIdJv9We2DumkNZFdCF5mz/Kpq3OcTaxSuCAYZge6HKK2CmNC02G1eJig2RV7XTw5hQrA==}
     engines: {node: '>=16'}
     hasBin: true
+
+  sugarss@5.0.1:
+    resolution: {integrity: sha512-ctS5RYCBVvPoZAnzIaX5QSShK8ZiZxD5HUqSxlusvEMC+QZQIPCPOIJg6aceFX+K2rf4+SH89eu++h1Zmsr2nw==}
+    engines: {node: '>=18.0'}
+    peerDependencies:
+      postcss: ^8.3.3
 
   supports-color@7.2.0:
     resolution: {integrity: sha512-qpCAvRl9stuOHveKsn7HncJRvv501qIacKzQlO/+Lwxc9+0q2wLyv4Dfvt80/DPn2pqOBsJdDiogXGR9+OvwRw==}
@@ -8944,7 +8989,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@tarojs/plugin-framework-react@4.2.0(@tarojs/helper@4.2.0)(@tarojs/runtime@4.2.0)(@tarojs/shared@4.2.0)(@vitejs/plugin-react@4.7.0(vite@6.4.2(@types/node@22.19.18)(jiti@2.7.0)(less@3.13.1)(lightningcss@1.32.0)(sass@1.99.0)(stylus@0.64.0)(terser@5.47.1)(tsx@4.21.0)))(react@18.3.1)(vite@6.4.2(@types/node@22.19.18)(jiti@2.7.0)(less@3.13.1)(lightningcss@1.32.0)(sass@1.99.0)(stylus@0.64.0)(terser@5.47.1)(tsx@4.21.0))(webpack@5.91.0(@swc/core@1.3.96)(lightningcss@1.32.0)(postcss@8.5.14))':
+  '@tarojs/plugin-framework-react@4.2.0(@tarojs/helper@4.2.0)(@tarojs/runtime@4.2.0)(@tarojs/shared@4.2.0)(@vitejs/plugin-react@4.7.0(vite@6.4.2(@types/node@22.19.18)(jiti@2.7.0)(less@3.13.1)(lightningcss@1.32.0)(sass@1.99.0)(stylus@0.64.0)(sugarss@5.0.1(postcss@8.5.14))(terser@5.47.1)(tsx@4.21.0)))(react@18.3.1)(vite@6.4.2(@types/node@22.19.18)(jiti@2.7.0)(less@3.13.1)(lightningcss@1.32.0)(sass@1.99.0)(stylus@0.64.0)(sugarss@5.0.1(postcss@8.5.14))(terser@5.47.1)(tsx@4.21.0))(webpack@5.91.0(@swc/core@1.3.96)(lightningcss@1.32.0)(postcss@8.5.14))':
     dependencies:
       '@tarojs/helper': 4.2.0
       '@tarojs/runtime': 4.2.0
@@ -8954,9 +8999,9 @@ snapshots:
       lodash: 4.18.1
       tslib: 2.8.1
     optionalDependencies:
-      '@vitejs/plugin-react': 4.7.0(vite@6.4.2(@types/node@22.19.18)(jiti@2.7.0)(less@3.13.1)(lightningcss@1.32.0)(sass@1.99.0)(stylus@0.64.0)(terser@5.47.1)(tsx@4.21.0))
+      '@vitejs/plugin-react': 4.7.0(vite@6.4.2(@types/node@22.19.18)(jiti@2.7.0)(less@3.13.1)(lightningcss@1.32.0)(sass@1.99.0)(stylus@0.64.0)(sugarss@5.0.1(postcss@8.5.14))(terser@5.47.1)(tsx@4.21.0))
       react: 18.3.1
-      vite: 6.4.2(@types/node@22.19.18)(jiti@2.7.0)(less@3.13.1)(lightningcss@1.32.0)(sass@1.99.0)(stylus@0.64.0)(terser@5.47.1)(tsx@4.21.0)
+      vite: 6.4.2(@types/node@22.19.18)(jiti@2.7.0)(less@3.13.1)(lightningcss@1.32.0)(sass@1.99.0)(stylus@0.64.0)(sugarss@5.0.1(postcss@8.5.14))(terser@5.47.1)(tsx@4.21.0)
       webpack: 5.91.0(@swc/core@1.3.96)(lightningcss@1.32.0)(postcss@8.5.14)
 
   '@tarojs/plugin-platform-weapp@4.2.0(@tarojs/service@4.2.0)(@tarojs/shared@4.2.0)':
@@ -9400,7 +9445,7 @@ snapshots:
       '@use-gesture/core': 10.3.1
       react: 19.2.6
 
-  '@vitejs/plugin-react@4.7.0(vite@6.4.2(@types/node@22.19.18)(jiti@2.7.0)(less@3.13.1)(lightningcss@1.32.0)(sass@1.99.0)(stylus@0.64.0)(terser@5.47.1)(tsx@4.21.0))':
+  '@vitejs/plugin-react@4.7.0(vite@6.4.2(@types/node@22.19.18)(jiti@2.7.0)(less@3.13.1)(lightningcss@1.32.0)(sass@1.99.0)(stylus@0.64.0)(sugarss@5.0.1(postcss@8.5.14))(terser@5.47.1)(tsx@4.21.0))':
     dependencies:
       '@babel/core': 7.29.0
       '@babel/plugin-transform-react-jsx-self': 7.27.1(@babel/core@7.29.0)
@@ -9408,7 +9453,7 @@ snapshots:
       '@rolldown/pluginutils': 1.0.0-beta.27
       '@types/babel__core': 7.20.5
       react-refresh: 0.17.0
-      vite: 6.4.2(@types/node@22.19.18)(jiti@2.7.0)(less@3.13.1)(lightningcss@1.32.0)(sass@1.99.0)(stylus@0.64.0)(terser@5.47.1)(tsx@4.21.0)
+      vite: 6.4.2(@types/node@22.19.18)(jiti@2.7.0)(less@3.13.1)(lightningcss@1.32.0)(sass@1.99.0)(stylus@0.64.0)(sugarss@5.0.1(postcss@8.5.14))(terser@5.47.1)(tsx@4.21.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -9870,6 +9915,8 @@ snapshots:
     dependencies:
       pascal-case: 3.1.2
       tslib: 2.8.1
+
+  camelcase-css@2.0.1: {}
 
   camera-controls@3.1.2(three@0.184.0):
     dependencies:
@@ -12259,6 +12306,11 @@ snapshots:
       read-cache: 1.0.0
       resolve: 1.22.12
 
+  postcss-js@4.1.0(postcss@8.5.14):
+    dependencies:
+      camelcase-css: 2.0.1
+      postcss: 8.5.14
+
   postcss-loader@8.2.1(postcss@8.5.14)(typescript@5.9.3)(webpack@5.91.0(@swc/core@1.3.96)(lightningcss@1.32.0)(postcss@8.5.14)):
     dependencies:
       cosmiconfig: 9.0.1(typescript@5.9.3)
@@ -12308,6 +12360,14 @@ snapshots:
       postcss: 8.5.14
       postcss-selector-parser: 6.1.2
 
+  postcss-mixins@12.1.2(postcss@8.5.14):
+    dependencies:
+      postcss: 8.5.14
+      postcss-js: 4.1.0(postcss@8.5.14)
+      postcss-simple-vars: 7.0.1(postcss@8.5.14)
+      sugarss: 5.0.1(postcss@8.5.14)
+      tinyglobby: 0.2.16
+
   postcss-modules-extract-imports@3.1.0(postcss@8.5.14):
     dependencies:
       postcss: 8.5.14
@@ -12328,6 +12388,11 @@ snapshots:
     dependencies:
       icss-utils: 5.1.0(postcss@8.5.14)
       postcss: 8.5.14
+
+  postcss-nested@7.0.2(postcss@8.5.14):
+    dependencies:
+      postcss: 8.5.14
+      postcss-selector-parser: 7.1.1
 
   postcss-normalize-charset@6.0.2(postcss@8.5.14):
     dependencies:
@@ -12384,6 +12449,12 @@ snapshots:
     dependencies:
       postcss: 8.5.14
 
+  postcss-preset-mantine@1.18.0(postcss@8.5.14):
+    dependencies:
+      postcss: 8.5.14
+      postcss-mixins: 12.1.2(postcss@8.5.14)
+      postcss-nested: 7.0.2(postcss@8.5.14)
+
   postcss-pxtransform@4.2.0(postcss@8.5.14):
     dependencies:
       postcss: 8.5.14
@@ -12408,6 +12479,10 @@ snapshots:
     dependencies:
       cssesc: 3.0.0
       util-deprecate: 1.0.2
+
+  postcss-simple-vars@7.0.1(postcss@8.5.14):
+    dependencies:
+      postcss: 8.5.14
 
   postcss-svgo@6.0.3(postcss@8.5.14):
     dependencies:
@@ -13156,6 +13231,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  sugarss@5.0.1(postcss@8.5.14):
+    dependencies:
+      postcss: 8.5.14
+
   supports-color@7.2.0:
     dependencies:
       has-flag: 4.0.0
@@ -13477,7 +13556,7 @@ snapshots:
 
   vary@1.1.2: {}
 
-  vite@6.4.2(@types/node@22.19.18)(jiti@2.7.0)(less@3.13.1)(lightningcss@1.32.0)(sass@1.99.0)(stylus@0.64.0)(terser@5.47.1)(tsx@4.21.0):
+  vite@6.4.2(@types/node@22.19.18)(jiti@2.7.0)(less@3.13.1)(lightningcss@1.32.0)(sass@1.99.0)(stylus@0.64.0)(sugarss@5.0.1(postcss@8.5.14))(terser@5.47.1)(tsx@4.21.0):
     dependencies:
       esbuild: 0.25.12
       fdir: 6.5.0(picomatch@4.0.4)
@@ -13493,6 +13572,7 @@ snapshots:
       lightningcss: 1.32.0
       sass: 1.99.0
       stylus: 0.64.0
+      sugarss: 5.0.1(postcss@8.5.14)
       terser: 5.47.1
       tsx: 4.21.0
 
