@@ -14,17 +14,41 @@ services:
       retries: 5
     restart: unless-stopped
 
+  mosquitto:
+    image: eclipse-mosquitto:2
+    volumes:
+      - mosquitto-data:/mosquitto/data
+    ports:
+      - "${MQTT_PORT:-1883}:1883"
+    restart: unless-stopped
+
+  gateway:
+    image: ghcr.io/${IMAGE_REPO}/gateway:latest
+    depends_on:
+      - mosquitto
+    environment:
+      TCP_BIND: "0.0.0.0:5858"
+      MQTT_BROKER: "mqtt://mosquitto:1883"
+      RUST_LOG: info
+    ports:
+      - "${GATEWAY_PORT:-5858}:5858"
+    restart: unless-stopped
+
   server:
     image: ghcr.io/${IMAGE_REPO}/server:latest
     depends_on:
       postgres:
         condition: service_healthy
+      mosquitto:
+        condition: service_started
     environment:
       DATABASE_URL: postgresql://iomtea:${DB_PASSWORD}@postgres:5432/iomtea
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-2h}
       JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
       PORT: "3000"
+      MQTT_ENABLED: "true"
+      MQTT_BROKER: "mqtt://mosquitto:1883"
     ports:
       - "${SERVER_PORT:-3000}:3000"
     restart: unless-stopped
@@ -39,3 +63,4 @@ services:
 
 volumes:
   pgdata:
+  mosquitto-data:
