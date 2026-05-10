@@ -72,7 +72,10 @@ bootstrap().then(() => {
     startMqttIngest(db, { broker: env.MQTT_BROKER, username: env.MQTT_USERNAME, password: env.MQTT_PASSWORD })
   }
 
-  startTcpIngest(db, { port: env.TCP_INGEST_PORT })
+  if (env.TCP_INGEST_ENABLED) {
+    logger.info({ port: env.TCP_INGEST_PORT }, 'starting TCP ingest')
+    startTcpIngest(db, { port: env.TCP_INGEST_PORT, preSharedToken: env.TCP_INGEST_TOKEN })
+  }
 
   logger.info({ port: env.PORT, demo: env.DEMO_MODE }, 'server ready')
   serve({ fetch: app.fetch, port: env.PORT })

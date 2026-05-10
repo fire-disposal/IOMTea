@@ -24,4 +24,5 @@ COPY --from=builder /app/apps/server/drizzle /app/apps/server/drizzle
 ENV NODE_ENV=production
 ENV PORT=3000
 EXPOSE 3000
+EXPOSE 5858
 CMD ["node", "apps/server/dist/index.js"]
