@@ -4,7 +4,9 @@ import { trpcServer } from '@hono/trpc-server'
 import { serve } from '@hono/node-server'
 import { appRouter } from './core/trpc/routers/_app'
 import { createContext } from './core/trpc/context'
+import { db } from './core/db'
 import { env } from './env'
+import { startMqttIngest } from './ingest'
 import pino from 'pino'
 
 const logger = pino({
@@ -27,6 +29,15 @@ app.use(
 )
 
 app.get('/health', (c) => c.json({ status: 'ok' }))
+
+if (env.MQTT_ENABLED) {
+  logger.info({ broker: env.MQTT_BROKER }, 'starting MQTT ingest')
+  startMqttIngest(db, {
+    broker: env.MQTT_BROKER,
+    username: env.MQTT_USERNAME,
+    password: env.MQTT_PASSWORD,
+  })
+}
 
 logger.info({ port: env.PORT }, 'starting server')
 serve({ fetch: app.fetch, port: env.PORT })
