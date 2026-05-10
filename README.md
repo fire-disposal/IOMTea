@@ -93,7 +93,8 @@ iomtea/
 │   └── shared-types/   # Zod 共享类型
 ├── gateway/            # Rust TCP→MQTT 协议网关
 ├── docs/
-│   └── ARCHITECTURE.md # 架构规范 (DDD-Lite)
+│   ├── ARCHITECTURE.md   # 架构规范 (DDD-Lite)
+│   └── CODE_MAP.md       # 代码地图 + 功能清单
 ├── docker-compose.yml
 ├── turbo.json
 ├── biome.json
@@ -148,7 +149,7 @@ pnpm --filter @iomtea/miniapp dev:weapp   # 微信小程序开发模式
 
 Context 间通过 Domain Event (`events` 表) 或 tRPC 调用通信，禁止跨 Context import 内部实现。
 
-详细架构说明见 [ARCHITECTURE.md](./docs/ARCHITECTURE.md)。
+详细架构说明见 [ARCHITECTURE.md](./docs/ARCHITECTURE.md)，代码导航见 [CODE_MAP.md](./docs/CODE_MAP.md)。
 
 ## 部署
 
