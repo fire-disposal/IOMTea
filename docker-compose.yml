@@ -31,7 +31,7 @@ services:
     build:
       context: ./gateway
       dockerfile: Dockerfile
-    image: ghcr.io/${IMAGE_REPO}/gateway:latest
+    image: ghcr.io/${IMAGE_REPO}/gateway:${IMAGE_TAG:-latest}
     depends_on:
       - mosquitto
     environment:
@@ -43,7 +43,7 @@ services:
     restart: unless-stopped
 
   server:
-    image: ghcr.io/${IMAGE_REPO}/server:latest
+    image: ghcr.io/${IMAGE_REPO}/server:${IMAGE_TAG:-latest}
     depends_on:
       postgres:
         condition: service_healthy
@@ -63,7 +63,7 @@ services:
     restart: unless-stopped
 
   web:
-    image: ghcr.io/${IMAGE_REPO}/web:latest
+    image: ghcr.io/${IMAGE_REPO}/web:${IMAGE_TAG:-latest}
     depends_on:
       - server
     ports:

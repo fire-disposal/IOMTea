@@ -16,12 +16,24 @@ env:
   IMAGE_NAME: ${{ github.repository }}/web
 
 jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @iomtea/web typecheck
+
   build-and-deploy:
+    needs: verify
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
-      id-token: write
 
     steps:
       - name: Checkout
@@ -47,9 +59,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=raw,value=latest
-            type=sha,prefix=,format=short
+          tags: type=sha,prefix=,format=short
 
       - name: Build and push
         uses: docker/build-push-action@v6
@@ -71,8 +81,8 @@ jobs:
           script: |
             cd ${{ secrets.DEPLOY_PATH }}
             export IMAGE_REPO=${{ github.repository }}
-            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            export IMAGE_TAG=$(echo "${{ github.sha }}" | cut -c1-7)
+            printf '%s' "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
             docker compose pull web
             docker compose up -d web
-            docker image prune -f
             docker logout ghcr.io
