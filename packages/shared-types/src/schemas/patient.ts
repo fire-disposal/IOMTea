@@ -3,8 +3,8 @@ import { GENDERS, PATIENT_STATUSES } from '../constants'
 
 export const patientSchema = z.object({
   id: z.string().uuid(),
-  name: z.string(),
-  birthDate: z.string().nullable(),
+  name: z.string().max(100),
+  birthDate: z.string().max(10).nullable(),
   gender: z.enum(GENDERS).nullable(),
   room: z.string().nullable(),
   bedNumber: z.string().nullable(),

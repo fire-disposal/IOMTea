@@ -5,6 +5,7 @@ import {
   text,
   doublePrecision,
   timestamp,
+  date,
   jsonb,
   pgEnum,
   index,
@@ -30,15 +31,18 @@ export const users = pgTable('users', {
 export const refreshTokens = pgTable('refresh_tokens', {
   id: uuid('id').defaultRandom().primaryKey(),
   userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  tokenHash: text('token_hash').notNull(),
+  tokenHash: text('token_hash').notNull().unique(),
   expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-})
+}, (t) => ({
+  userIdIdx: index('refresh_tokens_user_id_idx').on(t.userId),
+  expiresIdx: index('refresh_tokens_expires_idx').on(t.expiresAt),
+}))
 
 export const patients = pgTable('patients', {
   id: uuid('id').defaultRandom().primaryKey(),
   name: varchar('name', { length: 100 }).notNull(),
-  birthDate: varchar('birth_date', { length: 10 }),
+  birthDate: date('birth_date'),
   gender: varchar('gender', { length: 10 }),
   room: varchar('room', { length: 20 }),
   bedNumber: varchar('bed_number', { length: 20 }),
