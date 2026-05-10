@@ -1,0 +1,37 @@
+name: iomtea_tools
+description: IOMTea Flutter 实验工具 — MQTT/YOLO/IMU/BLE 调试面板
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.6.0
+  flutter: '>=3.27.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # MQTT
+  mqtt_client: ^10.0.0
+
+  # 传感器
+  sensors_plus: ^6.1.0
+
+  # 视觉 YOLO
+  ultralytics_yolo: ^0.2.0
+
+  # 路由
+  go_router: ^14.0.0
+
+  # 存储
+  shared_preferences: ^2.3.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/models/

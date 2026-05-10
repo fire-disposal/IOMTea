@@ -5,3 +5,10 @@ dist/
 .turbo/
 .swc/
 gateway/target/
+
+# Flutter
+apps/flutter/.dart_tool/
+apps/flutter/build/
+apps/flutter/.flutter-plugins*
+apps/flutter/.packages
+apps/flutter/pubspec.lock
