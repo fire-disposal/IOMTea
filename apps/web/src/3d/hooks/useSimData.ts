@@ -60,7 +60,7 @@ export function useSimData(patientIds: string[]) {
         alerts: patientAlerts,
       }
     })
-  }, [queries.map(q => q.data), alertsQuery.data, patientIds])
+  }, [queries.map(q => q.dataUpdatedAt), alertsQuery.dataUpdatedAt, patientIds.length, ...patientIds])
 
   const isLoading = queries.some((q) => q.isLoading)
 
