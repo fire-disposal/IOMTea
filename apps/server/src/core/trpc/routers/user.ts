@@ -9,6 +9,9 @@ export const userRouter = router({
   list: protectedProcedure
     .input(userListInputSchema)
     .query(async ({ ctx, input }) => {
+      if (ctx.userRole !== 'admin' && ctx.userRole !== 'doctor') {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'Only admin/doctor can list users' })
+      }
       const offset = (input.page - 1) * input.pageSize
       const rows = await ctx.db
         .select()
@@ -49,6 +52,12 @@ export const userRouter = router({
   update: protectedProcedure
     .input(z.object({ id: z.string().uuid(), data: userUpdateSchema }))
     .mutation(async ({ ctx, input }) => {
+      if (ctx.userId !== input.id && ctx.userRole !== 'admin') {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'Cannot modify another user' })
+      }
+      if (input.data.role && ctx.userRole !== 'admin') {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'Only admins can change roles' })
+      }
       const [updated] = await ctx.db
         .update(users)
         .set(input.data)
