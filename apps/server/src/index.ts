@@ -47,7 +47,13 @@ async function bootstrap() {
   try {
     const ward = await createWard(db, {
       name: 'ICU 观察病房',
-      patients: [{ profileId: 'elderly-cardiac', count: 3 }],
+      patients: [
+        { profileId: 'elderly-cardiac', count: 1 },
+        { profileId: 'post-surgery', count: 1 },
+        { profileId: 'diabetes', count: 1 },
+        { profileId: 'copd-respiratory', count: 1 },
+        { profileId: 'maternity', count: 1 },
+      ],
       speed: 1,
     })
     logger.info({ ward: ward.name, patients: ward.patientCount }, 'demo ward auto-started')

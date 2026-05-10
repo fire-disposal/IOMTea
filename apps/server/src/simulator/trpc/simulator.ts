@@ -52,7 +52,7 @@ export const simulatorRouter = router({
     }),
 
   injectScenario: publicProcedure
-    .input(z.object({ wardId: z.string(), type: z.enum(['bed_exit', 'tachycardia', 'fall', 'low_spo2']) }))
+    .input(z.object({ wardId: z.string(), type: z.enum(['bed_exit', 'tachycardia', 'fall', 'low_spo2', 'hyperglycemia', 'hypoglycemia', 'hypotension', 'arrhythmia', 'respiratory_distress']) }))
     .mutation(async ({ input }) => {
       const ok = await injectScenario(input.wardId, input.type)
       return { success: ok }

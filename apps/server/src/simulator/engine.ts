@@ -1,7 +1,14 @@
 import { SimulationClock } from './clock'
-import type { PatientInstance, SimulatedEvent, WardState, PatientProfile } from './types'
+import type { PatientInstance, SimulatedEvent, WardState, PatientProfile, Posture } from './types'
 import { generateHeartRate, generateRespiratoryRate, generateTemperature, generateSpO2, generateBedStatus } from './physiology/vitals'
-import type { ActivityLevel } from './physiology/vitals'
+import type { ActivityLevel } from './types'
+import { generateBloodPressure } from './physiology/blood-pressure'
+import { generateGlucose } from './physiology/glucose'
+import { generateMotionIndex } from './physiology/motion'
+import { generatePosture } from './physiology/posture'
+import { generateECGSamples } from './physiology/ecg-waveform'
+import { generateRespiratoryWaveform } from './physiology/respiratory-waveform'
+import { generatePressureDistribution } from './physiology/pressure-distribution'
 import { createPatientInstance, type FactoryDeps } from './factory'
 import { getProfile } from './profiles'
 
@@ -44,13 +51,39 @@ async function tickWard(ward: Ward): Promise<void> {
     const temp = generateTemperature(patient.baselines.temperature.resting, patient.baselines.temperature.variability, hour)
     const spo2 = generateSpO2(patient.baselines.spO2.resting, patient.baselines.spO2.variability)
     const bed = generateBedStatus(patient.activity, hour, profile.schedule.events)
+
+    const bp = generateBloodPressure(patient.baselines.bloodPressure.systolic, patient.baselines.bloodPressure.diastolic, patient.baselines.bloodPressure.variability, hour, patient.activity, hr)
+
+    const simMinutes = ward.clock.simulatedTime.getHours() * 60 + ward.clock.simulatedTime.getMinutes()
+    const glucose = generateGlucose(patient.baselines.bloodGlucose.fasting, patient.baselines.bloodGlucose.variability, patient.baselines.bloodGlucose.postprandialSpike, hour, profile.schedule.meals, simMinutes)
+
+    const motion = generateMotionIndex(patient.activity)
+
+    const patientData = patient as PatientInstance & { posture?: Posture }
+    const posture = generatePosture(patient.activity, hour, bed, patientData.posture || 'lying')
+    patientData.posture = posture
+
+    const ecgSamples = generateECGSamples(Math.round(hr))
+    const respSamples = generateRespiratoryWaveform(Math.round(rr))
+
+    const weight = profile.demographics.weightRange[0] + Math.random() * (profile.demographics.weightRange[1] - profile.demographics.weightRange[0])
+    const pressureGrid = generatePressureDistribution(posture, weight)
+
     const now = ward.clock.simulatedTime
 
     const obs: SimulatedEvent[] = [
       { patientId: patient.patientDbId, deviceId: patient.deviceDbId, kind: 'observation', metric: 'heart_rate', value: Math.round(hr), unit: 'bpm', tags: { simulated: true }, recordedAt: now },
       { patientId: patient.patientDbId, deviceId: patient.deviceDbId, kind: 'observation', metric: 'resp_rate', value: Math.round(rr), unit: 'rpm', tags: { simulated: true }, recordedAt: now },
-      { patientId: patient.patientDbId, deviceId: patient.deviceDbId, kind: 'observation', metric: 'temperature', value: Math.round(temp * 10) / 10, unit: '°C', tags: { simulated: true }, recordedAt: now },
+      { patientId: patient.patientDbId, deviceId: patient.deviceDbId, kind: 'observation', metric: 'temperature', value: Math.round(temp * 10) / 10, unit: '\u00b0C', tags: { simulated: true }, recordedAt: now },
       { patientId: patient.patientDbId, deviceId: patient.deviceDbId, kind: 'observation', metric: 'spo2', value: Math.round(spo2), unit: '%', tags: { simulated: true }, recordedAt: now },
+      { patientId: patient.patientDbId, deviceId: patient.deviceDbId, kind: 'observation', metric: 'systolic_bp', value: bp.systolic, unit: 'mmHg', tags: { simulated: true }, recordedAt: now },
+      { patientId: patient.patientDbId, deviceId: patient.deviceDbId, kind: 'observation', metric: 'diastolic_bp', value: bp.diastolic, unit: 'mmHg', tags: { simulated: true }, recordedAt: now },
+      { patientId: patient.patientDbId, deviceId: patient.deviceDbId, kind: 'observation', metric: 'glucose', value: glucose, unit: 'mmol/L', tags: { simulated: true }, recordedAt: now },
+      { patientId: patient.patientDbId, deviceId: patient.deviceDbId, kind: 'observation', metric: 'motion_index', value: motion, unit: 'g', tags: { simulated: true }, recordedAt: now },
+      { patientId: patient.patientDbId, deviceId: patient.deviceDbId, kind: 'observation', metric: 'posture', value: null, unit: null, tags: { simulated: true, posture }, recordedAt: now },
+      { patientId: patient.patientDbId, deviceId: patient.deviceDbId, kind: 'observation', metric: 'ecg_waveform', value: null, unit: null, tags: { simulated: true, waveform: ecgSamples }, recordedAt: now },
+      { patientId: patient.patientDbId, deviceId: patient.deviceDbId, kind: 'observation', metric: 'resp_waveform', value: null, unit: null, tags: { simulated: true, waveform: respSamples }, recordedAt: now },
+      { patientId: patient.patientDbId, deviceId: patient.deviceDbId, kind: 'observation', metric: 'pressure_grid', value: null, unit: null, tags: { simulated: true, grid: pressureGrid, posture }, recordedAt: now },
     ]
 
     const bedObs: SimulatedEvent = bed === 0
@@ -188,6 +221,33 @@ export async function injectScenario(wardId: string, type: string): Promise<bool
       rows.push(
         { patientId: pt, deviceId: dev, kind: 'observation', metric: 'spo2', value: 87, unit: '%', tags: { simulated: true, scenario: 'demo' }, recordedAt: now },
         { patientId: pt, deviceId: dev, kind: 'alert', metric: 'spo2', value: 87, unit: '%', severity: 'critical', status: 'active', tags: { simulated: true, scenario: 'demo', message: '低血氧' }, recordedAt: now },
+      )
+    } else if (type === 'hyperglycemia') {
+      rows.push(
+        { patientId: pt, deviceId: dev, kind: 'observation', metric: 'glucose', value: 14, unit: 'mmol/L', tags: { simulated: true, scenario: 'demo' }, recordedAt: now },
+        { patientId: pt, deviceId: dev, kind: 'alert', metric: 'glucose', value: 14, unit: 'mmol/L', severity: 'critical', status: 'active', tags: { simulated: true, scenario: 'demo', message: '高血糖危象' }, recordedAt: now },
+      )
+    } else if (type === 'hypoglycemia') {
+      rows.push(
+        { patientId: pt, deviceId: dev, kind: 'observation', metric: 'glucose', value: 2.8, unit: 'mmol/L', tags: { simulated: true, scenario: 'demo' }, recordedAt: now },
+        { patientId: pt, deviceId: dev, kind: 'alert', metric: 'glucose', value: 2.8, unit: 'mmol/L', severity: 'critical', status: 'active', tags: { simulated: true, scenario: 'demo', message: '低血糖危象' }, recordedAt: now },
+      )
+    } else if (type === 'hypotension') {
+      rows.push(
+        { patientId: pt, deviceId: dev, kind: 'observation', metric: 'systolic_bp', value: 80, unit: 'mmHg', tags: { simulated: true, scenario: 'demo' }, recordedAt: now },
+        { patientId: pt, deviceId: dev, kind: 'observation', metric: 'diastolic_bp', value: 50, unit: 'mmHg', tags: { simulated: true, scenario: 'demo' }, recordedAt: now },
+        { patientId: pt, deviceId: dev, kind: 'alert', metric: 'systolic_bp', value: 80, unit: 'mmHg', severity: 'warning', status: 'active', tags: { simulated: true, scenario: 'demo', message: '低血压' }, recordedAt: now },
+      )
+    } else if (type === 'arrhythmia') {
+      rows.push(
+        { patientId: pt, deviceId: dev, kind: 'observation', metric: 'heart_rate', value: 185, unit: 'bpm', tags: { simulated: true, scenario: 'demo', irregular: true }, recordedAt: now },
+        { patientId: pt, deviceId: dev, kind: 'alert', metric: 'heart_rate', value: 185, unit: 'bpm', severity: 'critical', status: 'active', tags: { simulated: true, scenario: 'demo', message: '心律失常' }, recordedAt: now },
+      )
+    } else if (type === 'respiratory_distress') {
+      rows.push(
+        { patientId: pt, deviceId: dev, kind: 'observation', metric: 'resp_rate', value: 40, unit: 'rpm', tags: { simulated: true, scenario: 'demo' }, recordedAt: now },
+        { patientId: pt, deviceId: dev, kind: 'observation', metric: 'spo2', value: 85, unit: '%', tags: { simulated: true, scenario: 'demo' }, recordedAt: now },
+        { patientId: pt, deviceId: dev, kind: 'alert', metric: 'spo2', value: 85, unit: '%', severity: 'critical', status: 'active', tags: { simulated: true, scenario: 'demo', message: '呼吸窘迫' }, recordedAt: now },
       )
     }
   }
