@@ -36,6 +36,7 @@ import { trpc } from './trpc'
 function Dashboard() {
   const logout = useAuthStore((s) => s.logout)
   const patients = usePatientStore((s) => s.patients)
+  const patientsLoading = usePatientStore((s) => s.isLoading)
   const wardId = useWardStore((s) => s.selectedWardId)
   const wardRunning = useWardStore((s) => s.wardRunning)
   const wsConnected = useWardStore((s) => s.wsConnected)
@@ -85,7 +86,7 @@ function Dashboard() {
 
   const ready = patientNames.length > 0 || patients.length > 0
 
-  if (!patients.length && !hasError) {
+  if (patientsLoading && !patients.length) {
     return (
       <Container py="xl">
         <Stack align="center" gap="md">
