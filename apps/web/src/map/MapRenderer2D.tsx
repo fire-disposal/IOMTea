@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import type { MapModel, EntityRuntime } from '@iomtea/shared-types/map'
-import { getWallSegments, getEntityDef, getZoneDef } from '@iomtea/shared-types/map'
+import { getWallSegments, getEntityDef, getZoneDef, getAsset } from '@iomtea/shared-types/map'
 
 interface MapRenderer2DProps {
   model: MapModel
@@ -24,19 +24,11 @@ export function MapRenderer2D({ model, cellSize = 32, runtimes, showGrid = false
         const zh = (zone.bounds.y2 - zone.bounds.y1 + 1) * cellSize
         return (
           <g key={zone.id}>
-            <rect
-              x={zx} y={zy}
-              width={zw} height={zh}
-              fill={def?.color || '#eee'}
-              stroke="#aaa" strokeWidth={1}
-            />
+            <rect x={zx} y={zy} width={zw} height={zh} fill={def?.color || '#eee'} stroke="#aaa" strokeWidth={1} />
             {zw >= 64 && zh >= 32 && (
-              <text
-                x={zx + zw / 2} y={zy + zh / 2}
-                textAnchor="middle" dominantBaseline="central"
-                fontSize={11} fill="#666" fontWeight={600}
-                style={{ pointerEvents: 'none', userSelect: 'none' }}
-              >
+              <text x={zx + zw / 2} y={zy + zh / 2} textAnchor="middle" dominantBaseline="central"
+                fontSize={11} fill="#999" fontWeight={600}
+                style={{ pointerEvents: 'none', userSelect: 'none' }}>
                 {zone.name || def?.label || ''}
               </text>
             )}
@@ -44,51 +36,73 @@ export function MapRenderer2D({ model, cellSize = 32, runtimes, showGrid = false
         )
       })}
 
-      {showGrid &&
-        Array.from({ length: model.width + 1 }, (_, i) => (
-          <line key={`gv-${i}`} x1={i * cellSize} y1={0} x2={i * cellSize} y2={h} stroke="#ddd" strokeWidth={0.5} />
-        ))
-      }
-      {showGrid &&
-        Array.from({ length: model.height + 1 }, (_, i) => (
-          <line key={`gh-${i}`} x1={0} y1={i * cellSize} x2={w} y2={i * cellSize} stroke="#ddd" strokeWidth={0.5} />
-        ))
-      }
+      {showGrid && Array.from({ length: model.width + 1 }, (_, i) => (
+        <line key={`gv-${i}`} x1={i * cellSize} y1={0} x2={i * cellSize} y2={h} stroke="#ddd" strokeWidth={0.5} />
+      ))}
+      {showGrid && Array.from({ length: model.height + 1 }, (_, i) => (
+        <line key={`gh-${i}`} x1={0} y1={i * cellSize} x2={w} y2={i * cellSize} stroke="#ddd" strokeWidth={0.5} />
+      ))}
 
       {walls.map((seg, i) => (
-        <line
-          key={`w-${i}`}
-          x1={seg.x1 * cellSize} y1={seg.y1 * cellSize}
-          x2={seg.x2 * cellSize} y2={seg.y2 * cellSize}
-          stroke="#333" strokeWidth={2.5}
-        />
+        <line key={`w-${i}`} x1={seg.x1 * cellSize} y1={seg.y1 * cellSize}
+          x2={seg.x2 * cellSize} y2={seg.y2 * cellSize} stroke="#333" strokeWidth={2.5} />
       ))}
 
       {model.entities.map((ent) => {
         const def = getEntityDef(ent.defId)
         if (!def) return null
-        const x = (ent.gridX + def.pivot.x) * cellSize
-        const y = (ent.gridY + def.pivot.y) * cellSize
-        const color = def.render2D?.color || '#999'
+        const asset = getAsset(def.assetId)
+        const sprite = asset?.sprite2D || { shape: 'rect' as const, color: '#999', size: [0.8, 0.8] as [number, number] }
 
-        if (def.render2D?.icon === 'circle') {
-          return <circle key={ent.id} cx={x} cy={y} r={cellSize * 0.3} fill={color} />
+        const runtime = runtimes?.get(ent.id)
+        const tx = runtime?.state === 'moving' && runtime.path && runtime.pathProgress !== undefined
+          ? ent.gridX + (runtime.path[runtime.path.length - 1]?.x ?? ent.gridX - ent.gridX) * (runtime.pathProgress ?? 0)
+          : ent.gridX
+        const ty = runtime?.state === 'moving' && runtime.path && runtime.pathProgress !== undefined
+          ? ent.gridY + (runtime.path[runtime.path.length - 1]?.y ?? ent.gridY - ent.gridY) * (runtime.pathProgress ?? 0)
+          : ent.gridY
+
+        const cx = (tx + def.pivot.x) * cellSize
+        const cy = (ty + def.pivot.y) * cellSize
+        const sw = sprite.size[0] * cellSize
+        const sh = sprite.size[1] * cellSize
+
+        switch (sprite.shape) {
+          case 'circle':
+            return <circle key={ent.id} cx={cx} cy={cy} r={sw / 2} fill={sprite.color} />
+          case 'diamond':
+            return (
+              <polygon key={ent.id}
+                points={`${cx},${cy - sh / 2} ${cx + sw / 2},${cy} ${cx},${cy + sh / 2} ${cx - sw / 2},${cy}`}
+                fill={sprite.color} />
+            )
+          case 'line': {
+            const hw = sprite.size[0] * cellSize
+            const hh = sprite.size[1] * cellSize
+            return <rect key={ent.id} x={cx - hw / 2} y={cy - hh / 2} width={hw} height={hh} fill={sprite.color} rx={1} />
+          }
+          case 'icon':
+            return sprite.svgPath
+              ? <path key={ent.id} d={sprite.svgPath} fill={sprite.color} transform={`translate(${cx},${cy})`} />
+              : <rect key={ent.id} x={ent.gridX * cellSize + 2} y={ent.gridY * cellSize + 2}
+                  width={cellSize - 4} height={cellSize - 4} fill={sprite.color} rx={2} />
+          default: {
+            const rx = ent.gridX * cellSize + (cellSize - sw) / 2
+            const ry = ent.gridY * cellSize + (cellSize - sh) / 2
+            return (
+              <g key={ent.id}>
+                <rect x={rx} y={ry} width={sw} height={sh} fill={sprite.color} rx={2} />
+                {sprite.label && sw >= 20 && sh >= 12 && (
+                  <text x={rx + sw / 2} y={ry + sh / 2 + 1} textAnchor="middle" dominantBaseline="central"
+                    fontSize={Math.min(10, sh * 0.7)} fill={sprite.labelColor || '#fff'}
+                    style={{ pointerEvents: 'none', userSelect: 'none' }}>
+                    {sprite.label}
+                  </text>
+                )}
+              </g>
+            )
+          }
         }
-        if (def.render2D?.icon === 'line') {
-          return <rect key={ent.id} x={x - cellSize * 0.1} y={y - cellSize * 0.4} width={cellSize * 0.2} height={cellSize * 0.8} fill={color} />
-        }
-        const w2 = def.size.w * cellSize
-        const h2 = def.size.h * cellSize
-        return (
-          <g key={ent.id}>
-            <rect x={ent.gridX * cellSize} y={ent.gridY * cellSize} width={w2} height={h2} fill={color} rx={2} />
-            {w2 >= cellSize && (
-              <text x={x} y={y + 4} textAnchor="middle" fontSize={9} fill="#fff" style={{ pointerEvents: 'none' }}>
-                {def.label}
-              </text>
-            )}
-          </g>
-        )
       })}
     </svg>
   )

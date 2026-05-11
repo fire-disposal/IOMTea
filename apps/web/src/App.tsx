@@ -21,6 +21,7 @@ import { useEffect, useState } from 'react'
 import { LoginPage } from './LoginPage'
 import { useRealtime } from './hooks/useRealtime'
 import { AlertRulesPage } from './pages/AlertRulesPage'
+import { AssetManagerPage } from './pages/AssetManagerPage'
 import { DeviceListPage } from './pages/DeviceListPage'
 import { DigitalTwinPage } from './pages/DigitalTwinPage'
 import { MapEditorPage } from './map/editor/MapEditorPage'
@@ -509,6 +510,7 @@ function Dashboard() {
             <Tabs.Tab value="alertRules">告警阈值</Tabs.Tab>
             <Tabs.Tab value="digitaltwin">数字孪生</Tabs.Tab>
             <Tabs.Tab value="mapEditor">地图编辑</Tabs.Tab>
+            <Tabs.Tab value="assets">资产管理</Tabs.Tab>
           </Tabs.List>
         </Tabs>
         <Button size="xs" variant="subtle" color="red" onClick={logout}>
@@ -523,6 +525,7 @@ function Dashboard() {
       {activeTab === 'alertRules' && <AlertRulesPage />}
       {activeTab === 'digitaltwin' && <DigitalTwinPage />}
       {activeTab === 'mapEditor' && <MapEditorPage />}
+      {activeTab === 'assets' && <AssetManagerPage />}
     </>
   )
 }

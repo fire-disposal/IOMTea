@@ -1,20 +1,20 @@
 import type { EntityDef, ZoneDef, InteractionDef } from './types'
 
 export const ENTITY_DEFS: EntityDef[] = [
-  { id: 'bed', label: '床', category: 'furniture', size: { w: 2, h: 1 }, layer: 0, walkability: 'solid', pivot: { x: 0.5, y: 0.5 }, defaultOrientation: 'N', tags: ['can-lie'], render2D: { icon: 'rect', color: '#8B7355' }, render3D: { component: 'Bed3D' } },
-  { id: 'table', label: '桌子', category: 'furniture', size: { w: 2, h: 1 }, layer: 0, walkability: 'solid', pivot: { x: 0.5, y: 0.5 }, defaultOrientation: 'N', tags: ['can-eat'], render2D: { icon: 'rect', color: '#A0846B' }, render3D: { component: 'Table3D' } },
-  { id: 'sofa', label: '沙发', category: 'furniture', size: { w: 2, h: 1 }, layer: 0, walkability: 'solid', pivot: { x: 0.5, y: 0.5 }, defaultOrientation: 'N', tags: ['can-sit'], render2D: { icon: 'rect', color: '#6B8F71' }, render3D: { component: 'Sofa3D' } },
-  { id: 'cabinet', label: '柜子', category: 'furniture', size: { w: 1, h: 1 }, layer: 0, walkability: 'solid', pivot: { x: 0.5, y: 0.5 }, defaultOrientation: 'N', render2D: { icon: 'rect', color: '#A0846B' }, render3D: { component: 'Cabinet3D' } },
-  { id: 'toilet', label: '马桶', category: 'furniture', size: { w: 1, h: 1 }, layer: 0, walkability: 'solid', pivot: { x: 0.5, y: 0.5 }, defaultOrientation: 'N', render2D: { icon: 'circle', color: '#E8E8E8' }, render3D: { component: 'Toilet3D' } },
-  { id: 'sink', label: '水池', category: 'furniture', size: { w: 1, h: 1 }, layer: 0, walkability: 'solid', pivot: { x: 0.5, y: 0.5 }, defaultOrientation: 'N', render2D: { icon: 'circle', color: '#B0C4DE' }, render3D: { component: 'Sink3D' } },
-  { id: 'person', label: '人员', category: 'actor', size: { w: 1, h: 1 }, layer: 0, walkability: 'passable', pivot: { x: 0.5, y: 0.5 }, defaultOrientation: 'N', render2D: { icon: 'circle', color: '#4CAF50' }, render3D: { component: 'Person3D' } },
-  { id: 'mattress_sensor', label: '床垫传感器', category: 'sensor', size: { w: 1, h: 1 }, layer: 2, walkability: 'passable', pivot: { x: 0.5, y: 0.5 }, defaultOrientation: 'N', render2D: { icon: 'circle', color: '#2196F3' }, render3D: { component: 'DeviceMarker3D' } },
-  { id: 'air_sensor', label: '环境传感器', category: 'sensor', size: { w: 1, h: 1 }, layer: 2, walkability: 'passable', pivot: { x: 0.5, y: 0.5 }, defaultOrientation: 'N', render2D: { icon: 'circle', color: '#00BCD4' }, render3D: { component: 'DeviceMarker3D' } },
-  { id: 'emergency_btn', label: '紧急按钮', category: 'marker', size: { w: 1, h: 1 }, layer: 2, walkability: 'passable', pivot: { x: 0.5, y: 0.5 }, defaultOrientation: 'N', render2D: { icon: 'circle', color: '#F44336' }, render3D: { component: 'DeviceMarker3D' } },
-  { id: 'motion_sensor', label: '体动传感器', category: 'sensor', size: { w: 1, h: 1 }, layer: 2, walkability: 'passable', pivot: { x: 0.5, y: 0.5 }, defaultOrientation: 'N', render2D: { icon: 'circle', color: '#FF9800' }, render3D: { component: 'DeviceMarker3D' } },
-  { id: 'tv', label: '电视', category: 'furniture', size: { w: 1, h: 1 }, layer: 2, walkability: 'passable', pivot: { x: 0.5, y: 0.5 }, defaultOrientation: 'N', render2D: { icon: 'rect', color: '#424242' }, render3D: { component: 'TV3D' } },
-  { id: 'door', label: '门', category: 'structure', size: { w: 1, h: 1 }, layer: 0, walkability: 'dynamic', pivot: { x: 0.5, y: 0.5 }, defaultOrientation: 'N', render2D: { icon: 'line', color: '#795548' }, render3D: { component: 'Door3D' } },
-  { id: 'window', label: '窗户', category: 'structure', size: { w: 1, h: 1 }, layer: 0, walkability: 'solid', pivot: { x: 0.5, y: 0.5 }, defaultOrientation: 'N', render2D: { icon: 'line', color: '#90CAF9' }, render3D: { component: 'Window3D' } },
+  { id: 'bed', label: '床', category: 'furniture', size: { w: 2, h: 1 }, layer: 0, walkability: 'solid', pivot: { x: 0.5, y: 0.5 }, defaultOrientation: 'N', tags: ['can-lie'], assetId: 'bed' },
+  { id: 'table', label: '桌子', category: 'furniture', size: { w: 2, h: 1 }, layer: 0, walkability: 'solid', pivot: { x: 0.5, y: 0.5 }, defaultOrientation: 'N', tags: ['can-eat'], assetId: 'table' },
+  { id: 'sofa', label: '沙发', category: 'furniture', size: { w: 2, h: 1 }, layer: 0, walkability: 'solid', pivot: { x: 0.5, y: 0.5 }, defaultOrientation: 'N', tags: ['can-sit'], assetId: 'sofa' },
+  { id: 'cabinet', label: '柜子', category: 'furniture', size: { w: 1, h: 1 }, layer: 0, walkability: 'solid', pivot: { x: 0.5, y: 0.5 }, defaultOrientation: 'N', assetId: 'cabinet' },
+  { id: 'toilet', label: '马桶', category: 'furniture', size: { w: 1, h: 1 }, layer: 0, walkability: 'solid', pivot: { x: 0.5, y: 0.5 }, defaultOrientation: 'N', assetId: 'toilet' },
+  { id: 'sink', label: '水池', category: 'furniture', size: { w: 1, h: 1 }, layer: 0, walkability: 'solid', pivot: { x: 0.5, y: 0.5 }, defaultOrientation: 'N', assetId: 'sink' },
+  { id: 'person', label: '人员', category: 'actor', size: { w: 1, h: 1 }, layer: 0, walkability: 'passable', pivot: { x: 0.5, y: 0.5 }, defaultOrientation: 'N', assetId: 'person' },
+  { id: 'mattress_sensor', label: '床垫传感器', category: 'sensor', size: { w: 1, h: 1 }, layer: 2, walkability: 'passable', pivot: { x: 0.5, y: 0.5 }, defaultOrientation: 'N', assetId: 'mattress_sensor' },
+  { id: 'air_sensor', label: '环境传感器', category: 'sensor', size: { w: 1, h: 1 }, layer: 2, walkability: 'passable', pivot: { x: 0.5, y: 0.5 }, defaultOrientation: 'N', assetId: 'air_sensor' },
+  { id: 'emergency_btn', label: '紧急按钮', category: 'marker', size: { w: 1, h: 1 }, layer: 2, walkability: 'passable', pivot: { x: 0.5, y: 0.5 }, defaultOrientation: 'N', assetId: 'emergency_btn' },
+  { id: 'motion_sensor', label: '体动传感器', category: 'sensor', size: { w: 1, h: 1 }, layer: 2, walkability: 'passable', pivot: { x: 0.5, y: 0.5 }, defaultOrientation: 'N', assetId: 'motion_sensor' },
+  { id: 'tv', label: '电视', category: 'furniture', size: { w: 1, h: 1 }, layer: 2, walkability: 'passable', pivot: { x: 0.5, y: 0.5 }, defaultOrientation: 'N', assetId: 'tv' },
+  { id: 'door', label: '门', category: 'structure', size: { w: 1, h: 1 }, layer: 0, walkability: 'dynamic', pivot: { x: 0.5, y: 0.5 }, defaultOrientation: 'N', assetId: 'door' },
+  { id: 'window', label: '窗户', category: 'structure', size: { w: 1, h: 1 }, layer: 0, walkability: 'solid', pivot: { x: 0.5, y: 0.5 }, defaultOrientation: 'N', assetId: 'window' },
 ]
 
 export const ZONE_DEFS: ZoneDef[] = [

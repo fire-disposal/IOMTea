@@ -1,11 +1,12 @@
 import { useMemo } from 'react'
 import type { MapModel, EntityRuntime } from '@iomtea/shared-types/map'
-import { getWallSegments, getEntityDef } from '@iomtea/shared-types/map'
+import { getWallSegments, getEntityDef, getAsset } from '@iomtea/shared-types/map'
 import { ZoneFloor } from './renderers/ZoneFloor'
 import { WallMesh } from './renderers/WallMesh'
 import { Bed3D } from './renderers/Bed3D'
 import { Person3D } from './renderers/Person3D'
 import { DeviceMarker3D } from './renderers/DeviceMarker3D'
+import { Billboard3D } from './renderers/Billboard3D'
 
 interface MapRenderer3DProps {
   model: MapModel
@@ -16,6 +17,13 @@ interface MapRenderer3DProps {
     systolicBP: number | null
     diastolicBP: number | null
   }>
+}
+
+const KNOWN_3D: Record<string, React.ComponentType<any>> = {
+  'bed': Bed3D,
+  'person': Person3D,
+  'mattress_sensor': DeviceMarker3D,
+  'emergency_btn': DeviceMarker3D,
 }
 
 export function MapRenderer3D({ model, runtimes, patientDataMap }: MapRenderer3DProps) {
@@ -37,29 +45,40 @@ export function MapRenderer3D({ model, runtimes, patientDataMap }: MapRenderer3D
       {model.entities.map((ent) => {
         const def = getEntityDef(ent.defId)
         if (!def) return null
+        const asset = getAsset(def.assetId)
+        if (!asset) return null
 
         const runtime = runtimes?.get(ent.id)
         const pd = ent.patientId ? patientDataMap?.get(ent.patientId) : undefined
 
-        switch (def.render3D?.component) {
-          case 'Bed3D':
-            return <Bed3D key={ent.id} entity={ent} def={def} tileSize={model.tileSize} />
-          case 'Person3D':
-            return (
-              <Person3D
-                key={ent.id}
-                entity={ent}
-                def={def}
-                tileSize={model.tileSize}
-                runtime={runtime}
-                patientData={pd}
-              />
-            )
-          case 'DeviceMarker3D':
-            return <DeviceMarker3D key={ent.id} entity={ent} def={def} tileSize={model.tileSize} />
-          default:
-            return null
+        const cx = (ent.gridX + def.pivot.x) * model.tileSize
+        const cz = (ent.gridY + def.pivot.y) * model.tileSize
+        const layerY = ent.layer === 2 ? 2.5 : ent.layer === 1 ? 0.5 : 0
+
+        const Component3D = KNOWN_3D[def.id]
+        if (Component3D) {
+          const C = Component3D
+          return (
+            <C
+              key={ent.id}
+              entity={ent}
+              def={def}
+              tileSize={model.tileSize}
+              runtime={runtime}
+              patientData={pd}
+            />
+          )
         }
+
+        return (
+          <Billboard3D
+            key={ent.id}
+            sprite={asset.sprite2D}
+            tileSize={model.tileSize}
+            layerY={layerY}
+            position={[cx, 0, cz]}
+          />
+        )
       })}
     </group>
   )

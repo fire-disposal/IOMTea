@@ -1,5 +1,6 @@
 export * from './types'
 export * from './registries'
+export * from './assets'
 export * from './grid'
 export * from './pathfinding'
 export * from './validation'

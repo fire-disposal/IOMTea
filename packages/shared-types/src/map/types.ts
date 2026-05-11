@@ -37,8 +37,32 @@ export interface EntityDef {
   pivot: { x: number; y: number }
   defaultOrientation: 'N' | 'S' | 'E' | 'W'
   tags?: string[]
-  render2D?: { icon: string; color: string }
-  render3D?: { component: string }
+  assetId: string
+}
+
+// ── Asset System ──
+
+export interface Sprite2D {
+  shape: 'rect' | 'circle' | 'diamond' | 'line' | 'icon'
+  color: string
+  size: [number, number]
+  svgPath?: string
+  label?: string
+  labelColor?: string
+}
+
+export interface Model3D {
+  type: 'box' | 'capsule' | 'sphere' | 'torus' | 'plane'
+  color: string
+  args: number[]
+  emissiveColor?: string
+}
+
+export interface AssetDef {
+  id: string
+  sprite2D: Sprite2D
+  model3D?: Model3D
+  variants?: Partial<Record<string, { sprite2D: Partial<Sprite2D>; model3D?: Partial<Model3D> }>>
 }
 
 export interface Entity {
