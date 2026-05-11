@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react'
-import type { MapModel, Zone, Entity } from '@iomtea/shared-types/map'
+import type { MapModel, Zone, Entity, EntityRuntime } from '@iomtea/shared-types/map'
 import { getEntityDef, canPlaceEntity } from '@iomtea/shared-types/map'
 import { MapRenderer2D } from '../MapRenderer2D'
 
@@ -10,6 +10,7 @@ interface MapCanvas2DProps {
   mode: ToolMode
   zoneDefId: string
   selectedEntityId: string | null
+  runtimes?: Map<string, EntityRuntime>
   onSelectEntity: (id: string | null) => void
   onAddEntity: (entity: Entity) => void
   onAddZone: (zone: Zone) => void
@@ -20,7 +21,7 @@ interface MapCanvas2DProps {
 }
 
 export function MapCanvas2D({
-  model, mode, zoneDefId, selectedEntityId, onSelectEntity, onAddEntity, onAddZone,
+  model, mode, zoneDefId, selectedEntityId, runtimes, onSelectEntity, onAddEntity, onAddZone,
   onMoveEntity, onDeleteEntity, onDeleteZone, onRotateEntity,
 }: MapCanvas2DProps) {
   const cellSize = 32
@@ -178,7 +179,7 @@ export function MapCanvas2D({
       onMouseUp={handleMouseUp}
       onContextMenu={handleContextMenu}
     >
-      <MapRenderer2D model={model} cellSize={cellSize} showGrid />
+      <MapRenderer2D model={model} cellSize={cellSize} showGrid runtimes={runtimes} />
 
       {hoverCell && typeof mode === 'object' && mode.type === 'place-entity' && (() => {
         const def = getEntityDef(mode.defId)
