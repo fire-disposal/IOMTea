@@ -1,10 +1,9 @@
 import { useState, useMemo } from 'react'
-import { Container, Title, SimpleGrid, Paper, Text, Group, ColorInput, Select, NumberInput, TextInput, Button, Stack, Tabs, ActionIcon } from '@mantine/core'
-import { notifications } from '@mantine/notifications'
+import { Container, Title, SimpleGrid, Paper, Text, Group, ColorInput, Select, NumberInput, TextInput, Button, Stack, Tabs } from '@mantine/core'
 import { Canvas } from '@react-three/fiber'
-import { OrbitControls } from '@react-three/drei'
 import { ASSET_DEFS, getAsset, type AssetDef, type Sprite2D, type Model3D } from '@iomtea/shared-types/map'
 import { Billboard3D } from '../map/renderers/Billboard3D'
+import { OrbitControls } from '@react-three/drei'
 
 const SHAPES = [
   { value: 'rect', label: '矩形' },
@@ -12,14 +11,6 @@ const SHAPES = [
   { value: 'diamond', label: '菱形' },
   { value: 'line', label: '线条' },
   { value: 'icon', label: '图标' },
-]
-
-const MODEL_TYPES = [
-  { value: 'box', label: '立方体' },
-  { value: 'capsule', label: '胶囊' },
-  { value: 'sphere', label: '球体' },
-  { value: 'torus', label: '圆环' },
-  { value: 'plane', label: '平面' },
 ]
 
 function SpritePreview({ sprite, size = 64 }: { sprite: Sprite2D; size?: number }) {
@@ -66,7 +57,7 @@ function Model3DPreview({ asset }: { asset: AssetDef }) {
   if (!asset.model3D) {
     return (
       <div style={{ width: 120, height: 120, background: '#1a1a2e', borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <Text size="xs" c="dimmed">无3D模型</Text>
+        <Text size="xs" c="dimmed">无3D模型→精灵回退</Text>
       </div>
     )
   }
@@ -83,56 +74,16 @@ function Model3DPreview({ asset }: { asset: AssetDef }) {
 }
 
 export function AssetManagerPage() {
-  const [assets, setAssets] = useState<AssetDef[]>(() =>
-    ASSET_DEFS.map((a) => ({ ...a, sprite2D: { ...a.sprite2D }, model3D: a.model3D ? { ...a.model3D } : undefined })),
-  )
-  const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [editMode, setEditMode] = useState<'2D' | '3D'>('2D')
-
-  const selected = useMemo(() => assets.find((a) => a.id === selectedId), [assets, selectedId])
-
-  const updateSprite = (field: keyof Sprite2D, value: any) => {
-    if (!selected) return
-    setAssets((prev) =>
-      prev.map((a) => (a.id === selected.id ? { ...a, sprite2D: { ...a.sprite2D, [field]: value } } : a)),
-    )
-  }
-
-  const updateModel = (field: keyof Model3D, value: any) => {
-    if (!selected) return
-    setAssets((prev) =>
-      prev.map((a) =>
-        a.id === selected.id
-          ? { ...a, model3D: { ...(a.model3D || { type: 'box', color: '#999', args: [1, 1, 1] }), [field]: value } }
-          : a,
-      ),
-    )
-  }
-
-  const handleAddModel = () => {
-    if (!selected) return
-    setAssets((prev) =>
-      prev.map((a) =>
-        a.id === selected.id && !a.model3D
-          ? { ...a, model3D: { type: 'box', color: '#999', args: [1, 1, 1] } }
-          : a,
-      ),
-    )
-  }
-
-  const handleRemoveModel = () => {
-    if (!selected) return
-    setAssets((prev) =>
-      prev.map((a) => (a.id === selected.id ? { ...a, model3D: undefined } : a)),
-    )
-  }
+  const [selectedId, setSelectedId] = useState<string | null>(ASSET_DEFS[0]?.id || null)
+  const selected = useMemo(() => ASSET_DEFS.find((a) => a.id === selectedId), [selectedId])
 
   return (
     <Container size="xl" py="md">
       <Title order={4} mb="md">资产管理</Title>
+      <Text size="xs" c="dimmed" mb="md">浏览内置资产定义。扩展资源包请编辑 ASSET_DEFS 注册表。</Text>
 
       <SimpleGrid cols={{ base: 2, sm: 3, md: 4, lg: 6 }} spacing="sm" mb="xl">
-        {assets.map((asset) => (
+        {ASSET_DEFS.map((asset) => (
           <Paper
             key={asset.id}
             p="sm"
@@ -151,75 +102,40 @@ export function AssetManagerPage() {
 
       {selected && (
         <Paper p="md" withBorder>
-          <Group justify="space-between" mb="md">
-            <Title order={5}>{selected.id}</Title>
-            <Tabs value={editMode} onChange={(v) => setEditMode(v as '2D' | '3D')}>
-              <Tabs.List>
-                <Tabs.Tab value="2D">2D 精灵</Tabs.Tab>
-                <Tabs.Tab value="3D">3D 模型</Tabs.Tab>
-              </Tabs.List>
-            </Tabs>
-          </Group>
+          <Title order={5} mb="md">{selected.id}</Title>
 
           <Group align="flex-start" gap="xl" wrap="wrap">
-            {editMode === '2D' ? (
-              <>
-                <Stack gap="xs" w={200}>
-                  <Select label="形状" data={SHAPES} value={selected.sprite2D.shape}
-                    onChange={(v) => v && updateSprite('shape', v)} />
-                  <ColorInput label="颜色" value={selected.sprite2D.color}
-                    onChange={(v) => updateSprite('color', v)} />
-                  <NumberInput label="宽度" value={selected.sprite2D.size[0]}
-                    onChange={(v) => updateSprite('size', [v ?? 0.8, selected.sprite2D.size[1]])}
-                    min={0.1} max={2} step={0.05} />
-                  <NumberInput label="高度" value={selected.sprite2D.size[1]}
-                    onChange={(v) => updateSprite('size', [selected.sprite2D.size[0], v ?? 0.8])}
-                    min={0.1} max={2} step={0.05} />
-                  <TextInput label="标签" value={selected.sprite2D.label || ''}
-                    onChange={(e) => updateSprite('label', e.currentTarget.value || undefined)} />
-                  <ColorInput label="标签颜色" value={selected.sprite2D.labelColor || '#ffffff'}
-                    onChange={(v) => updateSprite('labelColor', v)} />
-                </Stack>
+            <Stack gap="xs" w={200}>
+              <Text size="xs" fw={600} c="dimmed">2D 精灵属性</Text>
+              <Select label="形状" data={SHAPES} value={selected.sprite2D.shape} readOnly />
+              <ColorInput label="颜色" value={selected.sprite2D.color} readOnly />
+              <NumberInput label="宽度" value={selected.sprite2D.size[0]} readOnly />
+              <NumberInput label="高度" value={selected.sprite2D.size[1]} readOnly />
+              <TextInput label="标签" value={selected.sprite2D.label || ''} readOnly />
+            </Stack>
 
-                <Paper p="md" withBorder bg="gray.0">
-                  <Text size="xs" c="dimmed" mb="xs">2D 预览</Text>
-                  <SpritePreview sprite={selected.sprite2D} size={120} />
-                </Paper>
-              </>
-            ) : (
-              <>
-                {!selected.model3D ? (
-                  <Stack gap="md">
-                    <Text size="sm" c="dimmed">此资产暂无 3D 模型定义（将使用朝向相机的精灵图回退）</Text>
-                    <Button size="xs" onClick={handleAddModel}>添加 3D 模型</Button>
-                  </Stack>
-                ) : (
-                  <>
-                    <Stack gap="xs" w={200}>
-                      <Select label="类型" data={MODEL_TYPES} value={selected.model3D.type}
-                        onChange={(v) => v && updateModel('type', v)} />
-                      <ColorInput label="颜色" value={selected.model3D.color}
-                        onChange={(v) => updateModel('color', v)} />
-                      <TextInput label="参数" value={(selected.model3D.args || []).join(', ')}
-                        onChange={(e) => {
-                          const arr = e.currentTarget.value.split(',').map((s) => parseFloat(s.trim())).filter((n) => !isNaN(n))
-                          updateModel('args', arr)
-                        }} />
-                      <ColorInput label="发光色" value={selected.model3D.emissiveColor || ''}
-                        onChange={(v) => updateModel('emissiveColor', v || undefined)} />
-                      <Button size="xs" color="red" variant="light" onClick={handleRemoveModel}>
-                        移除 3D 模型
-                      </Button>
-                    </Stack>
+            <Paper p="md" withBorder bg="gray.0">
+              <Text size="xs" c="dimmed" mb="xs">2D 预览</Text>
+              <SpritePreview sprite={selected.sprite2D} size={120} />
+            </Paper>
 
-                    <Paper p="md" withBorder bg="gray.0">
-                      <Text size="xs" c="dimmed" mb="xs">3D 预览</Text>
-                      <Model3DPreview asset={selected} />
-                    </Paper>
-                  </>
-                )}
-              </>
-            )}
+            <Stack gap="xs" w={200}>
+              <Text size="xs" fw={600} c="dimmed">3D 模型属性</Text>
+              {selected.model3D ? (
+                <>
+                  <TextInput label="类型" value={selected.model3D.type} readOnly />
+                  <ColorInput label="颜色" value={selected.model3D.color} readOnly />
+                  <TextInput label="参数" value={(selected.model3D.args || []).join(', ')} readOnly />
+                </>
+              ) : (
+                <Text size="sm" c="dimmed">未定义 3D 模型</Text>
+              )}
+            </Stack>
+
+            <Paper p="md" withBorder bg="gray.0">
+              <Text size="xs" c="dimmed" mb="xs">3D 预览</Text>
+              <Model3DPreview asset={selected} />
+            </Paper>
           </Group>
         </Paper>
       )}

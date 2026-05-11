@@ -11,6 +11,7 @@ import { Billboard3D } from './renderers/Billboard3D'
 interface MapRenderer3DProps {
   model: MapModel
   runtimes?: Map<string, EntityRuntime>
+  entityStatusMap?: Map<string, 'normal' | 'warning' | 'alert'>
   patientDataMap?: Map<string, {
     heartRate: number | null
     spO2: number | null
@@ -26,7 +27,7 @@ const KNOWN_3D: Record<string, React.ComponentType<any>> = {
   'emergency_btn': DeviceMarker3D,
 }
 
-export function MapRenderer3D({ model, runtimes, patientDataMap }: MapRenderer3DProps) {
+export function MapRenderer3D({ model, runtimes, entityStatusMap, patientDataMap }: MapRenderer3DProps) {
   const walls = useMemo(() => getWallSegments(model), [model])
 
   return (
@@ -50,10 +51,13 @@ export function MapRenderer3D({ model, runtimes, patientDataMap }: MapRenderer3D
 
         const runtime = runtimes?.get(ent.id)
         const pd = ent.patientId ? patientDataMap?.get(ent.patientId) : undefined
+        const activeStatus = entityStatusMap?.get(ent.id) || ent.status
 
         const cx = (ent.gridX + def.pivot.x) * model.tileSize
         const cz = (ent.gridY + def.pivot.y) * model.tileSize
         const layerY = ent.layer === 2 ? 2.5 : ent.layer === 1 ? 0.5 : 0
+
+        const overriddenEnt = activeStatus !== ent.status ? { ...ent, status: activeStatus } : ent
 
         const Component3D = KNOWN_3D[def.id]
         if (Component3D) {
@@ -61,7 +65,7 @@ export function MapRenderer3D({ model, runtimes, patientDataMap }: MapRenderer3D
           return (
             <C
               key={ent.id}
-              entity={ent}
+              entity={overriddenEnt}
               def={def}
               tileSize={model.tileSize}
               runtime={runtime}

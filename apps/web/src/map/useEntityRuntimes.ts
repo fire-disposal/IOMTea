@@ -1,4 +1,4 @@
-import { useRef, useMemo } from 'react'
+import { useRef, useMemo, useEffect } from 'react'
 import type { MapModel, EntityRuntime, EntitySchedule } from '@iomtea/shared-types/map'
 import { updateEntityBehavior } from '@iomtea/shared-types/map'
 
@@ -23,30 +23,29 @@ export function useEntityRuntimes(
   deltaSec: number,
 ): Map<string, EntityRuntime> {
   const runtimesRef = useRef<Map<string, EntityRuntime>>(new Map())
-  const initializedRef = useRef(false)
+  const initDone = useRef(false)
 
-  useMemo(() => {
-    if (!initializedRef.current) {
+  useEffect(() => {
+    if (!initDone.current) {
+      const schedule = defaultSchedule()
       const personEntities = model.entities.filter((e) => e.defId === 'person')
-      for (let i = 0; i < personEntities.length; i++) {
-        const ent = personEntities[i]
+      for (const ent of personEntities) {
         runtimesRef.current.set(ent.id, {
           entityId: ent.id,
           state: 'idle',
           currentTile: { x: ent.gridX, y: ent.gridY },
         })
       }
-      initializedRef.current = true
+      initDone.current = true
     }
   }, [model])
 
-  useMemo(() => {
-    const schedule = defaultSchedule()
-    for (const [id, rt] of runtimesRef.current) {
-      const updated = updateEntityBehavior(rt, schedule, model, simulatedTime, deltaSec)
-      runtimesRef.current.set(id, updated)
-    }
-  }, [model, simulatedTime, deltaSec])
+  const schedule = useMemo(() => defaultSchedule(), [])
 
-  return runtimesRef.current
+  return useMemo(() => {
+    for (const [id, rt] of runtimesRef.current) {
+      runtimesRef.current.set(id, updateEntityBehavior(rt, schedule, model, simulatedTime, deltaSec))
+    }
+    return runtimesRef.current
+  }, [model, schedule, simulatedTime, deltaSec])
 }

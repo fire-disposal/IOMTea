@@ -40,24 +40,22 @@ const DEFAULT_CONFIG: DefaultMapConfig = {
   ],
 }
 
-let nextEntityId = 1
-function genId(prefix: string): string {
-  return `${prefix}-${nextEntityId++}`
+function genId(prefix: string, index: number): string {
+  return `${prefix}-${index}`
 }
 
 export function createDefaultMap(patientIds: string[], config?: DefaultMapConfig): MapModel {
   const cfg = config || DEFAULT_CONFIG
-  nextEntityId = 1
 
-  const zones: Zone[] = cfg.zones.map((z) => ({
-    id: genId('zone'),
+  const zones: Zone[] = cfg.zones.map((z, i) => ({
+    id: genId('zone', i + 1),
     defId: z.defId,
     name: z.name,
     bounds: { x1: z.x1, y1: z.y1, x2: z.x2, y2: z.y2 },
   }))
 
-  const entities: Entity[] = cfg.entities.map((e) => ({
-    id: genId(e.defId),
+  const entities: Entity[] = cfg.entities.map((e, i) => ({
+    id: genId(e.defId, i + 1),
     defId: e.defId,
     gridX: e.gridX,
     gridY: e.gridY,

@@ -61,24 +61,20 @@ export function DigitalTwinPage() {
     return map
   }, [patientData])
 
-  const liveModel = useMemo(() => {
-    const alertPatientIds = new Set(
-      patientData.filter((pd) => pd.alerts.length > 0).map((pd) => pd.patientId),
-    )
-    const alertSeverity = new Map(
-      patientData
-        .filter((pd) => pd.alerts.length > 0)
-        .map((pd) => [pd.patientId, pd.alerts.some((a) => a.severity === 'critical') ? 'alert' : 'warning'] as const),
-    )
-    const entities = model.entities.map((ent) => {
-      if (ent.defId !== 'mattress_sensor' || !ent.patientId) return ent
-      if (alertPatientIds.has(ent.patientId)) {
-        return { ...ent, status: alertSeverity.get(ent.patientId) || 'warning' }
+  const entityStatusMap = useMemo(() => {
+    const map = new Map<string, 'normal' | 'warning' | 'alert'>()
+    for (const pd of patientData) {
+      if (pd.alerts.length > 0) {
+        const severity = pd.alerts.some((a) => a.severity === 'critical') ? 'alert' as const : 'warning' as const
+        for (const ent of model.entities) {
+          if (ent.defId === 'mattress_sensor' && ent.patientId === pd.patientId) {
+            map.set(ent.id, severity)
+          }
+        }
       }
-      return ent
-    })
-    return { ...model, entities }
-  }, [model, patientData])
+    }
+    return map
+  }, [patientData, model.entities])
 
   if (patientsLoading) {
     return (
@@ -113,7 +109,7 @@ export function DigitalTwinPage() {
           gl={{ preserveDrawingBuffer: false, antialias: true }}
           onCreated={({ gl }) => { gl.setClearColor('#1a1a2e') }}
         >
-          <MapRenderer3D model={liveModel} patientDataMap={patientDataMap} />
+          <MapRenderer3D model={model} patientDataMap={patientDataMap} entityStatusMap={entityStatusMap} />
           <OrbitControls
             target={[7, 0, 5]}
             maxPolarAngle={Math.PI / 2.5}
