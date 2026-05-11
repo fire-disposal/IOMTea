@@ -1,16 +1,16 @@
 import type { PatientProfile } from '../types'
-import { elderlyCardiacProfile } from './elderly-cardiac'
-import { postSurgeryProfile } from './post-surgery'
-import { diabetesProfile } from './diabetes'
 import { copdRespiratoryProfile } from './copd-respiratory'
+import { diabetesProfile } from './diabetes'
+import { elderlyCardiacProfile } from './elderly-cardiac'
 import { maternityProfile } from './maternity'
+import { postSurgeryProfile } from './post-surgery'
 
 export const profiles: Record<string, PatientProfile> = {
   'elderly-cardiac': elderlyCardiacProfile,
   'post-surgery': postSurgeryProfile,
-  'diabetes': diabetesProfile,
+  diabetes: diabetesProfile,
   'copd-respiratory': copdRespiratoryProfile,
-  'maternity': maternityProfile,
+  maternity: maternityProfile,
 }
 
 export function getProfile(id: string): PatientProfile {

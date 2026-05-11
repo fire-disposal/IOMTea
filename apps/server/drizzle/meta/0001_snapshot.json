@@ -66,12 +66,8 @@
           "name": "audit_logs_user_id_users_id_fk",
           "tableFrom": "audit_logs",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -147,12 +143,8 @@
           "name": "devices_patient_id_patients_id_fk",
           "tableFrom": "devices",
           "tableTo": "patients",
-          "columnsFrom": [
-            "patient_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["patient_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -162,9 +154,7 @@
         "devices_serial_number_unique": {
           "name": "devices_serial_number_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "serial_number"
-          ]
+          "columns": ["serial_number"]
         }
       },
       "policies": {},
@@ -336,12 +326,8 @@
           "name": "events_patient_id_patients_id_fk",
           "tableFrom": "events",
           "tableTo": "patients",
-          "columnsFrom": [
-            "patient_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["patient_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -349,12 +335,8 @@
           "name": "events_device_id_devices_id_fk",
           "tableFrom": "events",
           "tableTo": "devices",
-          "columnsFrom": [
-            "device_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["device_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -569,12 +551,8 @@
           "name": "refresh_tokens_user_id_users_id_fk",
           "tableFrom": "refresh_tokens",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -584,9 +562,7 @@
         "refresh_tokens_token_hash_unique": {
           "name": "refresh_tokens_token_hash_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "token_hash"
-          ]
+          "columns": ["token_hash"]
         }
       },
       "policies": {},
@@ -645,9 +621,7 @@
         "users_username_unique": {
           "name": "users_username_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "username"
-          ]
+          "columns": ["username"]
         }
       },
       "policies": {},
@@ -659,67 +633,37 @@
     "public.alert_severity": {
       "name": "alert_severity",
       "schema": "public",
-      "values": [
-        "critical",
-        "warning",
-        "info"
-      ]
+      "values": ["critical", "warning", "info"]
     },
     "public.alert_status": {
       "name": "alert_status",
       "schema": "public",
-      "values": [
-        "active",
-        "acknowledged",
-        "resolved"
-      ]
+      "values": ["active", "acknowledged", "resolved"]
     },
     "public.device_status": {
       "name": "device_status",
       "schema": "public",
-      "values": [
-        "active",
-        "inactive",
-        "maintenance"
-      ]
+      "values": ["active", "inactive", "maintenance"]
     },
     "public.device_type": {
       "name": "device_type",
       "schema": "public",
-      "values": [
-        "mattress",
-        "vision",
-        "imu",
-        "generic",
-        "simulator",
-        "custom"
-      ]
+      "values": ["mattress", "vision", "imu", "generic", "simulator", "custom"]
     },
     "public.kind": {
       "name": "kind",
       "schema": "public",
-      "values": [
-        "observation",
-        "alert"
-      ]
+      "values": ["observation", "alert"]
     },
     "public.patient_status": {
       "name": "patient_status",
       "schema": "public",
-      "values": [
-        "active",
-        "discharged"
-      ]
+      "values": ["active", "discharged"]
     },
     "public.role": {
       "name": "role",
       "schema": "public",
-      "values": [
-        "admin",
-        "doctor",
-        "nurse",
-        "caregiver"
-      ]
+      "values": ["admin", "doctor", "nurse", "caregiver"]
     }
   },
   "schemas": {},

@@ -7,7 +7,7 @@ import {
   createEmptyTiles,
 } from '@iomtea/shared-types/map'
 
-function createDemoMap(): MapModel {
+function createDemoMap(patientIds: string[]): MapModel {
   const width = 15
   const height = 13
 
@@ -21,23 +21,25 @@ function createDemoMap(): MapModel {
     { id: 'z7', defId: 'hall', name: '走廊', bounds: { x1: 3, y1: 8, x2: 11, y2: 9 } },
   ]
 
+  const pid = (i: number) => patientIds[i] || ''
+
   const entities: Entity[] = [
-    { id: 'bed1', defId: 'bed', gridX: 1, gridY: 1, layer: 0, orientation: 'N', patientId: '', status: 'normal' },
-    { id: 'mat1', defId: 'mattress_sensor', gridX: 1, gridY: 1, layer: 2, orientation: 'N', status: 'normal' },
-    { id: 'bed2', defId: 'bed', gridX: 11, gridY: 1, layer: 0, orientation: 'N', patientId: '', status: 'normal' },
-    { id: 'mat2', defId: 'mattress_sensor', gridX: 11, gridY: 1, layer: 2, orientation: 'N', status: 'normal' },
-    { id: 'bed3', defId: 'bed', gridX: 11, gridY: 6, layer: 0, orientation: 'N', patientId: '', status: 'normal' },
-    { id: 'mat3', defId: 'mattress_sensor', gridX: 11, gridY: 6, layer: 2, orientation: 'N', status: 'normal' },
+    { id: 'bed1', defId: 'bed', gridX: 1, gridY: 1, layer: 0, orientation: 'N', patientId: pid(0), status: 'normal' },
+    { id: 'mat1', defId: 'mattress_sensor', gridX: 1, gridY: 1, layer: 2, orientation: 'N', patientId: pid(0), status: 'normal' },
+    { id: 'bed2', defId: 'bed', gridX: 11, gridY: 1, layer: 0, orientation: 'N', patientId: pid(1), status: 'normal' },
+    { id: 'mat2', defId: 'mattress_sensor', gridX: 11, gridY: 1, layer: 2, orientation: 'N', patientId: pid(1), status: 'normal' },
+    { id: 'bed3', defId: 'bed', gridX: 11, gridY: 6, layer: 0, orientation: 'N', patientId: pid(2), status: 'normal' },
+    { id: 'mat3', defId: 'mattress_sensor', gridX: 11, gridY: 6, layer: 2, orientation: 'N', patientId: pid(2), status: 'normal' },
     { id: 'sofa1', defId: 'sofa', gridX: 7, gridY: 2, layer: 0, orientation: 'S', status: 'normal' },
     { id: 'tv1', defId: 'tv', gridX: 5, gridY: 0, layer: 2, orientation: 'S', status: 'normal' },
     { id: 'table1', defId: 'table', gridX: 6, gridY: 5, layer: 0, orientation: 'N', status: 'normal' },
     { id: 'toilet1', defId: 'toilet', gridX: 1, gridY: 6, layer: 0, orientation: 'N', status: 'normal' },
     { id: 'sink1', defId: 'sink', gridX: 3, gridY: 6, layer: 0, orientation: 'N', status: 'normal' },
-    { id: 'person1', defId: 'person', gridX: 1, gridY: 1, layer: 0, orientation: 'N', patientId: '', status: 'normal' },
-    { id: 'person2', defId: 'person', gridX: 11, gridY: 1, layer: 0, orientation: 'N', patientId: '', status: 'normal' },
-    { id: 'person3', defId: 'person', gridX: 11, gridY: 6, layer: 0, orientation: 'N', patientId: '', status: 'normal' },
-    { id: 'person4', defId: 'person', gridX: 7, gridY: 2, layer: 0, orientation: 'N', patientId: '', status: 'normal' },
-    { id: 'person5', defId: 'person', gridX: 6, gridY: 5, layer: 0, orientation: 'N', patientId: '', status: 'normal' },
+    { id: 'person1', defId: 'person', gridX: 1, gridY: 1, layer: 0, orientation: 'N', patientId: pid(0), status: 'normal' },
+    { id: 'person2', defId: 'person', gridX: 11, gridY: 1, layer: 0, orientation: 'N', patientId: pid(1), status: 'normal' },
+    { id: 'person3', defId: 'person', gridX: 11, gridY: 6, layer: 0, orientation: 'N', patientId: pid(2), status: 'normal' },
+    { id: 'person4', defId: 'person', gridX: 7, gridY: 2, layer: 0, orientation: 'N', patientId: pid(3), status: 'normal' },
+    { id: 'person5', defId: 'person', gridX: 6, gridY: 5, layer: 0, orientation: 'N', patientId: pid(4), status: 'normal' },
   ]
 
   const model: MapModel = {
@@ -54,6 +56,6 @@ function createDemoMap(): MapModel {
   return model
 }
 
-export function useMapModel(): MapModel {
-  return useMemo(() => createDemoMap(), [])
+export function useMapModel(patientIds: string[] = []): MapModel {
+  return useMemo(() => createDemoMap(patientIds), [patientIds.join(',')])
 }

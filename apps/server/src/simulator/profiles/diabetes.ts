@@ -20,14 +20,18 @@ export const diabetesProfile: PatientProfile = {
   schedule: {
     sleep: { start: '22:00', end: '06:00' },
     meals: [{ time: '07:00' }, { time: '12:00' }, { time: '18:00' }],
-    events: [
-      { type: 'bed_exit', window: ['02:00', '05:00'], probability: 0.15 },
-    ],
+    events: [{ type: 'bed_exit', window: ['02:00', '05:00'], probability: 0.15 }],
   },
   devices: ['mattress'],
   alerts: [
     { metric: 'glucose', condition: 'gt', threshold: 11, severity: 'critical', message: '高血糖' },
     { metric: 'glucose', condition: 'lt', threshold: 3.5, severity: 'critical', message: '低血糖' },
-    { metric: 'heart_rate', condition: 'gt', threshold: 110, severity: 'warning', message: '心动过速' },
+    {
+      metric: 'heart_rate',
+      condition: 'gt',
+      threshold: 110,
+      severity: 'warning',
+      message: '心动过速',
+    },
   ],
 }

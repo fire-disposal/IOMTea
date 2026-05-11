@@ -20,14 +20,24 @@ export const copdRespiratoryProfile: PatientProfile = {
   schedule: {
     sleep: { start: '22:00', end: '05:00' },
     meals: [{ time: '08:00' }, { time: '12:00' }, { time: '17:30' }],
-    events: [
-      { type: 'bed_exit', window: ['01:00', '05:00'], probability: 0.25 },
-    ],
+    events: [{ type: 'bed_exit', window: ['01:00', '05:00'], probability: 0.25 }],
   },
   devices: ['mattress'],
   alerts: [
     { metric: 'spo2', condition: 'lt', threshold: 88, severity: 'critical', message: '严重低血氧' },
-    { metric: 'resp_rate', condition: 'gt', threshold: 35, severity: 'critical', message: '呼吸窘迫' },
-    { metric: 'heart_rate', condition: 'gt', threshold: 120, severity: 'warning', message: '心动过速' },
+    {
+      metric: 'resp_rate',
+      condition: 'gt',
+      threshold: 35,
+      severity: 'critical',
+      message: '呼吸窘迫',
+    },
+    {
+      metric: 'heart_rate',
+      condition: 'gt',
+      threshold: 120,
+      severity: 'warning',
+      message: '心动过速',
+    },
   ],
 }

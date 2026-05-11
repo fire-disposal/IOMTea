@@ -30,7 +30,17 @@ export interface PatientProfile {
   }[]
 }
 
-export const SCENARIO_TYPES = ['bed_exit', 'tachycardia', 'fall', 'low_spo2', 'hyperglycemia', 'hypoglycemia', 'hypotension', 'arrhythmia', 'respiratory_distress'] as const
+export const SCENARIO_TYPES = [
+  'bed_exit',
+  'tachycardia',
+  'fall',
+  'low_spo2',
+  'hyperglycemia',
+  'hypoglycemia',
+  'hypotension',
+  'arrhythmia',
+  'respiratory_distress',
+] as const
 export type ScenarioType = (typeof SCENARIO_TYPES)[number]
 
 export type ActivityLevel = 'resting' | 'light' | 'moderate' | 'heavy'
@@ -54,6 +64,7 @@ export interface PatientInstance {
   baselines: PatientProfile['baseline']
   conditions: string[]
   alerts: PatientProfile['alerts']
+  customThresholds?: { metric: string; min?: number; max?: number; enabled: boolean }[]
 }
 
 export interface SimulatedEvent {

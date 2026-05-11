@@ -1,9 +1,9 @@
 import { eq } from 'drizzle-orm'
 import type { DbClient } from '../../../core/db'
-import { devices, events } from '../../../core/db/schema'
-import { parseMattressPayload, type MattressPayload } from './parser'
-import { SleepStateManager } from './sleep-state'
+import { events, devices } from '../../../core/db/schema'
 import { AlertEngine } from './alerts'
+import { type MattressPayload, parseMattressPayload } from './parser'
+import { SleepStateManager } from './sleep-state'
 
 export class MattressModule {
   private sleepManager = new SleepStateManager()
@@ -16,11 +16,14 @@ export class MattressModule {
     // Auto-register device
     let device = await db.select().from(devices).where(eq(devices.serialNumber, sn)).limit(1)
     if (device.length === 0) {
-      const [created] = await db.insert(devices).values({
-        serialNumber: sn,
-        deviceType: 'mattress',
-        tags: { protocol: 'mattress', auto_registered: true },
-      }).returning()
+      const [created] = await db
+        .insert(devices)
+        .values({
+          serialNumber: sn,
+          deviceType: 'mattress',
+          tags: { protocol: 'mattress', auto_registered: true },
+        })
+        .returning()
       device = [created]
     }
 
@@ -40,7 +43,11 @@ export class MattressModule {
     const obsEvents = parseMattressPayload(payload, patientId, deviceId, now)
 
     // Sleep state
-    const sleepState = this.sleepManager.update(sn, payload.st || 'off', payload.time || now.toISOString())
+    const sleepState = this.sleepManager.update(
+      sn,
+      payload.st || 'off',
+      payload.time || now.toISOString(),
+    )
 
     // Alerts
     const alertEvents = this.alertEngine.process(payload, now)
@@ -49,8 +56,12 @@ export class MattressModule {
       ...obsEvents,
       ...alertEvents.map((a) => ({ ...a, patientId: patientId || '', deviceId })),
       {
-        patientId: patientId || '', deviceId, kind: 'observation' as const,
-        metric: 'sleep_state', value: Number(sleepState), unit: null,
+        patientId: patientId || '',
+        deviceId,
+        kind: 'observation' as const,
+        metric: 'sleep_state',
+        value: Number(sleepState),
+        unit: null,
         tags: { protocol: 'mattress', raw_status: payload.st, sn },
         recordedAt: now,
       },

@@ -1,9 +1,9 @@
-import { eq, and, desc } from 'drizzle-orm'
-import { z } from 'zod'
-import { TRPCError } from '@trpc/server'
-import { protectedProcedure, router } from '../index'
 import { ALERT_SEVERITIES, ALERT_STATUSES, alertSchema } from '@iomtea/shared-types'
+import { TRPCError } from '@trpc/server'
+import { and, desc, eq, gte } from 'drizzle-orm'
+import { z } from 'zod'
 import { events } from '../../db/schema'
+import { protectedProcedure, router } from '../index'
 
 export const alertRouter = router({
   list: protectedProcedure
@@ -14,6 +14,7 @@ export const alertRouter = router({
         status: z.enum(ALERT_STATUSES).optional(),
         severity: z.enum(ALERT_SEVERITIES).optional(),
         patientId: z.string().uuid().optional(),
+        from: z.number().optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -22,6 +23,7 @@ export const alertRouter = router({
       if (input.status) conditions.push(eq(events.status, input.status))
       if (input.severity) conditions.push(eq(events.severity, input.severity))
       if (input.patientId) conditions.push(eq(events.patientId, input.patientId))
+      if (input.from) conditions.push(gte(events.recordedAt, new Date(input.from)))
 
       const rows = await ctx.db
         .select()
@@ -31,20 +33,22 @@ export const alertRouter = router({
         .offset(offset)
         .orderBy(desc(events.recordedAt))
 
-      return z.array(alertSchema).parse(rows.map((a) => ({
-        id: a.id,
-        patientId: a.patientId,
-        deviceId: a.deviceId,
-        kind: 'alert' as const,
-        metric: a.metric,
-        value: a.value,
-        unit: a.unit,
-        severity: a.severity,
-        status: a.status,
-        tags: a.tags,
-        recordedAt: a.recordedAt.getTime(),
-        createdAt: a.createdAt.getTime(),
-      })))
+      return z.array(alertSchema).parse(
+        rows.map((a) => ({
+          id: a.id,
+          patientId: a.patientId,
+          deviceId: a.deviceId,
+          kind: 'alert' as const,
+          metric: a.metric,
+          value: a.value,
+          unit: a.unit,
+          severity: a.severity,
+          status: a.status,
+          tags: a.tags,
+          recordedAt: a.recordedAt.getTime(),
+          createdAt: a.createdAt.getTime(),
+        })),
+      )
     }),
 
   acknowledge: protectedProcedure
@@ -59,7 +63,9 @@ export const alertRouter = router({
       if (!updated) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Alert not found' })
       }
-      return alertSchema.pick({ id: true, status: true }).parse({ id: updated.id, status: updated.status })
+      return alertSchema
+        .pick({ id: true, status: true })
+        .parse({ id: updated.id, status: updated.status })
     }),
 
   resolve: protectedProcedure
@@ -74,6 +80,8 @@ export const alertRouter = router({
       if (!updated) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Alert not found' })
       }
-      return alertSchema.pick({ id: true, status: true }).parse({ id: updated.id, status: updated.status })
+      return alertSchema
+        .pick({ id: true, status: true })
+        .parse({ id: updated.id, status: updated.status })
     }),
 })

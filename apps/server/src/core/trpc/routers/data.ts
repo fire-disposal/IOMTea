@@ -1,42 +1,48 @@
-import { eq, and, gte, lte, desc } from 'drizzle-orm'
+import {
+  eventTimeSeriesInputSchema,
+  observationIngestSchema,
+  observationSchema,
+} from '@iomtea/shared-types'
+import { and, desc, eq, gte, lte } from 'drizzle-orm'
 import { z } from 'zod'
-import { protectedProcedure, router } from '../index'
-import { eventTimeSeriesInputSchema, observationIngestSchema, observationSchema } from '@iomtea/shared-types'
 import { events } from '../../db/schema'
+import { protectedProcedure, router } from '../index'
 
 export const dataRouter = router({
-  timeseries: protectedProcedure
-    .input(eventTimeSeriesInputSchema)
-    .query(async ({ ctx, input }) => {
-      const conditions = [
-        eq(events.patientId, input.patientId),
-        eq(events.metric, input.metric),
-        eq(events.kind, 'observation'),
-        gte(events.recordedAt, new Date(input.from)),
-      ]
-      if (input.to) {
-        conditions.push(lte(events.recordedAt, new Date(input.to)))
-      }
+  timeseries: protectedProcedure.input(eventTimeSeriesInputSchema).query(async ({ ctx, input }) => {
+    const conditions = [
+      eq(events.patientId, input.patientId),
+      eq(events.metric, input.metric),
+      eq(events.kind, 'observation'),
+      gte(events.recordedAt, new Date(input.from)),
+    ]
+    if (input.to) {
+      conditions.push(lte(events.recordedAt, new Date(input.to)))
+    }
 
-      const rows = await ctx.db
-        .select({
-          recordedAt: events.recordedAt,
-          value: events.value,
-          unit: events.unit,
-          tags: events.tags,
-        })
-        .from(events)
-        .where(and(...conditions))
-        .orderBy(events.recordedAt)
-        .limit(1000)
+    const rows = await ctx.db
+      .select({
+        recordedAt: events.recordedAt,
+        value: events.value,
+        unit: events.unit,
+        tags: events.tags,
+      })
+      .from(events)
+      .where(and(...conditions))
+      .orderBy(events.recordedAt)
+      .limit(1000)
 
-      return z.array(observationSchema.pick({ recordedAt: true, value: true, unit: true, tags: true })).parse(rows.map((r) => ({
-        recordedAt: r.recordedAt.getTime(),
-        value: r.value,
-        unit: r.unit,
-        tags: r.tags,
-      })))
-    }),
+    return z
+      .array(observationSchema.pick({ recordedAt: true, value: true, unit: true, tags: true }))
+      .parse(
+        rows.map((r) => ({
+          recordedAt: r.recordedAt.getTime(),
+          value: r.value,
+          unit: r.unit,
+          tags: r.tags,
+        })),
+      )
+  }),
 
   latest: protectedProcedure
     .input(z.object({ patientId: z.string().uuid() }))
@@ -47,22 +53,31 @@ export const dataRouter = router({
           value: events.value,
           unit: events.unit,
           recordedAt: events.recordedAt,
+          tags: events.tags,
         })
         .from(events)
-        .where(
-          and(
-            eq(events.patientId, input.patientId),
-            eq(events.kind, 'observation'),
-          ),
-        )
+        .where(and(eq(events.patientId, input.patientId), eq(events.kind, 'observation')))
         .orderBy(events.metric, desc(events.recordedAt))
 
-      return z.array(observationSchema.pick({ metric: true, value: true, unit: true, recordedAt: true })).parse(rows.map((r) => ({
-        metric: r.metric,
-        value: r.value,
-        unit: r.unit,
-        recordedAt: r.recordedAt.getTime(),
-      })))
+      return z
+        .array(
+          observationSchema.pick({
+            metric: true,
+            value: true,
+            unit: true,
+            recordedAt: true,
+            tags: true,
+          }),
+        )
+        .parse(
+          rows.map((r) => ({
+            metric: r.metric,
+            value: r.value,
+            unit: r.unit,
+            recordedAt: r.recordedAt.getTime(),
+            tags: r.tags,
+          })),
+        )
     }),
 
   ingest: protectedProcedure

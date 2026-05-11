@@ -14,13 +14,21 @@ export interface SimPatientData {
   alerts: { metric: string; severity: string; message: string }[]
 }
 
+const MAX_PATIENTS = 10
+
 export function useSimData(patientIds: string[]) {
   const enabled = patientIds.length > 0
 
-  const queries = patientIds.map((pid) =>
+  const paddedIds = useMemo(() => {
+    const arr = [...patientIds]
+    while (arr.length < MAX_PATIENTS) arr.push('')
+    return arr.slice(0, MAX_PATIENTS)
+  }, [patientIds.join(',')])
+
+  const queries = paddedIds.map((pid, i) =>
     trpc.data.latest.useQuery(
       { patientId: pid },
-      { enabled, refetchInterval: 2000 },
+      { enabled: enabled && pid !== '' && i < patientIds.length, refetchInterval: 2000 },
     ),
   )
 
@@ -30,7 +38,8 @@ export function useSimData(patientIds: string[]) {
   )
 
   const patientData: SimPatientData[] = useMemo(() => {
-    return queries.map((q, i) => {
+    const actualCount = patientIds.length
+    return queries.slice(0, actualCount).map((q, i) => {
       const vitals = q.data || []
       const gv = (m: string) => vitals.find((v: any) => v.metric === m)
 
@@ -60,9 +69,14 @@ export function useSimData(patientIds: string[]) {
         alerts: patientAlerts,
       }
     })
-  }, [queries.map(q => q.dataUpdatedAt), alertsQuery.dataUpdatedAt, patientIds.length, ...patientIds])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    queries.map((q) => q.dataUpdatedAt).join(','),
+    alertsQuery.dataUpdatedAt,
+    patientIds.join(','),
+  ])
 
-  const isLoading = queries.some((q) => q.isLoading)
+  const isLoading = queries.slice(0, patientIds.length).some((q) => q.isLoading)
 
   return { patientData, isLoading }
 }

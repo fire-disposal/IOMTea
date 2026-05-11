@@ -1,6 +1,6 @@
 import { TRPCError } from '@trpc/server'
-import { middleware, publicProcedure } from '../init'
 import { verifyToken } from '../../lib/jwt'
+import { middleware, publicProcedure } from '../init'
 
 export const authMiddleware = middleware(async ({ ctx, next }) => {
   const authHeader = ctx.req.headers.get('authorization')

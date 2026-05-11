@@ -2,11 +2,15 @@ import type { ActivityLevel } from '../types'
 export type { ActivityLevel }
 
 const activityMod: Record<ActivityLevel, number> = {
-  resting: 0, light: 8, moderate: 20, heavy: 40,
+  resting: 0,
+  light: 8,
+  moderate: 20,
+  heavy: 40,
 }
 
 function gaussian(mean: number, std: number): number {
-  let u = 0, v = 0
+  let u = 0,
+    v = 0
   while (u === 0) u = Math.random()
   while (v === 0) v = Math.random()
   return mean + std * Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v)
@@ -24,7 +28,7 @@ export function generateHeartRate(
   activity: ActivityLevel,
   tick: number,
 ): number {
-  const circadian = Math.sin((hourOfDay - 3) * Math.PI / 12) * circadianFactor
+  const circadian = Math.sin(((hourOfDay - 3) * Math.PI) / 12) * circadianFactor
   const activityModVal = activityMod[activity]
   const respCoupling = Math.sin(tick * 0.3) * 3
   const noise = gaussian(0, variability)
@@ -48,15 +52,12 @@ export function generateTemperature(
   variability: number,
   hourOfDay: number,
 ): number {
-  const circadian = Math.sin((hourOfDay - 4) * Math.PI / 12) * 0.4
+  const circadian = Math.sin(((hourOfDay - 4) * Math.PI) / 12) * 0.4
   const noise = gaussian(0, variability)
   return clamp(baseline + circadian + noise, 35.5, 42)
 }
 
-export function generateSpO2(
-  baseline: number,
-  variability: number,
-): number {
+export function generateSpO2(baseline: number, variability: number): number {
   const noise = gaussian(0, variability)
   return clamp(baseline + noise, 85, 100)
 }

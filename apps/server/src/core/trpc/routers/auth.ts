@@ -1,95 +1,91 @@
-import { eq } from 'drizzle-orm'
-import { TRPCError } from '@trpc/server'
-import { z } from 'zod'
 import { createHash } from 'node:crypto'
-import { publicProcedure, router } from '../index'
 import { loginSchema, registerSchema, tokenPairSchema } from '@iomtea/shared-types'
-import { users, refreshTokens } from '../../db/schema'
-import { hashPassword, verifyPassword } from '../../lib/password'
+import { TRPCError } from '@trpc/server'
+import { eq } from 'drizzle-orm'
+import { z } from 'zod'
+import { refreshTokens, users } from '../../db/schema'
 import { signAccessToken, signRefreshToken, verifyToken } from '../../lib/jwt'
+import { hashPassword, verifyPassword } from '../../lib/password'
+import { publicProcedure, router } from '../index'
 
 function hashToken(token: string): string {
   return createHash('sha256').update(token).digest('hex')
 }
 
 export const authRouter = router({
-  register: publicProcedure
-    .input(registerSchema)
-    .mutation(async ({ ctx, input }) => {
-      const existing = await ctx.db
-        .select()
-        .from(users)
-        .where(eq(users.username, input.username))
-        .limit(1)
+  register: publicProcedure.input(registerSchema).mutation(async ({ ctx, input }) => {
+    const existing = await ctx.db
+      .select()
+      .from(users)
+      .where(eq(users.username, input.username))
+      .limit(1)
 
-      if (existing.length > 0) {
-        throw new TRPCError({ code: 'CONFLICT', message: 'Username already exists' })
-      }
+    if (existing.length > 0) {
+      throw new TRPCError({ code: 'CONFLICT', message: 'Username already exists' })
+    }
 
-      const passwordHash = await hashPassword(input.password)
+    const passwordHash = await hashPassword(input.password)
 
-      const [user] = await ctx.db
-        .insert(users)
-        .values({
-          username: input.username,
-          passwordHash,
-          displayName: input.displayName,
-        })
-        .returning()
-
-      const jwtPayload = { sub: user.id, role: user.role }
-      const accessToken = await signAccessToken(jwtPayload)
-      const refreshToken = await signRefreshToken(user.id)
-
-      await ctx.db.insert(refreshTokens).values({
-        userId: user.id,
-        tokenHash: hashToken(refreshToken.token),
-        expiresAt: refreshToken.expiresAt,
+    const [user] = await ctx.db
+      .insert(users)
+      .values({
+        username: input.username,
+        passwordHash,
+        displayName: input.displayName,
       })
+      .returning()
 
-      return tokenPairSchema.parse({
-        accessToken,
-        refreshToken: refreshToken.token,
-        expiresAt: refreshToken.expiresAt.getTime(),
-      })
-    }),
+    const jwtPayload = { sub: user.id, role: user.role }
+    const accessToken = await signAccessToken(jwtPayload)
+    const refreshToken = await signRefreshToken(user.id)
 
-  login: publicProcedure
-    .input(loginSchema)
-    .mutation(async ({ ctx, input }) => {
-      const rows = await ctx.db
-        .select()
-        .from(users)
-        .where(eq(users.username, input.username))
-        .limit(1)
+    await ctx.db.insert(refreshTokens).values({
+      userId: user.id,
+      tokenHash: hashToken(refreshToken.token),
+      expiresAt: refreshToken.expiresAt,
+    })
 
-      if (rows.length === 0) {
-        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid credentials' })
-      }
+    return tokenPairSchema.parse({
+      accessToken,
+      refreshToken: refreshToken.token,
+      expiresAt: refreshToken.expiresAt.getTime(),
+    })
+  }),
 
-      const user = rows[0]
-      const valid = await verifyPassword(user.passwordHash, input.password)
+  login: publicProcedure.input(loginSchema).mutation(async ({ ctx, input }) => {
+    const rows = await ctx.db
+      .select()
+      .from(users)
+      .where(eq(users.username, input.username))
+      .limit(1)
 
-      if (!valid) {
-        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid credentials' })
-      }
+    if (rows.length === 0) {
+      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid credentials' })
+    }
 
-      const jwtPayload = { sub: user.id, role: user.role }
-      const accessToken = await signAccessToken(jwtPayload)
-      const refreshToken = await signRefreshToken(user.id)
+    const user = rows[0]
+    const valid = await verifyPassword(user.passwordHash, input.password)
 
-      await ctx.db.insert(refreshTokens).values({
-        userId: user.id,
-        tokenHash: hashToken(refreshToken.token),
-        expiresAt: refreshToken.expiresAt,
-      })
+    if (!valid) {
+      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid credentials' })
+    }
 
-      return tokenPairSchema.parse({
-        accessToken,
-        refreshToken: refreshToken.token,
-        expiresAt: refreshToken.expiresAt.getTime(),
-      })
-    }),
+    const jwtPayload = { sub: user.id, role: user.role }
+    const accessToken = await signAccessToken(jwtPayload)
+    const refreshToken = await signRefreshToken(user.id)
+
+    await ctx.db.insert(refreshTokens).values({
+      userId: user.id,
+      tokenHash: hashToken(refreshToken.token),
+      expiresAt: refreshToken.expiresAt,
+    })
+
+    return tokenPairSchema.parse({
+      accessToken,
+      refreshToken: refreshToken.token,
+      expiresAt: refreshToken.expiresAt.getTime(),
+    })
+  }),
 
   refresh: publicProcedure
     .input(z.object({ refreshToken: z.string() }))
@@ -112,11 +108,7 @@ export const authRouter = router({
         throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Refresh token expired' })
       }
 
-      const userRows = await ctx.db
-        .select()
-        .from(users)
-        .where(eq(users.id, stored.userId))
-        .limit(1)
+      const userRows = await ctx.db.select().from(users).where(eq(users.id, stored.userId)).limit(1)
 
       if (userRows.length === 0) {
         throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not found' })

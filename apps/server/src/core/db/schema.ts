@@ -1,18 +1,25 @@
 import {
-  pgTable,
-  uuid,
-  varchar,
-  text,
-  doublePrecision,
-  timestamp,
   date,
+  doublePrecision,
+  index,
   jsonb,
   pgEnum,
-  index,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+  varchar,
 } from 'drizzle-orm/pg-core'
 
 export const roleEnum = pgEnum('role', ['admin', 'doctor', 'nurse', 'caregiver'])
-export const deviceTypeEnum = pgEnum('device_type', ['mattress', 'vision', 'imu', 'generic', 'simulator', 'custom'])
+export const deviceTypeEnum = pgEnum('device_type', [
+  'mattress',
+  'vision',
+  'imu',
+  'generic',
+  'simulator',
+  'custom',
+])
 export const deviceStatusEnum = pgEnum('device_status', ['active', 'inactive', 'maintenance'])
 export const patientStatusEnum = pgEnum('patient_status', ['active', 'discharged'])
 export const alertSeverityEnum = pgEnum('alert_severity', ['critical', 'warning', 'info'])
@@ -28,16 +35,22 @@ export const users = pgTable('users', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 })
 
-export const refreshTokens = pgTable('refresh_tokens', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  tokenHash: text('token_hash').notNull().unique(),
-  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-}, (t) => ({
-  userIdIdx: index('refresh_tokens_user_id_idx').on(t.userId),
-  expiresIdx: index('refresh_tokens_expires_idx').on(t.expiresAt),
-}))
+export const refreshTokens = pgTable(
+  'refresh_tokens',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    tokenHash: text('token_hash').notNull().unique(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => ({
+    userIdIdx: index('refresh_tokens_user_id_idx').on(t.userId),
+    expiresIdx: index('refresh_tokens_expires_idx').on(t.expiresAt),
+  }),
+)
 
 export const patients = pgTable('patients', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -66,8 +79,12 @@ export const events = pgTable(
   'events',
   {
     id: uuid('id').defaultRandom().primaryKey(),
-    patientId: uuid('patient_id').notNull().references(() => patients.id, { onDelete: 'cascade' }),
-    deviceId: uuid('device_id').notNull().references(() => devices.id, { onDelete: 'cascade' }),
+    patientId: uuid('patient_id')
+      .notNull()
+      .references(() => patients.id, { onDelete: 'cascade' }),
+    deviceId: uuid('device_id')
+      .notNull()
+      .references(() => devices.id, { onDelete: 'cascade' }),
     kind: kindEnum('kind').notNull(),
     metric: varchar('metric', { length: 50 }).notNull(),
     value: doublePrecision('value'),
@@ -79,8 +96,16 @@ export const events = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => ({
-    patientMetricIdx: index('events_patient_metric_time_idx').on(t.patientId, t.metric, t.recordedAt.desc()),
-    patientKindIdx: index('events_patient_kind_time_idx').on(t.patientId, t.kind, t.recordedAt.desc()),
+    patientMetricIdx: index('events_patient_metric_time_idx').on(
+      t.patientId,
+      t.metric,
+      t.recordedAt.desc(),
+    ),
+    patientKindIdx: index('events_patient_kind_time_idx').on(
+      t.patientId,
+      t.kind,
+      t.recordedAt.desc(),
+    ),
     deviceTimeIdx: index('events_device_time_idx').on(t.deviceId, t.recordedAt.desc()),
   }),
 )

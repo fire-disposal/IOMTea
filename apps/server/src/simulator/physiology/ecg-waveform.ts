@@ -6,11 +6,11 @@ export function generateECGSamples(hr: number): number[] {
   const dt = totalDuration / sampleCount
 
   for (let i = 0; i < sampleCount; i++) {
-    let t = i * dt
+    const t = i * dt
 
     const phase = t / totalDuration
 
-    const pCenter = 0.20
+    const pCenter = 0.2
     const pWidth = 0.04
     const pAmplitude = 0.15
     const pWave = pAmplitude * Math.exp(-Math.pow((phase - pCenter) / pWidth, 2))
@@ -22,7 +22,7 @@ export function generateECGSamples(hr: number): number[] {
     const qDip = -0.2 * Math.exp(-Math.pow((phase - 0.32) / 0.008, 2))
     const sDip = -0.3 * Math.exp(-Math.pow((phase - 0.38) / 0.008, 2))
 
-    const tCenter = 0.60
+    const tCenter = 0.6
     const tWidth = 0.06
     const tAmplitude = 0.3
     const tWave = tAmplitude * Math.exp(-Math.pow((phase - tCenter) / tWidth, 2))

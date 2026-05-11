@@ -1,17 +1,19 @@
+import { serve } from '@hono/node-server'
+import { trpcServer } from '@hono/trpc-server'
+import { eq } from 'drizzle-orm'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
-import { trpcServer } from '@hono/trpc-server'
-import { serve } from '@hono/node-server'
-import { eq } from 'drizzle-orm'
-import { appRouter } from './core/trpc/routers/_app'
-import { createContext } from './core/trpc/context'
+import pino from 'pino'
+import { WebSocketServer } from 'ws'
 import { db } from './core/db'
 import { users } from './core/db/schema'
+import { hashPassword } from './core/lib/password'
+import { broadcastManager } from './core/realtime/broadcast'
+import { createContext } from './core/trpc/context'
+import { appRouter } from './core/trpc/routers/_app'
 import { env } from './env'
 import { startMqttIngest, startTcpIngest } from './ingest'
 import { createWard } from './simulator'
-import { hashPassword } from './core/lib/password'
-import pino from 'pino'
 
 const logger = pino({
   transport: { target: 'pino-pretty', options: { colorize: true } },
@@ -23,10 +25,15 @@ if (env.JWT_SECRET === 'dev-secret-change-in-production') {
 
 const app = new Hono()
 
-app.use('/trpc/*', cors({
-  origin: env.CORS_ORIGIN ? env.CORS_ORIGIN.split(',').map(s => s.trim()) : ['http://localhost:5173'],
-  credentials: true,
-}))
+app.use(
+  '/trpc/*',
+  cors({
+    origin: env.CORS_ORIGIN
+      ? env.CORS_ORIGIN.split(',').map((s) => s.trim())
+      : ['http://localhost:5173'],
+    credentials: true,
+  }),
+)
 
 app.use('/trpc/*', trpcServer({ router: appRouter, createContext }))
 app.get('/health', (c) => c.json({ status: 'ok' }))
@@ -69,7 +76,11 @@ async function bootstrap() {
 bootstrap().then(() => {
   if (env.MQTT_ENABLED) {
     logger.info({ broker: env.MQTT_BROKER }, 'starting MQTT ingest')
-    startMqttIngest(db, { broker: env.MQTT_BROKER, username: env.MQTT_USERNAME, password: env.MQTT_PASSWORD })
+    startMqttIngest(db, {
+      broker: env.MQTT_BROKER,
+      username: env.MQTT_USERNAME,
+      password: env.MQTT_PASSWORD,
+    })
   }
 
   if (env.TCP_INGEST_ENABLED) {
@@ -77,8 +88,51 @@ bootstrap().then(() => {
     startTcpIngest(db, { port: env.TCP_INGEST_PORT, preSharedToken: env.TCP_INGEST_TOKEN })
   }
 
-  logger.info({ port: env.PORT, demo: env.DEMO_MODE }, 'server ready')
-  serve({ fetch: app.fetch, port: env.PORT })
+  const server = serve({ fetch: app.fetch, port: env.PORT })
+  const wss = new WebSocketServer({ noServer: true })
+
+  server.on('upgrade', (request, socket, head) => {
+    const url = new URL(request.url || '/', `http://${request.headers.host || 'localhost'}`)
+    if (url.pathname === '/ws') {
+      wss.handleUpgrade(request, socket, head, (ws) => {
+        wss.emit('connection', ws, request)
+      })
+    } else {
+      socket.destroy()
+    }
+  })
+
+  wss.on('connection', (ws, req) => {
+    const url = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`)
+    const wardId = url.searchParams.get('wardId') || ''
+
+    if (wardId) {
+      broadcastManager.subscribe(wardId, ws)
+      logger.info({ wardId }, 'websocket client subscribed')
+    }
+
+    ws.on('message', (raw) => {
+      try {
+        const msg = JSON.parse(raw.toString())
+        if (msg.type === 'subscribe' && msg.wardId) {
+          broadcastManager.subscribe(msg.wardId, ws)
+          logger.info({ wardId: msg.wardId }, 'websocket client subscribed (message)')
+        }
+      } catch {
+        // ignore malformed messages
+      }
+    })
+
+    ws.on('close', () => {
+      broadcastManager.unsubscribeAll(ws)
+    })
+
+    ws.on('error', () => {
+      broadcastManager.unsubscribeAll(ws)
+    })
+  })
+
+  logger.info({ port: env.PORT, demo: env.DEMO_MODE, ws: true }, 'server ready')
 })
 
 export type { AppRouter } from './core/trpc/routers/_app'

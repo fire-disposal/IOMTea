@@ -1,4 +1,4 @@
-import { View, Text, Button } from '@tarojs/components'
+import { Button, Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useState } from 'react'
 import { trpc } from '../../utils/trpc'
@@ -37,18 +37,13 @@ export default function Login() {
   }
 
   return (
-    <View className='login'>
-      <View className='logo'>
-        <Text className='logo-text'>IOMTea</Text>
-        <Text className='logo-sub'>健康数据平台</Text>
+    <View className="login">
+      <View className="logo">
+        <Text className="logo-text">IOMTea</Text>
+        <Text className="logo-sub">健康数据平台</Text>
       </View>
 
-      <Button
-        className='wechat-btn'
-        type='primary'
-        loading={loading}
-        onClick={handleWechatLogin}
-      >
+      <Button className="wechat-btn" type="primary" loading={loading} onClick={handleWechatLogin}>
         微信一键登录
       </Button>
     </View>

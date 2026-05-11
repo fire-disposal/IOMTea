@@ -38,14 +38,14 @@ class ErrorBoundary extends Component<
 }
 
 export function DigitalTwinPage() {
-  const model = useMapModel()
-
   const { data: patients, isLoading: patientsLoading } = trpc.patient.list.useQuery(
     { pageSize: 20, status: 'active' },
     { refetchInterval: 10000 },
   )
 
   const patientIds = (patients as any[] | undefined)?.map((p: any) => p.id) || []
+  const model = useMapModel(patientIds)
+
   const { patientData, isLoading: simLoading } = useSimData(patientIds)
 
   const patientDataMap = useMemo(() => {
@@ -60,6 +60,25 @@ export function DigitalTwinPage() {
     }
     return map
   }, [patientData])
+
+  const liveModel = useMemo(() => {
+    const alertPatientIds = new Set(
+      patientData.filter((pd) => pd.alerts.length > 0).map((pd) => pd.patientId),
+    )
+    const alertSeverity = new Map(
+      patientData
+        .filter((pd) => pd.alerts.length > 0)
+        .map((pd) => [pd.patientId, pd.alerts.some((a) => a.severity === 'critical') ? 'alert' : 'warning'] as const),
+    )
+    const entities = model.entities.map((ent) => {
+      if (ent.defId !== 'mattress_sensor' || !ent.patientId) return ent
+      if (alertPatientIds.has(ent.patientId)) {
+        return { ...ent, status: alertSeverity.get(ent.patientId) || 'warning' }
+      }
+      return ent
+    })
+    return { ...model, entities }
+  }, [model, patientData])
 
   if (patientsLoading) {
     return (
@@ -94,7 +113,7 @@ export function DigitalTwinPage() {
           gl={{ preserveDrawingBuffer: false, antialias: true }}
           onCreated={({ gl }) => { gl.setClearColor('#1a1a2e') }}
         >
-          <MapRenderer3D model={model} patientDataMap={patientDataMap} />
+          <MapRenderer3D model={liveModel} patientDataMap={patientDataMap} />
           <OrbitControls
             target={[7, 0, 5]}
             maxPolarAngle={Math.PI / 2.5}

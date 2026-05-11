@@ -1,8 +1,8 @@
+import { Button, Container, Paper, PasswordInput, Text, TextInput, Title } from '@mantine/core'
+import { notifications } from '@mantine/notifications'
 import { useState } from 'react'
-import { Container, Paper, Title, TextInput, PasswordInput, Button, Text } from '@mantine/core'
 import { useAuthStore } from './store/auth'
 import { trpc } from './trpc'
-import { notifications } from '@mantine/notifications'
 
 export function LoginPage() {
   const [username, setUsername] = useState('')
@@ -41,7 +41,9 @@ export function LoginPage() {
 
   return (
     <Container size={420} my={80}>
-      <Title ta="center" c="blue">IOMTea</Title>
+      <Title ta="center" c="blue">
+        IOMTea
+      </Title>
       <Text c="dimmed" size="sm" ta="center" mt={5}>
         健康数据监护平台
       </Text>

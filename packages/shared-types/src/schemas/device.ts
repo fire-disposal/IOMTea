@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { DEVICE_TYPES, DEVICE_STATUSES } from '../constants'
+import { DEVICE_STATUSES, DEVICE_TYPES } from '../constants'
 
 export const deviceSchema = z.object({
   id: z.string().uuid(),

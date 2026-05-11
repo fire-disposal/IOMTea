@@ -1,4 +1,4 @@
-import type { MattressPayload, MattressEvent } from './parser'
+import type { MattressEvent, MattressPayload } from './parser'
 
 interface ThresholdCounter {
   sn: string
@@ -18,9 +18,9 @@ export class AlertEngine {
   private readonly HEART_MIN = 45
   private readonly BREATH_MAX = 30
   private readonly BREATH_MIN = 8
-  private readonly THRESHOLD_COUNT = 3  // consecutive hits before alert
+  private readonly THRESHOLD_COUNT = 3 // consecutive hits before alert
   private readonly BEDSORE_MINUTES = 120
-  private readonly POSITION_THRESHOLD = 2  // Manhattan distance
+  private readonly POSITION_THRESHOLD = 2 // Manhattan distance
 
   process(payload: MattressPayload, now: Date): MattressEvent[] {
     const sn = payload.sn
@@ -31,8 +31,17 @@ export class AlertEngine {
       const hbAbnormal = payload.hb > this.HEART_MAX || payload.hb < this.HEART_MIN
       this.tickCounter(this.heartbeatCounts, sn, 'heart_rate', hbAbnormal)
       if (this.getCount(this.heartbeatCounts, sn) >= this.THRESHOLD_COUNT) {
-        alerts.push(this.makeAlert(sn, 'heart_rate', 'heart_rate_abnormal', payload.hb, payload.hb > this.HEART_MAX ? 'warning' : 'critical',
-          payload.hb > this.HEART_MAX ? '心动过速' : '心动过缓', now))
+        alerts.push(
+          this.makeAlert(
+            sn,
+            'heart_rate',
+            'heart_rate_abnormal',
+            payload.hb,
+            payload.hb > this.HEART_MAX ? 'warning' : 'critical',
+            payload.hb > this.HEART_MAX ? '心动过速' : '心动过缓',
+            now,
+          ),
+        )
         this.resetCounter(this.heartbeatCounts, sn)
       }
     }
@@ -42,7 +51,17 @@ export class AlertEngine {
       const brAbnormal = payload.br > this.BREATH_MAX || payload.br < this.BREATH_MIN
       this.tickCounter(this.breathCounts, sn, 'resp_rate', brAbnormal)
       if (this.getCount(this.breathCounts, sn) >= this.THRESHOLD_COUNT) {
-        alerts.push(this.makeAlert(sn, 'resp_rate', 'resp_rate_abnormal', payload.br, 'warning', '呼吸异常', now))
+        alerts.push(
+          this.makeAlert(
+            sn,
+            'resp_rate',
+            'resp_rate_abnormal',
+            payload.br,
+            'warning',
+            '呼吸异常',
+            now,
+          ),
+        )
         this.resetCounter(this.breathCounts, sn)
       }
     }
@@ -68,7 +87,17 @@ export class AlertEngine {
           if (since) {
             const minutes = (now.getTime() - since.getTime()) / 60000
             if (minutes >= this.BEDSORE_MINUTES) {
-              alerts.push(this.makeAlert(sn, 'position', 'pressure_ulcer_risk', null, 'warning', '褥疮风险：超过120分钟未翻身', now))
+              alerts.push(
+                this.makeAlert(
+                  sn,
+                  'position',
+                  'pressure_ulcer_risk',
+                  null,
+                  'warning',
+                  '褥疮风险：超过120分钟未翻身',
+                  now,
+                ),
+              )
               this.positionUnchangedSince.set(sn, now) // reset timer after alert
             }
           } else {
@@ -86,7 +115,17 @@ export class AlertEngine {
       const count = (this.abnormalCount.get(sn) || 0) + 1
       this.abnormalCount.set(sn, count)
       if (count >= 10) {
-        alerts.push(this.makeAlert(sn, 'status', 'device_abnormal', null, 'warning', '设备异常：离床但承重偏高', now))
+        alerts.push(
+          this.makeAlert(
+            sn,
+            'status',
+            'device_abnormal',
+            null,
+            'warning',
+            '设备异常：离床但承重偏高',
+            now,
+          ),
+        )
         this.abnormalCount.set(sn, 0)
       }
     } else {
@@ -96,7 +135,12 @@ export class AlertEngine {
     return alerts
   }
 
-  private tickCounter(counters: ThresholdCounter[], sn: string, metric: string, abnormal: boolean): void {
+  private tickCounter(
+    counters: ThresholdCounter[],
+    sn: string,
+    metric: string,
+    abnormal: boolean,
+  ): void {
     const existing = counters.find((c) => c.sn === sn)
     if (existing) {
       if (abnormal) existing.count++
@@ -116,12 +160,23 @@ export class AlertEngine {
   }
 
   private makeAlert(
-    sn: string, metric: string, type: string, value: number | null,
-    severity: 'critical' | 'warning' | 'info', message: string, now: Date,
+    sn: string,
+    metric: string,
+    type: string,
+    value: number | null,
+    severity: 'critical' | 'warning' | 'info',
+    message: string,
+    now: Date,
   ): MattressEvent {
     return {
-      patientId: '', deviceId: '', // filled by caller
-      kind: 'alert', metric, value, unit: null, severity, status: 'active',
+      patientId: '',
+      deviceId: '', // filled by caller
+      kind: 'alert',
+      metric,
+      value,
+      unit: null,
+      severity,
+      status: 'active',
       tags: { sn, alert_type: type, message, protocol: 'mattress' },
       recordedAt: now,
     }

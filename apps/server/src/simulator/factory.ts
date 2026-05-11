@@ -1,5 +1,5 @@
 import { v4 as uuid } from 'uuid'
-import type { PatientProfile, PatientInstance } from './types'
+import type { PatientInstance, PatientProfile } from './types'
 
 export interface FactoryDeps {
   db: any
@@ -49,5 +49,6 @@ export async function createPatientInstance(
     baselines: profile.baseline,
     conditions: profile.conditions,
     alerts: profile.alerts,
+    customThresholds: ((result.patient.tags as any)?.customThresholds as any[]) || [],
   }
 }

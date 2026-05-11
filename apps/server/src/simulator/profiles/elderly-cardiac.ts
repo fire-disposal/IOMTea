@@ -20,15 +20,31 @@ export const elderlyCardiacProfile: PatientProfile = {
   schedule: {
     sleep: { start: '21:00', end: '06:00' },
     meals: [{ time: '07:00' }, { time: '12:00' }, { time: '18:00' }],
-    events: [
-      { type: 'bed_exit', window: ['02:00', '04:00'], probability: 0.35 },
-    ],
+    events: [{ type: 'bed_exit', window: ['02:00', '04:00'], probability: 0.35 }],
   },
   devices: ['mattress'],
   alerts: [
-    { metric: 'heart_rate', condition: 'gt', threshold: 130, severity: 'warning', message: '心动过速' },
-    { metric: 'heart_rate', condition: 'lt', threshold: 45, severity: 'critical', message: '心动过缓' },
+    {
+      metric: 'heart_rate',
+      condition: 'gt',
+      threshold: 130,
+      severity: 'warning',
+      message: '心动过速',
+    },
+    {
+      metric: 'heart_rate',
+      condition: 'lt',
+      threshold: 45,
+      severity: 'critical',
+      message: '心动过缓',
+    },
     { metric: 'spo2', condition: 'lt', threshold: 90, severity: 'critical', message: '低血氧' },
-    { metric: 'systolic_bp', condition: 'gt', threshold: 160, severity: 'warning', message: '高血压' },
+    {
+      metric: 'systolic_bp',
+      condition: 'gt',
+      threshold: 160,
+      severity: 'warning',
+      message: '高血压',
+    },
   ],
 }

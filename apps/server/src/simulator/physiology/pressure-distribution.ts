@@ -1,14 +1,11 @@
 import type { Posture, PressureGrid } from '../types'
 
-export function generatePressureDistribution(
-  posture: Posture,
-  weight: number,
-): PressureGrid {
+export function generatePressureDistribution(posture: Posture, weight: number): PressureGrid {
   const grid: PressureGrid = Array.from({ length: 4 }, () => Array(4).fill(0))
   const weightFactor = weight / 70
 
   if (posture === 'walking' || posture === 'standing') {
-    return grid.map(row => row.map(() => Math.round(Math.random() * 3)))
+    return grid.map((row) => row.map(() => Math.round(Math.random() * 3)))
   }
 
   for (let r = 0; r < 4; r++) {

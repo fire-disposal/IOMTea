@@ -20,15 +20,31 @@ export const maternityProfile: PatientProfile = {
   schedule: {
     sleep: { start: '22:00', end: '06:30' },
     meals: [{ time: '07:30' }, { time: '12:00' }, { time: '18:30' }],
-    events: [
-      { type: 'bed_exit', window: ['03:00', '05:00'], probability: 0.4 },
-    ],
+    events: [{ type: 'bed_exit', window: ['03:00', '05:00'], probability: 0.4 }],
   },
   devices: ['mattress'],
   alerts: [
-    { metric: 'heart_rate', condition: 'gt', threshold: 140, severity: 'critical', message: '心动过速' },
-    { metric: 'heart_rate', condition: 'lt', threshold: 50, severity: 'warning', message: '心动过缓' },
-    { metric: 'systolic_bp', condition: 'gt', threshold: 140, severity: 'critical', message: '子痫前期风险' },
+    {
+      metric: 'heart_rate',
+      condition: 'gt',
+      threshold: 140,
+      severity: 'critical',
+      message: '心动过速',
+    },
+    {
+      metric: 'heart_rate',
+      condition: 'lt',
+      threshold: 50,
+      severity: 'warning',
+      message: '心动过缓',
+    },
+    {
+      metric: 'systolic_bp',
+      condition: 'gt',
+      threshold: 140,
+      severity: 'critical',
+      message: '子痫前期风险',
+    },
     { metric: 'spo2', condition: 'lt', threshold: 94, severity: 'warning', message: '低血氧' },
   ],
 }

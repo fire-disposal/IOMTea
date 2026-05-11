@@ -9,7 +9,7 @@ export function generateRespiratoryWaveform(rr: number): number[] {
   const duration = 5
   const dt = duration / sampleCount
   const freq = rr / 60
-  let noiseIdx = Math.random() * 1000
+  const noiseIdx = Math.random() * 1000
 
   for (let i = 0; i < sampleCount; i++) {
     const t = i * dt

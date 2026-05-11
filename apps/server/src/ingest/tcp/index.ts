@@ -4,10 +4,10 @@ import type { DbClient } from '../../core/db'
 import { MattressModule } from '../mqtt/mattress'
 import type { MattressPayload } from '../mqtt/mattress/parser'
 
-const MAX_BUFFER = 65536       // 64 KiB — drop connection if exceeded
-const MAX_CONNECTIONS = 100    // global cap
+const MAX_BUFFER = 65536 // 64 KiB — drop connection if exceeded
+const MAX_CONNECTIONS = 100 // global cap
 const SOCKET_TIMEOUT_MS = 60_000 // 60s idle timeout
-const RATE_LIMIT_PER_SEC = 50  // max messages/sec per socket
+const RATE_LIMIT_PER_SEC = 50 // max messages/sec per socket
 
 function timeStr(): string {
   return new Date().toISOString().replace('T', ' ').slice(0, 19)
@@ -50,19 +50,25 @@ function decodeMsgpack(payload: Uint8Array): MattressPayload | null {
 // Special: st field can be ASCII char ('0'=off,'1'=on,'2'=mov) or numeric code.
 
 const STATUS_MAP: Record<number, string> = {
-  0x00: 'off', 0x30: 'off',  // numeric 0 or ASCII '0'
-  0x01: 'on',  0x31: 'on',   // numeric 1 or ASCII '1'
-  0x02: 'mov', 0x32: 'mov',  // numeric 2 or ASCII '2'
+  0: 'off',
+  48: 'off', // numeric 0 or ASCII '0'
+  1: 'on',
+  49: 'on', // numeric 1 or ASCII '1'
+  2: 'mov',
+  50: 'mov', // numeric 2 or ASCII '2'
 }
 
-function readMultiByte(payload: Buffer, startIdx: number): { value: number; consumed: number } | null {
+function readMultiByte(
+  payload: Buffer,
+  startIdx: number,
+): { value: number; consumed: number } | null {
   // Attempt to read multi-byte value (big-endian).
   // Scan forward until next TLV key marker (0xA1-0xA7) or end of buffer.
   const bytes: number[] = []
   let i = startIdx
   while (i < payload.length) {
     const b = payload[i]
-    if (b >= 0xA1 && b <= 0xA7) break // next key starts here
+    if (b >= 0xa1 && b <= 0xa7) break // next key starts here
     bytes.push(b)
     i++
   }
@@ -94,8 +100,8 @@ function decodeTLV(payload: Buffer): MattressPayload | null {
     }
 
     // TLV key: 0xA1-0xA7
-    if (b >= 0xA1 && b <= 0xA7) {
-      const len = b - 0xA0
+    if (b >= 0xa1 && b <= 0xa7) {
+      const len = b - 0xa0
       if (idx + len > payload.length) break
       const key = payload.toString('utf8', idx, idx + len)
       idx += len
@@ -108,7 +114,7 @@ function decodeTLV(payload: Buffer): MattressPayload | null {
         idx++
         while (idx < payload.length) {
           const nb = payload[idx]
-          if (nb >= 0xA1 && nb <= 0xA7) break
+          if (nb >= 0xa1 && nb <= 0xa7) break
           snBytes.push(nb)
           idx++
         }
@@ -118,12 +124,12 @@ function decodeTLV(payload: Buffer): MattressPayload | null {
 
       // Try multi-byte value first (for fields like hb, br that can exceed 255)
       const mbr = readMultiByte(payload, idx)
-      let v: number = 0
-      let vb: number = 0
+      let v = 0
+      let vb = 0
       if (mbr) {
         v = mbr.value
         idx += mbr.consumed
-        vb = v & 0xFF // single-byte fallback for char-based fields
+        vb = v & 0xff // single-byte fallback for char-based fields
       } else {
         vb = payload[idx]
         v = vb
@@ -131,17 +137,29 @@ function decodeTLV(payload: Buffer): MattressPayload | null {
       }
 
       switch (key) {
-        case 'hb': msg.hb = v === 255 || v === 0xFFFF ? -1 : v; break
-        case 'br': msg.br = v === 255 || v === 0xFFFF ? -1 : v; break
-        case 'od': msg.od = v === 255 || v === 0xFFFF ? -1 : v; break
+        case 'hb':
+          msg.hb = v === 255 || v === 0xffff ? -1 : v
+          break
+        case 'br':
+          msg.br = v === 255 || v === 0xffff ? -1 : v
+          break
+        case 'od':
+          msg.od = v === 255 || v === 0xffff ? -1 : v
+          break
         case 'st': {
           const mapped = STATUS_MAP[vb] || STATUS_MAP[v]
           msg.st = mapped || String.fromCharCode(vb)
           break
         }
-        case 'we': msg.we = v === 255 || v === 0xFFFF ? -1 : v; break
-        case 'wt': msg.wt = vb === 0xC3 || v === 0xC3 ? '1' : '0'; break
-        case 'fv': msg.fv = v; break
+        case 'we':
+          msg.we = v === 255 || v === 0xffff ? -1 : v
+          break
+        case 'wt':
+          msg.wt = vb === 0xc3 || v === 0xc3 ? '1' : '0'
+          break
+        case 'fv':
+          msg.fv = v
+          break
       }
     }
   }
@@ -157,7 +175,7 @@ function decodeTLV(payload: Buffer): MattressPayload | null {
 function tryDecode(buf: Buffer): { consumed: number; msg: MattressPayload | null } | null {
   if (buf.length < 4) return null
 
-  if (buf[0] === 0xAB && buf[1] === 0xCD) {
+  if (buf[0] === 0xab && buf[1] === 0xcd) {
     const len = buf[2]
     const total = 4 + len
     if (buf.length < total) return null
@@ -270,7 +288,9 @@ export function startTcpIngest(db: DbClient, config: TcpIngestConfig): void {
   })
 
   server.listen(config.port, () => {
-    console.log(`[ingest:tcp] listening on port ${config.port}${config.preSharedToken ? ' (auth enabled)' : ''}`)
+    console.log(
+      `[ingest:tcp] listening on port ${config.port}${config.preSharedToken ? ' (auth enabled)' : ''}`,
+    )
   })
 
   server.on('error', (err) => {

@@ -1,10 +1,12 @@
-import { View, Text, Input, Button } from '@tarojs/components'
+import { Button, Input, Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useState } from 'react'
 import { trpc } from '../../utils/trpc'
 
 export default function Settings() {
-  const [serverUrl, setServerUrl] = useState(Taro.getStorageSync('server_url') || 'http://localhost:3000')
+  const [serverUrl, setServerUrl] = useState(
+    Taro.getStorageSync('server_url') || 'http://localhost:3000',
+  )
 
   const save = () => {
     Taro.setStorageSync('server_url', serverUrl)
@@ -27,14 +29,23 @@ export default function Settings() {
   }
 
   return (
-    <View className='page'>
-      <View className='form-group'>
-        <Text className='label'>服务器地址</Text>
-        <Input value={serverUrl} onInput={e => setServerUrl(e.detail.value)} placeholder='http://localhost:3000' />
+    <View className="page">
+      <View className="form-group">
+        <Text className="label">服务器地址</Text>
+        <Input
+          value={serverUrl}
+          onInput={(e) => setServerUrl(e.detail.value)}
+          placeholder="http://localhost:3000"
+        />
       </View>
       <Button onClick={save}>保存</Button>
       <Button onClick={testConn}>测试连接</Button>
-      <Button onClick={logout} style={{ marginTop: '40px', backgroundColor: '#e03131', color: '#fff' }}>退出登录</Button>
+      <Button
+        onClick={logout}
+        style={{ marginTop: '40px', backgroundColor: '#e03131', color: '#fff' }}
+      >
+        退出登录
+      </Button>
     </View>
   )
 }

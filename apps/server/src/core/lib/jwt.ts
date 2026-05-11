@@ -14,11 +14,16 @@ function parseDuration(duration: string): number {
   if (!match) throw new Error(`Invalid duration: ${duration}`)
   const value = Number.parseInt(match[1])
   switch (match[2]) {
-    case 's': return value
-    case 'm': return value * 60
-    case 'h': return value * 3600
-    case 'd': return value * 86400
-    default: return value
+    case 's':
+      return value
+    case 'm':
+      return value * 60
+    case 'h':
+      return value * 3600
+    case 'd':
+      return value * 86400
+    default:
+      return value
   }
 }
 
@@ -32,7 +37,9 @@ export async function signAccessToken(payload: JwtPayload): Promise<string> {
     .sign(secret)
 }
 
-export async function signRefreshToken(userId: string): Promise<{ token: string; expiresAt: Date }> {
+export async function signRefreshToken(
+  userId: string,
+): Promise<{ token: string; expiresAt: Date }> {
   const expiresIn = parseDuration(env.JWT_REFRESH_EXPIRES_IN)
   const token = await new SignJWT({})
     .setProtectedHeader({ alg })
