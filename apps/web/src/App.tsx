@@ -39,7 +39,6 @@ function Dashboard() {
   const wardId = useWardStore((s) => s.selectedWardId)
   const wardRunning = useWardStore((s) => s.wardRunning)
   const wsConnected = useWardStore((s) => s.wsConnected)
-  const [ready, setReady] = useState(false)
   const [activeTab, setActiveTab] = useState<string | null>('dashboard')
   const [selectedMetric, setSelectedMetric] = useState<string>('standard')
 
@@ -58,24 +57,14 @@ function Dashboard() {
       notifications.show({ title: '注入失败', message: err.message, color: 'red' }),
   })
 
-  useEffect(() => {
-    if (patients.length > 0 && !ready) setReady(true)
-  }, [patients.length, ready])
+  const latestQueries = patientIds.slice(0, 3).map((id) =>
+    trpc.data.latest.useQuery(
+      { patientId: id },
+      { enabled: !!id, refetchInterval: 15000 },
+    ),
+  )
 
-  const latestQueries = [
-    trpc.data.latest.useQuery(
-      { patientId: patientIds[0] || '' },
-      { enabled: ready && !!patientIds[0], refetchInterval: 15000 },
-    ),
-    trpc.data.latest.useQuery(
-      { patientId: patientIds[1] || '' },
-      { enabled: ready && !!patientIds[1], refetchInterval: 15000 },
-    ),
-    trpc.data.latest.useQuery(
-      { patientId: patientIds[2] || '' },
-      { enabled: ready && !!patientIds[2], refetchInterval: 15000 },
-    ),
-  ]
+  const hasError = latestQueries.some((q) => q.isError)
 
   const alerts = trpc.alert.list.useQuery(
     { pageSize: 15, status: 'active' },
@@ -94,11 +83,22 @@ function Dashboard() {
 
   const severityColor: Record<string, string> = { critical: 'red', warning: 'orange', info: 'blue' }
 
-  if (!ready) {
+  const ready = patientNames.length > 0 || patients.length > 0
+
+  if (!patients.length && !hasError) {
     return (
-      <Container size="xl" py="xl">
-        <Loader />
-        <Text mt="md">连接服务器...</Text>
+      <Container py="xl">
+        <Stack align="center" gap="md">
+          <Loader />
+          <Text c="dimmed">连接服务器...</Text>
+        </Stack>
+      </Container>
+    )
+  }
+  if (hasError) {
+    return (
+      <Container py="xl">
+        <Text ta="center" c="red">数据获取失败，请检查网络连接后刷新页面</Text>
       </Container>
     )
   }

@@ -1,4 +1,3 @@
-import type { AppRouter } from '@server/core/trpc/routers/_app'
 import Taro from '@tarojs/taro'
 import { TRPCClientError, createTRPCClient, httpLink } from '@trpc/client'
 
@@ -32,7 +31,7 @@ function taroFetcher(input: RequestInfo | URL, init?: RequestInit): Promise<Resp
   })
 }
 
-export const trpc = createTRPCClient<AppRouter>({
+export const trpc = createTRPCClient<any>({
   links: [
     httpLink({
       url: `${API_BASE}/trpc`,
