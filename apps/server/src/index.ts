@@ -6,7 +6,7 @@ import { cors } from 'hono/cors'
 import pino from 'pino'
 import { WebSocketServer } from 'ws'
 import { db } from './core/db'
-import { users } from './core/db/schema'
+import { mapConfigs, users } from './core/db/schema'
 import { hashPassword } from './core/lib/password'
 import { broadcastManager } from './core/realtime/broadcast'
 import { createContext } from './core/trpc/context'
@@ -52,6 +52,24 @@ async function bootstrap() {
       role: 'admin',
     })
     logger.info('demo account created (demo / demo123)')
+  }
+
+  // Seed default map config
+  try {
+    const existingMap = await db.select().from(mapConfigs).where(eq(mapConfigs.id, 'default')).limit(1)
+    if (existingMap.length === 0) {
+      await db.insert(mapConfigs).values({
+        id: 'default',
+        data: {
+          id: 'default', width: 15, height: 13, tileSize: 1,
+          zones: [],
+          entities: [],
+        },
+      })
+      logger.info('default map config seeded')
+    }
+  } catch (err) {
+    logger.warn({ err }, 'map config seed failed (run db:migrate first)')
   }
 
   // Auto-start demo ward (idempotent — if already running, skip)

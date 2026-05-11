@@ -1,8 +1,10 @@
 import { useState, useCallback } from 'react'
 import { Container, Group, Text } from '@mantine/core'
+import { notifications } from '@mantine/notifications'
 import type { MapModel, Entity, Zone } from '@iomtea/shared-types/map'
-import { getEntityDef, buildGrid } from '@iomtea/shared-types/map'
+import { buildGrid } from '@iomtea/shared-types/map'
 import { useMapModel } from '../useMapModel'
+import { trpc } from '../../trpc'
 import { Toolbar } from './Toolbar'
 import { MapCanvas2D } from './MapCanvas2D'
 import { PropertiesPanel } from './PropertiesPanel'
@@ -14,6 +16,16 @@ export function MapEditorPage() {
   const [model, setModel] = useState<MapModel>({ ...initialModel })
   const [mode, setMode] = useState<ToolMode>('select')
   const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null)
+  const [zoneDefId, setZoneDefId] = useState('bedroom')
+
+  const utils = trpc.useUtils()
+  const saveMap = trpc.mapConfig.save.useMutation({
+    onSuccess: () => {
+      notifications.show({ title: '已保存', message: '地图已保存到服务器', color: 'green' })
+      utils.mapConfig.get.invalidate({ id: 'default' })
+    },
+    onError: (err: any) => notifications.show({ title: '保存失败', message: err.message, color: 'red' }),
+  })
 
   const selectedEntity = model.entities.find((e) => e.id === selectedEntityId) || null
 
@@ -21,6 +33,18 @@ export function MapEditorPage() {
     buildGrid(newModel)
     setModel({ ...newModel })
   }, [])
+
+  const handleSave = useCallback(() => {
+    const data = {
+      id: model.id || 'default',
+      width: model.width,
+      height: model.height,
+      tileSize: model.tileSize,
+      zones: model.zones,
+      entities: model.entities,
+    }
+    saveMap.mutate({ id: data.id, data: data as unknown as Record<string, unknown> })
+  }, [model, saveMap])
 
   const handleAddEntity = useCallback(
     (entity: Entity) => {
@@ -72,11 +96,19 @@ export function MapEditorPage() {
   return (
     <Container fluid p={0} style={{ height: 'calc(100vh - 60px)', display: 'flex', flexDirection: 'column' }}>
       <Group style={{ flex: 1, overflow: 'hidden' }} gap={0} wrap="nowrap">
-        <Toolbar mode={mode} onChangeMode={setMode} />
+        <Toolbar
+          mode={mode}
+          onChangeMode={setMode}
+          zoneDefId={zoneDefId}
+          onChangeZoneDef={setZoneDefId}
+          onSave={handleSave}
+          saving={saveMap.isPending}
+        />
         <div style={{ flex: 1, overflow: 'auto', padding: 8 }}>
           <MapCanvas2D
             model={model}
             mode={mode}
+            zoneDefId={zoneDefId}
             selectedEntityId={selectedEntityId}
             onSelectEntity={setSelectedEntityId}
             onAddEntity={handleAddEntity}

@@ -8,6 +8,7 @@ type ToolMode = 'select' | 'draw-room' | { type: 'place-entity'; defId: string }
 interface MapCanvas2DProps {
   model: MapModel
   mode: ToolMode
+  zoneDefId: string
   selectedEntityId: string | null
   onSelectEntity: (id: string | null) => void
   onAddEntity: (entity: Entity) => void
@@ -16,7 +17,7 @@ interface MapCanvas2DProps {
 }
 
 export function MapCanvas2D({
-  model, mode, selectedEntityId, onSelectEntity, onAddEntity, onAddZone, onMoveEntity,
+  model, mode, zoneDefId, selectedEntityId, onSelectEntity, onAddEntity, onAddZone, onMoveEntity,
 }: MapCanvas2DProps) {
   const cellSize = 32
   const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null)
@@ -109,7 +110,7 @@ export function MapCanvas2D({
       if (x2 - x1 >= 2 && y2 - y1 >= 2) {
         onAddZone({
           id: `zone-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-          defId: 'bedroom',
+          defId: zoneDefId,
           name: '新房间',
           bounds: { x1, y1, x2, y2 },
         })

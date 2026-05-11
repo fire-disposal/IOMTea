@@ -5,6 +5,7 @@ import { alertRuleRouter } from './alertRule'
 import { authRouter } from './auth'
 import { dataRouter } from './data'
 import { deviceRouter } from './device'
+import { mapConfigRouter } from './mapConfig'
 import { patientRouter } from './patient'
 import { userRouter } from './user'
 
@@ -16,6 +17,7 @@ export const appRouter = router({
   alert: alertRouter,
   data: dataRouter,
   alertRule: alertRuleRouter,
+  mapConfig: mapConfigRouter,
   simulator: simulatorRouter,
 })
 

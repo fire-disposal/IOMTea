@@ -130,3 +130,10 @@ export const auditLogs = pgTable('audit_logs', {
   ip: varchar('ip', { length: 50 }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 })
+
+export const mapConfigs = pgTable('map_configs', {
+  id: varchar('id', { length: 50 }).primaryKey(),
+  data: jsonb('data').notNull().default({}),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+})
