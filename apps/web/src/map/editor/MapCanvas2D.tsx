@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import type { MapModel, Zone, Entity } from '@iomtea/shared-types/map'
 import { getEntityDef, canPlaceEntity } from '@iomtea/shared-types/map'
 import { MapRenderer2D } from '../MapRenderer2D'
@@ -14,10 +14,14 @@ interface MapCanvas2DProps {
   onAddEntity: (entity: Entity) => void
   onAddZone: (zone: Zone) => void
   onMoveEntity: (id: string, x: number, y: number) => void
+  onDeleteEntity: (id: string) => void
+  onDeleteZone: (zoneId: string) => void
+  onRotateEntity: (id: string) => void
 }
 
 export function MapCanvas2D({
-  model, mode, zoneDefId, selectedEntityId, onSelectEntity, onAddEntity, onAddZone, onMoveEntity,
+  model, mode, zoneDefId, selectedEntityId, onSelectEntity, onAddEntity, onAddZone,
+  onMoveEntity, onDeleteEntity, onDeleteZone, onRotateEntity,
 }: MapCanvas2DProps) {
   const cellSize = 32
   const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null)
@@ -29,10 +33,47 @@ export function MapCanvas2D({
     return { x: Math.floor((clientX - rect.left) / cellSize), y: Math.floor((clientY - rect.top) / cellSize) }
   }, [cellSize])
 
+  // Keyboard: R=rotate, Delete=delete
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'r' || e.key === 'R') {
+        if (selectedEntityId) {
+          e.preventDefault()
+          onRotateEntity(selectedEntityId)
+        }
+      }
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (selectedEntityId) {
+          e.preventDefault()
+          onDeleteEntity(selectedEntityId)
+        }
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [selectedEntityId, onRotateEntity, onDeleteEntity])
+
+  const findZoneAt = useCallback((cell: { x: number; y: number }): Zone | null => {
+    return model.zones.find((z) =>
+      cell.x >= z.bounds.x1 && cell.x <= z.bounds.x2 &&
+      cell.y >= z.bounds.y1 && cell.y <= z.bounds.y2,
+    ) || null
+  }, [model.zones])
+
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
       const rect = e.currentTarget.getBoundingClientRect()
       const cell = gridToCell(e.clientX, e.clientY, rect)
+
+      // Right-click on zone → delete
+      if (e.button === 2) {
+        e.preventDefault()
+        const zone = findZoneAt(cell)
+        if (zone) {
+          onDeleteZone(zone.id)
+        }
+        return
+      }
 
       if (mode === 'select') {
         const clicked = model.entities.find((ent) => {
@@ -72,7 +113,7 @@ export function MapCanvas2D({
         }
       }
     },
-    [mode, model, gridToCell, onSelectEntity, onAddEntity],
+    [mode, model, gridToCell, findZoneAt, onSelectEntity, onAddEntity, onDeleteZone],
   )
 
   const handleMouseMove = useCallback(
@@ -101,6 +142,10 @@ export function MapCanvas2D({
     [dragStart, dragEntityId, mode, model, gridToCell, onMoveEntity],
   )
 
+  const handleContextMenu = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+  }, [])
+
   const handleMouseUp = useCallback(() => {
     if (dragStart && dragCurrent && mode === 'draw-room') {
       const x1 = Math.min(dragStart.x, dragCurrent.x)
@@ -119,7 +164,7 @@ export function MapCanvas2D({
     setDragStart(null)
     setDragCurrent(null)
     setDragEntityId(null)
-  }, [dragStart, dragCurrent, mode, onAddZone])
+  }, [dragStart, dragCurrent, mode, zoneDefId, onAddZone])
 
   const showPreview = dragStart && dragCurrent && mode === 'draw-room'
   const w = model.width * cellSize
@@ -127,12 +172,14 @@ export function MapCanvas2D({
 
   return (
     <div
-      style={{ position: 'relative', width: w, height: h, overflow: 'hidden' }}
+      style={{ position: 'relative', width: w, height: h, overflow: 'hidden', cursor: mode === 'draw-room' ? 'crosshair' : mode === 'select' ? 'default' : 'cell' }}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
+      onContextMenu={handleContextMenu}
     >
-      <MapRenderer2D model={model} cellSize={cellSize} />
+      <MapRenderer2D model={model} cellSize={cellSize} showGrid />
+
       {hoverCell && typeof mode === 'object' && mode.type === 'place-entity' && (() => {
         const def = getEntityDef(mode.defId)
         if (!def) return null
@@ -143,11 +190,20 @@ export function MapCanvas2D({
             left: hoverCell.x * cellSize, top: hoverCell.y * cellSize,
             width: def.size.w * cellSize, height: def.size.h * cellSize,
             border: `2px solid ${valid ? '#4caf50' : '#f44336'}`,
-            background: valid ? 'rgba(76,175,80,0.2)' : 'rgba(244,67,54,0.2)',
-            pointerEvents: 'none',
-          }} />
+            background: valid ? 'rgba(76,175,80,0.25)' : 'rgba(244,67,54,0.25)',
+            pointerEvents: 'none', zIndex: 10,
+          }}>
+            <div style={{
+              position: 'absolute', bottom: -18, left: 0, right: 0,
+              textAlign: 'center', fontSize: 10, color: valid ? '#2e7d32' : '#c62828',
+              whiteSpace: 'nowrap',
+            }}>
+              {def.label} {valid ? '✓' : '✗'}
+            </div>
+          </div>
         )
       })()}
+
       {showPreview && (
         <div style={{
           position: 'absolute',
@@ -156,10 +212,19 @@ export function MapCanvas2D({
           width: (Math.abs(dragCurrent!.x - dragStart!.x) + 1) * cellSize,
           height: (Math.abs(dragCurrent!.y - dragStart!.y) + 1) * cellSize,
           border: '2px dashed #1976d2',
-          background: 'rgba(25,118,210,0.1)',
-          pointerEvents: 'none',
-        }} />
+          background: 'rgba(25,118,210,0.12)',
+          pointerEvents: 'none', zIndex: 10,
+        }}>
+          <div style={{
+            position: 'absolute', inset: 0, display: 'flex',
+            alignItems: 'center', justifyContent: 'center',
+            color: '#1565c0', fontSize: 12, fontWeight: 600, opacity: 0.7,
+          }}>
+            {Math.abs(dragCurrent!.x - dragStart!.x) + 1}×{Math.abs(dragCurrent!.y - dragStart!.y) + 1}
+          </div>
+        </div>
       )}
+
       {selectedEntityId && (() => {
         const ent = model.entities.find((e) => e.id === selectedEntityId)
         if (!ent) return null
@@ -170,7 +235,8 @@ export function MapCanvas2D({
             position: 'absolute',
             left: ent.gridX * cellSize, top: ent.gridY * cellSize,
             width: def.size.w * cellSize, height: def.size.h * cellSize,
-            border: '2px solid #1976d2', pointerEvents: 'none',
+            border: '2px solid #1976d2', pointerEvents: 'none', zIndex: 10,
+            boxShadow: '0 0 0 1px rgba(25,118,210,0.3)',
           }} />
         )
       })()}

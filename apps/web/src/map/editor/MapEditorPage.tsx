@@ -11,6 +11,8 @@ import { PropertiesPanel } from './PropertiesPanel'
 
 type ToolMode = 'select' | 'draw-room' | { type: 'place-entity'; defId: string }
 
+const ORIENTATIONS = ['N', 'E', 'S', 'W'] as const
+
 export function MapEditorPage() {
   const initialModel = useMapModel()
   const [model, setModel] = useState<MapModel>({ ...initialModel })
@@ -85,9 +87,28 @@ export function MapEditorPage() {
     [model, rebuild],
   )
 
+  const handleRotateEntity = useCallback(
+    (id: string) => {
+      const ent = model.entities.find((e) => e.id === id)
+      if (!ent) return
+      const idx = ORIENTATIONS.indexOf(ent.orientation as any)
+      const next = ORIENTATIONS[(idx + 1) % 4]
+      handleUpdateEntity({ ...ent, orientation: next })
+    },
+    [model.entities, handleUpdateEntity],
+  )
+
   const handleAddZone = useCallback(
     (zone: Zone) => {
       const newModel = { ...model, zones: [...model.zones, zone] }
+      rebuild(newModel)
+    },
+    [model, rebuild],
+  )
+
+  const handleDeleteZone = useCallback(
+    (zoneId: string) => {
+      const newModel = { ...model, zones: model.zones.filter((z) => z.id !== zoneId) }
       rebuild(newModel)
     },
     [model, rebuild],
@@ -114,6 +135,9 @@ export function MapEditorPage() {
             onAddEntity={handleAddEntity}
             onAddZone={handleAddZone}
             onMoveEntity={handleMoveEntity}
+            onDeleteEntity={handleDeleteEntity}
+            onDeleteZone={handleDeleteZone}
+            onRotateEntity={handleRotateEntity}
           />
         </div>
         <PropertiesPanel
@@ -125,7 +149,9 @@ export function MapEditorPage() {
       <Group px="xs" py={4} bg="gray.1" justify="space-between">
         <Text size="xs" c="dimmed">
           区域: {model.zones.length} | 实体: {model.entities.length}
+          {selectedEntity && ` | 选中: ${selectedEntity.defId} (${selectedEntity.gridX},${selectedEntity.gridY})`}
         </Text>
+        <Text size="xs" c="dimmed">右键删除区域 · R旋转实体 · Delete删除实体</Text>
       </Group>
     </Container>
   )
