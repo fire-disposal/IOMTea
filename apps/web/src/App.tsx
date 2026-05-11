@@ -1,5 +1,6 @@
-import { ActionIcon, AppShell, Badge, Button, Container, Group, Loader, NavLink, Stack, Text } from '@mantine/core'
+import { ActionIcon, AppShell, Badge, Burger, Container, Group, Loader, NavLink, ScrollArea, Stack, Text, ThemeIcon } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
+import { IconAlertTriangle, IconChartLine, IconCube, IconDashboard, IconDeviceDesktop, IconMap, IconSettings, IconStethoscope, IconUsers } from '@tabler/icons-react'
 import { useState } from 'react'
 import { LoginPage } from './LoginPage'
 import { StoreProvider } from './StoreProvider'
@@ -26,59 +27,60 @@ function Dashboard() {
   const [active, setActive] = useState('dashboard')
   const [opened, { toggle }] = useDisclosure()
 
-  const patientNames = patients.map((p) => p.name)
   const alertCount = trpc.alert.list.useQuery({ pageSize: 1, status: 'active' }, { refetchInterval: 10000 })
 
   if (patientsLoading) {
-    return (
-      <Container py="xl">
-        <Stack align="center" gap="md"><Loader /><Text c="dimmed">加载系统数据...</Text></Stack>
-      </Container>
-    )
+    return <Container py="xl"><Stack align="center" gap="md"><Loader /><Text c="dimmed">加载系统数据...</Text></Stack></Container>
   }
 
   const navItems = [
-    { value: 'dashboard', label: '系统概览', alert: alertCount.data?.length },
-    { value: 'trends', label: '趋势分析' },
-    { value: 'digitaltwin', label: '数字孪生' },
-    { value: 'patients', label: '患者管理' },
-    { value: 'devices', label: '设备管理' },
-    { value: 'alertRules', label: '告警阈值' },
-    { value: 'wards', label: 'Ward 管理' },
-    { value: 'mapEditor', label: '地图编辑' },
-    { value: 'assets', label: '资产管理' },
+    { value: 'dashboard', label: '系统概览', icon: IconDashboard },
+    { value: 'trends', label: '趋势分析', icon: IconChartLine },
+    { value: 'digitaltwin', label: '数字孪生', icon: IconCube },
+    { value: 'patients', label: '患者管理', icon: IconUsers },
+    { value: 'devices', label: '设备管理', icon: IconDeviceDesktop },
+    { value: 'alertRules', label: '告警阈值', icon: IconAlertTriangle, alert: alertCount.data?.length },
+    { value: 'wards', label: 'Ward 管理', icon: IconStethoscope },
+    { value: 'mapEditor', label: '地图编辑', icon: IconMap },
+    { value: 'assets', label: '资产管理', icon: IconSettings },
   ]
 
   return (
     <>
       <StoreProvider />
-      <AppShell
-        header={{ height: 50 }}
-        navbar={{ width: 180, breakpoint: 'sm', collapsed: { mobile: !opened } }}
-        padding={0}
-      >
+      <AppShell header={{ height: 56 }} navbar={{ width: 220, breakpoint: 'sm', collapsed: { mobile: !opened } }} padding={0}>
         <AppShell.Header>
           <Group h="100%" px="md" justify="space-between">
-            <Group gap="xs">
-              <ActionIcon variant="subtle" onClick={toggle} hiddenFrom="sm" aria-label="菜单">☰</ActionIcon>
+            <Group gap="sm">
+              <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
+              <ThemeIcon size="sm" radius="md" variant="gradient" gradient={{ from: 'blue', to: 'cyan' }}>🏥</ThemeIcon>
               <Text fw={700}>IOMTea</Text>
-              <Badge color={wardRunning ? 'green' : 'gray'} size="sm" variant="dot">{wardRunning ? '运行' : '暂停'}</Badge>
+              <Badge color={wardRunning ? 'green' : 'gray'} size="sm" variant="dot">{wardRunning ? '运行中' : '已暂停'}</Badge>
               <Badge color={wsConnected ? 'green' : 'orange'} size="sm" variant="light">{wsConnected ? '实时' : '轮询'}</Badge>
             </Group>
-            <Button size="xs" variant="subtle" color="red" onClick={logout}>退出</Button>
+            <ActionIcon variant="subtle" color="red" onClick={logout} aria-label="退出" size="md"><IconUsers size={18} /></ActionIcon>
           </Group>
         </AppShell.Header>
 
-        <AppShell.Navbar p="xs">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.value}
-              label={item.label}
-              active={active === item.value}
-              onClick={() => { setActive(item.value); toggle() }}
-              rightSection={item.alert ? <Badge size="xs" color="red" variant="filled">{item.alert}</Badge> : undefined}
-            />
-          ))}
+        <AppShell.Navbar p="md">
+          <Stack gap={0} style={{ height: '100%' }}>
+            <ScrollArea style={{ flex: 1 }} scrollbarSize={6}>
+              <Stack gap={2}>
+                {navItems.map((item) => (
+                  <NavLink
+                    key={item.value}
+                    label={item.label}
+                    leftSection={<item.icon size={20} />}
+                    rightSection={item.alert ? <Badge size="xs" color="red" variant="filled">{item.alert}</Badge> : undefined}
+                    active={active === item.value}
+                    onClick={() => { setActive(item.value); toggle() }}
+                    variant="light"
+                    style={{ borderRadius: 6 }}
+                  />
+                ))}
+              </Stack>
+            </ScrollArea>
+          </Stack>
         </AppShell.Navbar>
 
         <AppShell.Main>
