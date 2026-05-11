@@ -5,7 +5,9 @@ import { Component, type ReactNode, useMemo } from 'react'
 import { useMapModel } from '../map/useMapModel'
 import { MapRenderer3D } from '../map/MapRenderer3D'
 import { useSimData } from '../3d/hooks/useSimData'
-import { useRealtime, type EntityState } from '../hooks/useRealtime'
+import { useRealtime } from '../hooks/useRealtime'
+import { useEntityStateStore } from '../store/entityState'
+import { useWardStore } from '../store/ward'
 import { trpc } from '../trpc'
 
 class ErrorBoundary extends Component<
@@ -45,11 +47,14 @@ export function DigitalTwinPage() {
   )
 
   const patientIds = (patients as any[] | undefined)?.map((p: any) => p.id) || []
-  const model = useMapModel(patientIds)
 
   const wardStatus = trpc.simulator.status.useQuery(undefined, { refetchInterval: 5000 })
-  const wardId = (wardStatus.data as any[] | undefined)?.[0]?.id || ''
-  const { isConnected: wsConnected, entityStates, simTime } = useRealtime(wardId || undefined)
+  const selectedWardId = useWardStore((s) => s.selectedWardId) || (wardStatus.data as any[] | undefined)?.[0]?.id || ''
+  const { isConnected: wsConnected } = useRealtime(selectedWardId || undefined)
+  const entityStates = useEntityStateStore((s) => s.states)
+  const simTime = useEntityStateStore((s) => s.simTime)
+
+  const model = useMapModel(patientIds, selectedWardId || undefined)
 
   const { patientData, isLoading: simLoading } = useSimData(patientIds)
 
@@ -129,7 +134,6 @@ export function DigitalTwinPage() {
             model={model}
             patientDataMap={patientDataMap}
             entityStatusMap={entityStatusMap}
-            entityStates={entityStates}
           />
           <OrbitControls
             target={[7, 0, 5]}

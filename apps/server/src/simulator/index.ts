@@ -5,6 +5,7 @@ export {
   resumeWard,
   setWardSpeed,
   listWards,
+  deleteWard,
   injectScenario,
 } from './engine'
 export { getProfile, profiles } from './profiles'

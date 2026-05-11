@@ -486,6 +486,14 @@ export function listWards(): WardState[] {
   return Array.from(wards.values()).map((w) => w.state)
 }
 
+export function deleteWard(id: string): boolean {
+  const ward = wards.get(id)
+  if (!ward) return false
+  clearWardInterval(ward)
+  wards.delete(id)
+  return true
+}
+
 export async function injectScenario(wardId: string, type: ScenarioType): Promise<boolean> {
   const ward = wards.get(wardId)
   if (!ward) return false

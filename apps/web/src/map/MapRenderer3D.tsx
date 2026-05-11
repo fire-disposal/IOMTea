@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import type { MapModel } from '@iomtea/shared-types/map'
 import { getWallSegments, getEntityDef, getAsset } from '@iomtea/shared-types/map'
-import type { EntityState } from '../hooks/useRealtime'
+import { useEntityStateStore } from '../store/entityState'
 import { ZoneFloor } from './renderers/ZoneFloor'
 import { WallMesh } from './renderers/WallMesh'
 import { Bed3D } from './renderers/Bed3D'
@@ -11,7 +11,6 @@ import { Billboard3D } from './renderers/Billboard3D'
 
 interface MapRenderer3DProps {
   model: MapModel
-  entityStates?: Map<string, EntityState>
   entityStatusMap?: Map<string, 'normal' | 'warning' | 'alert'>
   patientDataMap?: Map<string, {
     heartRate: number | null
@@ -28,8 +27,9 @@ const KNOWN_3D: Record<string, React.ComponentType<any>> = {
   'emergency_btn': DeviceMarker3D,
 }
 
-export function MapRenderer3D({ model, entityStates, entityStatusMap, patientDataMap }: MapRenderer3DProps) {
+export function MapRenderer3D({ model, entityStatusMap, patientDataMap }: MapRenderer3DProps) {
   const walls = useMemo(() => getWallSegments(model), [model])
+  const entityStates = useEntityStateStore((s) => s.states)
 
   return (
     <group>

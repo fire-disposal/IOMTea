@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { protectedProcedure, publicProcedure, router } from '../../core/trpc/index'
 import {
   createWard,
+  deleteWard,
   getWardState,
   injectScenario,
   listWards,
@@ -60,4 +61,9 @@ export const simulatorRouter = router({
       const ok = await injectScenario(input.wardId, input.type)
       return { success: ok }
     }),
+
+  delete: protectedProcedure.input(z.object({ wardId: z.string() })).mutation(({ input }) => {
+    const ok = deleteWard(input.wardId)
+    return { success: ok }
+  }),
 })

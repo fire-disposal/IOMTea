@@ -1,5 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
+import { useEntityStateStore } from '../store/entityState'
 
 interface WsEvent {
   patientId: string
@@ -32,22 +33,15 @@ interface WsMessage {
   entityStates: EntityStatePayload[]
 }
 
-export interface EntityState {
-  entityId: string
-  state: string
-  tileX: number
-  tileY: number
-  posture: string
-}
+export type { EntityStatePayload as EntityState }
 
 export function useRealtime(wardId: string | undefined) {
   const queryClient = useQueryClient()
   const wsRef = useRef<WebSocket | null>(null)
   const reconnectRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const subscribedRef = useRef(false)
-  const [entityStates, setEntityStates] = useState<Map<string, EntityState>>(new Map())
-  const [simTime, setSimTime] = useState<{ time: string; tz: string; hour: number } | null>(null)
-  const entityStateRef = useRef<Map<string, EntityState>>(new Map())
+  const setStates = useEntityStateStore((s) => s.setStates)
+  const setSimTime = useEntityStateStore((s) => s.setSimTime)
 
   const connect = useCallback(() => {
     if (!wardId) return
@@ -66,22 +60,14 @@ export function useRealtime(wardId: string | undefined) {
         const msg: WsMessage = JSON.parse(event.data)
         if (msg.type !== 'tick') return
 
-        // Update simulated time
+        // Update virtual time and entity states via Zustand
         setSimTime({ time: msg.simulatedTime, tz: msg.timezone, hour: msg.hourOfDay })
 
-        // Update entity states
-        const newStates = new Map(entityStateRef.current)
+        const newStates = new Map<string, EntityStatePayload>()
         for (const es of msg.entityStates || []) {
-          newStates.set(es.entityId, {
-            entityId: es.entityId,
-            state: es.state,
-            tileX: es.tileX,
-            tileY: es.tileY,
-            posture: es.posture,
-          })
+          newStates.set(es.entityId, es)
         }
-        entityStateRef.current = newStates
-        setEntityStates(new Map(newStates))
+        setStates(newStates)
 
         // Update vitals (existing logic)
         const observations = (msg.events || []).filter((e) => e.kind === 'observation')
@@ -166,5 +152,5 @@ export function useRealtime(wardId: string | undefined) {
     }
   }, [wardId, connect])
 
-  return { isConnected: subscribedRef.current, entityStates, simTime }
+  return { isConnected: subscribedRef.current }
 }

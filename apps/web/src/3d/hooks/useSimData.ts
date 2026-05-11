@@ -23,7 +23,7 @@ export function useSimData(patientIds: string[]) {
     const arr = [...patientIds]
     while (arr.length < MAX_PATIENTS) arr.push('')
     return arr.slice(0, MAX_PATIENTS)
-  }, [patientIds.join(',')])
+  }, [patientIds])
 
   const queries = paddedIds.map((pid, i) =>
     trpc.data.latest.useQuery(
@@ -47,9 +47,9 @@ export function useSimData(patientIds: string[]) {
       const pressureEv = gv('pressure_grid')
       const ecgEv = gv('ecg_waveform')
 
-      const patientId = patientIds[i] || ''
+      const pid = patientIds[i] || ''
       const patientAlerts = (alertsQuery.data || [])
-        .filter((a: any) => a.patientId === patientId)
+        .filter((a: any) => a.patientId === pid)
         .map((a: any) => ({
           metric: a.metric,
           severity: a.severity,
@@ -57,7 +57,7 @@ export function useSimData(patientIds: string[]) {
         }))
 
       return {
-        patientId,
+        patientId: pid,
         patientName: `患者 ${i + 1}`,
         posture: (postureEv?.tags?.posture as string) || 'lying',
         heartRate: gv('heart_rate')?.value ?? null,
@@ -70,11 +70,7 @@ export function useSimData(patientIds: string[]) {
       }
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    queries.map((q) => q.dataUpdatedAt).join(','),
-    alertsQuery.dataUpdatedAt,
-    patientIds.join(','),
-  ])
+  }, [queries.map((q) => q.dataUpdatedAt).join(','), alertsQuery.dataUpdatedAt, patientIds.join(',')])
 
   const isLoading = queries.slice(0, patientIds.length).some((q) => q.isLoading)
 

@@ -27,6 +27,7 @@ import { DigitalTwinPage } from './pages/DigitalTwinPage'
 import { MapEditorPage } from './map/editor/MapEditorPage'
 import { PatientListPage } from './pages/PatientListPage'
 import { TrendsPage } from './pages/TrendsPage'
+import { WardManagementPage } from './pages/WardManagementPage'
 import { useAuthStore } from './store/auth'
 import { trpc } from './trpc'
 
@@ -510,6 +511,7 @@ function Dashboard() {
             <Tabs.Tab value="alertRules">告警阈值</Tabs.Tab>
             <Tabs.Tab value="digitaltwin">数字孪生</Tabs.Tab>
             <Tabs.Tab value="mapEditor">地图编辑</Tabs.Tab>
+            <Tabs.Tab value="wards">Ward 管理</Tabs.Tab>
             <Tabs.Tab value="assets">资产管理</Tabs.Tab>
           </Tabs.List>
         </Tabs>
@@ -525,6 +527,7 @@ function Dashboard() {
       {activeTab === 'alertRules' && <AlertRulesPage />}
       {activeTab === 'digitaltwin' && <DigitalTwinPage />}
       {activeTab === 'mapEditor' && <MapEditorPage />}
+      {activeTab === 'wards' && <WardManagementPage />}
       {activeTab === 'assets' && <AssetManagerPage />}
     </>
   )
