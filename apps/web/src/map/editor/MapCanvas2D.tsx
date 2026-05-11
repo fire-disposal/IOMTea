@@ -18,11 +18,12 @@ interface MapCanvas2DProps {
   onDeleteEntity: (id: string) => void
   onDeleteZone: (zoneId: string) => void
   onRotateEntity: (id: string) => void
+  onRenameZone: (zoneId: string, name: string) => void
 }
 
 export function MapCanvas2D({
   model, mode, zoneDefId, selectedEntityId, runtimes, onSelectEntity, onAddEntity, onAddZone,
-  onMoveEntity, onDeleteEntity, onDeleteZone, onRotateEntity,
+  onMoveEntity, onDeleteEntity, onDeleteZone, onRotateEntity, onRenameZone,
 }: MapCanvas2DProps) {
   const cellSize = 32
   const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null)
@@ -70,8 +71,16 @@ export function MapCanvas2D({
       if (e.button === 2) {
         e.preventDefault()
         const zone = findZoneAt(cell)
+        if (zone) onDeleteZone(zone.id)
+        return
+      }
+
+      // Double-click on zone → rename
+      if (e.detail === 2 && mode === 'select') {
+        const zone = findZoneAt(cell)
         if (zone) {
-          onDeleteZone(zone.id)
+          const name = prompt('房间名称:', zone.name || '')
+          if (name !== null && name.trim()) onRenameZone(zone.id, name.trim())
         }
         return
       }

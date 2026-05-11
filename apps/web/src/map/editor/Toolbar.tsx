@@ -13,7 +13,7 @@ interface ToolbarProps {
 }
 
 const PLACABLE_DEFS = ENTITY_DEFS.filter((d) =>
-  d.category === 'furniture' || d.category === 'sensor' || d.category === 'structure',
+  d.category === 'furniture' || d.category === 'sensor' || d.category === 'structure' || d.category === 'actor',
 )
 
 export function Toolbar({ mode, onChangeMode, zoneDefId, onChangeZoneDef, onSave, saving }: ToolbarProps) {

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { Container, Group, Text } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
 import type { MapModel, Entity, Zone } from '@iomtea/shared-types/map'
@@ -28,6 +28,12 @@ export function MapEditorPage() {
     },
     onError: (err: any) => notifications.show({ title: '保存失败', message: err.message, color: 'red' }),
   })
+
+  const { data: patients } = trpc.patient.list.useQuery({ pageSize: 100, status: 'active' })
+  const patientOptions = useMemo(
+    () => ((patients as any[]) || []).map((p: any) => ({ value: p.id, label: p.name })),
+    [patients],
+  )
 
   const selectedEntity = model.entities.find((e) => e.id === selectedEntityId) || null
 
@@ -114,6 +120,17 @@ export function MapEditorPage() {
     [model, rebuild],
   )
 
+  const handleRenameZone = useCallback(
+    (zoneId: string, name: string) => {
+      const newModel = {
+        ...model,
+        zones: model.zones.map((z) => (z.id === zoneId ? { ...z, name } : z)),
+      }
+      rebuild(newModel)
+    },
+    [model, rebuild],
+  )
+
   return (
     <Container fluid p={0} style={{ height: 'calc(100vh - 60px)', display: 'flex', flexDirection: 'column' }}>
       <Group style={{ flex: 1, overflow: 'hidden' }} gap={0} wrap="nowrap">
@@ -138,10 +155,12 @@ export function MapEditorPage() {
             onDeleteEntity={handleDeleteEntity}
             onDeleteZone={handleDeleteZone}
             onRotateEntity={handleRotateEntity}
+            onRenameZone={handleRenameZone}
           />
         </div>
         <PropertiesPanel
           selectedEntity={selectedEntity}
+          patientOptions={patientOptions}
           onDelete={handleDeleteEntity}
           onUpdate={handleUpdateEntity}
         />
