@@ -146,11 +146,3 @@ export interface BehavioralProfile {
   interactions: Record<string, { perDay: number; typicalMin: number }>
   activityByHour: number[]
 }
-
-export interface BehaviorEvent {
-  timestamp: number
-  entityId: string
-  type: 'zone_enter' | 'zone_exit' | 'interaction_start' | 'interaction_end' | 'state_change'
-  zoneId?: string
-  interactionType?: string
-}

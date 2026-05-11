@@ -228,7 +228,6 @@ src/
 │
 ├── map/
 │   ├── useMapModel.ts           # MapModel Hook (后端加载 → 工厂回退)
-│   ├── useEntityRuntimes.ts     # 行为引擎 Hook (服务端已有, 保留备用)
 │   ├── MapRenderer2D.tsx        # SVG 2D 渲染器 (资产系统 + 网格 + 区域标签)
 │   ├── MapRenderer3D.tsx        # R3F 3D 渲染器 (资产系统 + Billboard 回退)
 │   ├── renderers/
@@ -264,11 +263,11 @@ src/
 └── map/
     ├── types.ts                 # Tile, Zone, Entity, EntityDef, MapModel, EntityRuntime, AssetDef, Sprite2D, Model3D, BehaviorProfile
     ├── registries.ts            # ENTITY_DEFS (14), ZONE_DEFS (6), INTERACTION_DEFS (3)
-    ├── assets.ts                # ASSET_DEFS (14) + getAsset + getSpriteForOrientation
+    ├── assets.ts                # ASSET_DEFS (14) + getAsset
     ├── grid.ts                  # buildGrid, getWallSegments, entitiesAt, isWalkable
     ├── pathfinding.ts           # findPath (A*)
     ├── validation.ts            # canPlaceEntity
-    ├── behavior.ts              # updateEntityBehavior, scheduleFromProfile, compareProfiles
+    ├── behavior.ts              # updateEntityBehavior
     ├── factory.ts               # createDefaultMap (配置化默认布局)
     └── index.ts                 # 桶导出
 ```

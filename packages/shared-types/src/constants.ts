@@ -13,11 +13,8 @@ export type AlertSeverity = (typeof ALERT_SEVERITIES)[number]
 export const ALERT_STATUSES = ['active', 'acknowledged', 'resolved'] as const
 export type AlertStatus = (typeof ALERT_STATUSES)[number]
 
-export const ALERT_TYPES = ['fall_detected', 'bed_exit', 'vital_anomaly', 'device_offline'] as const
-export type AlertType = (typeof ALERT_TYPES)[number]
+export const PATIENT_STATUSES = ['active', 'discharged'] as const
+export type PatientStatus = (typeof PATIENT_STATUSES)[number]
 
 export const GENDERS = ['male', 'female', 'other'] as const
 export type Gender = (typeof GENDERS)[number]
-
-export const PATIENT_STATUSES = ['active', 'discharged'] as const
-export type PatientStatus = (typeof PATIENT_STATUSES)[number]

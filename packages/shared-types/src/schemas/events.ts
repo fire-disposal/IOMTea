@@ -33,8 +33,6 @@ export const alertSchema = z.object({
   createdAt: z.number(),
 })
 
-export const eventSchema = z.discriminatedUnion('kind', [observationSchema, alertSchema])
-
 export const observationIngestSchema = z.object({
   patientId: z.string().uuid(),
   deviceId: z.string().uuid(),
@@ -43,17 +41,6 @@ export const observationIngestSchema = z.object({
   unit: z.string().max(20).optional(),
   tags: eventTagsSchema,
   recordedAt: z.number().optional(), // 不传则用服务器时间
-})
-
-export const alertIngestSchema = z.object({
-  patientId: z.string().uuid(),
-  deviceId: z.string().uuid(),
-  metric: z.string().max(50),
-  value: z.number().optional(),
-  unit: z.string().max(20).optional(),
-  severity: z.enum(ALERT_SEVERITIES).default('info'),
-  tags: eventTagsSchema,
-  recordedAt: z.number().optional(),
 })
 
 export const eventListInputSchema = z.object({
@@ -79,6 +66,3 @@ export const eventTimeSeriesInputSchema = z.object({
 export type Kind = z.infer<typeof kindEnum>
 export type Observation = z.infer<typeof observationSchema>
 export type Alert = z.infer<typeof alertSchema>
-export type Event = z.infer<typeof eventSchema>
-export type ObservationIngestInput = z.infer<typeof observationIngestSchema>
-export type AlertIngestInput = z.infer<typeof alertIngestSchema>

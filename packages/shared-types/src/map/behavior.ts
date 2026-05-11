@@ -1,15 +1,7 @@
-import type { MapModel, EntityRuntime, EntitySchedule, BehavioralProfile } from './types'
+import type { MapModel, EntityRuntime, EntitySchedule } from './types'
 import { getEntityDef, getInteractionDef } from './registries'
 import { entitiesAt } from './grid'
 import { findPath } from './pathfinding'
-
-export function scheduleFromProfile(schedule: EntitySchedule): EntitySchedule {
-  return schedule
-}
-
-export function compareProfiles(_a: BehavioralProfile, _b: BehavioralProfile): number {
-  return 1.0
-}
 
 function resolveActivity(
   schedule: EntitySchedule,

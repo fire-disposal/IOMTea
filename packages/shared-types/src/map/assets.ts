@@ -1,4 +1,4 @@
-import type { AssetDef, Sprite2D } from './types'
+import type { AssetDef } from './types'
 
 export const ASSET_DEFS: AssetDef[] = [
   {
@@ -68,8 +68,4 @@ export const ASSET_DEFS: AssetDef[] = [
 
 export function getAsset(id: string): AssetDef | undefined {
   return ASSET_DEFS.find((a) => a.id === id)
-}
-
-export function getSpriteForOrientation(asset: AssetDef, _orientation: string): Sprite2D {
-  return asset.sprite2D
 }
