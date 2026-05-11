@@ -13,10 +13,22 @@ interface SimEventPayload {
   recordedAt: string
 }
 
+interface EntityStatePayload {
+  entityId: string
+  state: string
+  tileX: number
+  tileY: number
+  posture: string
+}
+
 interface ServerMessage {
-  type: 'events'
+  type: 'tick'
   wardId: string
+  simulatedTime: string
+  timezone: string
+  hourOfDay: number
   events: SimEventPayload[]
+  entityStates: EntityStatePayload[]
 }
 
 class BroadcastManager {
@@ -46,11 +58,18 @@ class BroadcastManager {
     }
   }
 
-  broadcast(wardId: string, events: SimEventPayload[]): void {
+  broadcast(
+    wardId: string,
+    simulatedTime: string,
+    timezone: string,
+    hourOfDay: number,
+    events: SimEventPayload[],
+    entityStates: EntityStatePayload[],
+  ): void {
     const sockets = this.subscribers.get(wardId)
     if (!sockets || sockets.size === 0) return
 
-    const message: ServerMessage = { type: 'events', wardId, events }
+    const message: ServerMessage = { type: 'tick', wardId, simulatedTime, timezone, hourOfDay, events, entityStates }
     const data = JSON.stringify(message)
 
     for (const ws of sockets) {

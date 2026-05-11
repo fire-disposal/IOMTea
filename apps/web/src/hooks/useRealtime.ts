@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 interface WsEvent {
   patientId: string
@@ -14,10 +14,30 @@ interface WsEvent {
   recordedAt: string
 }
 
+interface EntityStatePayload {
+  entityId: string
+  state: string
+  tileX: number
+  tileY: number
+  posture: string
+}
+
 interface WsMessage {
-  type: 'events'
+  type: 'tick'
   wardId: string
+  simulatedTime: string
+  timezone: string
+  hourOfDay: number
   events: WsEvent[]
+  entityStates: EntityStatePayload[]
+}
+
+export interface EntityState {
+  entityId: string
+  state: string
+  tileX: number
+  tileY: number
+  posture: string
 }
 
 export function useRealtime(wardId: string | undefined) {
@@ -25,6 +45,9 @@ export function useRealtime(wardId: string | undefined) {
   const wsRef = useRef<WebSocket | null>(null)
   const reconnectRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const subscribedRef = useRef(false)
+  const [entityStates, setEntityStates] = useState<Map<string, EntityState>>(new Map())
+  const [simTime, setSimTime] = useState<{ time: string; tz: string; hour: number } | null>(null)
+  const entityStateRef = useRef<Map<string, EntityState>>(new Map())
 
   const connect = useCallback(() => {
     if (!wardId) return
@@ -41,10 +64,28 @@ export function useRealtime(wardId: string | undefined) {
     ws.onmessage = (event) => {
       try {
         const msg: WsMessage = JSON.parse(event.data)
-        if (msg.type !== 'events' || !msg.events?.length) return
+        if (msg.type !== 'tick') return
 
-        const observations = msg.events.filter((e) => e.kind === 'observation')
-        const alerts = msg.events.filter((e) => e.kind === 'alert')
+        // Update simulated time
+        setSimTime({ time: msg.simulatedTime, tz: msg.timezone, hour: msg.hourOfDay })
+
+        // Update entity states
+        const newStates = new Map(entityStateRef.current)
+        for (const es of msg.entityStates || []) {
+          newStates.set(es.entityId, {
+            entityId: es.entityId,
+            state: es.state,
+            tileX: es.tileX,
+            tileY: es.tileY,
+            posture: es.posture,
+          })
+        }
+        entityStateRef.current = newStates
+        setEntityStates(new Map(newStates))
+
+        // Update vitals (existing logic)
+        const observations = (msg.events || []).filter((e) => e.kind === 'observation')
+        const alerts = (msg.events || []).filter((e) => e.kind === 'alert')
 
         if (observations.length > 0) {
           for (const patientId of [...new Set(observations.map((o) => o.patientId))]) {
@@ -75,27 +116,24 @@ export function useRealtime(wardId: string | undefined) {
         }
 
         if (alerts.length > 0) {
-          queryClient.setQueryData(
-            ['alert', 'list', { pageSize: 50, status: 'active' }],
-            (old: any) => {
-              const oldAlerts = (old || []) as any[]
-              const newAlerts = alerts.map((a) => ({
-                id: `${a.patientId}-${a.metric}-${a.recordedAt}`,
-                patientId: a.patientId,
-                deviceId: a.deviceId,
-                kind: 'alert',
-                metric: a.metric,
-                value: a.value,
-                unit: a.unit,
-                severity: a.severity,
-                status: a.status || 'active',
-                tags: a.tags,
-                recordedAt: new Date(a.recordedAt).getTime(),
-              }))
-              const merged = [...newAlerts, ...oldAlerts].slice(0, 50)
-              return merged
-            },
-          )
+          queryClient.setQueryData(['alert', 'list', { pageSize: 50, status: 'active' }], (old: any) => {
+            const oldAlerts = (old || []) as any[]
+            const newAlerts = alerts.map((a) => ({
+              id: `${a.patientId}-${a.metric}-${a.recordedAt}`,
+              patientId: a.patientId,
+              deviceId: a.deviceId,
+              kind: 'alert',
+              metric: a.metric,
+              value: a.value,
+              unit: a.unit,
+              severity: a.severity,
+              status: a.status || 'active',
+              tags: a.tags,
+              recordedAt: new Date(a.recordedAt).getTime(),
+            }))
+            const merged = [...newAlerts, ...oldAlerts].slice(0, 50)
+            return merged
+          })
           queryClient.invalidateQueries({ queryKey: ['alert', 'count'] })
         }
       } catch {
@@ -128,5 +166,5 @@ export function useRealtime(wardId: string | undefined) {
     }
   }, [wardId, connect])
 
-  return { isConnected: subscribedRef.current }
+  return { isConnected: subscribedRef.current, entityStates, simTime }
 }

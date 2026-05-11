@@ -26,6 +26,7 @@ interface Ward {
   profileRefs: PatientProfile[]
   intervalId?: ReturnType<typeof setInterval>
   db: any
+  entityStates: Map<string, { state: string; tileX: number; tileY: number; posture: string }>
 }
 
 const wards = new Map<string, Ward>()
@@ -374,7 +375,26 @@ async function tickWard(ward: Ward): Promise<void> {
       tags: e.tags,
       recordedAt: e.recordedAt.toISOString(),
     }))
-    broadcastManager.broadcast(ward.state.id, broadcastPayload)
+
+    // Compute entity states from patient activity
+    const entityStatePayload = ward.patients.map((p, i) => {
+      const entityId = `person-${i + 1}`
+      const tileX = p.activity === 'resting' ? 1 + (i % 3) * 5 : 6 + (i % 3)
+      const tileY = p.activity === 'resting' ? 1 + Math.floor(i / 3) * 5 : 2 + Math.floor(i / 3) * 3
+      const posture = p.activity === 'resting' ? 'lying' : 'standing'
+      ward.entityStates.set(entityId, { state: p.activity === 'resting' ? 'idle' : 'idle', tileX, tileY, posture })
+      return { entityId, state: 'idle', tileX, tileY, posture }
+    })
+
+    const simTime = ward.clock.simulatedTime
+    broadcastManager.broadcast(
+      ward.state.id,
+      simTime.toISOString(),
+      Intl.DateTimeFormat().resolvedOptions().timeZone,
+      simTime.getHours(),
+      broadcastPayload,
+      entityStatePayload,
+    )
   }
 }
 
@@ -416,7 +436,7 @@ export async function createWard(
     startedAt: null,
     tick: 0,
   }
-  const ward: Ward = { state, clock, patients: patientInstances, profileRefs, db }
+  const ward: Ward = { state, clock, patients: patientInstances, profileRefs, db, entityStates: new Map() }
 
   state.running = true
   state.startedAt = new Date()
@@ -741,7 +761,15 @@ export async function injectScenario(wardId: string, type: ScenarioType): Promis
       tags: r.tags ?? {},
       recordedAt: r.recordedAt.toISOString(),
     }))
-    broadcastManager.broadcast(wardId, broadcastPayload)
+    const simTime = ward.clock.simulatedTime
+    broadcastManager.broadcast(
+      wardId,
+      simTime.toISOString(),
+      Intl.DateTimeFormat().resolvedOptions().timeZone,
+      simTime.getHours(),
+      broadcastPayload,
+      [],
+    )
   }
   return true
 }
