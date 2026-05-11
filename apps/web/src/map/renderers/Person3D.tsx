@@ -1,11 +1,12 @@
 import { Html } from '@react-three/drei'
-import type { Entity, EntityDef, EntityRuntime } from '@iomtea/shared-types/map'
+import type { Entity, EntityDef } from '@iomtea/shared-types/map'
+import type { EntityState } from '../../hooks/useRealtime'
 
 interface Person3DProps {
   entity: Entity
   def: EntityDef
   tileSize: number
-  runtime?: EntityRuntime
+  entityState?: EntityState
   patientData?: {
     heartRate: number | null
     spO2: number | null
@@ -14,35 +15,13 @@ interface Person3DProps {
   }
 }
 
-function tileToWorld(x: number, y: number, tileSize: number): [number, number] {
-  return [(x + 0.5) * tileSize, (y + 0.5) * tileSize]
-}
+export function Person3D({ entity, def, tileSize, entityState, patientData }: Person3DProps) {
+  const posture = entityState?.posture || (entity.meta?.posture as string) || 'standing'
 
-function interpolatePosition(
-  path: { x: number; y: number }[] | undefined,
-  progress: number | undefined,
-  tileSize: number,
-): [number, number] {
-  if (!path || path.length === 0) return [0, 0]
-  if (progress === undefined || progress >= 1) {
-    return tileToWorld(path[path.length - 1].x, path[path.length - 1].y, tileSize)
-  }
-  const idx = Math.floor(progress * (path.length - 1))
-  const nextIdx = Math.min(idx + 1, path.length - 1)
-  const localProgress = (progress * (path.length - 1)) - idx
-  const from = tileToWorld(path[idx].x, path[idx].y, tileSize)
-  const to = tileToWorld(path[nextIdx].x, path[nextIdx].y, tileSize)
-  return [
-    from[0] + (to[0] - from[0]) * localProgress,
-    from[1] + (to[1] - from[1]) * localProgress,
-  ]
-}
-
-export function Person3D({ entity, def, tileSize, runtime, patientData }: Person3DProps) {
-  const posture = (entity.meta?.posture as string) || 'standing'
-  const [worldX, worldZ] = runtime?.state === 'moving'
-    ? interpolatePosition(runtime.path, runtime.pathProgress, tileSize)
-    : tileToWorld(entity.gridX, entity.gridY, tileSize)
+  const tileX = entityState?.tileX ?? entity.gridX
+  const tileY = entityState?.tileY ?? entity.gridY
+  const worldX = (tileX + def.pivot.x) * tileSize
+  const worldZ = (tileY + def.pivot.y) * tileSize
 
   const layerY = entity.layer === 1 ? 0.5 : 0
 

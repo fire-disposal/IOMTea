@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
-import type { MapModel, EntityRuntime } from '@iomtea/shared-types/map'
+import type { MapModel } from '@iomtea/shared-types/map'
 import { getWallSegments, getEntityDef, getAsset } from '@iomtea/shared-types/map'
+import type { EntityState } from '../hooks/useRealtime'
 import { ZoneFloor } from './renderers/ZoneFloor'
 import { WallMesh } from './renderers/WallMesh'
 import { Bed3D } from './renderers/Bed3D'
@@ -10,7 +11,7 @@ import { Billboard3D } from './renderers/Billboard3D'
 
 interface MapRenderer3DProps {
   model: MapModel
-  runtimes?: Map<string, EntityRuntime>
+  entityStates?: Map<string, EntityState>
   entityStatusMap?: Map<string, 'normal' | 'warning' | 'alert'>
   patientDataMap?: Map<string, {
     heartRate: number | null
@@ -27,7 +28,7 @@ const KNOWN_3D: Record<string, React.ComponentType<any>> = {
   'emergency_btn': DeviceMarker3D,
 }
 
-export function MapRenderer3D({ model, runtimes, entityStatusMap, patientDataMap }: MapRenderer3DProps) {
+export function MapRenderer3D({ model, entityStates, entityStatusMap, patientDataMap }: MapRenderer3DProps) {
   const walls = useMemo(() => getWallSegments(model), [model])
 
   return (
@@ -49,7 +50,7 @@ export function MapRenderer3D({ model, runtimes, entityStatusMap, patientDataMap
         const asset = getAsset(def.assetId)
         if (!asset) return null
 
-        const runtime = runtimes?.get(ent.id)
+        const es = entityStates?.get(ent.id)
         const pd = ent.patientId ? patientDataMap?.get(ent.patientId) : undefined
         const activeStatus = entityStatusMap?.get(ent.id) || ent.status
 
@@ -68,7 +69,7 @@ export function MapRenderer3D({ model, runtimes, entityStatusMap, patientDataMap
               entity={overriddenEnt}
               def={def}
               tileSize={model.tileSize}
-              runtime={runtime}
+              entityState={es}
               patientData={pd}
             />
           )

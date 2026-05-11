@@ -1,10 +1,11 @@
-import { Container, Loader, Text } from '@mantine/core'
+import { Container, Loader, Text, Badge, Group } from '@mantine/core'
 import { OrbitControls } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import { Component, type ReactNode, useMemo } from 'react'
 import { useMapModel } from '../map/useMapModel'
 import { MapRenderer3D } from '../map/MapRenderer3D'
 import { useSimData } from '../3d/hooks/useSimData'
+import { useRealtime, type EntityState } from '../hooks/useRealtime'
 import { trpc } from '../trpc'
 
 class ErrorBoundary extends Component<
@@ -45,6 +46,10 @@ export function DigitalTwinPage() {
 
   const patientIds = (patients as any[] | undefined)?.map((p: any) => p.id) || []
   const model = useMapModel(patientIds)
+
+  const wardStatus = trpc.simulator.status.useQuery(undefined, { refetchInterval: 5000 })
+  const wardId = (wardStatus.data as any[] | undefined)?.[0]?.id || ''
+  const { isConnected: wsConnected, entityStates, simTime } = useRealtime(wardId || undefined)
 
   const { patientData, isLoading: simLoading } = useSimData(patientIds)
 
@@ -95,6 +100,17 @@ export function DigitalTwinPage() {
 
   return (
     <Container size="responsive" p={0} style={{ height: 'calc(100vh - 120px)' }}>
+      <Group px="md" py={4} gap="xs" justify="flex-end">
+        <Badge size="xs" color={wsConnected ? 'green' : 'orange'} variant="light">
+          {wsConnected ? '实时' : '轮询'}
+        </Badge>
+        {simTime && (
+          <Badge size="xs" color="blue" variant="light">
+            虚拟 {new Date(simTime.time).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
+          </Badge>
+        )}
+      </Group>
+
       {simLoading && (
         <Container py="md" ta="center">
           <Loader size="sm" />
@@ -109,7 +125,12 @@ export function DigitalTwinPage() {
           gl={{ preserveDrawingBuffer: false, antialias: true }}
           onCreated={({ gl }) => { gl.setClearColor('#1a1a2e') }}
         >
-          <MapRenderer3D model={model} patientDataMap={patientDataMap} entityStatusMap={entityStatusMap} />
+          <MapRenderer3D
+            model={model}
+            patientDataMap={patientDataMap}
+            entityStatusMap={entityStatusMap}
+            entityStates={entityStates}
+          />
           <OrbitControls
             target={[7, 0, 5]}
             maxPolarAngle={Math.PI / 2.5}
