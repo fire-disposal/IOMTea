@@ -5,6 +5,6 @@ export default defineConfig({
   out: './drizzle',
   dialect: 'postgresql',
   dbCredentials: {
-    url: process.env.DATABASE_URL || 'postgresql://localhost:5432/iomtea',
+    url: process.env.DATABASE_URL || 'postgresql://iomtea:iomtea123@127.0.0.1:5432/iomtea',
   },
 })

@@ -20,12 +20,14 @@ export function MapEditorPage() {
   const [mode, setMode] = useState<ToolMode>('select')
   const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null)
   const [zoneDefId, setZoneDefId] = useState('bedroom')
+  const [isDirty, setIsDirty] = useState(false)
 
   const utils = trpc.useUtils()
   const saveMap = trpc.mapConfig.save.useMutation({
     onSuccess: () => {
       notifications.show({ title: '已保存', message: '地图已保存到服务器', color: 'green' })
       utils.mapConfig.get.invalidate({ id: 'default' })
+      setIsDirty(false)
     },
     onError: (err: any) => notifications.show({ title: '保存失败', message: err.message, color: 'red' }),
   })
@@ -59,6 +61,7 @@ export function MapEditorPage() {
     (entity: Entity) => {
       const newModel = { ...model, entities: [...model.entities, entity] }
       rebuild(newModel)
+      setIsDirty(true)
     },
     [model, rebuild],
   )
@@ -68,6 +71,7 @@ export function MapEditorPage() {
       const newModel = { ...model, entities: model.entities.filter((e) => e.id !== id) }
       rebuild(newModel)
       if (selectedEntityId === id) setSelectedEntityId(null)
+      setIsDirty(true)
     },
     [model, selectedEntityId, rebuild],
   )
@@ -79,6 +83,7 @@ export function MapEditorPage() {
         entities: model.entities.map((e) => (e.id === entity.id ? entity : e)),
       }
       rebuild(newModel)
+      setIsDirty(true)
     },
     [model, rebuild],
   )
@@ -90,6 +95,7 @@ export function MapEditorPage() {
         entities: model.entities.map((e) => (e.id === id ? { ...e, gridX: x, gridY: y } : e)),
       }
       rebuild(newModel)
+      setIsDirty(true)
     },
     [model, rebuild],
   )
@@ -107,8 +113,11 @@ export function MapEditorPage() {
 
   const handleAddZone = useCallback(
     (zone: Zone) => {
-      const newModel = { ...model, zones: [...model.zones, zone] }
+      const sameType = model.zones.filter((z) => z.defId === zone.defId).length
+      const name = `${zone.defId === 'bedroom' ? '卧室' : zone.defId === 'livingroom' ? '客厅' : zone.defId === 'kitchen' ? '厨房' : zone.defId === 'bathroom' ? '卫浴' : zone.defId === 'hall' ? '走廊' : '房间'} ${sameType + 1}`
+      const newModel = { ...model, zones: [...model.zones, { ...zone, name }] }
       rebuild(newModel)
+      setIsDirty(true)
     },
     [model, rebuild],
   )
@@ -117,6 +126,7 @@ export function MapEditorPage() {
     (zoneId: string) => {
       const newModel = { ...model, zones: model.zones.filter((z) => z.id !== zoneId) }
       rebuild(newModel)
+      setIsDirty(true)
     },
     [model, rebuild],
   )
@@ -128,6 +138,7 @@ export function MapEditorPage() {
         zones: model.zones.map((z) => (z.id === zoneId ? { ...z, name } : z)),
       }
       rebuild(newModel)
+      setIsDirty(true)
     },
     [model, rebuild],
   )

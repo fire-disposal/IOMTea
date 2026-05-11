@@ -4,7 +4,7 @@ services:
     environment:
       POSTGRES_DB: iomtea
       POSTGRES_USER: iomtea
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-iomtea123}
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
