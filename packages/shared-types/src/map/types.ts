@@ -46,7 +46,7 @@ export interface Entity {
   defId: string
   gridX: number
   gridY: number
-  layer: number
+  layer: 0 | 1 | 2
   orientation: 'N' | 'S' | 'E' | 'W'
   patientId?: string
   status?: 'normal' | 'warning' | 'alert'
