@@ -6,41 +6,40 @@
 
 ## Overview
 
-重构 IOMTea 的场景/地图系统，参考 Prison Architect 的多层架构思想，实现：
+重构 IOMTea 的场景/地图系统，参考 Prison Architect 多层架构，实现逻辑-视图分离、跨端共享、寻路预留、可视化编辑器、数字孪生行为模拟。
 
-1. **逻辑-视图分离** — 同一份 `MapModel` 数据驱动 2D 和 3D 两种渲染
-2. **跨端共享** — 核心类型放入 `packages/shared-types`，Web 和小程序共用
-3. **预留寻路** — A* 寻路接口，用于未来的实体移动动画
-4. **可视化编辑器** — 仿游戏体验的拖拽式地图编辑
-5. **扩展性** — 注册表模式替代硬编码枚举，按标签驱动实体交互
+| 目标 | 说明 |
+|---|---|
+| 逻辑-视图分离 | 同一 `MapModel` → 2D SVG + 3D R3F |
+| 跨端共享 | 核心类型在 `packages/shared-types`，Web + 小程序 |
+| 预留寻路 | A* 接口，实体移动动画 |
+| 可视化编辑器 | 拖拽画房间、点击放实体 |
+| 扩展性 | 注册表去枚举，标签驱动交互 |
+| 数字孪生行为 | 三态状态机 + 交互系统 + 行为指纹 |
 
 ---
 
-## 1. Data Model — Three Layers
+## 1. Data Model
 
 All types in `packages/shared-types/src/map/types.ts`.
 
-### 1.1 GridLayer — Terrain / Walkability
-
-The smallest indivisible unit. Each tile answers one question: "Can something walk here?"
+### 1.1 GridLayer — Terrain
 
 ```ts
 interface Tile {
   terrain: 'floor' | 'void'
-  // floor = walkable, void = not walkable (outside any room)
-  // Walls are NOT tiles. Walls exist on edges between tiles.
 }
 ```
 
-**Key design**: Walls live in StructureLayer as edge segments, not as tile types. A `TILE_SIZE` thick wall is avoided — wall thickness (e.g., 0.15m) is a rendering concern only.
+Walls are NOT tiles. They are edge segments (Section 1.4). Wall thickness (0.15m) is a rendering concern.
 
 ### 1.2 ZoneLayer — Room Regions
 
 ```ts
 interface ZoneDef {
-  id: string                     // "bedroom", "livingroom"...
-  label: string                  // "卧室", "客厅"...
-  color: string                  // Zone fill color in editor
+  id: string
+  label: string
+  color: string
   defaultSize?: { w: number; h: number }
   requirements?: {
     minSize?: number
@@ -51,73 +50,73 @@ interface ZoneDef {
 
 interface Zone {
   id: string
-  defId: string                  // References ZoneDef.id
-  name: string                   // User-given name
+  defId: string
+  name: string
   bounds: { x1: number; y1: number; x2: number; y2: number }
 }
 ```
 
-Zones do not overlap. Any tile outside all zones is `void`.
+Zones do not overlap. Tiles outside all zones are `void`.
 
-### 1.3 ObjectLayer — Entities (Registration-table pattern)
+### 1.3 ObjectLayer — Entities (Registration-table)
 
 ```ts
 interface EntityDef {
-  id: string                     // "bed", "person", ...
+  id: string
   label: string
   category: 'furniture' | 'actor' | 'sensor' | 'marker' | 'structure'
-  size: { w: number; h: number }  // Grid cells occupied (orientation does NOT change this)
-  layer: 0 | 1 | 2               // 0=floor, 1=surface, 2=wall-mount
+  size: { w: number; h: number }
+  layer: 0 | 1 | 2
   walkability: 'solid' | 'passable' | 'dynamic'
-  pivot: { x: number; y: number } // Render pivot (0-1, default 0.5)
+  pivot: { x: number; y: number }
   defaultOrientation: 'N' | 'S' | 'E' | 'W'
-  tags?: string[]                 // Interaction tags: ['can-lie', 'can-sit', 'monitors-hr']
+  tags?: string[]
   render2D?: { icon: string; color: string }
   render3D?: { component: string }
 }
 
 interface Entity {
   id: string
-  defId: string                  // References EntityDef.id
-  gridX: number; gridY: number   // Top-left corner of occupied area
-  layer: number                  // Instance layer (defaults to def.layer)
-  orientation: 'N' | 'S' | 'E' | 'W'  // Visual only, does NOT change footprint
+  defId: string
+  gridX: number; gridY: number
+  layer: number
+  orientation: 'N' | 'S' | 'E' | 'W'  // visual only, footprint unchanged
   patientId?: string
   status?: 'normal' | 'warning' | 'alert'
-  meta?: Record<string, unknown> // Free-form: { posture: 'lying' }, { open: true }
+  meta?: Record<string, unknown>
 }
 ```
 
-**Key design decisions**:
-- Entity types use a registration table (`EntityDef[]`) not string enums. Adding new types = adding entries.
-- Orientation does NOT swap footprint size. A 2×1 bed always occupies 2×1 cells.
-- No `parentId`. No hard entity relationships. Furniture interactions use tags.
+- Orientation does NOT swap footprint. 2×1 bed always occupies 2×1.
+- No `parentId`. No hard entity relationships.
+- New entity types = add entry to `EntityDef[]`.
 
-### 1.4 StructureLayer — Walls/Doors/Windows (Edge-based)
+### 1.4 StructureLayer — Walls (Edge-based)
 
 ```ts
 interface WallSegment {
-  x1: number; y1: number; x2: number; y2: number  // World coords (meters)
+  x1: number; y1: number; x2: number; y2: number
   type: 'wall' | 'door' | 'window'
 }
 ```
 
-WallSegments are **derived data** (not serialized). They sit on tile **edges**, not inside tiles.
+**Derived data** (not serialized). Exists on tile **edges**. Derivation:
 
-**Derivation rules**:
-1. Any tile edge between `floor` and `void` → `wall` segment
-2. Door/window entities (category='structure') suppress wall segments at their position
+```
+1. Any edge between floor and void → wall segment
+2. Door/window entities (category='structure') suppress intersecting segments
+```
 
-**Thickness**: 0.15m in 3D, 2px in 2D. Controlled entirely by the renderer.
+Thickness: 0.15m (3D) / 2px (2D). Renderer-only concern.
 
 ### 1.5 MapModel — Aggregate Root
 
 ```ts
 interface MapModel {
   id: string
-  width: number; height: number     // Grid dimensions
-  tileSize: number                  // World size per cell (default 1.0)
-  tiles: Tile[][]                  // [y][x], derived from zones
+  width: number; height: number
+  tileSize: number
+  tiles: Tile[][]
   zones: Zone[]
   entities: Entity[]
 }
@@ -125,42 +124,29 @@ interface MapModel {
 
 ---
 
-## 2. Grid Generation & Wall Derivation
+## 2. Grid Generation & Walkability
 
 ### 2.1 From Zones to Tiles
 
 ```
-1. Initialize width×height Tile[][] all as { terrain: 'void' }
-2. For each Zone: set tiles in bounds to { terrain: 'floor' }
+1. Initialize width×height Tile[][] → all { terrain: 'void' }
+2. Each Zone → set tiles in bounds → { terrain: 'floor' }
 ```
 
-### 2.2 Wall Segment Derivation
-
-```
-For each adjacent tile pair (t1, t2):
-  If t1.terrain='floor' AND t2.terrain='void'
-    → generate WallSegment on the shared edge
-```
-
-Door/window entities suppress intersecting wall segments.
-
-### 2.3 Walkability Calculation
+### 2.2 Walkability
 
 ```ts
-// Get all entities that occupy tile (x, y)
 function entitiesAt(model: MapModel, x: number, y: number): Entity[] {
   return model.entities.filter(ent => {
     const def = getEntityDef(ent.defId)
-    if (x < ent.gridX || x >= ent.gridX + def.size.w) return false
-    if (y < ent.gridY || y >= ent.gridY + def.size.h) return false
-    return true
+    return x >= ent.gridX && x < ent.gridX + def.size.w
+        && y >= ent.gridY && y < ent.gridY + def.size.h
   })
 }
 
 function isWalkable(model, x, y): boolean {
   const tile = model.tiles[y]?.[x]
   if (!tile || tile.terrain === 'void') return false
-
   for (const ent of entitiesAt(model, x, y)) {
     const def = getEntityDef(ent.defId)
     if (def.walkability === 'solid') return false
@@ -170,57 +156,191 @@ function isWalkable(model, x, y): boolean {
 }
 ```
 
-**Rule**: One `solid` entity on any layer makes the entire cell unwalkable.
+Rule: one `solid` on any layer → cell unwalkable.
 
 ---
 
 ## 3. Layer System (Lightweight Z-axis)
 
-Three layers per cell, collision-isolated:
-
 | Layer | Name | Examples |
 |---|---|---|
-| 0 | Floor | bed, table, cabinet, standing person |
-| 1 | Surface | person lying on bed, items on table |
+| 0 | Floor | bed, table, standing person |
+| 1 | Surface | person on bed, items on table |
 | 2 | Wall-mount | sensors, TV, emergency button |
 
-- Entities on different layers never collide
-- Only `solid` entities on the same layer conflict
-- `passable` entities can coexist with anything
+- Different layers never collide
+- Same-layer `solid` entities conflict on placement
+- `passable` coexists with anything
 
-### 3.1 Tag-Driven Interaction (Entity-side logic)
+### 3.1 Tag-Driven Interaction
 
-Furniture only carries passive `tags`. Actor entities detect tags and change their own state:
+Furniture carries passive `tags`. Actors detect and self-modify. Furniture is unaware.
 
 ```
 bed.tags = ['can-lie']
-    ↓ (person entity arrives at bed’s tile)
-person.meta.posture = 'lying'
-person.layer = 1
-```
-
-Furniture has zero awareness of who is using it. The entity is fully responsible for its own state transitions.
-
-### 3.2 Pathfinding Preference
-
-When an entity has a need (e.g., `meta.needsRest`), pathfinding reduces traversal cost for tiles containing matching furniture:
-
-```ts
-function tileCost(entity, model, x, y): number {
-  let cost = 1.0
-  for (const other of entitiesAt(model, x, y)) {
-    const def = getEntityDef(other.defId)
-    if (entity.meta?.needsRest && def.tags?.includes('can-lie')) cost *= 0.5
-  }
-  return cost
-}
+  → person arrives at bed's tile
+  → person.meta.posture = 'lying'
+  → person.layer = 1
 ```
 
 ---
 
-## 4. Pathfinding Interface (A* Stub)
+## 4. Entity Behavior System
 
-In `packages/shared-types/src/map/pathfinding.ts`:
+In `packages/shared-types/src/map/behavior.ts`. Pure functions, no framework dependency.
+
+### 4.1 Three-State Machine
+
+Only motion-states. "resting/eating" are `acting` with a specific interaction target.
+
+```ts
+type EntityState = 'idle' | 'moving' | 'acting'
+```
+
+### 4.2 Interaction Definition
+
+```ts
+interface InteractionDef {
+  type: string
+  label: string
+  requiresTag: string
+  posture: 'standing' | 'sitting' | 'lying'
+  defaultDuration: number
+}
+
+interface Interaction {
+  type: string
+  targetEntityId?: string
+  targetTile: { x: number; y: number }
+  durationMinutes: number
+  posture: 'standing' | 'sitting' | 'lying'
+  startedAt: number
+}
+
+const INTERACTION_DEFS: InteractionDef[] = [
+  { type: 'sleep',  label: '睡眠', requiresTag: 'can-lie', posture: 'lying',    defaultDuration: 480 },
+  { type: 'rest',   label: '休息', requiresTag: 'can-sit', posture: 'sitting',  defaultDuration: 60 },
+  { type: 'eat',    label: '用餐', requiresTag: 'can-eat', posture: 'sitting',  defaultDuration: 30 },
+]
+```
+
+### 4.3 Entity Runtime
+
+```ts
+interface EntityRuntime {
+  entityId: string
+  state: EntityState
+  currentTile: { x: number; y: number }
+
+  // moving
+  path?: { x: number; y: number }[]
+  pathProgress?: number
+
+  // acting
+  interaction?: Interaction
+}
+```
+
+### 4.4 Behavior Engine
+
+```ts
+function updateEntityBehavior(
+  runtime: EntityRuntime,
+  schedule: EntitySchedule,
+  model: MapModel,
+  simulatedTime: Date,
+  deltaSec: number,
+): EntityRuntime
+```
+
+State transitions:
+
+```
+idle → (schedule active + tag found) → compute_path → moving
+moving → (path complete) → start_interaction → acting
+acting → (duration elapsed) → idle
+moving → (cancel override) → idle
+```
+
+### 4.5 Behavior Events (Audit Log)
+
+```ts
+interface BehaviorEvent {
+  timestamp: number; entityId: string
+  type: 'zone_enter' | 'zone_exit' | 'interaction_start' | 'interaction_end' | 'state_change'
+  zoneId?: string; interactionType?: string
+}
+```
+
+Emitted every tick. Accumulated logs directly aggregate into `BehavioralProfile` (Section 6).
+
+---
+
+## 5. Entity Schedule
+
+```ts
+interface ScheduleEntry {
+  startHour: number; endHour: number
+  interactionType: string             // "sleep", "eat", "free"...
+  requiresTag: string
+}
+
+interface EntitySchedule {
+  entries: ScheduleEntry[]
+  source: 'synthetic' | 'observed'
+}
+```
+
+Two sources, no merging, no override priority:
+
+```ts
+// Source A: from PatientProfile baseline (current)
+function scheduleFromProfile(profile: PatientProfile): EntitySchedule
+
+// Source B: from observed behavioral data (future)
+function scheduleFromBehavior(bp: BehavioralProfile): EntitySchedule
+```
+
+Switching is replacing `source`. Both produce the same `EntitySchedule` shape.
+
+---
+
+## 6. Behavioral Profile (Digital Twin Fingerprint)
+
+Same structure for virtual output and real observation. Bridges the two data sources.
+
+```ts
+interface BehavioralProfile {
+  zoneDwell: Record<string, { meanMin: number; stdMin: number }>
+  interactions: Record<string, { perDay: number; typicalMin: number }>
+  activityByHour: number[]
+}
+```
+
+### 6.1 Production Pipeline
+
+```
+Virtual entity runs → BehaviorEvent[] → aggregate → BehavioralProfile (virtual)
+Real sensors     → observation data  → aggregate → BehavioralProfile (observed)
+
+compareProfiles(virtual, observed) → similarity score
+```
+
+### 6.2 Interfaces (stubs for now)
+
+```ts
+function compareProfiles(a: BehavioralProfile, b: BehavioralProfile): number
+  // returns 0-1 similarity. Implementation deferred.
+
+function scheduleFromBehavior(bp: BehavioralProfile): EntitySchedule
+  // converts observed profile to schedule. Implementation deferred.
+```
+
+---
+
+## 7. Pathfinding (A*)
+
+In `packages/shared-types/src/map/pathfinding.ts`.
 
 ```ts
 interface PathResult {
@@ -235,102 +355,90 @@ function findPath(
   to: { x: number; y: number },
   opts?: {
     maxIterations?: number       // default 10000
-    entity?: Entity              // for cost preferences
+    entity?: EntityRuntime       // for cost preferences (furniture tags)
   },
-): PathResult | null             // null = no path
+): PathResult | null
 ```
 
-Standard A*: priority queue ordered by `f = g + h`, where `h` is Manhattan distance.
+Standard A*: `f = g + h`, Manhattan heuristic. Can incorporate tag-based tile cost preferences.
 
 ---
 
-## 5. Dual Renderers
+## 8. Dual Renderers
 
-Same `MapModel` → two rendering targets.
-
-### 5.1 2D Renderer — SVG Top-Down (Web) / Canvas (Miniapp)
+### 8.1 2D — SVG (Web) / Canvas (Miniapp)
 
 ```tsx
-function MapRenderer2D({ model, patientData }: MapRenderer2DProps) {
-  // Layers:
-  // 1. Zone fill rectangles (colored by zone def)
-  // 2. Wall segments (thin lines, 2px)
-  // 3. Entity icons (circles/rects by def.render2D)
+function MapRenderer2D({ model, runtimes }: MapRenderer2DProps) {
+  // 1. Zone fill (colored rectangles)
+  // 2. Wall segments (2px lines)
+  // 3. Entity icons (by def.render2D, positioned via EntityRuntime)
 }
 ```
 
-In miniapp: same logic, rendered via `Taro.createCanvasContext`.
-
-### 5.2 3D Renderer — R3F Canvas (Web only)
+### 8.2 3D — R3F (Web only)
 
 ```tsx
-function MapRenderer3D({ model, patientData }: MapRenderer3DProps) {
-  // Layers:
-  // 1. Zone floors (PlaneGeometry per zone)
-  // 2. Wall meshes (thin BoxGeometry along edges, 0.15m thick × 3m tall)
-  // 3. Entity meshes (by def.render3D.component lookup)
+function MapRenderer3D({ model, runtimes, patientData }: MapRenderer3DProps) {
+  // 1. Zone floors (PlaneGeometry per zone bounds)
+  // 2. Wall meshes (thin BoxGeometry 0.15m × 3m along edges)
+  // 3. Entity meshes (by def.render3D.component, animated via EntityRuntime)
 }
 ```
 
-### 5.3 Existing Component Migration
+### 8.3 Component Migration
 
-| Old Component | New Component | Change |
+| Old | New | Change |
 |---|---|---|
-| `RoomGenerator(layout)` | `ZoneFloor({ zone, tileSize })` | zone.bounds → floor plane |
-| `Bed({ position, pressureGrid })` | `Bed3D({ entity, def, pd, tileSize })` | position from gridX/gridY |
-| `Person({ position, posture, vitals })` | `Person3D({ entity, def, pd, tileSize })` | same pattern |
-| `DeviceMarker({ position, label, status })` | `DeviceMarker3D({ entity, def, tileSize })` | same pattern |
+| `RoomGenerator(layout)` | `ZoneFloor({ zone, tileSize })` | zone.bounds → plane |
+| `Bed({ position, grid })` | `Bed3D({ entity, def, runtime, tileSize })` | position from runtime |
+| `Person({ position, posture })` | `Person3D({ entity, def, runtime, tileSize })` | animated by runtime |
+| `DeviceMarker({ position })` | `DeviceMarker3D({ entity, def, tileSize })` | same pattern |
 
 ---
 
-## 6. Visual Editor (MapEditorPage)
-
-### 6.1 Layout
+## 9. Visual Editor
 
 ```
 ┌──────────────────────────────────────────────┐
 │  Toolbar: [Select] [Draw Room] [Bed] [...]   │
 ├─────────────────────────┬────────────────────┤
-│                         │                    │
 │  2D Canvas (SVG grid)   │  Properties Panel  │
-│  - Drag to draw zones   │  - Selected entity │
-│  - Click to place       │  - Position/orient │
-│  - Drag to move         │  - Patient binding │
-│                         │                    │
+│  - Drag → draw zone     │  Entity details    │
+│  - Click → place entity │  Position/orient   │
+│  - Drag → move entity   │  Patient binding   │
 ├─────────────────────────┴────────────────────┤
 │  Status: (5,3) | Room: 主卧 | Entities: 12   │
 └──────────────────────────────────────────────┘
 ```
 
-### 6.2 Tool Modes
-
 | Mode | Behavior |
 |---|---|
-| `select` | Click entity → select. Drag → move. Delete key → remove. Click blank → deselect. |
-| `draw-room` | Drag rectangle → create zone. Preview shows semi-transparent fill. |
-| `place-entity:{defId}` | Click grid → place entity. R key → rotate. Preview green/red for valid/invalid. |
+| `select` | Click select, drag move, Delete remove |
+| `draw-room` | Drag rectangle → create zone |
+| `place-entity:{defId}` | Click grid → place. R = rotate. Green/red preview |
 
-### 6.3 Validation
+### 9.1 Placement Validation
 
-`canPlaceEntity()` checks: within bounds, on floor tile, no same-layer solid overlap.
+`canPlaceEntity()`: within bounds, on floor tile, no same-layer solid overlap.
 
-### 6.4 Serialization
+### 9.2 Serialization
 
-Serialize only `{ id, width, height, zones, entities }`. Do NOT serialize `tiles` or `WallSegments` (they are derived).
+Store only `{ id, width, height, zones, entities }`. `tiles` and `WallSegments` are derived.
 
 ---
 
-## 7. Built-in Registries
+## 10. Built-in Registries
 
-### 7.1 EntityDefs (default)
+### 10.1 EntityDefs
 
 | defId | category | layer | size | walkability | tags |
 |---|---|---|---|---|---|
 | bed | furniture | 0 | 2×1 | solid | can-lie |
-| table | furniture | 0 | 2×1 | solid | — |
+| table | furniture | 0 | 2×1 | solid | can-eat |
+| sofa | furniture | 0 | 2×1 | solid | can-sit |
 | cabinet | furniture | 0 | 1×1 | solid | — |
 | toilet | furniture | 0 | 1×1 | solid | — |
-| sofa | furniture | 0 | 2×1 | solid | can-sit |
 | person | actor | 0 | 1×1 | passable | — |
 | mattress_sensor | sensor | 2 | 1×1 | passable | — |
 | air_sensor | sensor | 2 | 1×1 | passable | — |
@@ -340,7 +448,7 @@ Serialize only `{ id, width, height, zones, entities }`. Do NOT serialize `tiles
 | door | structure | 0 | 1×1 | dynamic | — |
 | window | structure | 0 | 1×1 | solid | — |
 
-### 7.2 ZoneDefs (default)
+### 10.2 ZoneDefs
 
 | defId | label | color |
 |---|---|---|
@@ -353,61 +461,58 @@ Serialize only `{ id, width, height, zones, entities }`. Do NOT serialize `tiles
 
 ---
 
-## 8. File Structure
+## 11. File Structure
 
 ```
 packages/shared-types/src/map/
-  ├── types.ts             # MapModel, Tile, Zone, Entity, EntityDef, ZoneDef
-  ├── registries.ts        # Built-in ENTITY_DEFS, ZONE_DEFS
-  ├── grid.ts              # buildGrid(), getWallSegments(), isWalkable()
-  ├── pathfinding.ts       # findPath() A* interface
+  ├── types.ts             # Tile, Zone, ZoneDef, Entity, EntityDef, MapModel,
+  │                        #   EntityState, EntityRuntime, Interaction, InteractionDef,
+  │                        #   ScheduleEntry, EntitySchedule, BehavioralProfile
+  ├── registries.ts        # ENTITY_DEFS, ZONE_DEFS, INTERACTION_DEFS
+  ├── grid.ts              # buildGrid(), getWallSegments(), entitiesAt(), isWalkable()
+  ├── pathfinding.ts       # findPath()
+  ├── behavior.ts          # updateEntityBehavior(), compareProfiles() stub,
+  │                        #   scheduleFromProfile(), scheduleFromBehavior() stub
   └── validation.ts        # canPlaceEntity()
 
 apps/web/src/map/
-  ├── useMapModel.ts       # React hook (trpc fetch + deserialize)
-  ├── MapRenderer2D.tsx    # SVG 2D renderer
-  ├── MapRenderer3D.tsx    # R3F 3D renderer
+  ├── useMapModel.ts       # React hook
+  ├── useEntityRuntimes.ts # Hook running behavior engine each frame
+  ├── MapRenderer2D.tsx
+  ├── MapRenderer3D.tsx
   ├── editor/
-  │   ├── MapEditorPage.tsx    # Editor page (toolbar + canvas + panel)
-  │   ├── MapCanvas2D.tsx      # Editable 2D canvas
-  │   ├── Toolbar.tsx          # Tool mode selector
-  │   └── PropertiesPanel.tsx  # Selected entity properties
+  │   ├── MapEditorPage.tsx
+  │   ├── MapCanvas2D.tsx
+  │   ├── Toolbar.tsx
+  │   └── PropertiesPanel.tsx
   └── renderers/
-      ├── ZoneFloor.tsx        # 3D zone floor
-      ├── WallMesh.tsx         # 3D wall segment (0.15m thick)
-      ├── Bed3D.tsx            # Migrated Bed component
-      ├── Person3D.tsx         # Migrated Person component
-      └── DeviceMarker3D.tsx   # Migrated DeviceMarker component
+      ├── ZoneFloor.tsx
+      ├── WallMesh.tsx
+      ├── Bed3D.tsx
+      ├── Person3D.tsx
+      └── DeviceMarker3D.tsx
 ```
 
 ---
 
-## 9. Implementation Phases
+## 12. Implementation Phases
 
 | Phase | Scope |
 |---|---|
-| **P1** | `shared-types/map/*` — types, registries, grid, pathfinding stub |
-| **P2** | `MapRenderer3D` — replaces existing `HomeScene`, all existing 3D entities |
-| **P3** | `MapRenderer2D` — SVG top-down view in Web |
-| **P4** | `MapEditorPage` — drag-to-draw zones, click-to-place entities |
-| **P5** | Migration — remove old `homeLayout.ts`, `RoomGenerator`, old entity components |
-| **P6** | Miniapp 2D Canvas renderer |
+| **P1** | `shared-types/map/*` — all types, registries, grid, pathfinding stub, behavior types |
+| **P2** | `MapRenderer3D` — replaces `HomeScene`, all existing 3D entities |
+| **P3** | `MapRenderer2D` — SVG top-down view |
+| **P4** | `behavior.ts` — full engine, `useEntityRuntimes` hook |
+| **P5** | `MapEditorPage` — drag-draw zones, click-place entities |
+| **P6** | Migration — remove `homeLayout.ts`, `RoomGenerator`, old components |
+| **P7** | Miniapp 2D Canvas renderer |
 
 ---
 
-## 10. Bootstrap: From Old Layout to New MapModel
+## 13. Bootstrap: Old Layout → New MapModel
 
-A factory function converts the old hardcoded `homeLayout` (RoomLayout[] with grid tiles) into the new `MapModel` format, providing backward compatibility during migration:
+Factory converts hardcoded `homeLayout` to `MapModel` for backward compatibility. Removed once editor is available.
 
 ```ts
-// packages/shared-types/src/map/bootstrap.ts
-function migrateFromHomeLayout(): MapModel {
-  // 1. Derive zones from old RoomLayout names and bounds
-  // 2. Derive entities from old AnchorDef positions
-  // 3. Call buildGrid() to generate tiles and walls
-  return model
-}
+function migrateFromHomeLayout(): MapModel
 ```
-
-Once the editor is available, the old layout is removed entirely.
-
