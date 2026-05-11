@@ -4,6 +4,7 @@ import { notifications } from '@mantine/notifications'
 import type { MapModel, Entity, Zone } from '@iomtea/shared-types/map'
 import { buildGrid } from '@iomtea/shared-types/map'
 import { useMapModel } from '../useMapModel'
+import { usePatientStore } from '../../store/patients'
 import { trpc } from '../../trpc'
 import { Toolbar } from './Toolbar'
 import { MapCanvas2D } from './MapCanvas2D'
@@ -29,9 +30,9 @@ export function MapEditorPage() {
     onError: (err: any) => notifications.show({ title: '保存失败', message: err.message, color: 'red' }),
   })
 
-  const { data: patients } = trpc.patient.list.useQuery({ pageSize: 100, status: 'active' })
+  const patients = usePatientStore((s) => s.patients)
   const patientOptions = useMemo(
-    () => ((patients as any[]) || []).map((p: any) => ({ value: p.id, label: p.name })),
+    () => patients.map((p) => ({ value: p.id, label: p.name })),
     [patients],
   )
 

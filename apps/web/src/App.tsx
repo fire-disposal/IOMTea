@@ -19,7 +19,7 @@ import {
 import { notifications } from '@mantine/notifications'
 import { useEffect, useState } from 'react'
 import { LoginPage } from './LoginPage'
-import { useRealtime } from './hooks/useRealtime'
+import { StoreProvider } from './StoreProvider'
 import { AlertRulesPage } from './pages/AlertRulesPage'
 import { AssetManagerPage } from './pages/AssetManagerPage'
 import { DeviceListPage } from './pages/DeviceListPage'
@@ -29,30 +29,27 @@ import { PatientListPage } from './pages/PatientListPage'
 import { TrendsPage } from './pages/TrendsPage'
 import { WardManagementPage } from './pages/WardManagementPage'
 import { useAuthStore } from './store/auth'
+import { usePatientStore } from './store/patients'
+import { useWardStore } from './store/ward'
 import { trpc } from './trpc'
 
 function Dashboard() {
   const logout = useAuthStore((s) => s.logout)
-  const [patientIds, setPatientIds] = useState<string[]>([])
-  const [patientNames, setPatientNames] = useState<string[]>([])
-  const [wardId, setWardId] = useState<string>('')
+  const patients = usePatientStore((s) => s.patients)
+  const wardId = useWardStore((s) => s.selectedWardId)
+  const wardRunning = useWardStore((s) => s.wardRunning)
+  const wsConnected = useWardStore((s) => s.wsConnected)
   const [ready, setReady] = useState(false)
   const [activeTab, setActiveTab] = useState<string | null>('dashboard')
   const [selectedMetric, setSelectedMetric] = useState<string>('standard')
 
-  // Fetch ward status (auto-started by server in demo mode)
-  const wardStatus = trpc.simulator.status.useQuery(undefined, { refetchInterval: 10000 })
-  const patientList = trpc.patient.list.useQuery(
-    { pageSize: 20, status: 'active' },
-    { refetchInterval: 15000 },
-  )
+  const patientIds = patients.map((p) => p.id)
+  const patientNames = patients.map((p) => p.name)
+
   const alertCount = trpc.alert.list.useQuery(
     { pageSize: 1, status: 'active' },
     { refetchInterval: 10000 },
   )
-
-  // WebSocket real-time data push
-  const { isConnected: wsConnected } = useRealtime(wardId)
 
   const inject = trpc.simulator.injectScenario.useMutation({
     onSuccess: () =>
@@ -62,15 +59,8 @@ function Dashboard() {
   })
 
   useEffect(() => {
-    if (wardStatus.data && Array.isArray(wardStatus.data) && wardStatus.data.length > 0) {
-      setWardId(wardStatus.data[0].id)
-    }
-    if (patientList.data !== undefined && !ready) {
-      setPatientIds(patientList.data.map((p: any) => p.id))
-      setPatientNames(patientList.data.map((p: any) => p.name))
-      setReady(true)
-    }
-  }, [wardStatus.data, patientList.data, ready])
+    if (patients.length > 0 && !ready) setReady(true)
+  }, [patients.length, ready])
 
   const latestQueries = [
     trpc.data.latest.useQuery(
@@ -103,8 +93,6 @@ function Dashboard() {
   })
 
   const severityColor: Record<string, string> = { critical: 'red', warning: 'orange', info: 'blue' }
-  const wardRunning =
-    wardStatus.data && Array.isArray(wardStatus.data) && wardStatus.data[0]?.running
 
   if (!ready) {
     return (
@@ -490,6 +478,7 @@ function Dashboard() {
 
   return (
     <>
+      <StoreProvider />
       <Group px="md" pt="md" justify="space-between">
         <Tabs value={activeTab} onChange={setActiveTab}>
           <Tabs.List>

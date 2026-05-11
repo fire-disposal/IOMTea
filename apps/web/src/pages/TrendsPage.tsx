@@ -11,6 +11,7 @@ import {
   YAxis,
 } from 'recharts'
 import { trpc } from '../trpc'
+import { usePatientStore } from '../store/patients'
 
 const METRICS = [
   { value: 'heart_rate', label: '心率 (HR)', unit: 'bpm', color: '#e03131' },
@@ -31,23 +32,19 @@ const RANGES = [
 ]
 
 export function TrendsPage() {
-  const [selectedPatient, setSelectedPatient] = useState<string | null>(null)
+  const selectedPatient = usePatientStore((s) => s.selectedPatientId)
+  const selectPatient = usePatientStore((s) => s.selectPatient)
+  const patients = usePatientStore((s) => s.patients)
   const [selectedMetric, setSelectedMetric] = useState<string | null>('heart_rate')
   const [selectedRange, setSelectedRange] = useState<string | null>('3600000')
-
-  const patientList = trpc.patient.list.useQuery({ pageSize: 100 })
 
   const timeRangeMs = Number.parseInt(selectedRange || '3600000', 10)
   const now = Date.now()
   const from = now - timeRangeMs
 
   const patientOptions = useMemo(
-    () =>
-      (patientList.data || []).map((p: any) => ({
-        value: p.id,
-        label: p.name,
-      })),
-    [patientList.data],
+    () => patients.map((p) => ({ value: p.id, label: p.name })),
+    [patients],
   )
 
   const timeseries = trpc.data.timeseries.useQuery(
@@ -124,7 +121,7 @@ export function TrendsPage() {
         <Select
           data={patientOptions}
           value={selectedPatient}
-          onChange={setSelectedPatient}
+          onChange={selectPatient}
           placeholder="选择患者"
           searchable
           clearable

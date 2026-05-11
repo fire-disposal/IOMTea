@@ -14,11 +14,12 @@ import {
 import { notifications } from '@mantine/notifications'
 import { useEffect, useMemo, useState } from 'react'
 import { trpc } from '../trpc'
+import { usePatientStore } from '../store/patients'
 
 export function AlertRulesPage() {
-  const [selectedPatient, setSelectedPatient] = useState<string | null>(null)
-
-  const patientList = trpc.patient.list.useQuery({ pageSize: 100 })
+  const selectedPatient = usePatientStore((s) => s.selectedPatientId)
+  const selectPatient = usePatientStore((s) => s.selectPatient)
+  const patients = usePatientStore((s) => s.patients)
 
   const rulesQuery = trpc.alertRule.byPatient.useQuery(
     { patientId: selectedPatient || '' },
@@ -41,12 +42,8 @@ export function AlertRulesPage() {
   }, [rulesQuery.data])
 
   const patientOptions = useMemo(
-    () =>
-      (patientList.data || []).map((p: any) => ({
-        value: p.id,
-        label: p.name,
-      })),
-    [patientList.data],
+    () => patients.map((p: any) => ({ value: p.id, label: p.name })),
+    [patients],
   )
 
   const handleSave = () => {
@@ -75,7 +72,7 @@ export function AlertRulesPage() {
         <Select
           data={patientOptions}
           value={selectedPatient}
-          onChange={setSelectedPatient}
+          onChange={selectPatient}
           placeholder="选择患者"
           searchable
           clearable
