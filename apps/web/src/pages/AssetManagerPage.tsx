@@ -1,3 +1,4 @@
+/// <reference types="@react-three/fiber" />
 import { useState, useMemo } from 'react'
 import { Container, Title, SimpleGrid, Paper, Text, Group, ColorInput, Select, NumberInput, TextInput, Button, Stack, Tabs } from '@mantine/core'
 import { Canvas } from '@react-three/fiber'

@@ -1,3 +1,4 @@
+/// <reference types="@react-three/fiber" />
 import type { WallSegment } from '@iomtea/shared-types/map'
 
 interface WallMeshProps {

@@ -1,5 +1,6 @@
 import {
   ActionIcon,
+  AppShell,
   Badge,
   Button,
   Card,
@@ -7,15 +8,16 @@ import {
   Grid,
   Group,
   Loader,
+  NavLink,
   Paper,
   SegmentedControl,
   Skeleton,
   Stack,
-  Tabs,
   Text,
   Title,
   Tooltip,
 } from '@mantine/core'
+import { useDisclosure } from '@mantine/hooks'
 import { notifications } from '@mantine/notifications'
 import { useEffect, useState } from 'react'
 import { LoginPage } from './LoginPage'
@@ -40,8 +42,9 @@ function Dashboard() {
   const wardId = useWardStore((s) => s.selectedWardId)
   const wardRunning = useWardStore((s) => s.wardRunning)
   const wsConnected = useWardStore((s) => s.wsConnected)
-  const [activeTab, setActiveTab] = useState<string | null>('dashboard')
-  const [selectedMetric, setSelectedMetric] = useState<string>('standard')
+  const [active, setActive] = useState('dashboard')
+  const [selectedMetric, setSelectedMetric] = useState('standard')
+  const [opened, { toggle }] = useDisclosure()
 
   const patientIds = patients.map((p) => p.id)
   const patientNames = patients.map((p) => p.name)
@@ -84,31 +87,29 @@ function Dashboard() {
 
   const severityColor: Record<string, string> = { critical: 'red', warning: 'orange', info: 'blue' }
 
-  const ready = patientNames.length > 0 || patients.length > 0
-
-  if (patientsLoading && !patients.length) {
+  if (patientsLoading) {
     return (
       <Container py="xl">
         <Stack align="center" gap="md">
           <Loader />
-          <Text c="dimmed">连接服务器...</Text>
+          <Text c="dimmed">加载患者数据...</Text>
         </Stack>
       </Container>
     )
   }
   if (hasError) {
     return (
-      <Container py="xl">
-        <Text ta="center" c="red">数据获取失败，请检查网络连接后刷新页面</Text>
+      <Container py="xl" ta="center">
+        <Text c="red" fw={500}>数据获取失败</Text>
+        <Text size="sm" c="dimmed" mt="xs">请检查网络连接后刷新页面</Text>
       </Container>
     )
   }
   if (patientNames.length === 0) {
     return (
-      <Container size="xl" py="xl">
-        <Text ta="center" c="dimmed">
-          暂无患者数据。请确认 Demo 模式已启用或手动添加患者。
-        </Text>
+      <Container py="xl" ta="center">
+        <Text c="dimmed" mb="md">暂无患者数据</Text>
+        <Text size="sm" c="dimmed">前往"Ward 管理"创建仿真 Ward，或前往"患者管理"手动添加患者</Text>
       </Container>
     )
   }
@@ -477,48 +478,72 @@ function Dashboard() {
     </Container>
   )
 
+  const navItems = [
+    { value: 'dashboard', label: '监护面板', alert: alertCount.data?.length },
+    { value: 'trends', label: '趋势分析' },
+    { value: 'digitaltwin', label: '数字孪生' },
+    { value: 'patients', label: '患者管理' },
+    { value: 'devices', label: '设备管理' },
+    { value: 'alertRules', label: '告警阈值' },
+    { value: 'wards', label: 'Ward 管理' },
+    { value: 'mapEditor', label: '地图编辑' },
+    { value: 'assets', label: '资产管理' },
+  ]
+
   return (
     <>
       <StoreProvider />
-      <Group px="md" pt="md" justify="space-between">
-        <Tabs value={activeTab} onChange={setActiveTab}>
-          <Tabs.List>
-            <Tabs.Tab
-              value="dashboard"
+      <AppShell
+        header={{ height: 50 }}
+        navbar={{ width: 180, breakpoint: 'sm', collapsed: { mobile: !opened } }}
+        padding={0}
+      >
+        <AppShell.Header>
+          <Group h="100%" px="md" justify="space-between">
+            <Group gap="xs">
+              <ActionIcon variant="subtle" onClick={toggle} hiddenFrom="sm" aria-label="菜单">
+                ☰
+              </ActionIcon>
+              <Text fw={700}>IOMTea</Text>
+              <Badge color={wardRunning ? 'green' : 'gray'} size="sm" variant="dot">
+                {wardRunning ? '运行中' : '暂停'}
+              </Badge>
+              <Badge color={wsConnected ? 'green' : 'orange'} size="sm" variant="light">
+                {wsConnected ? '实时' : '轮询'}
+              </Badge>
+            </Group>
+            <Button size="xs" variant="subtle" color="red" onClick={logout}>退出</Button>
+          </Group>
+        </AppShell.Header>
+
+        <AppShell.Navbar p="xs">
+          {navItems.map((item) => (
+            <NavLink
+              key={item.value}
+              label={item.label}
+              active={active === item.value}
+              onClick={() => { setActive(item.value); toggle() }}
               rightSection={
-                alertCount.data && alertCount.data.length > 0 ? (
-                  <Badge size="xs" color="red" variant="filled" style={{ minWidth: 18 }}>
-                    {alertCount.data.length}
-                  </Badge>
+                item.alert != null && item.alert > 0 ? (
+                  <Badge size="xs" color="red" variant="filled">{item.alert}</Badge>
                 ) : undefined
               }
-            >
-              监护面板
-            </Tabs.Tab>
-            <Tabs.Tab value="trends">趋势分析</Tabs.Tab>
-            <Tabs.Tab value="patients">患者管理</Tabs.Tab>
-            <Tabs.Tab value="devices">设备管理</Tabs.Tab>
-            <Tabs.Tab value="alertRules">告警阈值</Tabs.Tab>
-            <Tabs.Tab value="digitaltwin">数字孪生</Tabs.Tab>
-            <Tabs.Tab value="mapEditor">地图编辑</Tabs.Tab>
-            <Tabs.Tab value="wards">Ward 管理</Tabs.Tab>
-            <Tabs.Tab value="assets">资产管理</Tabs.Tab>
-          </Tabs.List>
-        </Tabs>
-        <Button size="xs" variant="subtle" color="red" onClick={logout}>
-          退出
-        </Button>
-      </Group>
+            />
+          ))}
+        </AppShell.Navbar>
 
-      {activeTab === 'dashboard' && dashboardView}
-      {activeTab === 'trends' && <TrendsPage />}
-      {activeTab === 'patients' && <PatientListPage />}
-      {activeTab === 'devices' && <DeviceListPage />}
-      {activeTab === 'alertRules' && <AlertRulesPage />}
-      {activeTab === 'digitaltwin' && <DigitalTwinPage />}
-      {activeTab === 'mapEditor' && <MapEditorPage />}
-      {activeTab === 'wards' && <WardManagementPage />}
-      {activeTab === 'assets' && <AssetManagerPage />}
+        <AppShell.Main>
+          {active === 'dashboard' && dashboardView}
+          {active === 'trends' && <TrendsPage />}
+          {active === 'patients' && <PatientListPage />}
+          {active === 'devices' && <DeviceListPage />}
+          {active === 'alertRules' && <AlertRulesPage />}
+          {active === 'digitaltwin' && <DigitalTwinPage />}
+          {active === 'mapEditor' && <MapEditorPage />}
+          {active === 'wards' && <WardManagementPage />}
+          {active === 'assets' && <AssetManagerPage />}
+        </AppShell.Main>
+      </AppShell>
     </>
   )
 }

@@ -1,3 +1,4 @@
+/// <reference types="@react-three/fiber" />
 import { useMemo } from 'react'
 import type { MapModel } from '@iomtea/shared-types/map'
 import { getWallSegments, getEntityDef, getAsset } from '@iomtea/shared-types/map'

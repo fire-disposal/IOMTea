@@ -1,3 +1,4 @@
+/// <reference types="@react-three/fiber" />
 import type { Entity, EntityDef } from '@iomtea/shared-types/map'
 
 interface Bed3DProps {

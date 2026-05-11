@@ -1,3 +1,4 @@
+/// <reference types="@react-three/fiber" />
 import { Html } from '@react-three/drei'
 import type { Entity, EntityDef } from '@iomtea/shared-types/map'
 import type { EntityState } from '../../store/entityState'

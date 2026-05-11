@@ -1,3 +1,4 @@
+/// <reference types="@react-three/fiber" />
 import { useMemo } from 'react'
 import type { Zone } from '@iomtea/shared-types/map'
 import { getZoneDef } from '@iomtea/shared-types/map'
