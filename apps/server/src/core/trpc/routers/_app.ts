@@ -3,6 +3,7 @@ import { router } from '../index'
 import { alertRouter } from './alert'
 import { alertRuleRouter } from './alertRule'
 import { authRouter } from './auth'
+import { dashboardRouter } from './dashboard'
 import { dataRouter } from './data'
 import { deviceRouter } from './device'
 import { mapConfigRouter } from './mapConfig'
@@ -17,6 +18,7 @@ export const appRouter = router({
   alert: alertRouter,
   data: dataRouter,
   alertRule: alertRuleRouter,
+  dashboard: dashboardRouter,
   mapConfig: mapConfigRouter,
   simulator: simulatorRouter,
 })
