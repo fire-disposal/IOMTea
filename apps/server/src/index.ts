@@ -38,10 +38,8 @@ app.use(
 app.use('/trpc/*', trpcServer({ router: appRouter, createContext }))
 app.get('/health', (c) => c.json({ status: 'ok' }))
 
-// Bootstrap — demo mode
+// Bootstrap — seed demo account, default map, auto-start ward
 async function bootstrap() {
-  if (!env.DEMO_MODE) return
-
   // Seed demo account
   const existing = await db.select().from(users).where(eq(users.username, 'demo')).limit(1)
   if (existing.length === 0) {
@@ -150,7 +148,7 @@ bootstrap().then(() => {
     })
   })
 
-  logger.info({ port: env.PORT, demo: env.DEMO_MODE, ws: true }, 'server ready')
+  logger.info({ port: env.PORT, ws: true }, 'server ready')
 })
 
 export type { AppRouter } from './core/trpc/routers/_app'
