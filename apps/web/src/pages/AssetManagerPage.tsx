@@ -1,6 +1,6 @@
 /// <reference types="@react-three/fiber" />
 import { useState, useMemo } from 'react'
-import { Container, Title, SimpleGrid, Paper, Text, Group, ColorInput, Select, NumberInput, TextInput, Button, Stack, Tabs } from '@mantine/core'
+import { Badge, ColorSwatch, Container, Group, Paper, SimpleGrid, Stack, Text, Title } from '@mantine/core'
 import { Canvas } from '@react-three/fiber'
 import { ASSET_DEFS, getAsset, type AssetDef, type Sprite2D, type Model3D } from '@iomtea/shared-types/map'
 import { Billboard3D } from '../map/renderers/Billboard3D'
@@ -105,39 +105,33 @@ export function AssetManagerPage() {
         <Paper p="md" withBorder>
           <Title order={5} mb="md">{selected.id}</Title>
 
-          <Group align="flex-start" gap="xl" wrap="wrap">
-            <Stack gap="xs" w={200}>
-              <Text size="xs" fw={600} c="dimmed">2D 精灵属性</Text>
-              <Select label="形状" data={SHAPES} value={selected.sprite2D.shape} readOnly />
-              <ColorInput label="颜色" value={selected.sprite2D.color} readOnly />
-              <NumberInput label="宽度" value={selected.sprite2D.size[0]} readOnly />
-              <NumberInput label="高度" value={selected.sprite2D.size[1]} readOnly />
-              <TextInput label="标签" value={selected.sprite2D.label || ''} readOnly />
-            </Stack>
-
+          <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="md">
             <Paper p="md" withBorder bg="gray.0">
-              <Text size="xs" c="dimmed" mb="xs">2D 预览</Text>
+              <Text size="xs" fw={600} c="dimmed" mb="xs">2D 精灵</Text>
+              <Stack gap={4}>
+                <Group gap="xs"><Text size="xs" c="dimmed" miw={40}>形状</Text><Badge size="xs" variant="light">{SHAPES.find(s => s.value === selected.sprite2D.shape)?.label}</Badge></Group>
+                <Group gap="xs"><Text size="xs" c="dimmed" miw={40}>颜色</Text><ColorSwatch color={selected.sprite2D.color} size={14} /><Text size="xs">{selected.sprite2D.color}</Text></Group>
+                <Group gap="xs"><Text size="xs" c="dimmed" miw={40}>尺寸</Text><Text size="xs">{selected.sprite2D.size[0]}×{selected.sprite2D.size[1]}</Text></Group>
+                {selected.sprite2D.label && <Group gap="xs"><Text size="xs" c="dimmed" miw={40}>标签</Text><Badge size="xs">{selected.sprite2D.label}</Badge></Group>}
+              </Stack>
+            </Paper>
+            <Paper p="md" withBorder bg="gray.0" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <SpritePreview sprite={selected.sprite2D} size={120} />
             </Paper>
-
-            <Stack gap="xs" w={200}>
-              <Text size="xs" fw={600} c="dimmed">3D 模型属性</Text>
-              {selected.model3D ? (
-                <>
-                  <TextInput label="类型" value={selected.model3D.type} readOnly />
-                  <ColorInput label="颜色" value={selected.model3D.color} readOnly />
-                  <TextInput label="参数" value={(selected.model3D.args || []).join(', ')} readOnly />
-                </>
-              ) : (
-                <Text size="sm" c="dimmed">未定义 3D 模型</Text>
-              )}
-            </Stack>
-
             <Paper p="md" withBorder bg="gray.0">
-              <Text size="xs" c="dimmed" mb="xs">3D 预览</Text>
+              <Text size="xs" fw={600} c="dimmed" mb="xs">3D 模型</Text>
+              {selected.model3D ? (
+                <Stack gap={4}>
+                  <Group gap="xs"><Text size="xs" c="dimmed" miw={40}>类型</Text><Badge size="xs" variant="light">{selected.model3D.type}</Badge></Group>
+                  <Group gap="xs"><Text size="xs" c="dimmed" miw={40}>颜色</Text><ColorSwatch color={selected.model3D.color} size={14} /><Text size="xs">{selected.model3D.color}</Text></Group>
+                  <Group gap="xs"><Text size="xs" c="dimmed" miw={40}>参数</Text><Text size="xs">{(selected.model3D.args || []).join(', ')}</Text></Group>
+                </Stack>
+              ) : <Text size="xs" c="dimmed">无 3D 模型（使用精灵回退）</Text>}
+            </Paper>
+            <Paper p="md" withBorder bg="gray.0" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Model3DPreview asset={selected} />
             </Paper>
-          </Group>
+          </SimpleGrid>
         </Paper>
       )}
     </Container>

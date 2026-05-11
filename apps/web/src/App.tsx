@@ -53,7 +53,7 @@ function Dashboard() {
           <Group h="100%" px="md" justify="space-between">
             <Group gap="sm">
               <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
-              <ThemeIcon size="sm" radius="md" variant="gradient" gradient={{ from: 'blue', to: 'cyan' }}>🏥</ThemeIcon>
+              <ThemeIcon size="sm" radius="md" variant="gradient" gradient={{ from: 'blue', to: 'cyan' }}>🍵</ThemeIcon>
               <Text fw={700}>IOMTea</Text>
               <Badge color={wardRunning ? 'green' : 'gray'} size="sm" variant="dot">{wardRunning ? '运行中' : '已暂停'}</Badge>
               <Badge color={wsConnected ? 'green' : 'orange'} size="sm" variant="light">{wsConnected ? '实时' : '轮询'}</Badge>

@@ -117,30 +117,10 @@ export function TrendsPage() {
         趋势分析
       </Title>
 
-      <Group mb="md" gap="sm">
-        <Select
-          data={patientOptions}
-          value={selectedPatient}
-          onChange={selectPatient}
-          placeholder="选择患者"
-          searchable
-          clearable
-          style={{ width: 200 }}
-        />
-        <Select
-          data={METRICS}
-          value={selectedMetric}
-          onChange={setSelectedMetric}
-          placeholder="选择指标"
-          style={{ width: 180 }}
-        />
-        <Select
-          data={RANGES}
-          value={selectedRange}
-          onChange={setSelectedRange}
-          placeholder="时间范围"
-          style={{ width: 160 }}
-        />
+      <Group mb="md" gap="sm" wrap="wrap">
+        <Select data={patientOptions} value={selectedPatient} onChange={selectPatient} placeholder="选择患者" searchable clearable w={{ base: '100%', sm: 200 }} />
+        <Select data={METRICS} value={selectedMetric} onChange={setSelectedMetric} placeholder="选择指标" w={{ base: '100%', sm: 180 }} />
+        <Select data={RANGES} value={selectedRange} onChange={setSelectedRange} placeholder="时间范围" w={{ base: '100%', sm: 160 }} />
       </Group>
 
       {!selectedPatient && (
