@@ -9,7 +9,8 @@
   },
   "exports": {
     ".": "./src/index.ts",
-    "./schemas": "./src/schemas/index.ts"
+    "./schemas": "./src/schemas/index.ts",
+    "./map": "./src/map/index.ts"
   },
   "dependencies": {
     "zod": "^3.24.0"
