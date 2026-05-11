@@ -9,6 +9,8 @@ const ruleSchema = z.object({
   min: z.number().optional(),
   max: z.number().optional(),
   enabled: z.boolean().default(true),
+  label: z.string().optional(),
+  unit: z.string().optional(),
 })
 
 export const alertRuleRouter = router({

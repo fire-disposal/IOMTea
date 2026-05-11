@@ -102,25 +102,7 @@ export function useRealtime(wardId: string | undefined) {
         }
 
         if (alerts.length > 0) {
-          queryClient.setQueryData(['alert', 'list', { pageSize: 50, status: 'active' }], (old: any) => {
-            const oldAlerts = (old || []) as any[]
-            const newAlerts = alerts.map((a) => ({
-              id: `${a.patientId}-${a.metric}-${a.recordedAt}`,
-              patientId: a.patientId,
-              deviceId: a.deviceId,
-              kind: 'alert',
-              metric: a.metric,
-              value: a.value,
-              unit: a.unit,
-              severity: a.severity,
-              status: a.status || 'active',
-              tags: a.tags,
-              recordedAt: new Date(a.recordedAt).getTime(),
-            }))
-            const merged = [...newAlerts, ...oldAlerts].slice(0, 50)
-            return merged
-          })
-          queryClient.invalidateQueries({ queryKey: ['alert', 'count'] })
+          queryClient.invalidateQueries({ queryKey: ['alert', 'list'] })
         }
       } catch {
         // ignore parse errors

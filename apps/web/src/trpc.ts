@@ -32,7 +32,7 @@ export function getTrpcClient() {
                   if (result?.accessToken) {
                     localStorage.setItem('token', result.accessToken)
                     localStorage.setItem('refreshToken', result.refreshToken)
-                    localStorage.setItem('expiresAt', String(Date.now() + result.expiresIn * 1000))
+                    localStorage.setItem('expiresAt', String(result.expiresAt))
                     headers.set('Authorization', `Bearer ${result.accessToken}`)
                     return fetch(input, { ...init, headers })
                   }
