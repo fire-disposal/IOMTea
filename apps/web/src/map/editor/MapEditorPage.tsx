@@ -3,6 +3,7 @@ import { Container, Group, Text } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
 import type { MapModel, Entity, Zone } from '@iomtea/shared-types/map'
 import { buildGrid } from '@iomtea/shared-types/map'
+import { mergeZones } from '@iomtea/shared-types/map'
 import { useMapModel } from '../useMapModel'
 import { usePatientStore } from '../../store/patients'
 import { trpc } from '../../trpc'
@@ -115,7 +116,8 @@ export function MapEditorPage() {
     (zone: Zone) => {
       const sameType = model.zones.filter((z) => z.defId === zone.defId).length
       const name = `${zone.defId === 'bedroom' ? '卧室' : zone.defId === 'livingroom' ? '客厅' : zone.defId === 'kitchen' ? '厨房' : zone.defId === 'bathroom' ? '卫浴' : zone.defId === 'hall' ? '走廊' : '房间'} ${sameType + 1}`
-      const newModel = { ...model, zones: [...model.zones, { ...zone, name }] }
+      const merged = mergeZones(model.zones, { ...zone, name })
+      const newModel = { ...model, zones: merged }
       rebuild(newModel)
       setIsDirty(true)
     },
