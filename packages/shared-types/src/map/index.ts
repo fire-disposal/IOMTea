@@ -1,3 +1,6 @@
 export * from './types'
 export * from './registries'
 export * from './grid'
+export * from './pathfinding'
+export * from './validation'
+export * from './behavior'
