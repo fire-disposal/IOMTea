@@ -12,6 +12,7 @@
   "dependencies": {
     "@iomtea/shared-types": "workspace:*",
     "@mantine/core": "^8.3.0",
+    "@mantine/form": "8.3.18",
     "@mantine/hooks": "^8.3.18",
     "@mantine/modals": "^8.3.18",
     "@mantine/notifications": "^8.3.0",
