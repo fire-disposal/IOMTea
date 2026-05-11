@@ -109,7 +109,11 @@ function Dashboard() {
     return (
       <Container py="xl" ta="center">
         <Text c="dimmed" mb="md">暂无患者数据</Text>
-        <Text size="sm" c="dimmed">前往"Ward 管理"创建仿真 Ward，或前往"患者管理"手动添加患者</Text>
+        <Text size="sm" c="dimmed" mb="lg">通过左侧导航前往"Ward 管理"创建仿真 Ward，或前往"患者管理"手动添加患者</Text>
+        <Group justify="center" gap="sm">
+          <Button variant="light" onClick={() => setActive('wards')}>Ward 管理</Button>
+          <Button variant="light" onClick={() => setActive('patients')}>患者管理</Button>
+        </Group>
       </Container>
     )
   }
