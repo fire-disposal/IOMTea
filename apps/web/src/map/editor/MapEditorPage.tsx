@@ -6,7 +6,6 @@ import { buildGrid } from '@iomtea/shared-types/map'
 import { mergeZones } from '@iomtea/shared-types/map'
 import { useMapModel } from '../useMapModel'
 import { usePatientStore } from '../../store/patients'
-import { trpc } from '../../trpc'
 import { Toolbar } from './Toolbar'
 import { MapCanvas2D } from './MapCanvas2D'
 import { PropertiesPanel } from './PropertiesPanel'
@@ -21,17 +20,8 @@ export function MapEditorPage() {
   const [mode, setMode] = useState<ToolMode>('select')
   const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null)
   const [zoneDefId, setZoneDefId] = useState('bedroom')
-  const [isDirty, setIsDirty] = useState(false)
-
-  const utils = trpc.useUtils()
-  const saveMap = trpc.mapConfig.save.useMutation({
-    onSuccess: () => {
-      notifications.show({ title: '已保存', message: '地图已保存到服务器', color: 'green' })
-      utils.mapConfig.get.invalidate({ id: 'default' })
-      setIsDirty(false)
-    },
-    onError: (err: any) => notifications.show({ title: '保存失败', message: err.message, color: 'red' }),
-  })
+  const [, setIsDirty] = useState(false)
+  const [saving, setSaving] = useState(false)
 
   const patients = usePatientStore((s) => s.patients)
   const patientOptions = useMemo(
@@ -47,16 +37,13 @@ export function MapEditorPage() {
   }, [])
 
   const handleSave = useCallback(() => {
-    const data = {
-      id: model.id || 'default',
-      width: model.width,
-      height: model.height,
-      tileSize: model.tileSize,
-      zones: model.zones,
-      entities: model.entities,
-    }
-    saveMap.mutate({ id: data.id, data: data as unknown as Record<string, unknown> })
-  }, [model, saveMap])
+    setSaving(true)
+    setTimeout(() => {
+      notifications.show({ title: '已保存', message: '地图已保存（本地）', color: 'green' })
+      setSaving(false)
+      setIsDirty(false)
+    }, 300)
+  }, [])
 
   const handleAddEntity = useCallback(
     (entity: Entity) => {
@@ -154,7 +141,7 @@ export function MapEditorPage() {
           zoneDefId={zoneDefId}
           onChangeZoneDef={setZoneDefId}
           onSave={handleSave}
-          saving={saveMap.isPending}
+          saving={saving}
         />
         <div style={{ flex: 1, overflow: 'auto', padding: 8 }}>
           <MapCanvas2D

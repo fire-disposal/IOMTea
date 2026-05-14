@@ -8,6 +8,7 @@ import { SleepStateManager } from './sleep-state'
 export class MattressModule {
   private sleepManager = new SleepStateManager()
   private alertEngine = new AlertEngine()
+  private prevBedStatus = new Map<string, string>()
 
   async process(db: DbClient, payload: MattressPayload): Promise<void> {
     const now = new Date()
@@ -31,13 +32,32 @@ export class MattressModule {
     const patientId = device[0].patientId
 
     // Update lastSeen
-    await db.update(devices).set({ lastSeen: now }).where(eq(devices.id, deviceId))
+    await db.update(devices).set({ lastSeenAt: now }).where(eq(devices.id, deviceId))
 
     // Skip event insertion when no patient is assigned
     if (!patientId) {
       console.warn(`[mattress] device ${sn} has no assigned patient, skipping event insert`)
       return
     }
+
+    const prevStatus = this.prevBedStatus.get(sn)
+    const curStatus = payload.st || 'off'
+
+    // Behavior event: bed exit transition (on/mov → off)
+    if (prevStatus && (prevStatus === 'on' || prevStatus === 'mov') && curStatus === 'off') {
+      await db.insert(events).values({
+        patientId,
+        deviceId,
+        kind: 'behavior' as any,
+        metric: 'bed_exit',
+        value: null,
+        unit: null,
+        source: 'iot' as any,
+        tags: { deviceId, serialNumber: sn, previousStatus: prevStatus },
+        recordedAt: now,
+      }).catch(() => {})
+    }
+    this.prevBedStatus.set(sn, curStatus)
 
     // Parse observations
     const obsEvents = parseMattressPayload(payload, patientId, deviceId, now)

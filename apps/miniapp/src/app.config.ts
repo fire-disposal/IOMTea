@@ -9,7 +9,7 @@ export default defineAppConfig({
   ],
   window: {
     backgroundTextStyle: 'light',
-    navigationBarBackgroundColor: '#1677ff',
+    navigationBarBackgroundColor: '#416323',
     navigationBarTitleText: 'IOMTea',
     navigationBarTextStyle: 'white',
   },

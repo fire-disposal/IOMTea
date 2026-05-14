@@ -1,16 +1,12 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { trpc } from './trpc'
 import { usePatientStore } from './store/patients'
-import { useWardStore } from './store/ward'
 import { useRealtime } from './hooks/useRealtime'
 
 export function StoreProvider() {
   const setPatients = usePatientStore((s) => s.setPatients)
-  const selectedWardId = useWardStore((s) => s.selectedWardId)
-  const setWardStatus = useWardStore((s) => s.setWardStatus)
-  const setWsConnected = useWardStore((s) => s.setWsConnected)
+  const [wardId, setWardId] = useState<string>('')
 
-  // Single patient list query — feeds all pages
   const patientsQuery = trpc.patient.list.useQuery(
     { pageSize: 100, status: 'active' },
     { refetchInterval: 15000 },
@@ -27,36 +23,20 @@ export function StoreProvider() {
     }
   }, [patientsQuery.data, patientsQuery.isLoading, setPatients])
 
-  // Single ward status query
-  const wardStatus = trpc.simulator.status.useQuery(undefined, { refetchInterval: 5000 })
+  const wardStatus = trpc.twin.engine.status.useQuery({}, { refetchInterval: 5000 })
 
   useEffect(() => {
     const data = wardStatus.data
-    if (data) {
-      const wards = Array.isArray(data) ? data : [data]
-      if (wards.length > 0 && !selectedWardId) {
-        useWardStore.getState().setSelectedWard(wards[0].id, wards[0].name)
-      }
-      const current = wards.find((w: any) => w.id === useWardStore.getState().selectedWardId) || wards[0]
-      if (current) {
-        setWardStatus({
-          running: current.running,
-          speed: current.speed,
-          tick: current.tick,
-          patientCount: current.patientCount,
-        })
+    if (data && Array.isArray(data)) {
+      const wards = data.filter(Boolean) as any[]
+      if (!wardId && wards.length > 0) {
+        setWardId(wards[0].id)
       }
     }
-  }, [wardStatus.data, selectedWardId, setWardStatus])
+  }, [wardStatus.data, wardId])
 
-  // Single WebSocket connection
-  const { isConnected } = useRealtime(selectedWardId || undefined)
+  useRealtime(wardId || undefined)
 
-  useEffect(() => {
-    setWsConnected(isConnected)
-  }, [isConnected, setWsConnected])
-
-  // Invalidate alert count periodically
   const utils = trpc.useUtils()
   useEffect(() => {
     const id = setInterval(() => {

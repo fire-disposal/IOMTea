@@ -7,6 +7,7 @@ import ReactDOM from 'react-dom/client'
 import '@mantine/core/styles.css'
 import '@mantine/notifications/styles.css'
 import { App } from './App'
+import { theme } from './theme'
 import { getTrpcClient, trpc } from './trpc'
 
 const queryClient = new QueryClient()
@@ -16,7 +17,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
-        <MantineProvider theme={{ primaryColor: 'blue', defaultRadius: 'md' }}>
+        <MantineProvider theme={theme}>
           <ModalsProvider>
             <Notifications />
             <App />

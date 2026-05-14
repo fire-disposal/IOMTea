@@ -14,6 +14,8 @@ const envSchema = z.object({
   TCP_INGEST_PORT: z.coerce.number().default(5858),
   TCP_INGEST_TOKEN: z.string().optional(),
   CORS_ORIGIN: z.string().optional(),
+  WECHAT_APP_ID: z.string().optional(),
+  WECHAT_APP_SECRET: z.string().optional(),
 })
 
 export const env = envSchema.parse(process.env)

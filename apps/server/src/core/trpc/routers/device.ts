@@ -29,7 +29,7 @@ export const deviceRouter = router({
         deviceType: d.deviceType,
         status: d.status,
         patientId: d.patientId,
-        lastSeen: d.lastSeen?.getTime() ?? null,
+        lastSeen: d.lastSeenAt?.getTime() ?? null,
         tags: d.tags,
         createdAt: d.createdAt.getTime(),
       })),
@@ -51,7 +51,7 @@ export const deviceRouter = router({
         deviceType: d.deviceType,
         status: d.status,
         patientId: d.patientId,
-        lastSeen: d.lastSeen?.getTime() ?? null,
+        lastSeen: d.lastSeenAt?.getTime() ?? null,
         tags: d.tags,
         createdAt: d.createdAt.getTime(),
       })
@@ -65,7 +65,7 @@ export const deviceRouter = router({
       deviceType: created.deviceType,
       status: created.status,
       patientId: created.patientId,
-      lastSeen: created.lastSeen?.getTime() ?? null,
+      lastSeen: created.lastSeenAt?.getTime() ?? null,
       tags: created.tags,
       createdAt: created.createdAt.getTime(),
     })
@@ -89,7 +89,7 @@ export const deviceRouter = router({
         deviceType: updated.deviceType,
         status: updated.status,
         patientId: updated.patientId,
-        lastSeen: updated.lastSeen?.getTime() ?? null,
+        lastSeen: updated.lastSeenAt?.getTime() ?? null,
         tags: updated.tags,
         createdAt: updated.createdAt.getTime(),
       })

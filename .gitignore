@@ -12,3 +12,5 @@ apps/flutter/build/
 apps/flutter/.flutter-plugins*
 apps/flutter/.packages
 apps/flutter/pubspec.lock
+
+*.tflite

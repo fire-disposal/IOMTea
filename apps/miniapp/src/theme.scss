@@ -1,0 +1,35 @@
+// IOMTea Matcha Green Brand Theme
+// Common variables for all pages
+
+page {
+  --brand-50: #F2F7ED;
+  --brand-100: #E3EFD6;
+  --brand-200: #C7E0AD;
+  --brand-300: #AAD184;
+  --brand-400: #8EC15B;
+  --brand-500: #6BA539;   // primary
+  --brand-600: #56842E;
+  --brand-700: #416323;
+  --brand-800: #2C4217;
+  --brand-900: #17210C;
+
+  --bg-page: #FAFAF5;
+  --bg-card: #FFFFFF;
+  --bg-brand: #6BA539;
+
+  --text-primary: #3C3C3C;
+  --text-secondary: #8C8C7E;
+  --text-on-brand: #FFFFFF;
+
+  --border-color: #C7E0AD;
+  --border-radius: 8px;
+
+  --color-error: #D32F2F;
+  --color-warning: #ED6C02;
+  --color-success: #4A8C3F;
+  --color-info: #2E7D9F;
+
+  background: var(--bg-page);
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", sans-serif;
+}

@@ -17,6 +17,10 @@ export const tokenPairSchema = z.object({
   expiresAt: z.number().int().positive(),
 })
 
+export const wechatLoginSchema = z.object({
+  code: z.string().min(1),
+})
+
 export type LoginInput = z.infer<typeof loginSchema>
 export type RegisterInput = z.infer<typeof registerSchema>
 export type TokenPair = z.infer<typeof tokenPairSchema>

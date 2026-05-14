@@ -3,45 +3,48 @@ import {
   doublePrecision,
   index,
   jsonb,
-  pgEnum,
   pgTable,
+  real,
   text,
   timestamp,
   uuid,
   varchar,
 } from 'drizzle-orm/pg-core'
-
-export const roleEnum = pgEnum('role', ['admin', 'doctor', 'nurse', 'caregiver'])
-export const deviceTypeEnum = pgEnum('device_type', [
-  'mattress',
-  'vision',
-  'imu',
-  'generic',
-  'simulator',
-  'custom',
-])
-export const deviceStatusEnum = pgEnum('device_status', ['active', 'inactive', 'maintenance'])
-export const patientStatusEnum = pgEnum('patient_status', ['active', 'discharged'])
-export const alertSeverityEnum = pgEnum('alert_severity', ['critical', 'warning', 'info'])
-export const alertStatusEnum = pgEnum('alert_status', ['active', 'acknowledged', 'resolved'])
-export const kindEnum = pgEnum('kind', ['observation', 'alert'])
+import {
+  alertSeverityEnum,
+  alertStatusEnum,
+  bloodTypeEnum,
+  deviceStatusEnum,
+  deviceTypeEnum,
+  eventSourceEnum,
+  genderEnum,
+  kindEnum,
+  patientStatusEnum,
+  roleEnum,
+  snapshotTypeEnum,
+  userStatusEnum,
+} from './schema/enums'
 
 export const users = pgTable('users', {
   id: uuid('id').defaultRandom().primaryKey(),
-  username: varchar('username', { length: 50 }).notNull().unique(),
-  passwordHash: text('password_hash').notNull(),
+  username: varchar('username', { length: 50 }).unique(),
+  passwordHash: text('password_hash'),
   displayName: varchar('display_name', { length: 100 }).notNull(),
+  avatarUrl: text('avatar_url'),
+  phone: varchar('phone', { length: 20 }).unique(),
+  email: varchar('email', { length: 255 }).unique(),
   role: roleEnum('role').notNull().default('caregiver'),
+  status: userStatusEnum('status').notNull().default('active'),
+  lastLoginAt: timestamp('last_login_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 })
 
 export const refreshTokens = pgTable(
   'refresh_tokens',
   {
     id: uuid('id').defaultRandom().primaryKey(),
-    userId: uuid('user_id')
-      .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
     tokenHash: text('token_hash').notNull().unique(),
     expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
@@ -54,41 +57,53 @@ export const refreshTokens = pgTable(
 
 export const patients = pgTable('patients', {
   id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
   name: varchar('name', { length: 100 }).notNull(),
   birthDate: date('birth_date'),
-  gender: varchar('gender', { length: 10 }),
-  room: varchar('room', { length: 20 }),
-  bedNumber: varchar('bed_number', { length: 20 }),
+  gender: genderEnum('gender'),
+  heightCm: real('height_cm'),
+  weightKg: real('weight_kg'),
+  bloodType: bloodTypeEnum('blood_type'),
+  phone: varchar('phone', { length: 20 }),
+  address: text('address'),
+  emergencyContact: varchar('emergency_contact', { length: 100 }),
+  emergencyPhone: varchar('emergency_phone', { length: 20 }),
   status: patientStatusEnum('status').notNull().default('active'),
+  primaryDoctorId: uuid('primary_doctor_id').references(() => users.id, { onDelete: 'set null' }),
   tags: jsonb('tags').default({}).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 })
 
 export const devices = pgTable('devices', {
   id: uuid('id').defaultRandom().primaryKey(),
   serialNumber: varchar('serial_number', { length: 100 }).notNull().unique(),
   deviceType: deviceTypeEnum('device_type').notNull(),
-  status: deviceStatusEnum('status').notNull().default('active'),
+  model: varchar('model', { length: 100 }),
+  manufacturer: varchar('manufacturer', { length: 100 }),
+  firmwareVersion: varchar('firmware_version', { length: 50 }),
+  status: deviceStatusEnum('status').notNull().default('inactive'),
   patientId: uuid('patient_id').references(() => patients.id, { onDelete: 'set null' }),
-  lastSeen: timestamp('last_seen', { withTimezone: true }),
+  roomId: uuid('room_id'),  // FK to twin_rooms.id — added via migration to prevent circular import
+  config: jsonb('config').default({}).notNull(),
+  lastSeenAt: timestamp('last_seen', { withTimezone: true }),
   tags: jsonb('tags').default({}).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 })
 
 export const events = pgTable(
   'events',
   {
     id: uuid('id').defaultRandom().primaryKey(),
-    patientId: uuid('patient_id')
-      .notNull()
-      .references(() => patients.id, { onDelete: 'cascade' }),
-    deviceId: uuid('device_id')
-      .notNull()
-      .references(() => devices.id, { onDelete: 'cascade' }),
+    patientId: uuid('patient_id').notNull().references(() => patients.id, { onDelete: 'cascade' }),
+    deviceId: uuid('device_id').references(() => devices.id, { onDelete: 'set null' }),
     kind: kindEnum('kind').notNull(),
-    metric: varchar('metric', { length: 50 }).notNull(),
+    metric: varchar('metric', { length: 100 }).notNull(),
     value: doublePrecision('value'),
-    unit: varchar('unit', { length: 20 }),
+    unit: varchar('unit', { length: 50 }),
+    confidence: real('confidence'),
+    source: eventSourceEnum('source').default('manual'),
     severity: alertSeverityEnum('severity'),
     status: alertStatusEnum('status'),
     tags: jsonb('tags').default({}).notNull(),
@@ -96,44 +111,21 @@ export const events = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => ({
-    patientMetricIdx: index('events_patient_metric_time_idx').on(
-      t.patientId,
-      t.metric,
-      t.recordedAt.desc(),
-    ),
-    patientKindIdx: index('events_patient_kind_time_idx').on(
-      t.patientId,
-      t.kind,
-      t.recordedAt.desc(),
-    ),
+    patientMetricIdx: index('events_patient_metric_time_idx').on(t.patientId, t.metric, t.recordedAt.desc()),
+    patientKindIdx: index('events_patient_kind_time_idx').on(t.patientId, t.kind, t.recordedAt.desc()),
     deviceTimeIdx: index('events_device_time_idx').on(t.deviceId, t.recordedAt.desc()),
+    patientSourceIdx: index('events_patient_source_idx').on(t.patientId, t.source),
   }),
 )
 
-export const ingestRawData = pgTable('ingest_raw_data', {
+export const patientSnapshots = pgTable('patient_snapshots', {
   id: uuid('id').defaultRandom().primaryKey(),
-  source: varchar('source', { length: 50 }).notNull(),
-  rawPayload: text('raw_payload').notNull(),
-  status: varchar('status', { length: 20 }).notNull().default('received'),
-  error: text('error'),
-  processedAt: timestamp('processed_at', { withTimezone: true }),
+  patientId: uuid('patient_id').references(() => patients.id, { onDelete: 'cascade' }).notNull(),
+  snapshotType: snapshotTypeEnum('snapshot_type').notNull(),
+  data: jsonb('data').notNull(),
+  periodStart: timestamp('period_start', { withTimezone: true }).notNull(),
+  periodEnd: timestamp('period_end', { withTimezone: true }).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 })
 
-export const auditLogs = pgTable('audit_logs', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
-  action: varchar('action', { length: 100 }).notNull(),
-  resource: varchar('resource', { length: 100 }).notNull(),
-  resourceId: varchar('resource_id', { length: 50 }),
-  details: jsonb('details').default({}),
-  ip: varchar('ip', { length: 50 }),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-})
 
-export const mapConfigs = pgTable('map_configs', {
-  id: varchar('id', { length: 50 }).primaryKey(),
-  data: jsonb('data').notNull().default({}),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-})

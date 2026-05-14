@@ -1,11 +1,13 @@
 import { createHash } from 'node:crypto'
-import { loginSchema, registerSchema, tokenPairSchema } from '@iomtea/shared-types'
+import { loginSchema, registerSchema, tokenPairSchema, wechatLoginSchema } from '@iomtea/shared-types'
 import { TRPCError } from '@trpc/server'
 import { eq } from 'drizzle-orm'
 import { z } from 'zod'
+import { wechatAccounts } from '../../db'
 import { refreshTokens, users } from '../../db/schema'
 import { signAccessToken, signRefreshToken, verifyToken } from '../../lib/jwt'
 import { hashPassword, verifyPassword } from '../../lib/password'
+import { code2session } from '../../lib/wechat'
 import { publicProcedure, router } from '../index'
 
 function hashToken(token: string): string {
@@ -64,6 +66,9 @@ export const authRouter = router({
     }
 
     const user = rows[0]
+    if (!user.passwordHash) {
+      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid credentials' })
+    }
     const valid = await verifyPassword(user.passwordHash, input.password)
 
     if (!valid) {
@@ -76,6 +81,65 @@ export const authRouter = router({
 
     await ctx.db.insert(refreshTokens).values({
       userId: user.id,
+      tokenHash: hashToken(refreshToken.token),
+      expiresAt: refreshToken.expiresAt,
+    })
+
+    return tokenPairSchema.parse({
+      accessToken,
+      refreshToken: refreshToken.token,
+      expiresAt: refreshToken.expiresAt.getTime(),
+    })
+  }),
+
+  wechatLogin: publicProcedure.input(wechatLoginSchema).mutation(async ({ ctx, input }) => {
+    const session = await code2session(input.code)
+    const { openid, unionid } = session
+
+    const existing = await ctx.db
+      .select()
+      .from(wechatAccounts)
+      .where(eq(wechatAccounts.openId, openid))
+      .limit(1)
+
+    let userId: string
+    let role: string
+
+    if (existing.length > 0) {
+      const user = await ctx.db.select().from(users).where(eq(users.id, existing[0].userId)).limit(1)
+      if (user.length === 0) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Orphan wechat account' })
+      }
+      userId = user[0].id
+      role = user[0].role
+    } else {
+      const [newUser] = await ctx.db
+        .insert(users)
+        .values({
+          displayName: `微信用户${openid.slice(-6)}`,
+          role: 'patient',
+          status: 'active',
+        })
+        .returning()
+
+      await ctx.db.insert(wechatAccounts).values({
+        userId: newUser.id,
+        openId: openid,
+        unionId: unionid || null,
+      })
+
+      userId = newUser.id
+      role = newUser.role
+    }
+
+    await ctx.db.update(users).set({ lastLoginAt: new Date() }).where(eq(users.id, userId))
+
+    const jwtPayload = { sub: userId, role }
+    const accessToken = await signAccessToken(jwtPayload)
+    const refreshToken = await signRefreshToken(userId)
+
+    await ctx.db.insert(refreshTokens).values({
+      userId,
       tokenHash: hashToken(refreshToken.token),
       expiresAt: refreshToken.expiresAt,
     })

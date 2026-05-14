@@ -6,6 +6,8 @@ export async function createContext(opts: FetchCreateContextFnOptions) {
   return {
     db,
     req: opts.req,
+    userId: null as string | null,
+    userRole: null as string | null,
   }
 }
 

@@ -6,14 +6,14 @@ import { cors } from 'hono/cors'
 import pino from 'pino'
 import { WebSocketServer } from 'ws'
 import { db } from './core/db'
-import { mapConfigs, users } from './core/db/schema'
+import { users } from './core/db/schema'
 import { hashPassword } from './core/lib/password'
 import { broadcastManager } from './core/realtime/broadcast'
 import { createContext } from './core/trpc/context'
 import { appRouter } from './core/trpc/routers/_app'
 import { env } from './env'
 import { startMqttIngest, startTcpIngest } from './ingest'
-import { createWard } from './simulator'
+import { seedPermissions } from './core/services/permission-seed'
 
 const logger = pino({
   transport: { target: 'pino-pretty', options: { colorize: true } },
@@ -52,40 +52,30 @@ async function bootstrap() {
     logger.info('demo account created (demo / demo123)')
   }
 
-  // Seed default map config
+  // Seed RBAC permissions
   try {
-    const existingMap = await db.select().from(mapConfigs).where(eq(mapConfigs.id, 'default')).limit(1)
-    if (existingMap.length === 0) {
-      await db.insert(mapConfigs).values({
-        id: 'default',
-        data: {
-          id: 'default', width: 15, height: 13, tileSize: 1,
-          zones: [],
-          entities: [],
-        },
-      })
-      logger.info('default map config seeded')
-    }
+    await seedPermissions(db)
+    logger.info('rbac permissions seeded')
   } catch (err) {
-    logger.warn({ err }, 'map config seed failed (run db:migrate first)')
+    logger.warn({ err }, 'permission seed failed (run db:migrate first)')
   }
 
-  // Auto-start demo ward (idempotent — if already running, skip)
+  // Auto-start demo engine
   try {
-    const ward = await createWard(db, {
-      name: 'ICU 观察病房',
-      patients: [
-        { profileId: 'elderly-cardiac', count: 1 },
-        { profileId: 'post-surgery', count: 1 },
-        { profileId: 'diabetes', count: 1 },
-        { profileId: 'copd-respiratory', count: 1 },
-        { profileId: 'maternity', count: 1 },
-      ],
-      speed: 1,
-    })
-    logger.info({ ward: ward.name, patients: ward.patientCount }, 'demo ward auto-started')
+    const { createEngine, startEngine } = await import('./twin/engine')
+    const { patients } = await import('./core/db/schema')
+    const existingPatients = await db.select().from(patients).limit(1)
+    if (existingPatients.length > 0) {
+      const engine = await createEngine(db, {
+        profileId: 'elderly-cardiac',
+        name: '演示患者',
+        speed: 1,
+      })
+      await startEngine(db, engine.patientId)
+      logger.info({ patientId: engine.patientId, name: '演示患者' }, 'demo engine auto-started')
+    }
   } catch (err) {
-    logger.warn({ err }, 'demo ward auto-start failed')
+    logger.warn({ err }, 'demo engine auto-start failed')
   }
 }
 
@@ -121,10 +111,16 @@ bootstrap().then(() => {
   wss.on('connection', (ws, req) => {
     const url = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`)
     const wardId = url.searchParams.get('wardId') || ''
+    const mapId = url.searchParams.get('mapId') || ''
 
     if (wardId) {
       broadcastManager.subscribe(wardId, ws)
       logger.info({ wardId }, 'websocket client subscribed')
+    }
+
+    if (mapId) {
+      broadcastManager.subscribeMap(mapId, ws)
+      logger.info({ mapId }, 'websocket client subscribed (twin)')
     }
 
     ws.on('message', (raw) => {
@@ -133,6 +129,10 @@ bootstrap().then(() => {
         if (msg.type === 'subscribe' && msg.wardId) {
           broadcastManager.subscribe(msg.wardId, ws)
           logger.info({ wardId: msg.wardId }, 'websocket client subscribed (message)')
+        }
+        if (msg.type === 'subscribe_twin' && msg.mapId) {
+          broadcastManager.subscribeMap(msg.mapId, ws)
+          logger.info({ mapId: msg.mapId }, 'websocket client subscribed twin (message)')
         }
       } catch {
         // ignore malformed messages
