@@ -26,6 +26,7 @@ jobs:
           node-version: 22
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @iomtea/shared-types typecheck
       - run: pnpm --filter @iomtea/web typecheck
 
   build-and-deploy:
@@ -86,7 +87,7 @@ jobs:
             docker compose pull web
             docker compose up -d web
             for i in $(seq 1 30); do
-              if curl -sf http://${{ secrets.SSH_HOST }}:3000/health; then
+              if curl -sf http://${{ secrets.SSH_HOST }}:80; then
                 echo "Service healthy"
                 break
               fi

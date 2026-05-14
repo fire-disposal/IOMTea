@@ -26,6 +26,7 @@ jobs:
           node-version: 22
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @iomtea/shared-types typecheck
       - run: pnpm --filter @iomtea/server typecheck
 
   build-and-deploy:
