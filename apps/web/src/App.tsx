@@ -1,6 +1,6 @@
 import { AppShell, Burger, Group, NavLink, Text, ThemeIcon, ActionIcon } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { IconDashboard, IconSettings, IconLogout } from '@tabler/icons-react'
+import { IconDashboard, IconSettings, IconLogout, IconAlertTriangle, IconPill, IconCalendar } from '@tabler/icons-react'
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { LoginPage } from './LoginPage'
 import { PatientWall } from './pages/PatientWall'
@@ -11,12 +11,18 @@ import { PatientMedications } from './pages/PatientMedications'
 import { PatientAppointments } from './pages/PatientAppointments'
 import { PatientProfile } from './pages/PatientProfile'
 import { DeviceListPage } from './pages/DeviceListPage'
+import { GlobalAlerts } from './pages/GlobalAlerts'
+import { GlobalMedications } from './pages/GlobalMedications'
+import { GlobalAppointments } from './pages/GlobalAppointments'
 import { MapEditorPage } from './map/editor/MapEditorPage'
 import { StoreProvider } from './StoreProvider'
 import { useAuthStore } from './store/auth'
 
 const navItems = [
   { label: '患者监护', icon: IconDashboard, path: '/patients' },
+  { label: '告警中心', icon: IconAlertTriangle, path: '/alerts' },
+  { label: '用药管理', icon: IconPill, path: '/medications' },
+  { label: '预约管理', icon: IconCalendar, path: '/appointments' },
 ]
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -105,6 +111,9 @@ export function App() {
             <Route path="appointments" element={<PatientAppointments />} />
             <Route path="profile" element={<PatientProfile />} />
           </Route>
+          <Route path="alerts" element={<GlobalAlerts />} />
+          <Route path="medications" element={<GlobalMedications />} />
+          <Route path="appointments" element={<GlobalAppointments />} />
           <Route path="settings" element={<SettingsLayout />}>
             <Route index element={<Navigate to="/settings/map-editor" replace />} />
             <Route path="map-editor/:mapId?" element={<MapEditorPage />} />
