@@ -1,9 +1,9 @@
 import { ActionIcon, Badge, Button, Group, Modal, Paper, SegmentedControl, SimpleGrid, Text, Tooltip } from '@mantine/core'
-import { IconMaximize, IconPlayerPause, IconPlayerPlay, IconSpeedboat, IconBolt, IconPlus } from '@tabler/icons-react'
+import { IconMaximize, IconPlayerPause, IconPlayerPlay, IconSpeedboat, IconBolt, IconPlus, IconMap, IconChevronUp, IconChevronDown } from '@tabler/icons-react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip as ReTooltip, ResponsiveContainer, Legend } from 'recharts'
 import { trpc } from '../trpc'
 import { TwinRenderer3D } from '../map/TwinRenderer3D'
@@ -25,7 +25,9 @@ const SPEEDS = [1, 2, 5, 10]
 
 export function PatientOverview() {
   const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
   const [timeRange, setTimeRange] = useState('6h')
+  const [chartVisible, setChartVisible] = useState(true)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [scenarioOpen, setScenarioOpen] = useState(false)
 
@@ -55,7 +57,6 @@ export function PatientOverview() {
     { enabled: !!id, refetchInterval: 10000 },
   )
 
-  // Look up the patient's twin map
   const patientMapQuery = trpc.twin.maps.get.useQuery(
     { patientId: id },
     { enabled: !!id },
@@ -63,7 +64,6 @@ export function PatientOverview() {
   const mapId = patientMapQuery.data?.id
   const mapData = useMapModel(mapId)
 
-  // Create map mutation
   const createMapMut = trpc.twin.maps.create.useMutation()
   const handleCreateMap = useCallback(() => {
     if (!id) return
@@ -143,11 +143,16 @@ export function PatientOverview() {
     || (tempQuery.data || []).length > 0
 
   return (
-    <>
-      <Group align="start" gap="md" wrap="nowrap" style={{ height: 'calc(100vh - 200px)' }}>
-        <Paper p="md" radius="md" style={{ flex: 1, height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {chartVisible ? (
+        <Paper p="md" radius="md" withBorder style={{ flex: '0 0 auto' }}>
           <Group justify="space-between" mb="sm">
-            <Text fw={600}>生命体征趋势</Text>
+            <Group gap="xs">
+              <Text fw={600}>生命体征趋势</Text>
+              <ActionIcon variant="subtle" size="sm" onClick={() => setChartVisible(false)} title="收起">
+                <IconChevronUp size={16} />
+              </ActionIcon>
+            </Group>
             <SegmentedControl
               size="xs"
               value={timeRange}
@@ -161,7 +166,7 @@ export function PatientOverview() {
             />
           </Group>
 
-          <div style={{ flex: 1 }}>
+          <div style={{ height: 260 }}>
             {!hasData ? (
               <Text c="dimmed" size="sm" ta="center" mt="xl">暂无数据</Text>
             ) : (
@@ -194,76 +199,91 @@ export function PatientOverview() {
             )}
           </div>
         </Paper>
+      ) : (
+        <Button
+          variant="light"
+          size="xs"
+          leftSection={<IconChevronDown size={14} />}
+          onClick={() => setChartVisible(true)}
+          style={{ alignSelf: 'flex-start' }}
+        >
+          显示生命体征趋势
+        </Button>
+      )}
 
-        <Paper p="md" radius="md" style={{ flex: 1, height: '100%', display: 'flex', flexDirection: 'column' }}>
-          <Group justify="space-between" mb="sm">
-            <Group gap={8}>
-              <Text fw={600}>数字孪生</Text>
-              <Badge color={isRunning ? 'green' : 'gray'} variant="light" size="sm">
-                {isRunning ? '运行中' : '已暂停'}
-              </Badge>
-              <Badge variant="outline" size="sm">{currentSpeed}x</Badge>
-            </Group>
-            <Group gap={4}>
-              <Tooltip label={isRunning ? '暂停' : '播放'}>
-                <ActionIcon
-                  variant="subtle"
-                  onClick={handlePlayPause}
-                  loading={pauseMut.isPending || resumeMut.isPending}
-                >
-                  {isRunning ? <IconPlayerPause size={18} /> : <IconPlayerPlay size={18} />}
-                </ActionIcon>
-              </Tooltip>
-              <Tooltip label={
-                `倍速 ${currentSpeed}x \u2192 ${SPEEDS[(SPEEDS.indexOf(currentSpeed) + 1) % SPEEDS.length]}x`
-              }>
-                <ActionIcon
-                  variant="subtle"
-                  onClick={handleSpeedCycle}
-                  loading={setSpeedMut.isPending}
-                >
-                  <IconSpeedboat size={18} />
-                </ActionIcon>
-              </Tooltip>
-              <Tooltip label="场景注入">
-                <ActionIcon
-                  variant="subtle"
-                  onClick={() => setScenarioOpen(true)}
-                  color="orange"
-                >
-                  <IconBolt size={18} />
-                </ActionIcon>
-              </Tooltip>
-              <Tooltip label="全屏">
-                <ActionIcon variant="subtle" onClick={() => setIsFullscreen(true)}>
-                  <IconMaximize size={18} />
-                </ActionIcon>
-              </Tooltip>
-            </Group>
+      <Paper p="md" radius="md" withBorder style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
+        <Group justify="space-between" mb="sm">
+          <Group gap={8}>
+            <Text fw={600}>数字孪生</Text>
+            <Badge color={isRunning ? 'green' : 'gray'} variant="light" size="sm">
+              {isRunning ? '运行中' : '已暂停'}
+            </Badge>
+            <Badge variant="outline" size="sm">{currentSpeed}x</Badge>
           </Group>
+          <Group gap={4}>
+            <Tooltip label={isRunning ? '暂停' : '播放'}>
+              <ActionIcon
+                variant="subtle"
+                onClick={handlePlayPause}
+                loading={pauseMut.isPending || resumeMut.isPending}
+              >
+                {isRunning ? <IconPlayerPause size={18} /> : <IconPlayerPlay size={18} />}
+              </ActionIcon>
+            </Tooltip>
+            <Tooltip label={
+              `倍速 ${currentSpeed}x → ${SPEEDS[(SPEEDS.indexOf(currentSpeed) + 1) % SPEEDS.length]}x`
+            }>
+              <ActionIcon
+                variant="subtle"
+                onClick={handleSpeedCycle}
+                loading={setSpeedMut.isPending}
+              >
+                <IconSpeedboat size={18} />
+              </ActionIcon>
+            </Tooltip>
+            <Tooltip label="场景注入">
+              <ActionIcon
+                variant="subtle"
+                onClick={() => setScenarioOpen(true)}
+                color="orange"
+              >
+                <IconBolt size={18} />
+              </ActionIcon>
+            </Tooltip>
+            <Tooltip label="编辑地图">
+              <ActionIcon variant="subtle" onClick={() => navigate(`/patients/${id}/map-editor`)}>
+                <IconMap size={18} />
+              </ActionIcon>
+            </Tooltip>
+            <Tooltip label="全屏">
+              <ActionIcon variant="subtle" onClick={() => setIsFullscreen(true)}>
+                <IconMaximize size={18} />
+              </ActionIcon>
+            </Tooltip>
+          </Group>
+        </Group>
 
-          <div style={{ flex: 1, borderRadius: 8, overflow: 'hidden', background: '#f0f4f8' }}>
-            {!mapData ? (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 16 }}>
-                <Text c="dimmed" size="sm">地图尚未配置</Text>
-                <Button
-                  size="sm"
-                  leftSection={<IconPlus size={16} />}
-                  onClick={handleCreateMap}
-                  loading={createMapMut.isPending}
-                >
-                  创建地图
-                </Button>
-              </div>
-            ) : (
-              <Canvas camera={{ position: [mapData.width / 2, mapData.height, mapData.height / 2], fov: 45 }} style={{ width: '100%', height: '100%' }}>
-                <OrbitControls enableDamping dampingFactor={0.1} maxPolarAngle={Math.PI / 2.5} />
-                <TwinRenderer3D mapData={mapData} />
-              </Canvas>
-            )}
-          </div>
-        </Paper>
-      </Group>
+        <div style={{ flex: 1, minHeight: 0, borderRadius: 8, overflow: 'hidden', background: '#f0f4f8' }}>
+          {!mapData ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 16 }}>
+              <Text c="dimmed" size="sm">地图尚未配置</Text>
+              <Button
+                size="sm"
+                leftSection={<IconPlus size={16} />}
+                onClick={handleCreateMap}
+                loading={createMapMut.isPending}
+              >
+                创建地图
+              </Button>
+            </div>
+          ) : (
+            <Canvas camera={{ position: [mapData.width / 2, mapData.height, mapData.height / 2], fov: 45 }} style={{ width: '100%', height: '100%' }}>
+              <OrbitControls enableDamping dampingFactor={0.1} maxPolarAngle={Math.PI / 2.5} />
+              <TwinRenderer3D mapData={mapData} />
+            </Canvas>
+          )}
+        </div>
+      </Paper>
 
       <Modal opened={scenarioOpen} onClose={() => setScenarioOpen(false)} title="场景注入" size="lg">
         <SimpleGrid cols={3} spacing="sm">
@@ -305,6 +325,6 @@ export function PatientOverview() {
           )}
         </div>
       </Modal>
-    </>
+    </div>
   )
 }

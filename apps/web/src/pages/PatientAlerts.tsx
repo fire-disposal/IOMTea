@@ -1,4 +1,4 @@
-import { Badge, Button, Group, Loader, Paper, SegmentedControl, Text, Timeline } from '@mantine/core'
+import { Badge, Button, Group, Paper, SegmentedControl, Skeleton, Text, Title, Timeline } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
 import { IconAlertTriangle, IconBell, IconCheck, IconInfoCircle } from '@tabler/icons-react'
 import { useState } from 'react'
@@ -57,11 +57,21 @@ export function PatientAlerts() {
   })
 
   if (alerts.isLoading) {
-    return <Group justify="center" py="xl"><Loader /></Group>
+    return (
+      <Paper p="lg" radius="md" withBorder>
+        <Skeleton height={28} width={200} mb="md" />
+        <Skeleton height={32} mb="md" />
+        <Skeleton height={200} />
+      </Paper>
+    )
   }
 
   if (!alerts.data || alerts.data.length === 0) {
-    return <StateEmpty message="暂无告警记录" />
+    return (
+      <Paper p="lg" radius="md" withBorder>
+        <StateEmpty message="暂无告警记录" />
+      </Paper>
+    )
   }
 
   const items = alerts.data as any[]
@@ -72,11 +82,15 @@ export function PatientAlerts() {
   }
 
   return (
-    <div>
+    <Paper p="lg" radius="md" withBorder>
+      <Group justify="space-between" mb="md">
+        <Title order={4}>告警记录</Title>
+      </Group>
+
       <Group gap="md" mb="md">
-        <Badge size="lg" color="red" leftSection={<Text inherit>{counts.critical}</Text>}>严重</Badge>
-        <Badge size="lg" color="orange" leftSection={<Text inherit>{counts.warning}</Text>}>警告</Badge>
-        <Badge size="lg" color="blue" leftSection={<Text inherit>{counts.info}</Text>}>信息</Badge>
+        <Badge size="lg" color="red" variant="light" leftSection={<Text inherit fw={600}>{counts.critical}</Text>}>严重</Badge>
+        <Badge size="lg" color="orange" variant="light" leftSection={<Text inherit fw={600}>{counts.warning}</Text>}>警告</Badge>
+        <Badge size="lg" color="blue" variant="light" leftSection={<Text inherit fw={600}>{counts.info}</Text>}>信息</Badge>
       </Group>
 
       <Group gap="md" mb="md">
@@ -84,51 +98,49 @@ export function PatientAlerts() {
         <SegmentedControl size="xs" value={statusFilter} onChange={(v) => setStatusFilter(v)} data={statusData} />
       </Group>
 
-      <Paper p="md" radius="md">
-        <Timeline active={items.filter((a: any) => a.status === 'active').length - 1} bulletSize={24} lineWidth={2}>
-          {items.map((a: any) => (
-            <Timeline.Item
-              key={a.id}
-              bullet={
-                a.severity === 'critical' ? <IconAlertTriangle size={12} color="red" /> : a.severity === 'warning' ? <IconBell size={12} color="orange" /> : <IconInfoCircle size={12} />
-              }
-              title={
-                <Group gap="xs" justify="space-between" wrap="nowrap">
-                  <Group gap="xs">
-                    <Text fw={500}>{a.metric}</Text>
-                    <Badge size="xs" color={severityColor[a.severity] || 'gray'}>
-                      {severityLabel[a.severity] || a.severity}
-                    </Badge>
-                    <Badge size="xs" color={statusColor[a.status] || 'gray'}>
-                      {statusLabel[a.status] || a.status}
-                    </Badge>
-                  </Group>
-                  <Group gap="xs">
-                    {a.status === 'active' && (
-                      <Button size="compact-xs" variant="light" color="blue" leftSection={<IconCheck size={12} />}
-                        onClick={() => acknowledge.mutate({ id: a.id })}
-                        loading={acknowledge.variables?.id === a.id}>
-                        确认
-                      </Button>
-                    )}
-                    {(a.status === 'active' || a.status === 'acknowledged') && (
-                      <Button size="compact-xs" variant="light" color="green" leftSection={<IconCheck size={12} />}
-                        onClick={() => resolve.mutate({ id: a.id })}
-                        loading={resolve.variables?.id === a.id}>
-                        解决
-                      </Button>
-                    )}
-                  </Group>
+      <Timeline active={items.filter((a: any) => a.status === 'active').length - 1} bulletSize={24} lineWidth={2}>
+        {items.map((a: any) => (
+          <Timeline.Item
+            key={a.id}
+            bullet={
+              a.severity === 'critical' ? <IconAlertTriangle size={12} color="red" /> : a.severity === 'warning' ? <IconBell size={12} color="orange" /> : <IconInfoCircle size={12} />
+            }
+            title={
+              <Group gap="xs" justify="space-between" wrap="nowrap">
+                <Group gap="xs">
+                  <Text fw={500}>{a.metric}</Text>
+                  <Badge size="xs" color={severityColor[a.severity] || 'gray'}>
+                    {severityLabel[a.severity] || a.severity}
+                  </Badge>
+                  <Badge size="xs" color={statusColor[a.status] || 'gray'}>
+                    {statusLabel[a.status] || a.status}
+                  </Badge>
                 </Group>
-              }
-            >
-              <Text size="sm" c="dimmed">
-                {a.value != null ? `${a.value} ${a.unit || ''}` : ''} · {relativeTime(new Date(a.recordedAt))}
-              </Text>
-            </Timeline.Item>
-          ))}
-        </Timeline>
-      </Paper>
-    </div>
+                <Group gap="xs">
+                  {a.status === 'active' && (
+                    <Button size="compact-xs" variant="light" color="blue" leftSection={<IconCheck size={12} />}
+                      onClick={() => acknowledge.mutate({ id: a.id })}
+                      loading={acknowledge.variables?.id === a.id}>
+                      确认
+                    </Button>
+                  )}
+                  {(a.status === 'active' || a.status === 'acknowledged') && (
+                    <Button size="compact-xs" variant="light" color="green" leftSection={<IconCheck size={12} />}
+                      onClick={() => resolve.mutate({ id: a.id })}
+                      loading={resolve.variables?.id === a.id}>
+                      解决
+                    </Button>
+                  )}
+                </Group>
+              </Group>
+            }
+          >
+            <Text size="sm" c="dimmed">
+              {a.value != null ? `${a.value} ${a.unit || ''}` : ''} · {relativeTime(new Date(a.recordedAt))}
+            </Text>
+          </Timeline.Item>
+        ))}
+      </Timeline>
+    </Paper>
   )
 }

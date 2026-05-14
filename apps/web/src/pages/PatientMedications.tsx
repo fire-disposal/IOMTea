@@ -1,4 +1,4 @@
-import { ActionIcon, Badge, Button, Card, Center, Group, Loader, Modal, Paper, Select, Stack, Table, Text, Textarea, TextInput, Title, Alert } from '@mantine/core'
+import { ActionIcon, Badge, Button, Card, Center, Group, Modal, Paper, Select, Stack, Table, Text, Textarea, TextInput, Title, Alert, Skeleton } from '@mantine/core'
 import { useForm } from '@mantine/form'
 import { notifications } from '@mantine/notifications'
 import { useState } from 'react'
@@ -180,20 +180,18 @@ export function PatientMedications() {
 
   if (meds.isLoading) {
     return (
-      <Center py="xl">
-        <Group>
-          <Loader size="sm" />
-          <Text c="dimmed">加载中...</Text>
-        </Group>
-      </Center>
+      <Paper p="lg" radius="md" withBorder>
+        <Skeleton height={28} width={160} mb="md" />
+        <Skeleton height={300} />
+      </Paper>
     )
   }
 
   if (meds.isError) {
     return (
-      <Center py="xl">
+      <Paper p="lg" radius="md" withBorder>
         <Alert color="red" title="加载失败">{meds.error?.message || '请检查网络连接'}</Alert>
-      </Center>
+      </Paper>
     )
   }
 
@@ -201,24 +199,24 @@ export function PatientMedications() {
 
   return (
     <>
-      <Group justify="space-between" mb="md">
-        <Title order={4}>用药管理</Title>
-        <Button
-          size="sm"
-          onClick={() => {
-            setEditingId(null)
-            form.reset()
-            setCreateOpen(true)
-          }}
-        >
-          添加用药
-        </Button>
-      </Group>
+      <Paper p="lg" radius="md" withBorder>
+        <Group justify="space-between" mb="md">
+          <Title order={4}>用药管理</Title>
+          <Button
+            size="sm"
+            onClick={() => {
+              setEditingId(null)
+              form.reset()
+              setCreateOpen(true)
+            }}
+          >
+            添加用药
+          </Button>
+        </Group>
 
-      {medications.length === 0 ? (
-        <StateEmpty message="暂无用药记录" />
-      ) : (
-        <Paper p="md" radius="md" withBorder>
+        {medications.length === 0 ? (
+          <StateEmpty message="暂无用药记录" />
+        ) : (
           <Table striped highlightOnHover>
             <Table.Thead>
               <Table.Tr>
@@ -291,7 +289,7 @@ export function PatientMedications() {
                             setSelectedMedId(selectedMedId === m.id ? null : m.id)
                           }
                         >
-                          📊
+                          <Text>📊</Text>
                         </ActionIcon>
                         <ActionIcon
                           size="sm"
@@ -299,7 +297,7 @@ export function PatientMedications() {
                           aria-label="编辑"
                           onClick={() => openEdit(m)}
                         >
-                          ✏️
+                          <Text>✏️</Text>
                         </ActionIcon>
                         <ActionIcon
                           size="sm"
@@ -308,7 +306,7 @@ export function PatientMedications() {
                           aria-label="删除"
                           onClick={() => setDeleteConfirm(m.id)}
                         >
-                          🗑
+                          <Text>🗑</Text>
                         </ActionIcon>
                       </Group>
                     </Table.Td>
@@ -317,20 +315,20 @@ export function PatientMedications() {
               })}
             </Table.Tbody>
           </Table>
-        </Paper>
-      )}
+        )}
+      </Paper>
 
       {selectedMedId && (
-        <Card mt="md" p="md" radius="md" withBorder>
+        <Card mt="lg" p="md" radius="md" withBorder>
           <Group justify="space-between" mb="sm">
             <Text fw={500}>服药依从性</Text>
             <ActionIcon variant="subtle" onClick={() => setSelectedMedId(null)}>
-              ✕
+              <Text>✕</Text>
             </ActionIcon>
           </Group>
           {selectedSchedules.isLoading ? (
             <Center py="md">
-              <Loader size="sm" />
+              <Skeleton height={60} />
             </Center>
           ) : !selectedSchedules.data || selectedSchedules.data.length === 0 ? (
             <Text size="sm" c="dimmed" ta="center" py="md">
@@ -350,7 +348,7 @@ export function PatientMedications() {
                     </Text>
                     {adherenceQueries[schedIdx]?.isLoading ? (
                       <Center py="xs">
-                        <Loader size="xs" />
+                        <Skeleton height={20} />
                       </Center>
                     ) : !adhData || adhData.length === 0 ? (
                       <Text size="xs" c="dimmed" ta="center" py="xs">

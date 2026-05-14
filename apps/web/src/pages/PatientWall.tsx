@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { Button, Container, Group, Modal, NumberInput, Paper, Select, SimpleGrid, Stack, Text, TextInput, ThemeIcon, Title } from '@mantine/core'
+import { ActionIcon, Button, Container, Group, Modal, NumberInput, Paper, Select, SimpleGrid, Stack, Text, TextInput, ThemeIcon, Title } from '@mantine/core'
 import { useForm } from '@mantine/form'
 import { notifications } from '@mantine/notifications'
-import { IconAlertTriangle, IconDevices, IconPlus, IconSearch, IconUsers } from '@tabler/icons-react'
+import { IconAlertTriangle, IconDevices, IconPlus, IconSearch, IconUsers, IconX } from '@tabler/icons-react'
 import { trpc } from '../trpc'
 import { PatientCard } from '../components/patients/PatientCard'
 import { StateSkeleton, StateEmpty, StateError } from '../components/shared/StateComponents'
@@ -51,7 +51,7 @@ export function PatientWall() {
       </Group>
 
       <SimpleGrid cols={3} mb="lg">
-        <Paper p="md" radius="md" withBorder>
+        <Paper p="md" radius="md" withBorder style={{ borderLeft: '3px solid var(--mantine-color-matchaGreen-5)' }}>
           <Group>
             <ThemeIcon color="matchaGreen" variant="light"><IconUsers size={20} /></ThemeIcon>
             <div>
@@ -60,7 +60,7 @@ export function PatientWall() {
             </div>
           </Group>
         </Paper>
-        <Paper p="md" radius="md" withBorder>
+        <Paper p="md" radius="md" withBorder style={{ borderLeft: '3px solid var(--mantine-color-red-5)' }}>
           <Group>
             <ThemeIcon color="red" variant="light"><IconAlertTriangle size={20} /></ThemeIcon>
             <div>
@@ -69,18 +69,29 @@ export function PatientWall() {
             </div>
           </Group>
         </Paper>
-        <Paper p="md" radius="md" withBorder>
+        <Paper p="md" radius="md" withBorder style={{ borderLeft: '3px solid var(--mantine-color-blue-5)' }}>
           <Group>
             <ThemeIcon color="blue" variant="light"><IconDevices size={20} /></ThemeIcon>
             <div>
-              <Text size="xs" c="dimmed">在线设备</Text>
-              <Text fw={700} size="xl">{patients.data?.length ?? 0 > 0 ? '—' : '—'}</Text>
+              <Text size="xs" c="dimmed">监护中</Text>
+              <Text fw={700} size="xl">{patients.data?.length ?? '—'}</Text>
             </div>
           </Group>
         </Paper>
       </SimpleGrid>
 
-      <TextInput placeholder="搜索患者..." leftSection={<IconSearch size={16} />} value={search} onChange={(e) => setSearch(e.currentTarget.value)} mb="xl" />
+      <TextInput
+        placeholder="搜索患者..."
+        leftSection={<IconSearch size={16} />}
+        rightSection={search ? (
+          <ActionIcon size="sm" variant="subtle" onClick={() => setSearch('')}>
+            <IconX size={14} />
+          </ActionIcon>
+        ) : undefined}
+        value={search}
+        onChange={(e) => setSearch(e.currentTarget.value)}
+        mb="xl"
+      />
 
       {patients.isLoading && <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}><StateSkeleton count={6} /></SimpleGrid>}
       {patients.isError && <StateError message="加载患者列表失败" />}
@@ -89,7 +100,14 @@ export function PatientWall() {
       )}
       {!patients.isLoading && !patients.isError && filtered.length > 0 && (
         <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="lg">
-          {filtered.map((p: any) => <PatientCard key={p.id} patient={p} alertCount={alerts.data?.filter((a: any) => a.patientId === p.id && a.status === 'active').length} onDelete={(id) => setDeleteTarget(id)} />)}
+          {filtered.map((p: any) => (
+            <PatientCard
+              key={p.id}
+              patient={p}
+              alertCount={alerts.data?.filter((a: any) => a.patientId === p.id && a.status === 'active').length}
+              onDelete={(id) => setDeleteTarget(id)}
+            />
+          ))}
         </SimpleGrid>
       )}
 

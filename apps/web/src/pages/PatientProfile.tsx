@@ -1,10 +1,9 @@
-import { Badge, Button, Group, Modal, NumberInput, Paper, Select, Stack, Table, Text, TextInput, Title } from '@mantine/core'
+import { Badge, Button, Group, Modal, NumberInput, Paper, Select, Skeleton, Stack, Table, Text, TextInput, Title } from '@mantine/core'
 import { useForm } from '@mantine/form'
 import { notifications } from '@mantine/notifications'
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { trpc } from '../trpc'
-import { StateSkeleton } from '../components/shared/StateComponents'
 
 const genderOptions = [
   { value: 'male', label: '男' },
@@ -83,44 +82,51 @@ export function PatientProfile() {
     updateMutation.mutate({ id: id!, data: form.values } as any)
   }
 
-  if (patient.isLoading) return <StateSkeleton count={2} />
+  if (patient.isLoading) {
+    return (
+      <Stack gap="md">
+        <Skeleton height={28} width={200} />
+        <Skeleton height={120} />
+        <Skeleton height={120} />
+      </Stack>
+    )
+  }
+
   if (!patient.data) return <Text c="dimmed">患者不存在</Text>
 
   const p = patient.data as any
 
   if (editing) {
     return (
-      <Stack gap="md">
-        <Paper p="md" radius="md">
-          <Title order={4} mb="md">编辑信息</Title>
-          <form onSubmit={form.onSubmit(save)}>
-            <Stack gap="md">
-              <Group gap="md">
-                <TextInput label="姓名" required {...form.getInputProps('name')} />
-                <Select label="性别" data={genderOptions} {...form.getInputProps('gender')} />
-                <TextInput label="出生日期" type="date" {...form.getInputProps('birthDate')} />
-              </Group>
-              <Group gap="md">
-                <NumberInput label="身高 (cm)" min={0} {...form.getInputProps('heightCm')} />
-                <NumberInput label="体重 (kg)" min={0} {...form.getInputProps('weightKg')} />
-                <Select label="血型" data={bloodTypeOptions} {...form.getInputProps('bloodType')} />
-              </Group>
-              <Group gap="md">
-                <TextInput label="电话" {...form.getInputProps('phone')} />
-                <TextInput label="地址" {...form.getInputProps('address')} />
-              </Group>
-              <Group gap="md">
-                <TextInput label="紧急联系人" {...form.getInputProps('emergencyContact')} />
-                <TextInput label="紧急电话" {...form.getInputProps('emergencyPhone')} />
-              </Group>
-              <Group>
-                <Button type="submit" loading={updateMutation.isPending}>保存</Button>
-                <Button variant="subtle" onClick={() => setEditing(false)}>取消</Button>
-              </Group>
-            </Stack>
-          </form>
-        </Paper>
-      </Stack>
+      <Paper p="lg" radius="md" withBorder>
+        <Title order={4} mb="md">编辑信息</Title>
+        <form onSubmit={form.onSubmit(save)}>
+          <Stack gap="md">
+            <Group gap="md">
+              <TextInput label="姓名" required {...form.getInputProps('name')} />
+              <Select label="性别" data={genderOptions} {...form.getInputProps('gender')} />
+              <TextInput label="出生日期" type="date" {...form.getInputProps('birthDate')} />
+            </Group>
+            <Group gap="md">
+              <NumberInput label="身高 (cm)" min={0} {...form.getInputProps('heightCm')} />
+              <NumberInput label="体重 (kg)" min={0} {...form.getInputProps('weightKg')} />
+              <Select label="血型" data={bloodTypeOptions} {...form.getInputProps('bloodType')} />
+            </Group>
+            <Group gap="md">
+              <TextInput label="电话" {...form.getInputProps('phone')} />
+              <TextInput label="地址" {...form.getInputProps('address')} />
+            </Group>
+            <Group gap="md">
+              <TextInput label="紧急联系人" {...form.getInputProps('emergencyContact')} />
+              <TextInput label="紧急电话" {...form.getInputProps('emergencyPhone')} />
+            </Group>
+            <Group>
+              <Button type="submit" loading={updateMutation.isPending}>保存</Button>
+              <Button variant="subtle" onClick={() => setEditing(false)}>取消</Button>
+            </Group>
+          </Stack>
+        </form>
+      </Paper>
     )
   }
 
@@ -130,7 +136,7 @@ export function PatientProfile() {
         <Button size="sm" color="red" variant="light" onClick={() => setDeleteConfirm(true)}>删除患者</Button>
       </Group>
 
-      <Paper p="md" radius="md">
+      <Paper p="lg" radius="md" withBorder>
         <Group justify="space-between" mb="md">
           <Title order={4}>基本信息</Title>
           <Button size="sm" variant="light" onClick={startEdit}>编辑</Button>
@@ -146,7 +152,7 @@ export function PatientProfile() {
         <Text size="xs" c="dimmed" mt="xs">主治医生ID: {p.primaryDoctorId || '未设置'}</Text>
       </Paper>
 
-      <Paper p="md" radius="md">
+      <Paper p="lg" radius="md" withBorder>
         <Title order={4} mb="md">联系信息</Title>
         <Group gap="xl">
           <div><Text size="xs" c="dimmed">电话</Text><Text>{p.phone || '未设置'}</Text></div>
@@ -156,7 +162,7 @@ export function PatientProfile() {
         </Group>
       </Paper>
 
-      <Paper p="md" radius="md">
+      <Paper p="lg" radius="md" withBorder>
         <Title order={4} mb="md">病史</Title>
         <Group>
           {p.tags?.conditions?.map((c: string) => <Badge key={c} color="matchaGreen">{c}</Badge>)}
@@ -164,12 +170,12 @@ export function PatientProfile() {
         </Group>
       </Paper>
 
-      <Paper p="md" radius="md">
+      <Paper p="lg" radius="md" withBorder>
         <Title order={4} mb="md">关联设备</Title>
         {devices.isLoading ? (
-          <StateSkeleton count={1} />
+          <Skeleton height={100} />
         ) : (
-          <Table>
+          <Table striped highlightOnHover>
             <Table.Thead>
               <Table.Tr>
                 <Table.Th>序列号</Table.Th>

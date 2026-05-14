@@ -1,10 +1,10 @@
-import { Button, Center, Loader, Paper, Stack, Text, ThemeIcon } from '@mantine/core'
+import { Button, Center, Skeleton, Stack, Text, ThemeIcon } from '@mantine/core'
 import { IconAlertTriangle, IconDatabaseOff, IconRefresh } from '@tabler/icons-react'
 
 export function StateSkeleton({ count = 3 }: { count?: number }) {
   return (
     <>{Array.from({ length: count }).map((_, i) => (
-      <Paper key={i} p="xl" radius="lg" style={{ height: 120, background: '#f0f0f0', opacity: 0.5 }} />
+      <Skeleton key={i} height={140} radius="md" />
     ))}</>
   )
 }
@@ -17,7 +17,7 @@ export function StateEmpty({ message = '暂无数据', action, actionLabel }: {
   return (
     <Center py={60}>
       <Stack align="center" gap="md">
-        <ThemeIcon size={64} radius="xl" color="gray" variant="light">
+        <ThemeIcon size={64} radius="xl" color="matchaGreen" variant="light">
           <IconDatabaseOff size={32} />
         </ThemeIcon>
         <Text c="dimmed" size="lg">{message}</Text>

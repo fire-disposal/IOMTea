@@ -1,4 +1,4 @@
-import { AppShell, Burger, Group, NavLink, Text, ThemeIcon, ActionIcon } from '@mantine/core'
+import { AppShell, Burger, Divider, Group, NavLink, Text, ThemeIcon, ActionIcon } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconDashboard, IconSettings, IconLogout, IconAlertTriangle, IconPill, IconCalendar } from '@tabler/icons-react'
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useNavigate, useLocation } from 'react-router-dom'
@@ -43,7 +43,7 @@ function DashboardLayout() {
     <AppShell
       header={{ height: 56 }}
       navbar={{ width: 220, breakpoint: 'sm', collapsed: { mobile: !opened } }}
-      padding="md"
+      padding={0}
     >
       <AppShell.Header>
         <Group h="100%" px="md" justify="space-between">
@@ -65,21 +65,21 @@ function DashboardLayout() {
           <NavLink
             key={item.label}
             label={item.label}
-            leftSection={<item.icon size={20} />}
+            leftSection={<item.icon size={20} stroke={1.5} />}
             active={location.pathname.startsWith(item.path)}
             onClick={() => navigate(item.path)}
-            variant="filled"
-            style={{ borderRadius: 6 }}
+            variant="light"
+            mb={2}
           />
         ))}
+        <Divider my="sm" />
         {isAdmin && (
           <NavLink
             label="系统设置"
-            leftSection={<IconSettings size={20} />}
+            leftSection={<IconSettings size={20} stroke={1.5} />}
             active={location.pathname.startsWith('/settings')}
             onClick={() => navigate('/settings')}
-            variant="filled"
-            style={{ borderRadius: 6 }}
+            variant="light"
           />
         )}
       </AppShell.Navbar>
@@ -90,10 +90,6 @@ function DashboardLayout() {
       </AppShell.Main>
     </AppShell>
   )
-}
-
-function SettingsLayout() {
-  return <Outlet />
 }
 
 export function App() {
@@ -110,15 +106,12 @@ export function App() {
             <Route path="medications" element={<PatientMedications />} />
             <Route path="appointments" element={<PatientAppointments />} />
             <Route path="profile" element={<PatientProfile />} />
+            <Route path="map-editor" element={<MapEditorPage />} />
           </Route>
           <Route path="alerts" element={<GlobalAlerts />} />
           <Route path="medications" element={<GlobalMedications />} />
           <Route path="appointments" element={<GlobalAppointments />} />
-          <Route path="settings" element={<SettingsLayout />}>
-            <Route index element={<Navigate to="/settings/map-editor" replace />} />
-            <Route path="map-editor/:mapId?" element={<MapEditorPage />} />
-            <Route path="devices" element={<DeviceListPage />} />
-          </Route>
+          <Route path="settings" element={<DeviceListPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

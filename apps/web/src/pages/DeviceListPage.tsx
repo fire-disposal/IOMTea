@@ -1,4 +1,4 @@
-import { ActionIcon, Badge, Button, Container, Group, Modal, Select, Stack, Table, Text, TextInput, Title, Alert } from '@mantine/core'
+import { ActionIcon, Badge, Button, Group, Modal, Select, Stack, Table, Text, TextInput, Title, Alert, Skeleton, Paper, Container } from '@mantine/core'
 import { useForm } from '@mantine/form'
 import { notifications } from '@mantine/notifications'
 import { useState } from 'react'
@@ -52,42 +52,54 @@ export function DeviceListPage() {
     setEditingTarget(d)
   }
 
-  if (isLoading) return <Container py="xl"><Group justify="center"><Text c="dimmed">加载中...</Text></Group></Container>
-  if (isError) return <Container py="xl"><Alert color="red" title="加载失败">{error?.message || '请检查网络连接'}</Alert></Container>
+  if (isLoading) return (
+    <Container size="xl" py="xl">
+      <Skeleton height={28} width={160} mb="md" />
+      <Skeleton height={300} />
+    </Container>
+  )
+
+  if (isError) return (
+    <Container size="xl" py="xl">
+      <Alert color="red" title="加载失败">{error?.message || '请检查网络连接'}</Alert>
+    </Container>
+  )
 
   return (
     <Container size="xl" py="md">
-      <Group justify="space-between" mb="md">
-        <Title order={4}>设备管理</Title>
-        <Button size="sm" onClick={() => { form.reset(); setCreateOpen(true) }}>添加设备</Button>
-      </Group>
+      <Paper p="lg" radius="md" withBorder>
+        <Group justify="space-between" mb="md">
+          <Title order={4}>设备管理</Title>
+          <Button size="sm" onClick={() => { form.reset(); setCreateOpen(true) }}>添加设备</Button>
+        </Group>
 
-      <Table striped highlightOnHover>
-        <Table.Thead><Table.Tr><Table.Th>序列号</Table.Th><Table.Th>类型</Table.Th><Table.Th>状态</Table.Th><Table.Th>患者</Table.Th><Table.Th>最后在线</Table.Th><Table.Th>操作</Table.Th></Table.Tr></Table.Thead>
-        <Table.Tbody>
-          {devices.length === 0 ? (
-            <Table.Tr><Table.Td colSpan={6}><Text ta="center" c="dimmed" py="md">暂无设备</Text></Table.Td></Table.Tr>
-          ) : devices.map((d: any) => (
-            <Table.Tr key={d.id}>
-              <Table.Td>{d.serialNumber}</Table.Td>
-              <Table.Td><Badge size="xs" variant="light">{typeLabels[d.deviceType] || d.deviceType}</Badge></Table.Td>
-              <Table.Td><Badge size="xs" color={statusColor[d.status]} variant="filled">{d.status}</Badge></Table.Td>
-              <Table.Td>{patientMap.get(d.patientId) || '—'}</Table.Td>
-              <Table.Td>{d.lastSeen ? new Date(d.lastSeen).toLocaleString() : '—'}</Table.Td>
-              <Table.Td>
-                <Group gap={4}>
-                  <ActionIcon size="sm" variant="subtle" aria-label="编辑" onClick={() => startEdit(d)}>
-                    <Text>✏️</Text>
-                  </ActionIcon>
-                  <ActionIcon size="sm" variant="subtle" color="red" aria-label="删除" onClick={() => setDeleteConfirm(d.id)}>
-                    <Text>🗑</Text>
-                  </ActionIcon>
-                </Group>
-              </Table.Td>
-            </Table.Tr>
-          ))}
-        </Table.Tbody>
-      </Table>
+        <Table striped highlightOnHover>
+          <Table.Thead><Table.Tr><Table.Th>序列号</Table.Th><Table.Th>类型</Table.Th><Table.Th>状态</Table.Th><Table.Th>患者</Table.Th><Table.Th>最后在线</Table.Th><Table.Th>操作</Table.Th></Table.Tr></Table.Thead>
+          <Table.Tbody>
+            {devices.length === 0 ? (
+              <Table.Tr><Table.Td colSpan={6}><Text ta="center" c="dimmed" py="md">暂无设备</Text></Table.Td></Table.Tr>
+            ) : devices.map((d: any) => (
+              <Table.Tr key={d.id}>
+                <Table.Td>{d.serialNumber}</Table.Td>
+                <Table.Td><Badge size="xs" variant="light">{typeLabels[d.deviceType] || d.deviceType}</Badge></Table.Td>
+                <Table.Td><Badge size="xs" color={statusColor[d.status]} variant="filled">{d.status}</Badge></Table.Td>
+                <Table.Td>{patientMap.get(d.patientId) || '—'}</Table.Td>
+                <Table.Td>{d.lastSeen ? new Date(d.lastSeen).toLocaleString() : '—'}</Table.Td>
+                <Table.Td>
+                  <Group gap={4}>
+                    <ActionIcon size="sm" variant="subtle" aria-label="编辑" onClick={() => startEdit(d)}>
+                      <Text>✏️</Text>
+                    </ActionIcon>
+                    <ActionIcon size="sm" variant="subtle" color="red" aria-label="删除" onClick={() => setDeleteConfirm(d.id)}>
+                      <Text>🗑</Text>
+                    </ActionIcon>
+                  </Group>
+                </Table.Td>
+              </Table.Tr>
+            ))}
+          </Table.Tbody>
+        </Table>
+      </Paper>
 
       <Modal opened={createOpen} onClose={() => setCreateOpen(false)} title="添加设备">
         <form onSubmit={form.onSubmit(() => create.mutate(form.values as any))}>

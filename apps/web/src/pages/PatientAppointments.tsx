@@ -1,4 +1,4 @@
-import { ActionIcon, Badge, Button, Group, Modal, NumberInput, Paper, Select, Stack, Table, Tabs, Text, TextInput, Textarea } from '@mantine/core'
+import { ActionIcon, Badge, Button, Group, Modal, NumberInput, Paper, Select, Skeleton, Stack, Table, Tabs, Text, TextInput, Textarea, Title } from '@mantine/core'
 import { useForm } from '@mantine/form'
 import { notifications } from '@mantine/notifications'
 import { IconCalendar, IconTrash, IconEdit } from '@tabler/icons-react'
@@ -86,37 +86,48 @@ export function PatientAppointments() {
 
   const canCancel = (status: string) => status === 'scheduled' || status === 'confirmed'
 
+  if (appts.isLoading) {
+    return (
+      <Paper p="lg" radius="md" withBorder>
+        <Skeleton height={28} width={160} mb="md" />
+        <Skeleton height={64} mb="md" />
+        <Skeleton height={200} />
+      </Paper>
+    )
+  }
+
   return (
     <>
-      <Group justify="flex-end" mb="md">
-        <Button size="sm" onClick={() => { form.reset(); setCreateOpen(true) }}>新建预约</Button>
-      </Group>
+      <Paper p="lg" radius="md" withBorder>
+        <Group justify="space-between" mb="md">
+          <Title order={4}>预约管理</Title>
+          <Button size="sm" onClick={() => { form.reset(); setCreateOpen(true) }}>新建预约</Button>
+        </Group>
 
-      {upcoming && (
-        <Paper p="md" radius="md" bg="matchaGreen.0" mb="md">
-          <Group>
-            <IconCalendar size={24} color="var(--mantine-color-matchaGreen-6)" />
-            <div>
-              <Text fw={600}>下次预约</Text>
-              <Text>{new Date(upcoming.scheduledAt).toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })} · {APPOINTMENT_TYPES.find(t => t.value === upcoming.appointmentType)?.label || upcoming.appointmentType} · {upcoming.location}</Text>
-              <Text size="sm" c="dimmed">{daysUntil(upcoming.scheduledAt)}天后</Text>
-            </div>
-          </Group>
-        </Paper>
-      )}
+        {upcoming && (
+          <Paper p="md" radius="md" bg="matchaGreen.0" mb="md" withBorder>
+            <Group>
+              <IconCalendar size={24} color="var(--mantine-color-matchaGreen-6)" />
+              <div>
+                <Text fw={600}>下次预约</Text>
+                <Text>{new Date(upcoming.scheduledAt).toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })} · {APPOINTMENT_TYPES.find(t => t.value === upcoming.appointmentType)?.label || upcoming.appointmentType} · {upcoming.location}</Text>
+                <Text size="sm" c="dimmed">{daysUntil(upcoming.scheduledAt)}天后</Text>
+              </div>
+            </Group>
+          </Paper>
+        )}
 
-      <Tabs defaultValue="appointments">
-        <Tabs.List mb="md">
-          <Tabs.Tab value="appointments">预约列表</Tabs.Tab>
-          <Tabs.Tab value="followups">随访记录</Tabs.Tab>
-        </Tabs.List>
+        <Tabs defaultValue="appointments">
+          <Tabs.List mb="md">
+            <Tabs.Tab value="appointments">预约列表</Tabs.Tab>
+            <Tabs.Tab value="followups">随访记录</Tabs.Tab>
+          </Tabs.List>
 
-        <Tabs.Panel value="appointments">
-          {!appts.data || appts.data.length === 0 ? (
-            <StateEmpty message="暂无预约记录" />
-          ) : (
-            <Paper p="md" radius="md">
-              <Table>
+          <Tabs.Panel value="appointments">
+            {!appts.data || appts.data.length === 0 ? (
+              <StateEmpty message="暂无预约记录" />
+            ) : (
+              <Table striped highlightOnHover>
                 <Table.Thead>
                   <Table.Tr>
                     <Table.Th>类型</Table.Th>
@@ -136,39 +147,39 @@ export function PatientAppointments() {
                       <Table.Td><Badge color={STATUS_COLORS[a.status] || 'gray'} size="sm">{a.status}</Badge></Table.Td>
                       <Table.Td>{a.reason || '—'}</Table.Td>
                       <Table.Td>
-                        {canCancel(a.status) && (
-                          <ActionIcon size="sm" variant="subtle" color="red" onClick={() => setCancelTarget(a.id)}>
-                            <IconTrash size={14} />
+                        <Group gap={4}>
+                          {canCancel(a.status) && (
+                            <ActionIcon size="sm" variant="subtle" color="red" onClick={() => setCancelTarget(a.id)}>
+                              <IconTrash size={14} />
+                            </ActionIcon>
+                          )}
+                          <ActionIcon size="sm" variant="subtle" onClick={() => {
+                            form.setValues({
+                              appointmentType: a.appointmentType,
+                              scheduledAt: a.scheduledAt ? new Date(a.scheduledAt).toISOString().slice(0, 16) : '',
+                              durationMinutes: a.durationMinutes ?? 30,
+                              location: a.location || '',
+                              reason: a.reason || '',
+                              notes: a.notes || '',
+                            })
+                            setEditingTarget(a.id)
+                          }}>
+                            <IconEdit size={14} />
                           </ActionIcon>
-                        )}
-                        <ActionIcon size="sm" variant="subtle" onClick={() => {
-                          form.setValues({
-                            appointmentType: a.appointmentType,
-                            scheduledAt: a.scheduledAt ? new Date(a.scheduledAt).toISOString().slice(0, 16) : '',
-                            durationMinutes: a.durationMinutes ?? 30,
-                            location: a.location || '',
-                            reason: a.reason || '',
-                            notes: a.notes || '',
-                          })
-                          setEditingTarget(a.id)
-                        }}>
-                          <IconEdit size={14} />
-                        </ActionIcon>
+                        </Group>
                       </Table.Td>
                     </Table.Tr>
                   ))}
                 </Table.Tbody>
               </Table>
-            </Paper>
-          )}
-        </Tabs.Panel>
+            )}
+          </Tabs.Panel>
 
-        <Tabs.Panel value="followups">
-          {!followups.data || followups.data.length === 0 ? (
-            <StateEmpty message="暂无随访记录" />
-          ) : (
-            <Paper p="md" radius="md">
-              <Table>
+          <Tabs.Panel value="followups">
+            {!followups.data || followups.data.length === 0 ? (
+              <StateEmpty message="暂无随访记录" />
+            ) : (
+              <Table striped highlightOnHover>
                 <Table.Thead>
                   <Table.Tr>
                     <Table.Th>类型</Table.Th>
@@ -188,10 +199,10 @@ export function PatientAppointments() {
                   ))}
                 </Table.Tbody>
               </Table>
-            </Paper>
-          )}
-        </Tabs.Panel>
-      </Tabs>
+            )}
+          </Tabs.Panel>
+        </Tabs>
+      </Paper>
 
       <Modal opened={createOpen} onClose={() => setCreateOpen(false)} title="新建预约">
         <form onSubmit={form.onSubmit((vals) => create.mutate({ patientId: id!, ...vals } as any))}>

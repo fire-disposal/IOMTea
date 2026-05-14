@@ -1,7 +1,8 @@
 import { useState, useCallback, useMemo, useEffect } from 'react'
-import { Container, Group, Text } from '@mantine/core'
+import { Container, Group, Text, Button } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
+import { IconArrowLeft } from '@tabler/icons-react'
 import type { MapModel, Entity, Zone } from '@iomtea/shared-types/map'
 import { buildGrid, createEmptyTiles } from '@iomtea/shared-types/map'
 import { mergeZones } from '@iomtea/shared-types/map'
@@ -30,8 +31,14 @@ function tilesToGrid(tiles: { terrain: string }[][]): number[][] {
 }
 
 export function MapEditorPage() {
-  const { mapId } = useParams<{ mapId: string }>()
-  const savedMapId = mapId && mapId !== 'new' ? mapId : undefined
+  const { id, mapId } = useParams<{ id: string; mapId: string }>()
+  const navigate = useNavigate()
+
+  const { data: mapData } = trpc.twin.maps.get.useQuery(
+    { patientId: id! },
+    { enabled: !!id },
+  )
+  const savedMapId = mapData?.id
 
   const serverModelData = useMapModel(savedMapId)
 
@@ -209,6 +216,11 @@ export function MapEditorPage() {
 
   return (
     <Container fluid p={0} style={{ height: 'calc(100vh - 60px)', display: 'flex', flexDirection: 'column' }}>
+      <Group px="xs" py={4}>
+        <Button variant="subtle" leftSection={<IconArrowLeft size={16} />} onClick={() => navigate(`/patients/${id}`)}>
+          返回患者详情
+        </Button>
+      </Group>
       <Group style={{ flex: 1, overflow: 'hidden' }} gap={0} wrap="nowrap">
         <Toolbar
           mode={mode}

@@ -1,4 +1,4 @@
-import { ActionIcon, Badge, Card, Group, Stack, Text, ThemeIcon } from '@mantine/core'
+import { ActionIcon, Avatar, Badge, Card, Group, Text } from '@mantine/core'
 import { IconHeart, IconLungs, IconAlertCircle, IconTrash } from '@tabler/icons-react'
 import { useNavigate } from 'react-router-dom'
 import { trpc } from '../../trpc'
@@ -13,11 +13,10 @@ interface PatientCardProps {
     tags?: any
   }
   alertCount?: number
-  deviceOnline?: boolean
   onDelete?: (id: string) => void
 }
 
-export function PatientCard({ patient, alertCount = 0, deviceOnline = false, onDelete }: PatientCardProps) {
+export function PatientCard({ patient, alertCount = 0, onDelete }: PatientCardProps) {
   const latestVitals = trpc.data.latest.useQuery(
     { patientId: patient.id },
     { enabled: !!patient.id, refetchInterval: 15000 }
@@ -27,13 +26,14 @@ export function PatientCard({ patient, alertCount = 0, deviceOnline = false, onD
     heartRate: latestVitals.data?.find((v: any) => v.metric === 'heart_rate')?.value as number | undefined,
     spO2: latestVitals.data?.find((v: any) => v.metric === 'spo2')?.value as number | undefined,
   }
+  const isOnline = (latestVitals.data?.length ?? 0) > 0
   const navigate = useNavigate()
   const age = patient.birthDate
     ? Math.floor((Date.now() - new Date(patient.birthDate).getTime()) / 31557600000)
     : null
 
-  const hrColor = vitals?.heartRate && (vitals.heartRate > 100 || vitals.heartRate < 50) ? 'red' : 'matchaGreen'
-  const spO2Color = vitals?.spO2 && vitals.spO2 < 92 ? 'red' : 'matchaGreen'
+  const hrColor = vitals?.heartRate && (vitals.heartRate > 100 || vitals.heartRate < 50) ? 'red' : undefined
+  const spO2Color = vitals?.spO2 && vitals.spO2 < 92 ? 'red' : undefined
   const conditions = (patient.tags as any)?.conditions || []
 
   return (
@@ -41,26 +41,34 @@ export function PatientCard({ patient, alertCount = 0, deviceOnline = false, onD
       shadow="sm"
       padding="lg"
       radius="md"
-      style={{ cursor: 'pointer', borderTop: '3px solid var(--mantine-color-matchaGreen-5)', position: 'relative' }}
+      withBorder
+      style={{ cursor: 'pointer', position: 'relative' }}
       onClick={() => navigate(`/patients/${patient.id}`)}
     >
       {onDelete && (
-        <div style={{ position: 'absolute', top: 8, right: 8 }}>
-          <ActionIcon
-            variant="subtle"
-            color="red"
-            size="sm"
-            onClick={(e) => { e.stopPropagation(); onDelete(patient.id) }}
-          >
-            <IconTrash size={14} />
-          </ActionIcon>
-        </div>
+        <ActionIcon
+          variant="subtle"
+          color="red"
+          size="sm"
+          style={{ position: 'absolute', top: 8, right: 8, zIndex: 1 }}
+          onClick={(e) => { e.stopPropagation(); onDelete(patient.id) }}
+        >
+          <IconTrash size={14} />
+        </ActionIcon>
       )}
-      <Group justify="space-between" mb="xs">
-        <Group gap="xs">
-          <Text fw={600} size="lg">{patient.name}</Text>
-          <div style={{ width: 8, height: 8, borderRadius: '50%', background: deviceOnline ? '#6BA539' : '#ccc' }} />
-        </Group>
+
+      <Group mb="md" wrap="nowrap">
+        <Avatar color="matchaGreen" radius="xl" size="lg">
+          {patient.name.charAt(0)}
+        </Avatar>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <Text fw={600} truncate>{patient.name}</Text>
+          <Group gap={6} mt={2}>
+            {age != null && <Text size="xs" c="dimmed">{age}岁</Text>}
+            {patient.gender && <Text size="xs" c="dimmed">{patient.gender === 'male' ? '男' : patient.gender === 'female' ? '女' : '其他'}</Text>}
+            <Badge size="xs" color={isOnline ? 'green' : 'gray'} variant="dot">{isOnline ? '在线' : '离线'}</Badge>
+          </Group>
+        </div>
         {alertCount > 0 && (
           <Badge color="red" variant="filled" leftSection={<IconAlertCircle size={12} />}>
             {alertCount}
@@ -68,25 +76,25 @@ export function PatientCard({ patient, alertCount = 0, deviceOnline = false, onD
         )}
       </Group>
 
-      <Group gap="xs" mb="md">
-        {age && <Text size="sm" c="dimmed">{age}岁</Text>}
-        {patient.gender && <Text size="sm" c="dimmed">{patient.gender === 'male' ? '男' : patient.gender === 'female' ? '女' : '其他'}</Text>}
-        {Array.isArray(conditions) && conditions.slice(0, 2).map((c: any) => (
-          <Badge key={c} size="xs" variant="light" color="gray">{c}</Badge>
-        ))}
-      </Group>
+      {conditions.length > 0 && (
+        <Group gap={4} mb="md">
+          {conditions.slice(0, 3).map((c: any) => (
+            <Badge key={c} size="xs" variant="light" color="matchaGreen">{c}</Badge>
+          ))}
+        </Group>
+      )}
 
       <Group gap="xl">
         <Group gap={4}>
-          <IconHeart size={16} color={`var(--mantine-color-${hrColor}-6)`} />
-          <Text size="sm" fw={500} c={hrColor === 'red' ? 'red' : undefined}>
-            {vitals?.heartRate ?? '--'} bpm
+          <IconHeart size={16} color={hrColor ? `var(--mantine-color-red-6)` : `var(--mantine-color-gray-5)`} />
+          <Text size="sm" fw={500} c={hrColor ? 'red' : undefined}>
+            {vitals?.heartRate ?? '--'} <Text span size="xs" c="dimmed">bpm</Text>
           </Text>
         </Group>
         <Group gap={4}>
-          <IconLungs size={16} color={`var(--mantine-color-${spO2Color}-6)`} />
-          <Text size="sm" fw={500} c={spO2Color === 'red' ? 'red' : undefined}>
-            {vitals?.spO2 ?? '--'}%
+          <IconLungs size={16} color={spO2Color ? `var(--mantine-color-red-6)` : `var(--mantine-color-gray-5)`} />
+          <Text size="sm" fw={500} c={spO2Color ? 'red' : undefined}>
+            {vitals?.spO2 ?? '--'}<Text span size="xs" c="dimmed">%</Text>
           </Text>
         </Group>
       </Group>
