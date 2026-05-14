@@ -28,6 +28,7 @@ export const deviceListInputSchema = z.object({
   pageSize: z.number().int().min(1).max(100).default(20),
   deviceType: z.enum(DEVICE_TYPES).optional(),
   status: z.enum(DEVICE_STATUSES).optional(),
+  patientId: z.string().uuid().optional(),
 })
 
 export type Device = z.infer<typeof deviceSchema>

@@ -20,6 +20,9 @@ export const deviceRouter = router({
     if (input.status) {
       query = query.where(eq(devices.status, input.status))
     }
+    if (input.patientId) {
+      query = query.where(eq(devices.patientId, input.patientId))
+    }
     const rows = await query.limit(input.pageSize).offset(offset).orderBy(devices.createdAt)
 
     return z.array(deviceSchema).parse(
