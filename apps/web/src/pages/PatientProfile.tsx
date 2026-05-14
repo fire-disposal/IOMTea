@@ -1,8 +1,8 @@
-import { Badge, Button, Group, NumberInput, Paper, Select, Stack, Table, Text, TextInput, Title } from '@mantine/core'
+import { Badge, Button, Group, Modal, NumberInput, Paper, Select, Stack, Table, Text, TextInput, Title } from '@mantine/core'
 import { useForm } from '@mantine/form'
 import { notifications } from '@mantine/notifications'
 import { useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { trpc } from '../trpc'
 import { StateSkeleton } from '../components/shared/StateComponents'
 
@@ -23,7 +23,9 @@ function genderLabel(g: string) {
 
 export function PatientProfile() {
   const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
   const [editing, setEditing] = useState(false)
+  const [deleteConfirm, setDeleteConfirm] = useState(false)
   const utils = trpc.useUtils()
 
   const patient = trpc.patient.byId.useQuery({ id: id! }, { enabled: !!id })
@@ -35,6 +37,14 @@ export function PatientProfile() {
       setEditing(false)
       notifications.show({ title: '保存成功', message: '', color: 'green' })
     },
+  })
+
+  const deleteMutation = trpc.patient.delete.useMutation({
+    onSuccess: () => {
+      notifications.show({ title: '成功', message: '患者已删除', color: 'green' })
+      navigate('/patients')
+    },
+    onError: (err) => notifications.show({ title: '失败', message: err.message, color: 'red' }),
   })
 
   const form = useForm({
@@ -70,7 +80,7 @@ export function PatientProfile() {
   }
 
   const save = () => {
-    updateMutation.mutate({ id: id!, ...form.values } as any)
+    updateMutation.mutate({ id: id!, data: form.values } as any)
   }
 
   if (patient.isLoading) return <StateSkeleton count={2} />
@@ -116,6 +126,10 @@ export function PatientProfile() {
 
   return (
     <Stack gap="md">
+      <Group justify="flex-end">
+        <Button size="sm" color="red" variant="light" onClick={() => setDeleteConfirm(true)}>删除患者</Button>
+      </Group>
+
       <Paper p="md" radius="md">
         <Group justify="space-between" mb="md">
           <Title order={4}>基本信息</Title>
@@ -177,6 +191,14 @@ export function PatientProfile() {
           </Table>
         )}
       </Paper>
+
+      <Modal opened={deleteConfirm} onClose={() => setDeleteConfirm(false)} title="确认删除" size="sm">
+        <Text mb="lg">确定要删除此患者吗？此操作不可撤销。</Text>
+        <Group justify="flex-end">
+          <Button variant="subtle" onClick={() => setDeleteConfirm(false)}>取消</Button>
+          <Button color="red" loading={deleteMutation.isPending} onClick={() => deleteMutation.mutate({ id: id! })}>确认删除</Button>
+        </Group>
+      </Modal>
     </Stack>
   )
 }

@@ -1,11 +1,13 @@
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import { Container, Group, Text } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
+import { useParams } from 'react-router-dom'
 import type { MapModel, Entity, Zone } from '@iomtea/shared-types/map'
-import { buildGrid } from '@iomtea/shared-types/map'
+import { buildGrid, createEmptyTiles } from '@iomtea/shared-types/map'
 import { mergeZones } from '@iomtea/shared-types/map'
 import { useMapModel } from '../useMapModel'
 import { usePatientStore } from '../../store/patients'
+import { trpc } from '../../trpc'
 import { Toolbar } from './Toolbar'
 import { MapCanvas2D } from './MapCanvas2D'
 import { PropertiesPanel } from './PropertiesPanel'
@@ -14,20 +16,74 @@ type ToolMode = 'select' | 'draw-room' | { type: 'place-entity'; defId: string }
 
 const ORIENTATIONS = ['N', 'E', 'S', 'W'] as const
 
+function gridToMapModel(width: number, height: number, grid: number[][], zones: Zone[], entities: Entity[], id?: string): MapModel {
+  const tiles = Array.from({ length: height }, (_: unknown, y: number) =>
+    Array.from({ length: width }, (_: unknown, x: number) => ({
+      terrain: (grid[y]?.[x] === 1 || grid[y]?.[x] === 2 ? 'floor' : 'void') as 'floor' | 'void',
+    })),
+  )
+  return { id: id || 'local', width, height, tileSize: 1, tiles, zones, entities }
+}
+
+function tilesToGrid(tiles: { terrain: string }[][]): number[][] {
+  return tiles.map((row) => row.map((t) => (t.terrain === 'floor' ? 1 : 0)))
+}
+
 export function MapEditorPage() {
-  const initialModel = useMapModel()
-  const [model, setModel] = useState<MapModel>({ ...initialModel })
+  const { mapId } = useParams<{ mapId: string }>()
+  const savedMapId = mapId && mapId !== 'new' ? mapId : undefined
+
+  const serverModelData = useMapModel(savedMapId)
+
+  const [model, setModel] = useState<MapModel>(() => ({
+    id: 'local',
+    width: 16,
+    height: 11,
+    tileSize: 1,
+    tiles: createEmptyTiles(16, 11),
+    zones: [] as Zone[],
+    entities: [] as Entity[],
+  }))
+  const [modelReady, setModelReady] = useState(false)
   const [mode, setMode] = useState<ToolMode>('select')
   const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null)
   const [zoneDefId, setZoneDefId] = useState('bedroom')
   const [, setIsDirty] = useState(false)
-  const [saving, setSaving] = useState(false)
+  const [serverMapId, setServerMapId] = useState<string | null>(savedMapId || null)
 
   const patients = usePatientStore((s) => s.patients)
   const patientOptions = useMemo(
     () => patients.map((p) => ({ value: p.id, label: p.name })),
     [patients],
   )
+
+  const updateMap = trpc.twin.maps.update.useMutation()
+  const createMap = trpc.twin.maps.create.useMutation()
+
+  useEffect(() => {
+    if (serverModelData && !modelReady) {
+      const zones: Zone[] = (serverModelData.rooms || []).map((r: any) => ({
+        id: r.id,
+        defId: r.roomType || 'custom',
+        name: r.name || '',
+        bounds: { x1: r.x, y1: r.y, x2: r.x + r.w - 1, y2: r.y + r.h - 1 },
+      }))
+      const entities: Entity[] = (serverModelData.entities || []).map((e: any) => ({
+        id: e.id,
+        defId: e.defId,
+        gridX: e.gridX,
+        gridY: e.gridY,
+        layer: (e.layer ?? 0) as 0 | 1 | 2,
+        orientation: e.orientation || 'N',
+        patientId: e.properties?.patientId || undefined,
+        status: 'normal',
+      }))
+      const m = gridToMapModel(serverModelData.width, serverModelData.height, serverModelData.grid || [], zones, entities, serverModelData.id)
+      buildGrid(m)
+      setModel(m)
+      setModelReady(true)
+    }
+  }, [serverModelData, modelReady])
 
   const selectedEntity = model.entities.find((e) => e.id === selectedEntityId) || null
 
@@ -36,14 +92,31 @@ export function MapEditorPage() {
     setModel({ ...newModel })
   }, [])
 
-  const handleSave = useCallback(() => {
-    setSaving(true)
-    setTimeout(() => {
-      notifications.show({ title: '已保存', message: '地图已保存（本地）', color: 'green' })
-      setSaving(false)
+  const handleSave = useCallback(async () => {
+    try {
+      const grid = tilesToGrid(model.tiles)
+
+      if (serverMapId) {
+        await updateMap.mutateAsync({ id: serverMapId, grid })
+        notifications.show({ title: '已保存', message: '地图已保存到服务器', color: 'green' })
+      } else if (patients.length > 0) {
+        const created = await createMap.mutateAsync({
+          patientId: patients[0].id,
+          name: '家庭地图',
+          width: model.width,
+          height: model.height,
+          grid,
+        })
+        setServerMapId(created.id)
+        notifications.show({ title: '已保存', message: '地图已创建并保存', color: 'green' })
+      } else {
+        notifications.show({ title: '无法保存', message: '没有可用的患者，请先添加患者', color: 'red' })
+      }
       setIsDirty(false)
-    }, 300)
-  }, [])
+    } catch (err: any) {
+      notifications.show({ title: '保存失败', message: err?.message || '未知错误', color: 'red' })
+    }
+  }, [model, serverMapId, patients, updateMap, createMap])
 
   const handleAddEntity = useCallback(
     (entity: Entity) => {
@@ -132,6 +205,8 @@ export function MapEditorPage() {
     [model, rebuild],
   )
 
+  const isSaving = updateMap.isPending || createMap.isPending
+
   return (
     <Container fluid p={0} style={{ height: 'calc(100vh - 60px)', display: 'flex', flexDirection: 'column' }}>
       <Group style={{ flex: 1, overflow: 'hidden' }} gap={0} wrap="nowrap">
@@ -141,7 +216,7 @@ export function MapEditorPage() {
           zoneDefId={zoneDefId}
           onChangeZoneDef={setZoneDefId}
           onSave={handleSave}
-          saving={saving}
+          saving={isSaving}
         />
         <div style={{ flex: 1, overflow: 'auto', padding: 8 }}>
           <MapCanvas2D
@@ -170,6 +245,7 @@ export function MapEditorPage() {
         <Text size="xs" c="dimmed">
           区域: {model.zones.length} | 实体: {model.entities.length}
           {selectedEntity && ` | 选中: ${selectedEntity.defId} (${selectedEntity.gridX},${selectedEntity.gridY})`}
+          {serverMapId && ` | 地图ID: ${serverMapId.slice(0, 8)}...`}
         </Text>
         <Text size="xs" c="dimmed">右键删除区域 · R旋转实体 · Delete删除实体</Text>
       </Group>

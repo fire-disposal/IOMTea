@@ -18,6 +18,8 @@ export const deviceCreateSchema = z.object({
 })
 
 export const deviceUpdateSchema = z.object({
+  serialNumber: z.string().min(1).max(100).optional(),
+  deviceType: z.enum(DEVICE_TYPES).optional(),
   status: z.enum(DEVICE_STATUSES).optional(),
   patientId: z.string().uuid().nullable().optional(),
   tags: z.record(z.string(), z.unknown()).optional(),

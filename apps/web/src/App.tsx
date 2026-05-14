@@ -107,7 +107,7 @@ export function App() {
           </Route>
           <Route path="settings" element={<SettingsLayout />}>
             <Route index element={<Navigate to="/settings/map-editor" replace />} />
-            <Route path="map-editor" element={<MapEditorPage />} />
+            <Route path="map-editor/:mapId?" element={<MapEditorPage />} />
             <Route path="devices" element={<DeviceListPage />} />
           </Route>
         </Route>

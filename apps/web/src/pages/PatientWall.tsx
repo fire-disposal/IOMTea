@@ -10,6 +10,7 @@ import { StateSkeleton, StateEmpty, StateError } from '../components/shared/Stat
 export function PatientWall() {
   const [search, setSearch] = useState('')
   const [createOpen, setCreateOpen] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
   const utils = trpc.useUtils()
 
   const patients = trpc.patient.list.useQuery({ pageSize: 100, status: 'active' })
@@ -19,6 +20,15 @@ export function PatientWall() {
       notifications.show({ title: '成功', message: '患者已创建', color: 'green' })
       setCreateOpen(false)
       form.reset()
+      utils.patient.list.invalidate()
+    },
+    onError: (err) => notifications.show({ title: '失败', message: err.message, color: 'red' }),
+  })
+
+  const deletePatient = trpc.patient.delete.useMutation({
+    onSuccess: () => {
+      notifications.show({ title: '成功', message: '患者已删除', color: 'green' })
+      setDeleteTarget(null)
       utils.patient.list.invalidate()
     },
     onError: (err) => notifications.show({ title: '失败', message: err.message, color: 'red' }),
@@ -79,7 +89,7 @@ export function PatientWall() {
       )}
       {!patients.isLoading && !patients.isError && filtered.length > 0 && (
         <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="lg">
-          {filtered.map((p: any) => <PatientCard key={p.id} patient={p} alertCount={alerts.data?.filter((a: any) => a.patientId === p.id && a.status === 'active').length} />)}
+          {filtered.map((p: any) => <PatientCard key={p.id} patient={p} alertCount={alerts.data?.filter((a: any) => a.patientId === p.id && a.status === 'active').length} onDelete={(id) => setDeleteTarget(id)} />)}
         </SimpleGrid>
       )}
 
@@ -96,6 +106,13 @@ export function PatientWall() {
             <Button type="submit" loading={createPatient.isPending} fullWidth>创建患者</Button>
           </Stack>
         </form>
+      </Modal>
+      <Modal opened={!!deleteTarget} onClose={() => setDeleteTarget(null)} title="确认删除" size="sm">
+        <Text mb="lg">确定要删除此患者吗？此操作不可撤销。</Text>
+        <Group justify="flex-end">
+          <Button variant="subtle" onClick={() => setDeleteTarget(null)}>取消</Button>
+          <Button color="red" loading={deletePatient.isPending} onClick={() => deletePatient.mutate({ id: deleteTarget! })}>确认删除</Button>
+        </Group>
       </Modal>
     </Container>
   )

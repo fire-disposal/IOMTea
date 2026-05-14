@@ -35,13 +35,14 @@ interface WsMessage {
 
 export type { EntityStatePayload as EntityState }
 
-export function useRealtime(wardId: string | undefined) {
+export function useRealtime(wardId: string | undefined, mapId?: string) {
   const queryClient = useQueryClient()
   const wsRef = useRef<WebSocket | null>(null)
   const reconnectRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const subscribedRef = useRef(false)
   const setStates = useEntityStateStore((s) => s.setStates)
   const setSimTime = useEntityStateStore((s) => s.setSimTime)
+  const mapIdRef = useRef(mapId)
 
   const connect = useCallback(() => {
     if (!wardId) return
@@ -53,6 +54,9 @@ export function useRealtime(wardId: string | undefined) {
 
     ws.onopen = () => {
       subscribedRef.current = true
+      if (mapIdRef.current) {
+        ws.send(JSON.stringify({ type: 'subscribe_twin', mapId: mapIdRef.current }))
+      }
     }
 
     ws.onmessage = (event) => {
@@ -121,6 +125,7 @@ export function useRealtime(wardId: string | undefined) {
   }, [wardId, queryClient])
 
   useEffect(() => {
+    mapIdRef.current = mapId
     if (!wardId) return
     connect()
     return () => {

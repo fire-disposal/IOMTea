@@ -1,13 +1,12 @@
 import { ActionIcon, Badge, Button, Group, Modal, Paper, SegmentedControl, SimpleGrid, Text, Tooltip } from '@mantine/core'
-import { IconMaximize, IconPlayerPause, IconPlayerPlay, IconSpeedboat, IconBolt } from '@tabler/icons-react'
+import { IconMaximize, IconPlayerPause, IconPlayerPlay, IconSpeedboat, IconBolt, IconPlus } from '@tabler/icons-react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip as ReTooltip, ResponsiveContainer, Legend } from 'recharts'
 import { trpc } from '../trpc'
-import { MapRenderer3D } from '../map/MapRenderer3D'
-import { MapRenderer2D } from '../map/MapRenderer2D'
+import { TwinRenderer3D } from '../map/TwinRenderer3D'
 import { useMapModel } from '../map/useMapModel'
 
 const SCENARIOS = [
@@ -29,7 +28,6 @@ export function PatientOverview() {
   const [timeRange, setTimeRange] = useState('6h')
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [scenarioOpen, setScenarioOpen] = useState(false)
-  const [viewMode, setViewMode] = useState<'3d' | '2d'>('3d')
 
   const [now, setNow] = useState(() => Date.now())
   useEffect(() => {
@@ -57,7 +55,28 @@ export function PatientOverview() {
     { enabled: !!id, refetchInterval: 10000 },
   )
 
-  const mapModel = useMapModel(id ? [id] : [])
+  // Look up the patient's twin map
+  const patientMapQuery = trpc.twin.maps.get.useQuery(
+    { patientId: id },
+    { enabled: !!id },
+  )
+  const mapId = patientMapQuery.data?.id
+  const mapData = useMapModel(mapId)
+
+  // Create map mutation
+  const createMapMut = trpc.twin.maps.create.useMutation()
+  const handleCreateMap = useCallback(() => {
+    if (!id) return
+    createMapMut.mutate({
+      patientId: id,
+      name: '默认家庭',
+      width: 16,
+      height: 11,
+      grid: Array.from({ length: 11 }, () => Array.from({ length: 16 }, () => 0)),
+    }, {
+      onSuccess: () => patientMapQuery.refetch(),
+    })
+  }, [id, createMapMut, patientMapQuery])
 
   const engineStatus = trpc.twin.engine.status.useQuery(
     { patientId: id! },
@@ -91,21 +110,6 @@ export function PatientOverview() {
       .sort(([a], [b]) => a - b)
       .map(([, d]) => d)
   }, [hrQuery.data, spo2Query.data, bpQuery.data, tempQuery.data])
-
-  const patientDataMap = useMemo(() => {
-    if (!id) return undefined
-    const getLast = (arr: any[] | undefined): number | null =>
-      arr?.length ? arr[arr.length - 1].value : null
-    return new Map([[
-      id,
-      {
-        heartRate: getLast(hrQuery.data),
-        spO2: getLast(spo2Query.data),
-        systolicBP: getLast(bpQuery.data),
-        diastolicBP: null,
-      },
-    ]])
-  }, [id, hrQuery.data, spo2Query.data, bpQuery.data])
 
   const es = (engineStatus.data && !Array.isArray(engineStatus.data)) ? engineStatus.data : null
   const isRunning = es?.running ?? false
@@ -147,7 +151,7 @@ export function PatientOverview() {
             <SegmentedControl
               size="xs"
               value={timeRange}
-              onChange={(v) => setTimeRange(v)}
+              onChange={(v: string) => setTimeRange(v)}
               data={[
                 { label: '1h', value: '1h' },
                 { label: '6h', value: '6h' },
@@ -230,12 +234,6 @@ export function PatientOverview() {
                   <IconBolt size={18} />
                 </ActionIcon>
               </Tooltip>
-              <SegmentedControl
-                size="xs"
-                value={viewMode}
-                onChange={(v) => setViewMode(v as '3d' | '2d')}
-                data={[{ label: '3D', value: '3d' }, { label: '2D', value: '2d' }]}
-              />
               <Tooltip label="全屏">
                 <ActionIcon variant="subtle" onClick={() => setIsFullscreen(true)}>
                   <IconMaximize size={18} />
@@ -245,15 +243,23 @@ export function PatientOverview() {
           </Group>
 
           <div style={{ flex: 1, borderRadius: 8, overflow: 'hidden', background: '#f0f4f8' }}>
-            {viewMode === '3d' ? (
-              <Canvas camera={{ position: [10, 12, 10], fov: 50 }} style={{ width: '100%', height: '100%' }}>
-                <OrbitControls enableDamping dampingFactor={0.1} maxPolarAngle={Math.PI / 2.2} />
-                {mapModel && <MapRenderer3D model={mapModel} patientDataMap={patientDataMap} />}
-              </Canvas>
-            ) : (
-              <div style={{ width: '100%', height: '100%', overflow: 'auto', display: 'flex', justifyContent: 'center', alignItems: 'flex-start' }}>
-                {mapModel && <MapRenderer2D model={mapModel} />}
+            {!mapData ? (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 16 }}>
+                <Text c="dimmed" size="sm">地图尚未配置</Text>
+                <Button
+                  size="sm"
+                  leftSection={<IconPlus size={16} />}
+                  onClick={handleCreateMap}
+                  loading={createMapMut.isPending}
+                >
+                  创建地图
+                </Button>
               </div>
+            ) : (
+              <Canvas camera={{ position: [mapData.width / 2, mapData.height, mapData.height / 2], fov: 45 }} style={{ width: '100%', height: '100%' }}>
+                <OrbitControls enableDamping dampingFactor={0.1} maxPolarAngle={Math.PI / 2.5} />
+                <TwinRenderer3D mapData={mapData} />
+              </Canvas>
             )}
           </div>
         </Paper>
@@ -279,15 +285,23 @@ export function PatientOverview() {
 
       <Modal opened={isFullscreen} onClose={() => setIsFullscreen(false)} fullScreen title="数字孪生 — 全屏">
         <div style={{ width: '100%', height: 'calc(100vh - 100px)', borderRadius: 8, overflow: 'hidden', background: '#f0f4f8' }}>
-          {viewMode === '3d' ? (
-            <Canvas camera={{ position: [10, 12, 10], fov: 50 }} style={{ width: '100%', height: '100%' }}>
-              <OrbitControls enableDamping dampingFactor={0.1} maxPolarAngle={Math.PI / 2.2} />
-              {mapModel && <MapRenderer3D model={mapModel} patientDataMap={patientDataMap} />}
-            </Canvas>
-          ) : (
-            <div style={{ width: '100%', height: '100%', overflow: 'auto', display: 'flex', justifyContent: 'center', alignItems: 'flex-start' }}>
-              {mapModel && <MapRenderer2D model={mapModel} />}
+          {!mapData ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 16 }}>
+              <Text c="dimmed" size="sm">地图尚未配置</Text>
+              <Button
+                size="sm"
+                leftSection={<IconPlus size={16} />}
+                onClick={handleCreateMap}
+                loading={createMapMut.isPending}
+              >
+                创建地图
+              </Button>
             </div>
+          ) : (
+            <Canvas camera={{ position: [mapData.width / 2, mapData.height, mapData.height / 2], fov: 45 }} style={{ width: '100%', height: '100%' }}>
+              <OrbitControls enableDamping dampingFactor={0.1} maxPolarAngle={Math.PI / 2.5} />
+              <TwinRenderer3D mapData={mapData} />
+            </Canvas>
           )}
         </div>
       </Modal>

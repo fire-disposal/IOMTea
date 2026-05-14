@@ -19,6 +19,13 @@ export const patientCreateSchema = z.object({
   gender: z.enum(GENDERS).optional(),
   room: z.string().max(20).optional(),
   bedNumber: z.string().max(20).optional(),
+  heightCm: z.number().min(0).max(300).optional(),
+  weightKg: z.number().min(0).max(500).optional(),
+  bloodType: z.enum(['A', 'B', 'AB', 'O']).optional(),
+  phone: z.string().max(20).optional(),
+  address: z.string().optional(),
+  emergencyContact: z.string().max(100).optional(),
+  emergencyPhone: z.string().max(20).optional(),
   tags: z.record(z.string(), z.unknown()).optional(),
 })
 

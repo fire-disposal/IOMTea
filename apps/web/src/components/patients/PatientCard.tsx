@@ -1,5 +1,5 @@
-import { Badge, Card, Group, Stack, Text, ThemeIcon } from '@mantine/core'
-import { IconHeart, IconLungs, IconAlertCircle } from '@tabler/icons-react'
+import { ActionIcon, Badge, Card, Group, Stack, Text, ThemeIcon } from '@mantine/core'
+import { IconHeart, IconLungs, IconAlertCircle, IconTrash } from '@tabler/icons-react'
 import { useNavigate } from 'react-router-dom'
 import { trpc } from '../../trpc'
 
@@ -14,9 +14,10 @@ interface PatientCardProps {
   }
   alertCount?: number
   deviceOnline?: boolean
+  onDelete?: (id: string) => void
 }
 
-export function PatientCard({ patient, alertCount = 0, deviceOnline = false }: PatientCardProps) {
+export function PatientCard({ patient, alertCount = 0, deviceOnline = false, onDelete }: PatientCardProps) {
   const latestVitals = trpc.data.latest.useQuery(
     { patientId: patient.id },
     { enabled: !!patient.id, refetchInterval: 15000 }
@@ -40,9 +41,21 @@ export function PatientCard({ patient, alertCount = 0, deviceOnline = false }: P
       shadow="sm"
       padding="lg"
       radius="md"
-      style={{ cursor: 'pointer', borderTop: '3px solid var(--mantine-color-matchaGreen-5)' }}
+      style={{ cursor: 'pointer', borderTop: '3px solid var(--mantine-color-matchaGreen-5)', position: 'relative' }}
       onClick={() => navigate(`/patients/${patient.id}`)}
     >
+      {onDelete && (
+        <div style={{ position: 'absolute', top: 8, right: 8 }}>
+          <ActionIcon
+            variant="subtle"
+            color="red"
+            size="sm"
+            onClick={(e) => { e.stopPropagation(); onDelete(patient.id) }}
+          >
+            <IconTrash size={14} />
+          </ActionIcon>
+        </div>
+      )}
       <Group justify="space-between" mb="xs">
         <Group gap="xs">
           <Text fw={600} size="lg">{patient.name}</Text>

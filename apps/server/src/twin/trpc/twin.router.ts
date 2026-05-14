@@ -106,7 +106,14 @@ export const twinRouter = router({
   maps: router({
     get: protectedProcedure.input(mapGetSchema).query(async ({ ctx, input }) => {
       if (input.id) {
-        return (await loadMapData(ctx.db as any, input.id)).map
+        const data = await loadMapData(ctx.db as any, input.id)
+        return data.map
+      }
+      if (input.patientId) {
+        const rows = await (ctx.db as any).select().from(twinMaps).where(eq(twinMaps.patientId, input.patientId)).limit(1)
+        if (rows.length === 0) return null
+        const data = await loadMapData(ctx.db as any, rows[0].id)
+        return data.map
       }
       return null
     }),

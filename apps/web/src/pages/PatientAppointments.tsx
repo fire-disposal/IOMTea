@@ -1,7 +1,7 @@
 import { ActionIcon, Badge, Button, Group, Modal, NumberInput, Paper, Select, Stack, Table, Tabs, Text, TextInput, Textarea } from '@mantine/core'
 import { useForm } from '@mantine/form'
 import { notifications } from '@mantine/notifications'
-import { IconCalendar, IconTrash } from '@tabler/icons-react'
+import { IconCalendar, IconTrash, IconEdit } from '@tabler/icons-react'
 import { useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { trpc } from '../trpc'
@@ -28,6 +28,7 @@ export function PatientAppointments() {
   const { id } = useParams<{ id: string }>()
   const [createOpen, setCreateOpen] = useState(false)
   const [cancelTarget, setCancelTarget] = useState<string | null>(null)
+  const [editingTarget, setEditingTarget] = useState<string | null>(null)
   const utils = trpc.useUtils()
 
   const appts = trpc.appointment.list.useQuery({ patientId: id! }, { enabled: !!id })
@@ -39,6 +40,14 @@ export function PatientAppointments() {
       setCreateOpen(false)
       form.reset()
       notifications.show({ title: '预约已创建', message: '', color: 'green' })
+    },
+  })
+
+  const update = trpc.appointment.update.useMutation({
+    onSuccess: () => {
+      utils.appointment.list.invalidate()
+      setEditingTarget(null)
+      notifications.show({ title: '预约已更新', message: '', color: 'green' })
     },
   })
 
@@ -132,6 +141,19 @@ export function PatientAppointments() {
                             <IconTrash size={14} />
                           </ActionIcon>
                         )}
+                        <ActionIcon size="sm" variant="subtle" onClick={() => {
+                          form.setValues({
+                            appointmentType: a.appointmentType,
+                            scheduledAt: a.scheduledAt ? new Date(a.scheduledAt).toISOString().slice(0, 16) : '',
+                            durationMinutes: a.durationMinutes ?? 30,
+                            location: a.location || '',
+                            reason: a.reason || '',
+                            notes: a.notes || '',
+                          })
+                          setEditingTarget(a.id)
+                        }}>
+                          <IconEdit size={14} />
+                        </ActionIcon>
                       </Table.Td>
                     </Table.Tr>
                   ))}
@@ -206,6 +228,45 @@ export function PatientAppointments() {
               {...form.getInputProps('notes')}
             />
             <Button type="submit" fullWidth loading={create.isPending}>创建</Button>
+          </Stack>
+        </form>
+      </Modal>
+
+      <Modal opened={!!editingTarget} onClose={() => setEditingTarget(null)} title="编辑预约">
+        <form onSubmit={form.onSubmit((vals) => update.mutate({ id: editingTarget!, ...vals } as any))}>
+          <Stack gap="sm">
+            <Select
+              label="预约类型"
+              required
+              data={APPOINTMENT_TYPES}
+              {...form.getInputProps('appointmentType')}
+            />
+            <TextInput
+              label="预约时间"
+              required
+              type="datetime-local"
+              {...form.getInputProps('scheduledAt')}
+            />
+            <NumberInput
+              label="时长（分钟）"
+              min={5}
+              max={480}
+              {...form.getInputProps('durationMinutes')}
+            />
+            <Select
+              label="地点"
+              data={['居家', '线上', 'XX医院']}
+              {...form.getInputProps('location')}
+            />
+            <TextInput
+              label="原因"
+              {...form.getInputProps('reason')}
+            />
+            <Textarea
+              label="备注"
+              {...form.getInputProps('notes')}
+            />
+            <Button type="submit" fullWidth loading={update.isPending}>保存</Button>
           </Stack>
         </form>
       </Modal>
