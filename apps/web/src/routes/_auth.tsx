@@ -5,20 +5,28 @@ import {
 import { useDisclosure } from '@mantine/hooks'
 import {
   IconDashboard, IconSettings, IconLogout, IconUsers,
-  IconChartLine, IconBell, IconCalendar, IconPill,
+  IconChartLine, IconBell, IconCalendar, IconPill, IconDevices,
 } from '@tabler/icons-react'
 import { Outlet, createFileRoute, redirect, useNavigate, useRouterState } from '@tanstack/react-router'
 import { useAuthStore } from '../store/auth'
 import { StoreProvider } from '../StoreProvider'
 
-const navItems = [
+const monitorItems = [
   { label: '工作台', icon: IconDashboard, path: '/' },
   { label: '居民管理', icon: IconUsers, path: '/patients' },
   { label: '健康趋势', icon: IconChartLine, path: '/trends' },
+]
+
+const manageItems = [
   { label: '异常处置', icon: IconBell, path: '/alerts' },
   { label: '随访管理', icon: IconCalendar, path: '/appointments' },
   { label: '用药监督', icon: IconPill, path: '/medications' },
+]
+
+const adminItems = [
   { label: 'IoT 配置', icon: IconSettings, path: '/iot/pins' },
+  { label: '系统设置', icon: IconDevices, path: '/settings' },
+  { label: '用户管理', icon: IconSettings, path: '/settings/users' },
 ]
 
 const pageStyles = [
@@ -38,7 +46,11 @@ function DashboardLayout() {
   const logout = useAuthStore((s) => s.logout)
   const role = useAuthStore((s) => s.role)
   const isAdmin = role === 'admin'
-  const currentPage = navItems.find((item) => item.path === '/' ? pathname === '/' : pathname.startsWith(item.path))
+
+  const allItems = [...monitorItems, ...manageItems, ...adminItems]
+  const currentPage = allItems.find((item) => item.path === '/' ? pathname === '/' : pathname.startsWith(item.path))
+
+  const isActive = (path: string) => path === '/' ? pathname === '/' : pathname.startsWith(path)
 
   return (
     <AppShell header={{ height: 56 }} navbar={{ width: 220, breakpoint: 'sm', collapsed: { mobile: !opened } }} padding="md">
@@ -58,31 +70,34 @@ function DashboardLayout() {
         </Group>
       </AppShell.Header>
       <AppShell.Navbar p="xs">
-        {navItems.map((item) => (
+        <Text size="xs" c="dimmed" fw={500} px="sm" pt="xs" pb={4}>监控</Text>
+        {monitorItems.map((item) => (
           <NavLink key={item.label} label={item.label}
             leftSection={<item.icon size={20} stroke={1.5} />}
-            active={item.path === '/' ? pathname === '/' : pathname.startsWith(item.path)}
+            active={isActive(item.path)}
             onClick={() => navigate({ to: item.path })} variant="light" mb={2}
           />
         ))}
-        <Divider my="sm" />
+        <Divider my="xs" />
+        <Text size="xs" c="dimmed" fw={500} px="sm" pt="xs" pb={4}>管理</Text>
+        {manageItems.map((item) => (
+          <NavLink key={item.label} label={item.label}
+            leftSection={<item.icon size={20} stroke={1.5} />}
+            active={isActive(item.path)}
+            onClick={() => navigate({ to: item.path })} variant="light" mb={2}
+          />
+        ))}
         {isAdmin && (
           <>
-            <NavLink
-              label="系统设置"
-              leftSection={<IconSettings size={20} stroke={1.5} />}
-              active={pathname.startsWith('/settings') && !pathname.startsWith('/settings/users')}
-              onClick={() => navigate({ to: '/settings' })}
-              variant="light"
-            />
-            <NavLink
-              label="用户管理"
-              leftSection={<IconSettings size={20} stroke={1.5} />}
-              active={pathname.startsWith('/settings/users')}
-              onClick={() => navigate({ to: '/settings/users' })}
-              variant="light"
-              mb={2}
-            />
+            <Divider my="xs" />
+            <Text size="xs" c="dimmed" fw={500} px="sm" pt="xs" pb={4}>系统</Text>
+            {adminItems.map((item) => (
+              <NavLink key={item.label} label={item.label}
+                leftSection={<item.icon size={20} stroke={1.5} />}
+                active={isActive(item.path)}
+                onClick={() => navigate({ to: item.path })} variant="light" mb={2}
+              />
+            ))}
           </>
         )}
       </AppShell.Navbar>

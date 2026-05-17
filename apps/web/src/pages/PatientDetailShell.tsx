@@ -26,7 +26,6 @@ export function PatientDetailShell({ children }: { children: ReactNode }) {
   const isOnline = (latestVitals.data?.length ?? 0) > 0
 
   const tabValue = pathname.includes('/alert-rules') ? 'alert-rules'
-    : pathname.includes('/map-editor') ? 'map-editor'
     : pathname.includes('/alerts') ? 'alerts'
     : pathname.includes('/medications') ? 'medications'
     : pathname.includes('/appointments') ? 'appointments'
@@ -121,7 +120,6 @@ export function PatientDetailShell({ children }: { children: ReactNode }) {
           <Tabs.Tab value="medications">用药</Tabs.Tab>
           <Tabs.Tab value="appointments">预约</Tabs.Tab>
           <Tabs.Tab value="profile">档案</Tabs.Tab>
-          <Tabs.Tab value="map-editor">地图编辑</Tabs.Tab>
         </Tabs.List>
       </Tabs>
 
