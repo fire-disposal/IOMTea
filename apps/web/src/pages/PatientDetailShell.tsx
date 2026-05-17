@@ -27,7 +27,6 @@ export function PatientDetailShell({ children }: { children: ReactNode }) {
   const tabValue = pathname.includes('/alert-rules') ? 'alert-rules'
     : pathname.includes('/alerts') ? 'alerts'
     : pathname.includes('/medications') ? 'medications'
-    : pathname.includes('/appointments') ? 'appointments'
     : pathname.includes('/profile') ? 'profile'
     : 'overview'
 
@@ -109,7 +108,6 @@ export function PatientDetailShell({ children }: { children: ReactNode }) {
           <Tabs.Tab value="alerts">告警</Tabs.Tab>
           <Tabs.Tab value="alert-rules">规则</Tabs.Tab>
           <Tabs.Tab value="medications">用药</Tabs.Tab>
-          <Tabs.Tab value="appointments">预约</Tabs.Tab>
           <Tabs.Tab value="profile">档案</Tabs.Tab>
         </Tabs.List>
       </Tabs>

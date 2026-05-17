@@ -5,7 +5,7 @@ import {
 import { useDisclosure } from '@mantine/hooks'
 import {
   IconDashboard, IconSettings, IconLogout, IconUsers,
-  IconChartLine, IconBell, IconCalendar, IconPill, IconDevices,
+  IconChartLine, IconBell, IconPill, IconDevices,
 } from '@tabler/icons-react'
 import { Outlet, createFileRoute, redirect, useNavigate, useRouterState } from '@tanstack/react-router'
 import { useAuthStore } from '../store/auth'
@@ -19,7 +19,6 @@ const monitorItems = [
 
 const manageItems = [
   { label: '异常处置', icon: IconBell, path: '/alerts' },
-  { label: '随访管理', icon: IconCalendar, path: '/appointments' },
   { label: '用药监督', icon: IconPill, path: '/medications' },
 ]
 

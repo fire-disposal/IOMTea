@@ -12,7 +12,6 @@ const authPatientsRoute = createRoute({ getParentRoute: () => authRoute, path: '
 const authTrendsRoute = createRoute({ getParentRoute: () => authRoute, path: 'trends' } as any)
 const authAlertsRoute = createRoute({ getParentRoute: () => authRoute, path: 'alerts' } as any)
 const authMedicationsRoute = createRoute({ getParentRoute: () => authRoute, path: 'medications' } as any)
-const authAppointmentsRoute = createRoute({ getParentRoute: () => authRoute, path: 'appointments' } as any)
 const authIotPinsRoute = createRoute({ getParentRoute: () => authRoute, path: 'iot/pins' } as any)
 const authSettingsRoute = createRoute({ getParentRoute: () => authRoute, path: 'settings' } as any)
 const authSettingsUsersRoute = createRoute({ getParentRoute: () => authRoute, path: 'settings/users' } as any)
@@ -21,7 +20,6 @@ const authPatientIndexRoute = createRoute({ getParentRoute: () => authPatientDet
 const authPatientAlertsRoute = createRoute({ getParentRoute: () => authPatientDetailRoute, path: 'alerts' } as any)
 const authPatientAlertRulesRoute = createRoute({ getParentRoute: () => authPatientDetailRoute, path: 'alert-rules' } as any)
 const authPatientMedicationsRoute = createRoute({ getParentRoute: () => authPatientDetailRoute, path: 'medications' } as any)
-const authPatientAppointmentsRoute = createRoute({ getParentRoute: () => authPatientDetailRoute, path: 'appointments' } as any)
 const authPatientProfileRoute = createRoute({ getParentRoute: () => authPatientDetailRoute, path: 'profile' } as any)
 const authPatientMapEditorRoute = createRoute({ getParentRoute: () => authPatientDetailRoute, path: 'map-editor' } as any)
 
@@ -29,11 +27,11 @@ const routeTree = rootRoute.addChildren([
   loginRoute,
   authRoute.addChildren([
     authIndexRoute, authPatientsRoute, authTrendsRoute,
-    authAlertsRoute, authMedicationsRoute, authAppointmentsRoute,
+    authAlertsRoute, authMedicationsRoute,
     authIotPinsRoute, authSettingsRoute, authSettingsUsersRoute,
     authPatientDetailRoute.addChildren([
       authPatientIndexRoute, authPatientAlertsRoute, authPatientAlertRulesRoute,
-      authPatientMedicationsRoute, authPatientAppointmentsRoute,
+      authPatientMedicationsRoute,
       authPatientProfileRoute, authPatientMapEditorRoute,
     ]),
   ]),
