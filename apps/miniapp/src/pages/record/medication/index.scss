@@ -1,7 +1,7 @@
 .med-page {
   min-height: 100vh;
   padding: 24px;
-  background: #f8f9fa;
+  background: var(--bg-page);
 }
 
 .med-header {
@@ -12,7 +12,21 @@
 .med-title {
   font-size: 28px;
   font-weight: 600;
-  color: #1a1a2e;
+  color: var(--text-primary);
+}
+
+.med-empty {
+  text-align: center;
+  padding: 60px 0;
+  color: var(--text-secondary);
+  font-size: 16px;
+}
+
+.med-empty-hint {
+  display: block;
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 8px;
 }
 
 .med-list {
@@ -25,7 +39,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #fff;
+  background: var(--bg-card);
   border-radius: 12px;
   padding: 16px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.08);
@@ -43,17 +57,17 @@
 .med-drug {
   font-size: 18px;
   font-weight: 600;
-  color: #1a1a2e;
+  color: var(--text-primary);
 }
 
 .med-dosage {
   font-size: 14px;
-  color: #6c757d;
+  color: var(--text-secondary);
 }
 
 .med-time {
   font-size: 14px;
-  color: #6c757d;
+  color: var(--text-secondary);
 }
 
 .med-actions {
@@ -69,13 +83,13 @@
 }
 
 .med-btn--take {
-  background: #28a745;
+  background: var(--color-success);
   color: #fff;
 }
 
 .med-btn--skip {
   background: #e9ecef;
-  color: #6c757d;
+  color: var(--text-secondary);
 }
 
 .med-status {
@@ -83,5 +97,5 @@
   font-weight: 500;
 }
 
-.med-status--taken { color: #28a745; }
-.med-status--skipped { color: #6c757d; }
+.med-status--taken { color: var(--color-success); }
+.med-status--skipped { color: var(--text-secondary); }

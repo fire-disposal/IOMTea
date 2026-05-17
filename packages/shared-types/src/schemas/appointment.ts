@@ -28,7 +28,7 @@ export const followupCreateSchema = z.object({
   patientId: z.string().uuid(),
   type: z.enum(['phone', 'video', 'home_visit', 'clinic', 'message']),
   summary: z.string().optional(),
-  vitalSigns: z.record(z.any()).optional(),
+  vitalSigns: z.record(z.unknown()).optional(),
   assessment: z.string().optional(),
   nextFollowupAt: z.string().optional(),
 })

@@ -13,14 +13,8 @@ interface MedItem {
   skipped?: boolean
 }
 
-const MOCK_MEDS: MedItem[] = [
-  { id: '1', drug: '二甲双胍', dosage: '500mg', scheduled_time: '08:00' },
-  { id: '2', drug: '氨氯地平', dosage: '5mg', scheduled_time: '08:00' },
-  { id: '3', drug: '阿托伐他汀', dosage: '10mg', scheduled_time: '20:00' },
-]
-
 export default function MedicationRecord() {
-  const [meds, setMeds] = useState(MOCK_MEDS)
+  const [meds, setMeds] = useState<MedItem[]>([])
 
   const handleTake = useCallback((id: string) => {
     setMeds(prev => prev.map(m => m.id === id ? { ...m, taken: true, skipped: false } : m))
@@ -55,6 +49,12 @@ export default function MedicationRecord() {
         <Text className='med-title'>今日用药</Text>
       </View>
       <ScrollView className='med-list' scrollY>
+        {meds.length === 0 && (
+          <View className='med-empty'>
+            <Text>暂无用药计划</Text>
+            <Text className='med-empty-hint'>请通过 Web 端添加用药方案</Text>
+          </View>
+        )}
         {meds.map(med => (
           <View key={med.id} className={`med-item ${med.taken ? 'med-item--taken' : ''} ${med.skipped ? 'med-item--skipped' : ''}`}>
             <View className='med-info'>

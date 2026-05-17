@@ -1,4 +1,4 @@
-import { Badge, Group, Tabs, Text } from '@mantine/core'
+import { Alert, Badge, Group, Skeleton, Tabs, Text } from '@mantine/core'
 import { IconArrowLeft, IconHeart, IconLungs, IconHeartbeat, IconTemperatureCelsius } from '@tabler/icons-react'
 import { Outlet, useNavigate, useParams, useLocation } from 'react-router-dom'
 import { trpc } from '../trpc'
@@ -31,8 +31,25 @@ export function PatientDetailShell() {
     : location.pathname.includes('/profile') ? 'profile'
     : 'overview'
 
-  if (patient.isLoading) return null
-  if (!patient.data) return null
+  if (patient.isLoading) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 56px)' }}>
+        <Group px="lg" py="sm" bg="matchaGreen.1">
+          <Skeleton height={24} width={200} radius="sm" />
+        </Group>
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Skeleton height={300} width="90%" radius="md" />
+        </div>
+      </div>
+    )
+  }
+  if (!patient.data) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 56px)', alignItems: 'center', justifyContent: 'center' }}>
+        <Alert color="red" title="患者不存在">无法加载该患者信息，请返回列表重试。</Alert>
+      </div>
+    )
+  }
 
   const p = patient.data as any
   const es = (engineStatus.data && !Array.isArray(engineStatus.data)) ? engineStatus.data : null

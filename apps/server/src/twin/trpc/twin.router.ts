@@ -7,6 +7,7 @@ import {
 import { z } from 'zod'
 import { eq } from 'drizzle-orm'
 import { protectedProcedure, router } from '../../core/trpc/index'
+import { requirePermission } from '../../core/trpc/middleware/rbac'
 import { twinMaps, twinRooms, twinEntities } from '../../core/db'
 import { loadMapData } from '../db-writer'
 import { createEngine, startEngine, stopEngine, setSpeed, getEngineStatus, listEngines, getEngine, injectScenario, type PatientEngine } from '../engine'
@@ -43,7 +44,8 @@ function buildGrid(mapData: Awaited<ReturnType<typeof loadMapData>>): number[][]
 
 export const twinRouter = router({
   maps: router({
-    get: protectedProcedure.input(mapGetSchema).query(async ({ ctx, input }) => {
+    get: protectedProcedure
+      .use(requirePermission('twin:read')).input(mapGetSchema).query(async ({ ctx, input }) => {
       if (input.id) {
         const data = await loadMapData(ctx.db as any, input.id)
         return data.map
@@ -57,7 +59,8 @@ export const twinRouter = router({
       return null
     }),
 
-    create: protectedProcedure.input(mapCreateSchema).mutation(async ({ ctx, input }) => {
+    create: protectedProcedure
+      .use(requirePermission('twin:manage')).input(mapCreateSchema).mutation(async ({ ctx, input }) => {
       const [map] = await (ctx.db as any).insert(twinMaps).values({
         patientId: input.patientId,
         name: input.name,
@@ -68,7 +71,8 @@ export const twinRouter = router({
       return map
     }),
 
-    update: protectedProcedure.input(mapUpdateSchema).mutation(async ({ ctx, input }) => {
+    update: protectedProcedure
+      .use(requirePermission('twin:manage')).input(mapUpdateSchema).mutation(async ({ ctx, input }) => {
       const { id, ...data } = input
       const [updated] = await (ctx.db as any).update(twinMaps).set(data).where(eq(twinMaps.id, id)).returning()
       return updated
@@ -76,13 +80,15 @@ export const twinRouter = router({
   }),
 
   rooms: router({
-    list: protectedProcedure.input(z.object({ mapId: z.string().uuid() })).query(async ({ ctx, input }) => {
+    list: protectedProcedure
+      .use(requirePermission('twin:read')).input(z.object({ mapId: z.string().uuid() })).query(async ({ ctx, input }) => {
       return (ctx.db as any).select().from(twinRooms).where(eq(twinRooms.mapId, input.mapId))
     }),
   }),
 
   entities: router({
-    list: protectedProcedure.input(entityListInputSchema).query(async ({ ctx, input }) => {
+    list: protectedProcedure
+      .use(requirePermission('twin:read')).input(entityListInputSchema).query(async ({ ctx, input }) => {
       const conditions = [eq(twinEntities.mapId, input.mapId)]
       if (input.category) conditions.push(eq(twinEntities.category, input.category as any))
       if (input.roomId) conditions.push(eq(twinEntities.roomId, input.roomId))
@@ -91,7 +97,8 @@ export const twinRouter = router({
   }),
 
   engine: router({
-    start: protectedProcedure.input(z.object({
+    start: protectedProcedure
+      .use(requirePermission('twin:manage')).input(z.object({
       profileId: z.string().optional().default('elderly-cardiac'),
       name: z.string().optional().default('Simulated Patient'),
       mapId: z.string().uuid().optional(),
@@ -111,22 +118,26 @@ export const twinRouter = router({
       return getEngineStatus(engine.patientId)
     }),
 
-    stop: protectedProcedure.input(z.object({ patientId: z.string().uuid() })).mutation(async ({ ctx, input }) => {
+    stop: protectedProcedure
+      .use(requirePermission('twin:manage')).input(z.object({ patientId: z.string().uuid() })).mutation(async ({ ctx, input }) => {
       stopEngine(input.patientId)
       return { success: true }
     }),
 
-    pause: protectedProcedure.input(z.object({ patientId: z.string().uuid() })).mutation(async ({ ctx, input }) => {
+    pause: protectedProcedure
+      .use(requirePermission('twin:manage')).input(z.object({ patientId: z.string().uuid() })).mutation(async ({ ctx, input }) => {
       stopEngine(input.patientId)
       return { success: true }
     }),
 
-    resume: protectedProcedure.input(z.object({ patientId: z.string().uuid() })).mutation(async ({ ctx, input }) => {
+    resume: protectedProcedure
+      .use(requirePermission('twin:manage')).input(z.object({ patientId: z.string().uuid() })).mutation(async ({ ctx, input }) => {
       await startEngine(ctx.db as any, input.patientId)
       return { success: true }
     }),
 
     setSpeed: protectedProcedure
+      .use(requirePermission('twin:manage'))
       .input(z.object({ patientId: z.string().uuid(), speed: z.number().min(0.1).max(60) }))
       .mutation(async ({ ctx, input }) => {
         const ok = setSpeed(input.patientId, input.speed)
@@ -134,6 +145,7 @@ export const twinRouter = router({
       }),
 
     status: protectedProcedure
+      .use(requirePermission('twin:read'))
       .input(z.object({ patientId: z.string().uuid().optional() }))
       .query(async ({ ctx, input }) => {
         if (input.patientId) {
@@ -144,6 +156,7 @@ export const twinRouter = router({
       }),
 
     injectScenario: protectedProcedure
+      .use(requirePermission('twin:manage'))
       .input(z.object({ patientId: z.string().uuid(), type: z.enum(SCENARIO_TYPES) }))
       .mutation(async ({ ctx, input }) => {
         const ok = await injectScenario(ctx.db as any, input.patientId, input.type)
