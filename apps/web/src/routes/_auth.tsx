@@ -13,7 +13,7 @@ import { StoreProvider } from '../StoreProvider'
 
 const navItems = [
   { label: '工作台', icon: IconDashboard, path: '/' },
-  { label: '居民管理', icon: IconUsers, path: '/residents' },
+  { label: '居民管理', icon: IconUsers, path: '/patients' },
   { label: '健康趋势', icon: IconChartLine, path: '/trends' },
   { label: '异常处置', icon: IconBell, path: '/alerts' },
   { label: '随访管理', icon: IconCalendar, path: '/appointments' },
@@ -67,11 +67,23 @@ function DashboardLayout() {
         ))}
         <Divider my="sm" />
         {isAdmin && (
-          <NavLink label="系统设置"
-            leftSection={<IconSettings size={20} stroke={1.5} />}
-            active={pathname.startsWith('/settings')}
-            onClick={() => navigate({ to: '/settings' })} variant="light"
-          />
+          <>
+            <NavLink
+              label="系统设置"
+              leftSection={<IconSettings size={20} stroke={1.5} />}
+              active={pathname.startsWith('/settings') && !pathname.startsWith('/settings/users')}
+              onClick={() => navigate({ to: '/settings' })}
+              variant="light"
+            />
+            <NavLink
+              label="用户管理"
+              leftSection={<IconSettings size={20} stroke={1.5} />}
+              active={pathname.startsWith('/settings/users')}
+              onClick={() => navigate({ to: '/settings/users' })}
+              variant="light"
+              mb={2}
+            />
+          </>
         )}
       </AppShell.Navbar>
       <AppShell.Main>

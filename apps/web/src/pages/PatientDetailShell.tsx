@@ -25,7 +25,8 @@ export function PatientDetailShell({ children }: { children: ReactNode }) {
   const temp = latestVitals.data?.find((v: any) => v.metric === 'temperature')?.value
   const isOnline = (latestVitals.data?.length ?? 0) > 0
 
-  const tabValue = pathname.includes('/map-editor') ? 'map-editor'
+  const tabValue = pathname.includes('/alert-rules') ? 'alert-rules'
+    : pathname.includes('/map-editor') ? 'map-editor'
     : pathname.includes('/alerts') ? 'alerts'
     : pathname.includes('/medications') ? 'medications'
     : pathname.includes('/appointments') ? 'appointments'
@@ -116,6 +117,7 @@ export function PatientDetailShell({ children }: { children: ReactNode }) {
         <Tabs.List px="md" style={{ borderBottom: '1px solid var(--mantine-color-gray-2)' }}>
           <Tabs.Tab value="overview">概览</Tabs.Tab>
           <Tabs.Tab value="alerts">告警</Tabs.Tab>
+          <Tabs.Tab value="alert-rules">规则</Tabs.Tab>
           <Tabs.Tab value="medications">用药</Tabs.Tab>
           <Tabs.Tab value="appointments">预约</Tabs.Tab>
           <Tabs.Tab value="profile">档案</Tabs.Tab>
