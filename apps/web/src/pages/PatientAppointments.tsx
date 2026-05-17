@@ -3,7 +3,7 @@ import { useForm } from '@mantine/form'
 import { notifications } from '@mantine/notifications'
 import { IconCalendar, IconTrash, IconEdit } from '@tabler/icons-react'
 import { useMemo, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams } from '@tanstack/react-router'
 import { trpc } from '../trpc'
 import { StateEmpty } from '../components/shared/StateComponents'
 
@@ -25,7 +25,7 @@ const FOLLOWUP_LABELS: Record<string, string> = {
 }
 
 export function PatientAppointments() {
-  const { id } = useParams<{ id: string }>()
+  const { id } = (useParams as any)({ from: '/_auth/patients/$id' })
   const [createOpen, setCreateOpen] = useState(false)
   const [cancelTarget, setCancelTarget] = useState<string | null>(null)
   const [editingTarget, setEditingTarget] = useState<string | null>(null)

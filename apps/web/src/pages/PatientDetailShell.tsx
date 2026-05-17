@@ -1,6 +1,7 @@
 import { Alert, Badge, Group, Skeleton, Tabs, Text } from '@mantine/core'
 import { IconArrowLeft, IconHeart, IconLungs, IconHeartbeat, IconTemperatureCelsius } from '@tabler/icons-react'
-import { Outlet, useNavigate, useParams, useLocation } from 'react-router-dom'
+import { useNavigate, useParams, useRouterState } from '@tanstack/react-router'
+import type { ReactNode } from 'react'
 import { trpc } from '../trpc'
 
 function genderLabel(g: string) {
@@ -9,10 +10,10 @@ function genderLabel(g: string) {
   return '其他'
 }
 
-export function PatientDetailShell() {
-  const { id } = useParams<{ id: string }>()
+export function PatientDetailShell({ children }: { children: ReactNode }) {
+  const { id } = (useParams as any)({ from: '/_auth/patients/$id' })
   const navigate = useNavigate()
-  const location = useLocation()
+  const pathname = useRouterState({ select: (s) => s.location.pathname })
   const patient = trpc.patient.byId.useQuery({ id: id! }, { enabled: !!id })
   const latestVitals = trpc.data.latest.useQuery({ patientId: id! }, { enabled: !!id, refetchInterval: 15000 })
   const engineStatus = trpc.twin.engine.status.useQuery({ patientId: id! }, { enabled: !!id, refetchInterval: 5000 })
@@ -24,11 +25,11 @@ export function PatientDetailShell() {
   const temp = latestVitals.data?.find((v: any) => v.metric === 'temperature')?.value
   const isOnline = (latestVitals.data?.length ?? 0) > 0
 
-  const tabValue = location.pathname.includes('/map-editor') ? 'map-editor'
-    : location.pathname.includes('/alerts') ? 'alerts'
-    : location.pathname.includes('/medications') ? 'medications'
-    : location.pathname.includes('/appointments') ? 'appointments'
-    : location.pathname.includes('/profile') ? 'profile'
+  const tabValue = pathname.includes('/map-editor') ? 'map-editor'
+    : pathname.includes('/alerts') ? 'alerts'
+    : pathname.includes('/medications') ? 'medications'
+    : pathname.includes('/appointments') ? 'appointments'
+    : pathname.includes('/profile') ? 'profile'
     : 'overview'
 
   if (patient.isLoading) {
@@ -67,7 +68,7 @@ export function PatientDetailShell() {
         wrap="nowrap"
       >
         <Group gap="sm" wrap="nowrap">
-          <IconArrowLeft size={20} style={{ cursor: 'pointer', flexShrink: 0 }} onClick={() => navigate('/patients')} />
+          <IconArrowLeft size={20} style={{ cursor: 'pointer', flexShrink: 0 }} onClick={() => navigate({ to: '/patients' })} />
           <div>
             <Text fw={700} size="md">{p.name}</Text>
             <Text size="xs" c="dimmed">
@@ -107,7 +108,11 @@ export function PatientDetailShell() {
         </Group>
       </Group>
 
-      <Tabs value={tabValue} onChange={(v) => navigate(`/patients/${id}/${v === 'overview' ? '' : v}`)}>
+      <Tabs value={tabValue} onChange={(v) => {
+        if (!id) return
+        if (v === 'overview') navigate({ to: '/patients/$id', params: { id } as any })
+        else navigate({ to: '/patients/$id/' + v as any, params: { id } as any })
+      }}>
         <Tabs.List px="md" style={{ borderBottom: '1px solid var(--mantine-color-gray-2)' }}>
           <Tabs.Tab value="overview">概览</Tabs.Tab>
           <Tabs.Tab value="alerts">告警</Tabs.Tab>
@@ -119,7 +124,7 @@ export function PatientDetailShell() {
       </Tabs>
 
       <div style={{ flex: 1, minHeight: 0, overflow: 'auto', padding: 16 }}>
-        <Outlet />
+        {children}
       </div>
     </div>
   )

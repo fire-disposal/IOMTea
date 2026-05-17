@@ -1,11 +1,11 @@
 import React, { useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams } from '@tanstack/react-router'
 import { Container, Title, Loader, Alert, Badge, Group, Paper } from '@mantine/core'
 import { useHomeMap } from '../hooks/useHomeMap'
 import { HomeMapCanvas } from '../twin'
 
 export function HomeMapViewerPage() {
-  const { patientId } = useParams<{ patientId: string }>()
+  const { patientId } = (useParams as any)({ from: '/_auth/patients/$id/map' })
   const { runtime, isLoading, error } = useHomeMap(patientId)
   const [selectedRoom, setSelectedRoom] = useState<string | undefined>()
 

@@ -3,7 +3,7 @@ import { Container, Paper, Table, Badge, Text, Title, SimpleGrid, ThemeIcon, Gro
 import { IconPill, IconUsers } from '@tabler/icons-react'
 import { trpc } from '../trpc'
 import { QueryGate } from '../components/shared/QueryGate'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from '@tanstack/react-router'
 
 const STATUS_COLORS: Record<string, string> = { active: 'green', completed: 'blue', paused: 'orange', cancelled: 'gray' }
 const STATUS_LABELS: Record<string, string> = { active: '使用中', completed: '已完成', paused: '暂停', cancelled: '取消' }
@@ -87,7 +87,7 @@ export function GlobalMedications() {
                   <Table.Td><Badge size="sm" variant="light" color="gray">{ROUTE_LABELS[m.route] || m.route}</Badge></Table.Td>
                   <Table.Td><Badge size="sm" color={STATUS_COLORS[m.status] || 'gray'}>{STATUS_LABELS[m.status] || m.status}</Badge></Table.Td>
                   <Table.Td>
-                    <Button size="xs" variant="light" onClick={() => navigate(`/patients/${m.patientId}/medications`)}>
+                    <Button size="xs" variant="light" onClick={() =>                       navigate({ to: '/patients/$id/medications', params: { id: m.patientId } })}>
                       查看
                     </Button>
                   </Table.Td>

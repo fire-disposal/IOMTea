@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react'
 import { Container, Group, Paper, Text, Modal, SimpleGrid, Button, Loader, Alert } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
-import { useParams } from 'react-router-dom'
+import { useParams } from '@tanstack/react-router'
 import { type TileFlag, packGrid, placeTile, TEMPLATES, canPlaceThing, getThingDef } from '@iomtea/shared-types'
 import { trpc } from '../../trpc'
 import { useHomeMap } from '../../hooks/useHomeMap'
@@ -15,7 +15,7 @@ import type { EditorMode, PaintType } from './EditorTypes'
 const PAINT_INIT: PaintType = 1 as PaintType
 
 export function MapEditorPage() {
-  const { id } = useParams<{ id: string }>()
+  const { id } = (useParams as any)({ from: '/_auth/patients/$id' })
   const patientId = id
   const { runtime, isLoading, error } = useHomeMap(patientId)
   const trpcUtils = trpc.useUtils()

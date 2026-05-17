@@ -18,7 +18,7 @@ import {
   IconSettings,
   IconUsers,
 } from '@tabler/icons-react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from '@tanstack/react-router'
 import { QueryGate } from '../components/shared/QueryGate'
 import { StatsBar, type StatsBarItem } from '../components/shared/StatsBar'
 import { trpc } from '../trpc'
@@ -46,7 +46,7 @@ export function DashboardPage() {
       <Paper p="md" radius="md" withBorder className="card-hover">
         <Group justify="space-between" mb="sm">
           <Text fw={600}>最近告警</Text>
-          <Button variant="subtle" size="xs" rightSection={<IconChevronRight size={14} />} onClick={() => navigate('/alerts')}>
+          <Button variant="subtle" size="xs" rightSection={<IconChevronRight size={14} />} onClick={() => navigate({ to: '/alerts' })}>
             查看全部
           </Button>
         </Group>

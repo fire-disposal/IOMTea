@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate } from '@tanstack/react-router'
 import { trpc } from '../trpc'
 import { useHomeMap } from '../hooks/useHomeMap'
 import { VitalsChart } from './components/VitalsChart'
@@ -9,7 +9,7 @@ import { ScenarioModal } from './components/ScenarioModal'
 const SPEEDS = [1, 2, 5, 10]
 
 export function PatientOverview() {
-  const { id } = useParams<{ id: string }>()
+  const { id } = (useParams as any)({ from: '/_auth/patients/$id' })
   const navigate = useNavigate()
   const [timeRange, setTimeRange] = useState('6h')
   const [chartVisible, setChartVisible] = useState(true)
@@ -108,7 +108,7 @@ export function PatientOverview() {
         onSpeedCycle={handleSpeedCycle}
         isSpeedPending={setSpeedMut.isPending}
         onInjectScenario={() => setScenarioOpen(true)}
-        onEditMap={() => navigate(`/patients/${id}/map-editor`)}
+        onEditMap={() => navigate({ to: '/patients/$id/map-editor', params: { id: id! } })}
         fullscreenOpen={isFullscreen}
         onFullscreenOpen={() => setIsFullscreen(true)}
         onFullscreenClose={() => setIsFullscreen(false)}

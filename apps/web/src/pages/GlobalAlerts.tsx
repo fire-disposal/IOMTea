@@ -4,7 +4,7 @@ import { notifications } from '@mantine/notifications'
 import { IconAlertTriangle, IconBell, IconCheck } from '@tabler/icons-react'
 import { trpc } from '../trpc'
 import { StateEmpty } from '../components/shared/StateComponents'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from '@tanstack/react-router'
 
 const STATUS_COLORS: Record<string, string> = { active: 'red', acknowledged: 'yellow', resolved: 'green' }
 const SEVERITY_COLORS: Record<string, string> = { critical: 'red', warning: 'orange', info: 'blue' }
@@ -83,7 +83,7 @@ export function GlobalAlerts() {
               {alerts.data.map(a => (
                 <Table.Tr key={a.id}>
                   <Table.Td>
-                    <Button variant="subtle" size="xs" onClick={() => navigate(`/patients/${a.patientId}`)}>
+                    <Button variant="subtle" size="xs" onClick={() =>                       navigate({ to: '/patients/$id', params: { id: a.patientId } })}>
                       {a.patientId?.slice(0, 8)}
                     </Button>
                   </Table.Td>

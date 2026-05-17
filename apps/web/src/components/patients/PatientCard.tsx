@@ -1,6 +1,6 @@
 import { ActionIcon, Avatar, Badge, Card, Group, Text } from '@mantine/core'
 import { IconHeart, IconLungs, IconAlertCircle, IconTrash } from '@tabler/icons-react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from '@tanstack/react-router'
 import { trpc } from '../../trpc'
 
 interface PatientCardProps {
@@ -44,7 +44,7 @@ export function PatientCard({ patient, alertCount = 0, onDelete }: PatientCardPr
       withBorder
       className="card-hover"
       style={{ cursor: 'pointer', position: 'relative' }}
-      onClick={() => navigate(`/patients/${patient.id}`)}
+      onClick={() => navigate({ to: '/patients/$id', params: { id: patient.id } })}
     >
       {onDelete && (
         <ActionIcon

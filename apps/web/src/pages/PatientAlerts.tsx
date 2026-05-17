@@ -2,7 +2,7 @@ import { Badge, Button, Group, Paper, SegmentedControl, Skeleton, Text, Title, T
 import { notifications } from '@mantine/notifications'
 import { IconAlertTriangle, IconBell, IconCheck, IconInfoCircle } from '@tabler/icons-react'
 import { useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams } from '@tanstack/react-router'
 import { trpc } from '../trpc'
 import { StateEmpty } from '../components/shared/StateComponents'
 
@@ -36,7 +36,7 @@ function relativeTime(date: Date): string {
 }
 
 export function PatientAlerts() {
-  const { id } = useParams<{ id: string }>()
+  const { id } = (useParams as any)({ from: '/_auth/patients/$id' })
   const [severityFilter, setSeverityFilter] = useState<string>('all')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const utils = trpc.useUtils()

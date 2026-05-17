@@ -2,7 +2,7 @@ import { Badge, Button, Group, Modal, NumberInput, Paper, Select, Skeleton, Stac
 import { useForm } from '@mantine/form'
 import { notifications } from '@mantine/notifications'
 import { useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate } from '@tanstack/react-router'
 import { trpc } from '../trpc'
 
 const genderOptions = [
@@ -21,7 +21,7 @@ function genderLabel(g: string) {
 }
 
 export function PatientProfile() {
-  const { id } = useParams<{ id: string }>()
+  const { id } = (useParams as any)({ from: '/_auth/patients/$id' })
   const navigate = useNavigate()
   const [editing, setEditing] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState(false)
@@ -41,7 +41,7 @@ export function PatientProfile() {
   const deleteMutation = trpc.patient.delete.useMutation({
     onSuccess: () => {
       notifications.show({ title: '成功', message: '患者已删除', color: 'green' })
-      navigate('/patients')
+      navigate({ to: '/patients' })
     },
     onError: (err) => notifications.show({ title: '失败', message: err.message, color: 'red' }),
   })

@@ -3,7 +3,7 @@ import { Container, Paper, Table, Badge, Text, Title, Skeleton, SimpleGrid, Them
 import { IconCalendar, IconCalendarWeek, IconList } from '@tabler/icons-react'
 import { trpc } from '../trpc'
 import { QueryGate } from '../components/shared/QueryGate'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from '@tanstack/react-router'
 
 const APPOINTMENT_TYPE_LABELS: Record<string, string> = {
   checkup: '体检', followup: '随访', emergency: '急诊', consultation: '咨询', rehabilitation: '康复',
@@ -128,7 +128,7 @@ export function GlobalAppointments() {
                   <Table.Td><Text size="sm">{new Date(a.scheduledAt).toLocaleString()}</Text></Table.Td>
                   <Table.Td><Badge size="sm" color={STATUS_COLORS[a.status] || 'gray'}>{STATUS_LABELS[a.status] || a.status}</Badge></Table.Td>
                   <Table.Td>
-                    <Button size="xs" variant="light" onClick={() => navigate(`/patients/${a.patientId}/appointments`)}>
+                    <Button size="xs" variant="light" onClick={() =>                       navigate({ to: '/patients/$id/appointments', params: { id: a.patientId } })}>
                       查看
                     </Button>
                   </Table.Td>

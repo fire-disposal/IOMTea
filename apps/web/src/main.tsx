@@ -1,29 +1,18 @@
-import { MantineProvider } from '@mantine/core'
-import { ModalsProvider } from '@mantine/modals'
-import { Notifications } from '@mantine/notifications'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { RouterProvider, createRouter } from '@tanstack/react-router'
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import '@mantine/core/styles.css'
-import '@mantine/notifications/styles.css'
-import { App } from './App'
-import { theme } from './theme'
-import { getTrpcClient, trpc } from './trpc'
+import { routeTree } from './routeTree.gen'
 
-const queryClient = new QueryClient()
-const trpcClient = getTrpcClient()
+const router = createRouter({ routeTree })
+
+declare module '@tanstack/react-router' {
+  interface Register {
+    router: typeof router
+  }
+}
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <trpc.Provider client={trpcClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>
-        <MantineProvider theme={theme}>
-          <ModalsProvider>
-            <Notifications />
-            <App />
-          </ModalsProvider>
-        </MantineProvider>
-      </QueryClientProvider>
-    </trpc.Provider>
+    <RouterProvider router={router} />
   </React.StrictMode>,
 )

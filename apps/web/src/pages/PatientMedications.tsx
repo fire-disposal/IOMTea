@@ -2,7 +2,7 @@ import { ActionIcon, Badge, Button, Card, Center, Group, Modal, Paper, Select, S
 import { useForm } from '@mantine/form'
 import { notifications } from '@mantine/notifications'
 import { useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams } from '@tanstack/react-router'
 import { trpc } from '../trpc'
 import { StateEmpty } from '../components/shared/StateComponents'
 
@@ -46,7 +46,7 @@ function getNextDose(schedules: any[] | undefined): { time: string; minutesUntil
 }
 
 export function PatientMedications() {
-  const { id } = useParams<{ id: string }>()
+  const { id } = (useParams as any)({ from: '/_auth/patients/$id' })
   const patientId = id!
 
   const [createOpen, setCreateOpen] = useState(false)
