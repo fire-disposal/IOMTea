@@ -1,0 +1,22 @@
+.messages-page {
+  padding: 16px 16px 66px;
+  min-height: 100vh;
+  background: var(--bg-page, #FAFAF5);
+}
+
+.messages-page__title {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-primary, #3C3C3C);
+  display: block;
+  margin-bottom: 16px;
+}
+
+.messages-page__empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 0;
+  color: var(--text-secondary, #8C8C7E);
+  font-size: 16px;
+}

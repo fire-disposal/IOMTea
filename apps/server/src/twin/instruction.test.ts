@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { enqueueInstruction, processNextInstruction, completeInstruction, clearQueue, peekQueue } from './instruction'
+import { enqueueInstruction, processNextInstruction } from './instruction'
 import { createActorState, type Instruction } from './behavior'
 
 function makeInstruction(overrides: Partial<Instruction> = {}): Instruction {
@@ -65,23 +65,4 @@ describe('processNextInstruction', () => {
   })
 })
 
-describe('clearQueue', () => {
-  it('empties the queue', () => {
-    const actor = createActorState('a1', 0, 0, null)
-    enqueueInstruction(actor, makeInstruction())
-    enqueueInstruction(actor, makeInstruction())
-    clearQueue(actor)
-    expect(actor.instructionQueue).toEqual([])
-  })
-})
 
-describe('peekQueue', () => {
-  it('returns a copy of the queue', () => {
-    const actor = createActorState('a1', 0, 0, null)
-    enqueueInstruction(actor, makeInstruction())
-    const peeked = peekQueue(actor)
-    expect(peeked).toHaveLength(1)
-    peeked.pop()
-    expect(actor.instructionQueue).toHaveLength(1)
-  })
-})

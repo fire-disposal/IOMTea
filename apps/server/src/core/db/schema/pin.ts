@@ -1,0 +1,12 @@
+import { pgTable, timestamp, uuid, varchar } from 'drizzle-orm/pg-core'
+import { users } from '../schema'
+
+export const usersPin = pgTable('users_pin', {
+  pin: varchar('pin', { length: 6 }).primaryKey(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  label: varchar('label', { length: 64 }).default(''),
+  nickname: varchar('nickname', { length: 32 }).default(''),
+  thingId: uuid('thing_id'),
+  lastSeenAt: timestamp('last_seen_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+})

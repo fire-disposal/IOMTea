@@ -48,7 +48,8 @@ export function useRealtime(wardId: string | undefined, mapId?: string) {
     if (!wardId) return
 
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-    const wsUrl = `${protocol}//${window.location.host}/ws?wardId=${encodeURIComponent(wardId)}`
+    const token = localStorage.getItem('token')
+    const wsUrl = `${protocol}//${window.location.host}/ws?wardId=${encodeURIComponent(wardId)}${token ? `&token=${encodeURIComponent(token)}` : ''}`
     const ws = new WebSocket(wsUrl)
     wsRef.current = ws
 

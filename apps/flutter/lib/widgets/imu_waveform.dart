@@ -18,7 +18,7 @@ class ImuWaveformPainter extends CustomPainter {
     for (int i = 0; i < data.length; i++) {
       final x = i * scaleX;
       final y = midY - (data[i].accelMagnitude / maxMag) * (size.height / 2 - 10);
-      if (i == 0) path.moveTo(x, y); else path.lineTo(x, y);
+      if (i == 0) { path.moveTo(x, y); } else { path.lineTo(x, y); }
     }
     canvas.drawPath(path, paint);
   }

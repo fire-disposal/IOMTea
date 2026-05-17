@@ -1,6 +1,7 @@
+import { and, eq } from 'drizzle-orm'
 import type { DbClient } from '../db'
 import { permissions, rolePermissions } from '../db'
-import { eq, and } from 'drizzle-orm'
+import type { Role } from '../db/schema/enums'
 
 const DEFAULT_PERMISSIONS = [
   { code: 'patient:read', name: '查看患者', resource: 'patient', action: 'read' },
@@ -21,21 +22,46 @@ const DEFAULT_PERMISSIONS = [
   { code: 'admin:settings', name: '系统设置', resource: 'admin', action: 'settings' },
 ]
 
-const ROLE_PERMISSION_MAP: Record<string, string[]> = {
-  admin:       DEFAULT_PERMISSIONS.map((p) => p.code),
-  doctor:      ['patient:read', 'patient:write', 'device:read', 'device:write', 'device:manage',
-                 'alert:read', 'alert:manage', 'medication:read', 'medication:write',
-                 'appointment:read', 'appointment:write', 'twin:read', 'twin:manage', 'dashboard:view'],
-  nurse:       ['patient:read', 'device:read', 'alert:read', 'alert:manage',
-                 'medication:read', 'appointment:read', 'twin:read', 'dashboard:view'],
-  caregiver:   ['patient:read', 'alert:read', 'medication:read', 'twin:read', 'dashboard:view'],
-  patient:     ['dashboard:view'],
-  family:      ['dashboard:view'],
+const ROLE_PERMISSION_MAP: Record<Role, string[]> = {
+  admin: DEFAULT_PERMISSIONS.map((p) => p.code),
+  doctor: [
+    'patient:read',
+    'patient:write',
+    'device:read',
+    'device:write',
+    'device:manage',
+    'alert:read',
+    'alert:manage',
+    'medication:read',
+    'medication:write',
+    'appointment:read',
+    'appointment:write',
+    'twin:read',
+    'twin:manage',
+    'dashboard:view',
+  ],
+  nurse: [
+    'patient:read',
+    'device:read',
+    'alert:read',
+    'alert:manage',
+    'medication:read',
+    'appointment:read',
+    'twin:read',
+    'dashboard:view',
+  ],
+  caregiver: ['patient:read', 'alert:read', 'medication:read', 'twin:read', 'dashboard:view'],
+  patient: ['dashboard:view'],
+  family: ['dashboard:view'],
 }
 
 export async function seedPermissions(db: DbClient): Promise<void> {
   for (const perm of DEFAULT_PERMISSIONS) {
-    const existing = await db.select().from(permissions).where(eq(permissions.code, perm.code)).limit(1)
+    const existing = await db
+      .select()
+      .from(permissions)
+      .where(eq(permissions.code, perm.code))
+      .limit(1)
     if (existing.length === 0) {
       await db.insert(permissions).values(perm)
     }
@@ -46,11 +72,13 @@ export async function seedPermissions(db: DbClient): Promise<void> {
       const existing = await db
         .select()
         .from(rolePermissions)
-        .where(and(eq(rolePermissions.role, role as any), eq(rolePermissions.permissionCode, code)))
+        .where(
+          and(eq(rolePermissions.role, role as Role), eq(rolePermissions.permissionCode, code)),
+        )
         .limit(1)
       if (existing.length === 0) {
         await db.insert(rolePermissions).values({
-          role: role as any,
+          role: role as Role,
           permissionCode: code,
         })
       }

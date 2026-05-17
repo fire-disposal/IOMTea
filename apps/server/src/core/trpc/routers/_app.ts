@@ -4,24 +4,26 @@ import { alertRouter } from './alert'
 import { alertRuleRouter } from './alertRule'
 import { appointmentRouter } from './appointment'
 import { authRouter } from './auth'
-import { dashboardRouter } from './dashboard'
+import { homeMapRouter } from './home-map'
 import { dataRouter } from './data'
 import { deviceRouter } from './device'
 import { medicationRouter } from './medication'
 import { patientRouter } from './patient'
+import { pinRouter } from './pin'
 import { userRouter } from './user'
 
 export const appRouter = router({
   auth: authRouter,
   user: userRouter,
   patient: patientRouter,
+  pin: pinRouter,
   medication: medicationRouter,
   appointment: appointmentRouter,
   device: deviceRouter,
   alert: alertRouter,
   data: dataRouter,
   alertRule: alertRuleRouter,
-  dashboard: dashboardRouter,
+  homeMap: homeMapRouter,
   twin: twinRouter,
 })
 

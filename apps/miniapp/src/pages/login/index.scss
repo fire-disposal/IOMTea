@@ -5,7 +5,7 @@
   justify-content: center;
   min-height: 100vh;
   padding: 40px;
-  background: #fff;
+  background: var(--bg-page);
 }
 
 .logo {
@@ -17,13 +17,13 @@
   display: block;
   font-size: 56px;
   font-weight: 700;
-  color: #1677ff;
+  color: var(--brand-500);
 }
 
 .logo-sub {
   display: block;
   font-size: 30px;
-  color: #999;
+  color: var(--text-secondary);
   margin-top: 8px;
 }
 
@@ -33,4 +33,21 @@
   line-height: 88px;
   font-size: 32px;
   border-radius: 12px;
+  background: var(--brand-500) !important;
+  color: #fff !important;
+}
+
+.login-hint {
+  display: block;
+  font-size: 24px;
+  color: var(--text-secondary);
+  margin-top: 24px;
+}
+
+.demo-link {
+  display: block;
+  font-size: 26px;
+  color: var(--brand-500);
+  margin-top: 40px;
+  text-decoration: underline;
 }

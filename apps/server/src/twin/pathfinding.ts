@@ -100,6 +100,4 @@ export function findPath(
   return null
 }
 
-export function isValidPath(path: Point[], grid: GridCell[][]): boolean {
-  return path.every((p) => isPassable(grid, p.x, p.y))
-}
+

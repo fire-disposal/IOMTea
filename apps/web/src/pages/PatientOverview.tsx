@@ -1,25 +1,10 @@
-import { ActionIcon, Badge, Button, Group, Modal, Paper, SegmentedControl, SimpleGrid, Text, Tooltip } from '@mantine/core'
-import { IconMaximize, IconPlayerPause, IconPlayerPlay, IconSpeedboat, IconBolt, IconPlus, IconMap, IconChevronUp, IconChevronDown } from '@tabler/icons-react'
-import { Canvas } from '@react-three/fiber'
-import { OrbitControls } from '@react-three/drei'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip as ReTooltip, ResponsiveContainer, Legend } from 'recharts'
 import { trpc } from '../trpc'
-import { TwinRenderer3D } from '../map/TwinRenderer3D'
-import { useMapModel } from '../map/useMapModel'
-
-const SCENARIOS = [
-  { key: 'tachycardia', label: '心动过速', desc: 'HR 155 bpm' },
-  { key: 'low_spo2', label: '低血氧', desc: 'SpO2 88%' },
-  { key: 'hypotension', label: '低血压', desc: '收缩压 85' },
-  { key: 'fall', label: '跌倒检测', desc: '触发跌倒告警' },
-  { key: 'bed_exit', label: '离床', desc: '触发离床告警' },
-  { key: 'hyperglycemia', label: '高血糖', desc: '血糖 13.5' },
-  { key: 'hypoglycemia', label: '低血糖', desc: '血糖 2.8' },
-  { key: 'arrhythmia', label: '心律失常', desc: 'HR 180 bpm' },
-  { key: 'respiratory_distress', label: '呼吸窘迫', desc: 'RR 35 rpm' },
-]
+import { useHomeMap } from '../hooks/useHomeMap'
+import { VitalsChart } from './components/VitalsChart'
+import { TwinViewer } from './components/TwinViewer'
+import { ScenarioModal } from './components/ScenarioModal'
 
 const SPEEDS = [1, 2, 5, 10]
 
@@ -40,59 +25,33 @@ export function PatientOverview() {
   const timeMap: Record<string, number> = { '1h': 3600000, '6h': 21600000, '24h': 86400000, '7d': 604800000 }
   const from = now - (timeMap[timeRange] || 21600000)
 
-  const hrQuery = trpc.data.timeseries.useQuery(
-    { patientId: id!, metric: 'heart_rate', from, to: now },
-    { enabled: !!id, refetchInterval: 10000 },
-  )
-  const spo2Query = trpc.data.timeseries.useQuery(
-    { patientId: id!, metric: 'spo2', from, to: now },
-    { enabled: !!id, refetchInterval: 10000 },
-  )
-  const bpQuery = trpc.data.timeseries.useQuery(
-    { patientId: id!, metric: 'systolic_bp', from, to: now },
-    { enabled: !!id, refetchInterval: 10000 },
-  )
-  const tempQuery = trpc.data.timeseries.useQuery(
-    { patientId: id!, metric: 'temperature', from, to: now },
-    { enabled: !!id, refetchInterval: 10000 },
-  )
+  const hrQuery = trpc.data.timeseries.useQuery({ patientId: id!, metric: 'heart_rate', from, to: now }, { enabled: !!id, refetchInterval: 10000 })
+  const spo2Query = trpc.data.timeseries.useQuery({ patientId: id!, metric: 'spo2', from, to: now }, { enabled: !!id, refetchInterval: 10000 })
+  const bpQuery = trpc.data.timeseries.useQuery({ patientId: id!, metric: 'systolic_bp', from, to: now }, { enabled: !!id, refetchInterval: 10000 })
+  const tempQuery = trpc.data.timeseries.useQuery({ patientId: id!, metric: 'temperature', from, to: now }, { enabled: !!id, refetchInterval: 10000 })
 
-  const patientMapQuery = trpc.twin.maps.get.useQuery(
-    { patientId: id },
-    { enabled: !!id },
-  )
-  const mapId = patientMapQuery.data?.id
-  const mapData = useMapModel(mapId)
+  const { runtime: mapData, isLoading: mapLoading, error: mapError, refetch: refetchMap } = useHomeMap(id)
+  const createMapMut = trpc.homeMap.generateFromTemplate.useMutation()
 
-  const createMapMut = trpc.twin.maps.create.useMutation()
   const handleCreateMap = useCallback(() => {
     if (!id) return
-    createMapMut.mutate({
-      patientId: id,
-      name: '默认家庭',
-      width: 16,
-      height: 11,
-      grid: Array.from({ length: 11 }, () => Array.from({ length: 16 }, () => 0)),
-    }, {
-      onSuccess: () => patientMapQuery.refetch(),
-    })
-  }, [id, createMapMut, patientMapQuery])
+    createMapMut.mutate({ patientId: id, templateId: 'two_bedroom' }, { onSuccess: () => refetchMap() })
+  }, [id, createMapMut, refetchMap])
 
-  const engineStatus = trpc.twin.engine.status.useQuery(
-    { patientId: id! },
-    { enabled: !!id, refetchInterval: 5000 },
-  )
-
+  const engineStatus = trpc.twin.engine.status.useQuery({ patientId: id! }, { enabled: !!id, refetchInterval: 5000 })
   const resumeMut = trpc.twin.engine.resume.useMutation()
   const pauseMut = trpc.twin.engine.pause.useMutation()
   const setSpeedMut = trpc.twin.engine.setSpeed.useMutation()
   const injectMut = trpc.twin.engine.injectScenario.useMutation()
 
+  const es = (engineStatus.data && !Array.isArray(engineStatus.data)) ? engineStatus.data : null
+  const isRunning = es?.running ?? false
+  const currentSpeed = es?.speed ?? 1
+
   const chartData = useMemo(() => {
     const bucket = (ts: number) => Math.floor(ts / 60000) * 60000
-    const map = new Map<number, any>()
-
-    const add = (arr: any[] | undefined, key: string) => {
+    const map = new Map<number, Record<string, number>>()
+    const add = (arr: Array<{ recordedAt: number; value: number }> | undefined, key: string) => {
       if (!arr) return
       for (const e of arr) {
         const b = bucket(e.recordedAt)
@@ -100,35 +59,23 @@ export function PatientOverview() {
         map.get(b)![key] = e.value
       }
     }
-
-    add(hrQuery.data, 'hr')
-    add(spo2Query.data, 'spo2')
-    add(bpQuery.data, 'systolic_bp')
-    add(tempQuery.data, 'temp')
-
-    return Array.from(map.entries())
-      .sort(([a], [b]) => a - b)
-      .map(([, d]) => d)
+    add(hrQuery.data as any, 'hr')
+    add(spo2Query.data as any, 'spo2')
+    add(bpQuery.data as any, 'systolic_bp')
+    add(tempQuery.data as any, 'temp')
+    return Array.from(map.entries()).sort(([a], [b]) => a - b).map(([, d]) => d as { ts: number; [k: string]: number | undefined })
   }, [hrQuery.data, spo2Query.data, bpQuery.data, tempQuery.data])
-
-  const es = (engineStatus.data && !Array.isArray(engineStatus.data)) ? engineStatus.data : null
-  const isRunning = es?.running ?? false
-  const currentSpeed = es?.speed ?? 1
 
   const handlePlayPause = useCallback(() => {
     if (!id) return
-    if (isRunning) {
-      pauseMut.mutate({ patientId: id })
-    } else {
-      resumeMut.mutate({ patientId: id })
-    }
+    if (isRunning) pauseMut.mutate({ patientId: id })
+    else resumeMut.mutate({ patientId: id })
   }, [id, isRunning, pauseMut, resumeMut])
 
   const handleSpeedCycle = useCallback(() => {
     if (!id) return
     const idx = SPEEDS.indexOf(currentSpeed)
-    const next = SPEEDS[(idx + 1) % SPEEDS.length]
-    setSpeedMut.mutate({ patientId: id, speed: next })
+    setSpeedMut.mutate({ patientId: id, speed: SPEEDS[(idx + 1) % SPEEDS.length] })
   }, [id, currentSpeed, setSpeedMut])
 
   const handleInject = useCallback((type: string) => {
@@ -137,194 +84,42 @@ export function PatientOverview() {
     setScenarioOpen(false)
   }, [id, injectMut])
 
-  const hasData = (hrQuery.data || []).length > 0
-    || (spo2Query.data || []).length > 0
-    || (bpQuery.data || []).length > 0
-    || (tempQuery.data || []).length > 0
-
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 16 }}>
-      {chartVisible ? (
-        <Paper p="md" radius="md" withBorder style={{ flex: '0 0 auto' }}>
-          <Group justify="space-between" mb="sm">
-            <Group gap="xs">
-              <Text fw={600}>生命体征趋势</Text>
-              <ActionIcon variant="subtle" size="sm" onClick={() => setChartVisible(false)} title="收起">
-                <IconChevronUp size={16} />
-              </ActionIcon>
-            </Group>
-            <SegmentedControl
-              size="xs"
-              value={timeRange}
-              onChange={(v: string) => setTimeRange(v)}
-              data={[
-                { label: '1h', value: '1h' },
-                { label: '6h', value: '6h' },
-                { label: '24h', value: '24h' },
-                { label: '7d', value: '7d' },
-              ]}
-            />
-          </Group>
+      <VitalsChart
+        data={chartData}
+        timeRange={timeRange}
+        onTimeRangeChange={setTimeRange}
+        visible={chartVisible}
+        onToggle={() => setChartVisible((v) => !v)}
+      />
 
-          <div style={{ height: 260 }}>
-            {!hasData ? (
-              <Text c="dimmed" size="sm" ta="center" mt="xl">暂无数据</Text>
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
-                  <XAxis
-                    dataKey="ts"
-                    type="number"
-                    domain={['auto', 'auto']}
-                    tickFormatter={(ts) =>
-                      new Date(ts).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
-                    }
-                    tick={{ fontSize: 11 }}
-                  />
-                  <YAxis yAxisId="vitals" domain={[40, 200]} tick={{ fontSize: 11 }} />
-                  <YAxis yAxisId="pct" orientation="right" domain={[35, 100]} tick={{ fontSize: 11 }} />
-                  <ReTooltip labelFormatter={(ts) => new Date(ts).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })} />
-                  <Legend />
-                  <Line yAxisId="vitals" type="monotone" dataKey="hr" stroke="#e03131" strokeWidth={2}
-                    dot={false} name="心率 (bpm)" connectNulls />
-                  <Line yAxisId="vitals" type="monotone" dataKey="systolic_bp" stroke="#f08c00" strokeWidth={2}
-                    dot={false} name="收缩压 (mmHg)" connectNulls />
-                  <Line yAxisId="pct" type="monotone" dataKey="spo2" stroke="#1971c2" strokeWidth={2}
-                    dot={false} name="血氧 (%)" connectNulls />
-                  <Line yAxisId="pct" type="monotone" dataKey="temp" stroke="#2f9e44" strokeWidth={1.5}
-                    dot={false} name="体温 (°C)" connectNulls />
-                </LineChart>
-              </ResponsiveContainer>
-            )}
-          </div>
-        </Paper>
-      ) : (
-        <Button
-          variant="light"
-          size="xs"
-          leftSection={<IconChevronDown size={14} />}
-          onClick={() => setChartVisible(true)}
-          style={{ alignSelf: 'flex-start' }}
-        >
-          显示生命体征趋势
-        </Button>
-      )}
+      <TwinViewer
+        mapRuntime={mapData}
+        mapLoading={mapLoading}
+        mapError={mapError}
+        isRunning={isRunning}
+        speed={currentSpeed}
+        onCreateMap={handleCreateMap}
+        onCreateMapPending={createMapMut.isPending}
+        onPlayPause={handlePlayPause}
+        isPausePending={pauseMut.isPending}
+        isResumePending={resumeMut.isPending}
+        onSpeedCycle={handleSpeedCycle}
+        isSpeedPending={setSpeedMut.isPending}
+        onInjectScenario={() => setScenarioOpen(true)}
+        onEditMap={() => navigate(`/patients/${id}/map-editor`)}
+        fullscreenOpen={isFullscreen}
+        onFullscreenOpen={() => setIsFullscreen(true)}
+        onFullscreenClose={() => setIsFullscreen(false)}
+      />
 
-      <Paper p="md" radius="md" withBorder style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
-        <Group justify="space-between" mb="sm">
-          <Group gap={8}>
-            <Text fw={600}>数字孪生</Text>
-            <Badge color={isRunning ? 'green' : 'gray'} variant="light" size="sm">
-              {isRunning ? '运行中' : '已暂停'}
-            </Badge>
-            <Badge variant="outline" size="sm">{currentSpeed}x</Badge>
-          </Group>
-          <Group gap={4}>
-            <Tooltip label={isRunning ? '暂停' : '播放'}>
-              <ActionIcon
-                variant="subtle"
-                onClick={handlePlayPause}
-                loading={pauseMut.isPending || resumeMut.isPending}
-              >
-                {isRunning ? <IconPlayerPause size={18} /> : <IconPlayerPlay size={18} />}
-              </ActionIcon>
-            </Tooltip>
-            <Tooltip label={
-              `倍速 ${currentSpeed}x → ${SPEEDS[(SPEEDS.indexOf(currentSpeed) + 1) % SPEEDS.length]}x`
-            }>
-              <ActionIcon
-                variant="subtle"
-                onClick={handleSpeedCycle}
-                loading={setSpeedMut.isPending}
-              >
-                <IconSpeedboat size={18} />
-              </ActionIcon>
-            </Tooltip>
-            <Tooltip label="场景注入">
-              <ActionIcon
-                variant="subtle"
-                onClick={() => setScenarioOpen(true)}
-                color="orange"
-              >
-                <IconBolt size={18} />
-              </ActionIcon>
-            </Tooltip>
-            <Tooltip label="编辑地图">
-              <ActionIcon variant="subtle" onClick={() => navigate(`/patients/${id}/map-editor`)}>
-                <IconMap size={18} />
-              </ActionIcon>
-            </Tooltip>
-            <Tooltip label="全屏">
-              <ActionIcon variant="subtle" onClick={() => setIsFullscreen(true)}>
-                <IconMaximize size={18} />
-              </ActionIcon>
-            </Tooltip>
-          </Group>
-        </Group>
-
-        <div style={{ flex: 1, minHeight: 0, borderRadius: 8, overflow: 'hidden', background: '#f0f4f8' }}>
-          {!mapData ? (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 16 }}>
-              <Text c="dimmed" size="sm">地图尚未配置</Text>
-              <Button
-                size="sm"
-                leftSection={<IconPlus size={16} />}
-                onClick={handleCreateMap}
-                loading={createMapMut.isPending}
-              >
-                创建地图
-              </Button>
-            </div>
-          ) : (
-            <Canvas camera={{ position: [mapData.width / 2, mapData.height, mapData.height / 2], fov: 45 }} style={{ width: '100%', height: '100%' }}>
-              <OrbitControls enableDamping dampingFactor={0.1} maxPolarAngle={Math.PI / 2.5} />
-              <TwinRenderer3D mapData={mapData} />
-            </Canvas>
-          )}
-        </div>
-      </Paper>
-
-      <Modal opened={scenarioOpen} onClose={() => setScenarioOpen(false)} title="场景注入" size="lg">
-        <SimpleGrid cols={3} spacing="sm">
-          {SCENARIOS.map((s) => (
-            <Button
-              key={s.key}
-              variant="light"
-              color="orange"
-              onClick={() => handleInject(s.key)}
-              loading={injectMut.isPending}
-              styles={{ root: { height: 'auto', padding: '12px 8px', flexDirection: 'column', gap: 4 } }}
-            >
-              <Text size="sm" fw={600}>{s.label}</Text>
-              <Text size="xs" c="dimmed">{s.desc}</Text>
-            </Button>
-          ))}
-        </SimpleGrid>
-      </Modal>
-
-      <Modal opened={isFullscreen} onClose={() => setIsFullscreen(false)} fullScreen title="数字孪生 — 全屏">
-        <div style={{ width: '100%', height: 'calc(100vh - 100px)', borderRadius: 8, overflow: 'hidden', background: '#f0f4f8' }}>
-          {!mapData ? (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 16 }}>
-              <Text c="dimmed" size="sm">地图尚未配置</Text>
-              <Button
-                size="sm"
-                leftSection={<IconPlus size={16} />}
-                onClick={handleCreateMap}
-                loading={createMapMut.isPending}
-              >
-                创建地图
-              </Button>
-            </div>
-          ) : (
-            <Canvas camera={{ position: [mapData.width / 2, mapData.height, mapData.height / 2], fov: 45 }} style={{ width: '100%', height: '100%' }}>
-              <OrbitControls enableDamping dampingFactor={0.1} maxPolarAngle={Math.PI / 2.5} />
-              <TwinRenderer3D mapData={mapData} />
-            </Canvas>
-          )}
-        </div>
-      </Modal>
+      <ScenarioModal
+        opened={scenarioOpen}
+        onClose={() => setScenarioOpen(false)}
+        onInject={handleInject}
+        pending={injectMut.isPending}
+      />
     </div>
   )
 }

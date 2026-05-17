@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
 import 'mqtt_models.dart';

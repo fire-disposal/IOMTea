@@ -10,7 +10,7 @@
 | Web 前端 | React 19 + Vite 6 + Mantine v8 + React Three Fiber + Three.js 0.184 |
 | 微信小程序 | Taro 4 + React 18 |
 | 实验工具 | Flutter 3.27 + Dart 3.6 |
-| 协议网关 | Node.js TCP Server (内置于 ingest) |
+| 协议网关 | MQTT 设备接入 (mqtt-ingest) |
 | 基础设施 | pnpm monorepo + Turborepo + Docker Compose + Biome |
 
 ## 快速开始
@@ -83,9 +83,8 @@ iomtea/
 │   ├── server/         # Hono + tRPC 后端
 │   │   └── src/
 │   │       ├── core/          # 核心上下文 (DB, Auth, CRUD)
-│   │       ├── simulator/     # 生理仿真引擎 + 5种患者画像
-│   │       ├── ingest/        # MQTT 数据接入 (智能床垫)
-│   │       └── events/        # Domain Event 共享层
+│   │       ├── twin/          # 数字孪生引擎 + 5种患者画像
+│   │       └── mqtt-ingest/   # MQTT 设备数据接入
 │   ├── web/            # Web 仪表盘 + 3D 数字孪生
 │   ├── miniapp/        # 微信小程序 (Taro)
 │   └── flutter/        # Flutter 实验工具 (MQTT/YOLO/IMU/BLE)
@@ -110,12 +109,13 @@ iomtea/
 | 5 种患者生理画像仿真 | ✅ |
 | 12 种生理指标生成 (HR/RR/SpO2/体温/血压/血糖/体动/姿势/ECG/呼吸波形/体压分布) | ✅ |
 | 9 种临床场景一键注入 | ✅ |
-| 实时数据仪表盘 (2s 轮询) | ✅ |
-| Web 3D 数字孪生 (R3F 瓦片程序化居家场景) | ✅ |
+| A* 寻路 + 智能体行为引擎 | ✅ |
+| 居家地图系统 (2D Canvas 渲染 + 编辑器) | ✅ |
+| 实时数据仪表盘 | ✅ |
+| 设备 PIN 管理 | ✅ |
+| 用药/预约管理 | ✅ |
 | 微信小程序 (6 页面) | ✅ |
-| 智能床垫 MQTT 数据接入 | ✅ |
-| 智能床垫 TCP 直接接入 (MessagePack + TLV 解码) | ✅ |
-| Rust TCP→MQTT 协议网关 | ❌ (已合并入 server ingest) |
+| MQTT 设备数据接入 | ✅ |
 | CI/CD (GitHub Actions → Docker → 自托管) | ✅ |
 
 ## 常用命令
@@ -143,9 +143,9 @@ pnpm --filter @iomtea/miniapp dev:weapp   # 微信小程序开发模式
 
 采用 DDD-Lite 领域驱动设计，三个有界上下文：
 
-1. **Core** — 用户认证、患者/设备 CRUD、事件存储
-2. **Simulator** — 生理仿真引擎，5 种患者画像，实时数据生成
-3. **Ingest** — MQTT 设备接入，智能床垫数据解析，睡眠状态机
+1. **Core** — 用户认证、患者/设备 CRUD、事件存储、PIN 管理
+2. **Twin** — 数字孪生引擎，生理仿真 (路径查找/行为/导航网格)，实时数据生成
+3. **MQTT-Ingest** — MQTT 设备数据接入
 
 Context 间通过 Domain Event (`events` 表) 或 tRPC 调用通信，禁止跨 Context import 内部实现。
 

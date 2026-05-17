@@ -1,0 +1,19 @@
+.segment-picker {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.segment-picker__item {
+  padding: 10px 20px;
+  background: white;
+  border-radius: 20px;
+  font-size: 16px;
+  color: #495057;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.segment-picker__item--active {
+  background: #4a90d9;
+  color: white;
+  font-weight: 500;
+}

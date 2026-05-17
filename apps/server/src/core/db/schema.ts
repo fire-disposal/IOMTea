@@ -98,6 +98,7 @@ export const events = pgTable(
     id: uuid('id').defaultRandom().primaryKey(),
     patientId: uuid('patient_id').notNull().references(() => patients.id, { onDelete: 'cascade' }),
     deviceId: uuid('device_id').references(() => devices.id, { onDelete: 'set null' }),
+    pinCode: varchar('pin_code', { length: 6 }),
     kind: kindEnum('kind').notNull(),
     metric: varchar('metric', { length: 100 }).notNull(),
     value: doublePrecision('value'),

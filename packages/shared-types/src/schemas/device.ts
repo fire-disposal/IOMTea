@@ -1,5 +1,6 @@
 import { z } from 'zod'
-import { DEVICE_STATUSES, DEVICE_TYPES } from '../constants'
+const DEVICE_TYPES = ['mattress', 'vision', 'imu', 'generic', 'simulator', 'custom'] as const
+const DEVICE_STATUSES = ['active', 'inactive', 'maintenance'] as const
 
 export const deviceSchema = z.object({
   id: z.string().uuid(),

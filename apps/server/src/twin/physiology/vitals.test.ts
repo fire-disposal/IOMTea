@@ -85,7 +85,7 @@ describe('generateSpO2', () => {
 describe('generateBedStatus', () => {
   it('returns 1 during sleep hours (22-6) with resting activity', () => {
     const events = [
-      { type: 'bed_exit', window: ['06:00' as string, '08:00' as string], probability: 0.8 },
+      { type: 'bed_exit', window: ['06:00', '08:00'] as [string, string], probability: 0.8 },
     ]
     const bed = generateBedStatus('resting', 23, events)
     expect(bed).toBe(1)
@@ -93,7 +93,7 @@ describe('generateBedStatus', () => {
 
   it('returns 0 during daytime with light activity', () => {
     const events = [
-      { type: 'bed_exit', window: ['06:00' as string, '08:00' as string], probability: 0.8 },
+      { type: 'bed_exit', window: ['06:00', '08:00'] as [string, string], probability: 0.8 },
     ]
     const bed = generateBedStatus('light', 14, events)
     expect(bed).toBe(0)

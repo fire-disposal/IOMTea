@@ -1,26 +1,7 @@
 import type { DbClient } from '../core/db'
-import { twinActivityLog, twinActorStates, twinMaps, twinRooms, twinEntities, twinBehaviorRules } from '../core/db'
+import { twinActorStates, twinMaps, twinRooms, twinEntities, twinBehaviorRules } from '../core/db'
 import { eq } from 'drizzle-orm'
 import type { ActorState } from './behavior'
-
-export async function saveActivityLog(
-  db: DbClient,
-  actorEntityId: string,
-  action: string,
-  fromRoomId: string | null,
-  toRoomId: string | null,
-  durationMs?: number,
-  metadata?: Record<string, any>,
-): Promise<void> {
-  await db.insert(twinActivityLog).values({
-    actorEntityId,
-    action,
-    fromRoomId,
-    toRoomId,
-    durationMs: durationMs ?? null,
-    metadata: metadata ?? {},
-  })
-}
 
 export async function saveActorState(db: DbClient, actor: ActorState): Promise<void> {
   const existing = await db
@@ -75,17 +56,4 @@ export async function loadMapData(db: DbClient, mapId: string) {
   )
 
   return { map: map[0], rooms, entities, actors, behaviorRules }
-}
-
-export async function getActorStatesFromDb(db: DbClient, mapId: string) {
-  const entities = await db.select().from(twinEntities).where(eq(twinEntities.mapId, mapId))
-  const actorEntityIds = entities.filter((e) => e.category === 'actor').map((e) => e.id)
-  if (actorEntityIds.length === 0) return []
-
-  const states: any[] = []
-  for (const entityId of actorEntityIds) {
-    const rows = await db.select().from(twinActorStates).where(eq(twinActorStates.entityId, entityId)).limit(1)
-    if (rows.length > 0) states.push(rows[0])
-  }
-  return states
 }

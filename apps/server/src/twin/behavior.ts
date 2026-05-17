@@ -51,32 +51,6 @@ export function createActorState(entityId: string, x: number, y: number, roomId:
   }
 }
 
-export function canTransition(from: BehaviorState, to: BehaviorState): boolean {
-  const transitions: Record<BehaviorState, BehaviorState[]> = {
-    idle:     ['moving', 'acting', 'sleeping', 'eating', 'toilet', 'shower'],
-    moving:   ['idle', 'acting', 'waiting'],
-    acting:   ['idle', 'moving'],
-    sleeping: ['idle', 'moving'],
-    eating:   ['idle', 'moving'],
-    toilet:   ['idle', 'moving'],
-    shower:   ['idle', 'moving'],
-    waiting:  ['moving', 'idle'],
-  }
-  return transitions[from]?.includes(to) ?? false
-}
-
-export function postureForState(state: BehaviorState): ActorPosture {
-  switch (state) {
-    case 'sleeping': return 'lying'
-    case 'eating': return 'sitting'
-    case 'moving': return 'walking'
-    case 'toilet': return 'sitting'
-    case 'shower': return 'standing'
-    case 'acting': return 'standing'
-    default: return 'standing'
-  }
-}
-
 export function tickActorMovement(actor: ActorState, speed: number): void {
   if (actor.behaviorState !== 'moving' || actor.path.length === 0) return
 

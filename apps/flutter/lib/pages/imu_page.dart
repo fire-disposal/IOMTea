@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 import 'package:flutter/material.dart';
 import '../services/imu_sensor_service.dart';
 import '../widgets/imu_waveform.dart';

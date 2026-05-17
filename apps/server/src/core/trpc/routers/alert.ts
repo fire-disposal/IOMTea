@@ -3,10 +3,12 @@ import { TRPCError } from '@trpc/server'
 import { and, desc, eq, gte } from 'drizzle-orm'
 import { z } from 'zod'
 import { events } from '../../db/schema'
+import { requirePermission } from '../middleware/rbac'
 import { protectedProcedure, router } from '../index'
 
 export const alertRouter = router({
   list: protectedProcedure
+    .use(requirePermission('alert:read'))
     .input(
       z.object({
         page: z.number().int().min(1).default(1),
@@ -52,6 +54,7 @@ export const alertRouter = router({
     }),
 
   acknowledge: protectedProcedure
+    .use(requirePermission('alert:manage'))
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
       const [updated] = await ctx.db
@@ -69,12 +72,95 @@ export const alertRouter = router({
     }),
 
   resolve: protectedProcedure
+    .use(requirePermission('alert:manage'))
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
       const [updated] = await ctx.db
         .update(events)
         .set({ status: 'resolved' })
         .where(and(eq(events.id, input.id), eq(events.kind, 'alert')))
+        .returning()
+
+      if (!updated) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Alert not found' })
+      }
+      return alertSchema
+        .pick({ id: true, status: true })
+        .parse({ id: updated.id, status: updated.status })
+    }),
+
+  assign: protectedProcedure
+    .use(requirePermission('alert:manage'))
+    .input(z.object({ alertId: z.string().uuid(), assigneeId: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const [updated] = await ctx.db
+        .update(events)
+        .set({ status: 'assigned' })
+        .where(and(eq(events.id, input.alertId), eq(events.kind, 'alert')))
+        .returning()
+
+      if (!updated) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Alert not found' })
+      }
+      return alertSchema
+        .pick({ id: true, status: true })
+        .parse({ id: updated.id, status: updated.status })
+    }),
+
+  handle: protectedProcedure
+    .use(requirePermission('alert:manage'))
+    .input(z.object({ alertId: z.string().uuid(), note: z.string().optional() }))
+    .mutation(async ({ ctx, input }) => {
+      const [alert] = await ctx.db
+        .select({ tags: events.tags })
+        .from(events)
+        .where(and(eq(events.id, input.alertId), eq(events.kind, 'alert')))
+        .limit(1)
+
+      if (!alert) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Alert not found' })
+      }
+
+      const tags = { ...((alert.tags as Record<string, unknown>) || {}) }
+      if (input.note) tags.handle_note = input.note
+      tags.handled_at = new Date().toISOString()
+
+      const [updated] = await ctx.db
+        .update(events)
+        .set({ status: 'handled', tags })
+        .where(and(eq(events.id, input.alertId), eq(events.kind, 'alert')))
+        .returning()
+
+      if (!updated) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Alert not found' })
+      }
+      return alertSchema
+        .pick({ id: true, status: true })
+        .parse({ id: updated.id, status: updated.status })
+    }),
+
+  close: protectedProcedure
+    .use(requirePermission('alert:manage'))
+    .input(z.object({ alertId: z.string().uuid(), resolution: z.string().optional() }))
+    .mutation(async ({ ctx, input }) => {
+      const [alert] = await ctx.db
+        .select({ tags: events.tags })
+        .from(events)
+        .where(and(eq(events.id, input.alertId), eq(events.kind, 'alert')))
+        .limit(1)
+
+      if (!alert) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Alert not found' })
+      }
+
+      const tags = { ...((alert.tags as Record<string, unknown>) || {}) }
+      if (input.resolution) tags.resolution = input.resolution
+      tags.closed_at = new Date().toISOString()
+
+      const [updated] = await ctx.db
+        .update(events)
+        .set({ status: 'closed', tags })
+        .where(and(eq(events.id, input.alertId), eq(events.kind, 'alert')))
         .returning()
 
       if (!updated) {

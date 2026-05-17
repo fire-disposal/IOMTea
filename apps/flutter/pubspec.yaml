@@ -23,6 +23,9 @@ dependencies:
   # 路由
   go_router: ^14.0.0
 
+  # HTTP
+  http: ^1.2.0
+
   # 存储
   shared_preferences: ^2.3.0
 

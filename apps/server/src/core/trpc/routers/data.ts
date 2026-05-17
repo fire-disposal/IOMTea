@@ -1,6 +1,5 @@
 import {
   eventTimeSeriesInputSchema,
-  observationIngestSchema,
   observationSchema,
 } from '@iomtea/shared-types'
 import { and, desc, eq, gte, lte } from 'drizzle-orm'
@@ -80,22 +79,4 @@ export const dataRouter = router({
         )
     }),
 
-  ingest: protectedProcedure
-    .input(z.array(observationIngestSchema))
-    .mutation(async ({ ctx, input }) => {
-      const now = new Date()
-      const values = input.map((d) => ({
-        patientId: d.patientId,
-        deviceId: d.deviceId,
-        kind: 'observation' as const,
-        metric: d.metric,
-        value: d.value,
-        unit: d.unit ?? null,
-        tags: d.tags ?? {},
-        recordedAt: d.recordedAt ? new Date(d.recordedAt) : now,
-      }))
-
-      const result = await ctx.db.insert(events).values(values).returning()
-      return { inserted: result.length }
-    }),
 })

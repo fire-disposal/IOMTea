@@ -10,12 +10,9 @@ const envSchema = z.object({
   MQTT_USERNAME: z.string().optional(),
   MQTT_PASSWORD: z.string().optional(),
   MQTT_ENABLED: z.coerce.boolean().default(false),
-  TCP_INGEST_ENABLED: z.coerce.boolean().default(true),
-  TCP_INGEST_PORT: z.coerce.number().default(5858),
-  TCP_INGEST_TOKEN: z.string().optional(),
-  CORS_ORIGIN: z.string().optional(),
   WECHAT_APP_ID: z.string().optional(),
   WECHAT_APP_SECRET: z.string().optional(),
+  CORS_ORIGIN: z.string().optional(),
 })
 
 export const env = envSchema.parse(process.env)

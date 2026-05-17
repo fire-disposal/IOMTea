@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { findPath, isValidPath, type PathResult } from './pathfinding'
+import { findPath, type PathResult } from './pathfinding'
 
 type GridCell = { terrain: 0 | 1 | 2 }
 
@@ -29,7 +29,6 @@ describe('findPath', () => {
     ])
     const result = findPath(grid, { x: 1, y: 0 }, { x: 2, y: 2 })
     expect(result).not.toBeNull()
-    expect(isValidPath(result!.path, grid)).toBe(true)
   })
 
   it('avoids void tiles (terrain=0)', () => {
@@ -71,24 +70,7 @@ describe('findPath', () => {
     ])
     const result = findPath(grid, { x: 0, y: 0 }, { x: 4, y: 3 })
     expect(result).not.toBeNull()
-    expect(isValidPath(result!.path, grid)).toBe(true)
   })
 })
 
-describe('isValidPath', () => {
-  it('validates all tiles are passable', () => {
-    const grid = g([
-      [1, 1, 1],
-      [1, 1, 1],
-    ])
-    expect(isValidPath([{ x: 0, y: 0 }, { x: 1, y: 0 }, { x: 2, y: 0 }], grid)).toBe(true)
-  })
 
-  it('detects void in path', () => {
-    const grid = g([
-      [1, 1, 0],
-      [1, 1, 1],
-    ])
-    expect(isValidPath([{ x: 0, y: 0 }, { x: 2, y: 0 }], grid)).toBe(false)
-  })
-})

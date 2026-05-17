@@ -1,0 +1,58 @@
+.number-input__display {
+  text-align: center;
+  padding: 24px;
+  position: relative;
+}
+.number-input__value {
+  font-size: 64px;
+  font-weight: 300;
+  color: #1a1a2e;
+}
+.number-input__hint {
+  display: block;
+  font-size: 14px;
+  color: #adb5bd;
+  margin-top: 8px;
+  animation: hintPulse 2s ease-in-out infinite;
+}
+@keyframes hintPulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+.number-input__keypad {
+  width: 100%;
+  max-width: 360px;
+}
+.number-input__row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.number-input__key {
+  flex: 1;
+  height: 64px;
+  background: white;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  font-size: 24px;
+  font-weight: 500;
+  color: #1a1a2e;
+  cursor: pointer;
+  transition: transform 0.1s, background 0.1s;
+  user-select: none;
+}
+.number-input__key:active {
+  background: #d0ebff;
+  transform: scale(0.95);
+}
+.number-input__key--empty {
+  background: transparent;
+  box-shadow: none;
+}
+.number-input__key--empty:active {
+  background: transparent;
+  transform: none;
+}

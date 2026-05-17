@@ -10,9 +10,12 @@
   "exports": {
     ".": "./src/index.ts",
     "./schemas": "./src/schemas/index.ts",
-    "./map": "./src/map/index.ts"
+    "./ema": "./src/ema/index.ts"
   },
   "dependencies": {
     "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.6"
   }
 }

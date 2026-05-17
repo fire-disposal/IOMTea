@@ -17,7 +17,8 @@ class ImuData {
 }
 
 class ImuSensorService {
-  StreamSubscription<dynamic>? _accel, _gyro;
+  StreamSubscription<AccelerometerEvent>? _accel;
+  StreamSubscription<GyroscopeEvent>? _gyro;
   final _ctrl = StreamController<ImuData>.broadcast();
   Stream<ImuData> get dataStream => _ctrl.stream;
 

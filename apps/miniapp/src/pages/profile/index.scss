@@ -1,0 +1,247 @@
+.profile-page {
+  padding: 24px 16px 66px;
+  min-height: 100vh;
+  background: var(--bg-page, #FAFAF5);
+}
+
+.profile-page__header {
+  text-align: center;
+  padding: 32px 0;
+}
+
+.profile-page__avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: var(--brand-500, #6BA539);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+}
+
+.profile-page__avatar-text {
+  font-size: 28px;
+  color: #fff;
+  font-weight: 600;
+}
+
+.profile-page__name {
+  display: block;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary, #3C3C3C);
+}
+
+.profile-page__section {
+  background: var(--bg-card, #fff);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.profile-page__section-title {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary, #3C3C3C);
+  margin-bottom: 12px;
+}
+
+.profile-page__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.profile-stat-item {
+  flex: 0 0 calc(25% - 6px);
+  text-align: center;
+  padding: 8px 0;
+}
+
+.profile-stat-item__num {
+  display: block;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--brand-500, #6BA539);
+}
+
+.profile-stat-item__label {
+  display: block;
+  font-size: 12px;
+  color: var(--text-secondary, #8C8C7E);
+  margin-top: 2px;
+}
+
+.profile-page__menu {
+  background: var(--bg-card, #fff);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.profile-page__sync {
+  background: var(--bg-card, #fff);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.profile-sync-info__label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary, #3C3C3C);
+}
+
+.profile-sync-info__count {
+  display: block;
+  font-size: 12px;
+  color: var(--text-secondary, #8C8C7E);
+  margin-top: 2px;
+}
+
+.profile-sync-btn {
+  font-size: 13px !important;
+  padding: 6px 16px !important;
+  line-height: 1.5 !important;
+  background: var(--brand-500, #6BA539) !important;
+  color: #fff !important;
+  border-radius: 6px !important;
+  min-width: auto !important;
+}
+
+.pin-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.pin-item:last-child {
+  border-bottom: none;
+}
+
+.pin-item__info {
+  flex: 1;
+}
+
+.pin-item__code {
+  display: block;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary, #3C3C3C);
+  font-family: monospace;
+  letter-spacing: 2px;
+}
+
+.pin-item__nickname {
+  display: block;
+  font-size: 14px;
+  color: var(--brand-500, #6BA539);
+  margin-top: 2px;
+}
+
+.pin-item__nickname-input {
+  display: block;
+  font-size: 14px;
+  padding: 4px 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-top: 4px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.pin-item__label {
+  display: block;
+  font-size: 12px;
+  color: var(--text-secondary, #8C8C7E);
+  margin-top: 2px;
+}
+
+.pin-item__last-seen {
+  display: block;
+  font-size: 12px;
+  color: var(--text-secondary, #8C8C7E);
+  margin-top: 2px;
+}
+
+.pin-item__actions {
+  display: flex;
+  gap: 8px;
+  margin-left: 12px;
+}
+
+.pin-item__copy, .pin-item__edit {
+  font-size: 13px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--brand-500, #6BA539);
+  color: var(--brand-500, #6BA539);
+}
+
+.profile-menu-item {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background 0.15s;
+}
+.profile-menu-item:active {
+  background: #f0f0e8;
+}
+
+.profile-menu-item:last-child {
+  border-bottom: none;
+}
+
+.profile-menu-item__icon {
+  font-size: 20px;
+  margin-right: 12px;
+}
+
+.profile-menu-item__label {
+  flex: 1;
+  font-size: 16px;
+  color: var(--text-primary, #3C3C3C);
+}
+
+.profile-menu-item__arrow {
+  font-size: 20px;
+  color: var(--text-secondary, #8C8C7E);
+}
+
+.profile-pins-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pin-skeleton {
+  height: 64px;
+  border-radius: 8px;
+  background: #f0f0e8;
+  animation: profileSkeletonPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes profileSkeletonPulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+.pin-item:active {
+  background: #f8f8f0;
+  border-radius: 8px;
+}
+
+.pin-item__copy:active, .pin-item__edit:active {
+  background: var(--brand-500, #6BA539);
+  color: #fff;
+}

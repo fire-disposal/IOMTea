@@ -4,9 +4,13 @@ import { trpc } from '../../utils/trpc'
 
 export default function Alerts() {
   const [alerts, setAlerts] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    trpc.alert.list.query({ pageSize: 50 }).then((r) => setAlerts(r || []))
+    trpc.alert.list.query({ pageSize: 50 }).then((r) => {
+      setAlerts(r || [])
+      setLoading(false)
+    }).catch(() => setLoading(false))
   }, [])
 
   const severityColor: Record<string, string> = {
@@ -17,7 +21,8 @@ export default function Alerts() {
 
   return (
     <View className="page">
-      {alerts.length === 0 && <Text className="empty">无告警记录</Text>}
+      {loading && <Text className="empty">加载中...</Text>}
+      {!loading && alerts.length === 0 && <Text className="empty">无告警记录</Text>}
       {alerts.map((a) => (
         <View
           key={a.id}

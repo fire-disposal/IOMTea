@@ -1,0 +1,157 @@
+.dynamic-form {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding: 24px;
+  background: #f8f9fa;
+}
+
+.dynamic-form__header {
+  text-align: center;
+  padding: 32px 0 24px;
+}
+
+.dynamic-form__title {
+  font-size: 28px;
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+.dynamic-form__desc {
+  font-size: 14px;
+  color: #6c757d;
+  margin-top: 8px;
+  display: block;
+}
+
+.dynamic-form__fields {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.dynamic-form__footer {
+  padding: 16px 0 32px;
+}
+
+.dynamic-form__submit {
+  width: 100%;
+  height: 48px;
+  background: #4a90d9;
+  color: white;
+  border-radius: 12px;
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 48px;
+  text-align: center;
+}
+
+.dynamic-form__submit:active {
+  background: #3a7bc8;
+}
+
+.dynamic-field {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.dynamic-field__label {
+  font-size: 16px;
+  font-weight: 500;
+  color: #1a1a2e;
+  margin-bottom: 12px;
+  display: block;
+}
+
+.dynamic-field__options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.dynamic-field__option {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+  font-size: 14px;
+  color: #495057;
+}
+
+.dynamic-field__option--active {
+  background: #4a90d9;
+  color: white;
+  border-color: #4a90d9;
+}
+
+.dynamic-field__likert {
+  display: flex;
+  gap: 4px;
+}
+
+.dynamic-field__likert-item {
+  flex: 1;
+  padding: 12px 4px;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+  text-align: center;
+}
+
+.dynamic-field__likert-item--active {
+  background: #4a90d9;
+  color: white;
+  border-color: #4a90d9;
+}
+
+.dynamic-field__likert-label {
+  font-size: 12px;
+}
+
+.dynamic-field__vas {
+  padding: 8px 0;
+}
+
+.dynamic-field__vas-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: #6c757d;
+}
+
+.dynamic-field__vas-value {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+.dynamic-field__number {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dynamic-field__number-input {
+  flex: 1;
+  height: 44px;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 0 12px;
+  font-size: 16px;
+}
+
+.dynamic-field__number-unit {
+  font-size: 14px;
+  color: #6c757d;
+}
+
+.dynamic-field__textarea {
+  width: 100%;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 14px;
+  min-height: 80px;
+}

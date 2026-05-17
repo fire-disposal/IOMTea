@@ -13,7 +13,7 @@ export const deviceTypeEnum = pgEnum('device_type', [
 export const deviceStatusEnum = pgEnum('device_status', ['active', 'inactive', 'maintenance', 'error'])
 export const patientStatusEnum = pgEnum('patient_status', ['active', 'discharged', 'archived'])
 export const alertSeverityEnum = pgEnum('alert_severity', ['critical', 'warning', 'info'])
-export const alertStatusEnum = pgEnum('alert_status', ['active', 'acknowledged', 'resolved', 'expired'])
+export const alertStatusEnum = pgEnum('alert_status', ['active', 'acknowledged', 'resolved', 'expired', 'new', 'assigned', 'handled', 'closed'])
 export const kindEnum = pgEnum('kind', ['observation', 'alert', 'behavior', 'location'])
 
 // New enums
@@ -35,3 +35,31 @@ export const actorPostureEnum = pgEnum('actor_posture', ['lying', 'sitting', 'st
 export const behaviorStateEnum = pgEnum('behavior_state', ['idle', 'moving', 'acting', 'sleeping', 'eating', 'toilet', 'shower'])
 export const behaviorRuleTypeEnum = pgEnum('behavior_rule_type', ['schedule', 'trigger', 'routine'])
 export const roomTypeEnum = pgEnum('room_type', ['bedroom', 'livingroom', 'kitchen', 'bathroom', 'study', 'corridor', 'custom'])
+
+// ── Type exports: single source of truth for strict TypeScript usage ──
+export type Role = 'admin' | 'doctor' | 'nurse' | 'caregiver' | 'patient' | 'family'
+export type DeviceType = 'mattress' | 'vision' | 'imu' | 'generic' | 'simulator' | 'custom'
+export type DeviceStatus = 'active' | 'inactive' | 'maintenance' | 'error'
+export type PatientStatus = 'active' | 'discharged' | 'archived'
+export type AlertSeverity = 'critical' | 'warning' | 'info'
+export type AlertStatus = 'active' | 'acknowledged' | 'resolved' | 'expired' | 'new' | 'assigned' | 'handled' | 'closed'
+export type EventKind = 'observation' | 'alert' | 'behavior' | 'location'
+
+export type UserStatus = 'active' | 'disabled' | 'pending'
+export type Gender = 'male' | 'female' | 'other'
+export type BloodType = 'A' | 'B' | 'AB' | 'O'
+export type SnapshotType = 'daily' | 'weekly' | 'monthly' | 'discharge'
+export type EventSource = 'iot' | 'cv' | 'simulator' | 'manual'
+export type MedicationStatus = 'active' | 'completed' | 'paused' | 'cancelled'
+export type MedicationRoute = 'oral' | 'injection' | 'topical' | 'inhalation' | 'other'
+export type AdherenceStatus = 'taken' | 'missed' | 'skipped' | 'delayed'
+export type ConfirmationMethod = 'self' | 'family' | 'auto' | 'unknown'
+export type AppointmentType = 'checkup' | 'followup' | 'emergency' | 'consultation' | 'rehabilitation'
+export type AppointmentStatus = 'scheduled' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'no_show'
+export type FollowupType = 'phone' | 'video' | 'home_visit' | 'clinic' | 'message'
+export type EntityCategory = 'furniture' | 'structure' | 'sensor' | 'actor' | 'marker'
+export type Orientation = 'N' | 'S' | 'E' | 'W'
+export type ActorPosture = 'lying' | 'sitting' | 'standing' | 'walking'
+export type BehaviorState = 'idle' | 'moving' | 'acting' | 'sleeping' | 'eating' | 'toilet' | 'shower'
+export type BehaviorRuleType = 'schedule' | 'trigger' | 'routine'
+export type RoomType = 'bedroom' | 'livingroom' | 'kitchen' | 'bathroom' | 'study' | 'corridor' | 'custom'

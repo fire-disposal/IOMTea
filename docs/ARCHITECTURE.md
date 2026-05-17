@@ -19,38 +19,36 @@ apps/server/src/
 │   ├── services/                业务逻辑（auth, device, patient）
 │   └── trpc/                    tRPC 路由（Application Layer，薄层）
 │
-├── simulator/               ← Context: 仿真
+├── twin/                    ← Context: 数字孪生
 │   ├── engine.ts                引擎入口
-│   ├── clock.ts                 仿真时钟
-│   ├── factory.ts               患者实例工厂
-│   ├── profiles/                患者档案配置
-│   ├── physiology/              生理信号模型（纯函数）
-│   ├── devices/                 虚拟设备模拟器（纯函数）
-│   ├── scenarios/               场景脚本
+│   ├── scheduler.ts             运行调度器
+│   ├── pathfinding.ts           A* 寻路
+│   ├── behavior.ts              智能体行为
+│   ├── nav-mesh.ts              导航网格
+│   ├── instruction.ts           动作指令
 │   ├── db-writer.ts             events 表批量写入
-│   └── trpc/                    仿真控制 tRPC 路由
+│   ├── profiles/                患者档案配置 (5 种)
+│   ├── physiology/              生理信号模型（纯函数）
+│   └── trpc/                    孪生控制 tRPC 路由
 │
-├── ingest/                  ← Context: 数据接入（规划中）
-│   ├── mqtt/
-│   ├── tcp/
-│   └── trpc/
-│
-└── events/                  ← Domain Event 共享层
-    └── （即 db/schema.ts 中的 events 表）
+├── mqtt-ingest/             ← Context: 数据接入
+│   ├── index.ts
+│   ├── listener.ts
+│   └── router.ts
 ```
 
 ### Context 间通信规则
 
 ```
-simulator ──写入──▶ events 表 ◀──读取── core (dataRouter)
-simulator ◀──tRPC── core (deviceRouter.create/register)
-ingest    ──写入──▶ events 表          （未来）
-ingest    ◀──tRPC── core               （未来）
+twin      ──写入──▶ events 表 ◀──读取── core (dataRouter)
+twin      ◀──tRPC── core (deviceRouter.create/register)
+mqtt-ingest──写入──▶ events 表
+mqtt-ingest◀──tRPC── core
 ```
 
 **禁止**：
-- `simulator/` import `core/services/` 的任何内容
-- `simulator/` import `core/trpc/` 的任何实现
+- `twin/` import `core/services/` 的任何内容
+- `twin/` import `core/trpc/` 的任何实现
 - Context 之间 import type 仅限 `shared-types` 包
 
 **允许**：
@@ -91,9 +89,9 @@ ingest    ◀──tRPC── core               （未来）
 
 ```
 所有数据流入:
-  simulator ──▶ events 表 ◀── ingest (未来)
-                    │
-所有数据流出:        ▼
+  twin ──▶ events 表 ◀── mqtt-ingest
+               │
+所有数据流出:   ▼
   data.timeseries ──▶ Dashboard
   data.latest     ──▶ 患者卡片
   alert.list      ──▶ 告警面板
@@ -103,11 +101,13 @@ ingest    ◀──tRPC── core               （未来）
 
 ```
 events (
-  id, patient_id, device_id,
+  id, patient_id, device_id, pin_code,
   kind,        -- 'observation' | 'alert'
   metric,      -- 自由文本，不校验枚举
   value,       -- double，alert 可 null
   unit,        -- 自由文本
+  confidence,  -- 信号质量 0-1
+  source,      -- 'manual' | 'device' | 'simulator' | 'imported'
   severity,    -- 仅 alert
   status,      -- 仅 alert
   tags,        -- jsonb，核心扩展机制
@@ -205,7 +205,7 @@ register: publicProcedure.mutation(({ ctx, input }) =>
 向 AI 描述任务时，统一使用如下格式：
 
 ```
-Context: IOMTea 项目，Bounded Context = {core|simulator|ingest}
+Context: IOMTea 项目，Bounded Context = {core|twin|mqtt-ingest}
 规则:
   - 你可以导入: drizzle-orm, @iomtea/shared-types, {Context}/ 内部模块
   - 你不能导入: {其他 Context}/ 的任何模块
@@ -243,3 +243,4 @@ Context: IOMTea 项目，Bounded Context = {core|simulator|ingest}
 | 版本 | 日期 | 变更 |
 |------|------|------|
 | v1.0 | 2026-05-10 | 初始版，定义 Bounded Context + 术语 + 分层 + 反模式 + AI 契约 |
+| v1.1 | 2026-05-16 | 更新 Context: simulator→twin, ingest→mqtt-ingest; 更新 event 结构 |

@@ -8,10 +8,11 @@ import { TRPCError } from '@trpc/server'
 import { eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { patients } from '../../db/schema'
+import { requirePermission } from '../middleware/rbac'
 import { protectedProcedure, router } from '../index'
 
 export const patientRouter = router({
-  list: protectedProcedure.input(patientListInputSchema).query(async ({ ctx, input }) => {
+  list: protectedProcedure.use(requirePermission('patient:read')).input(patientListInputSchema).query(async ({ ctx, input }) => {
     const offset = (input.page - 1) * input.pageSize
     let query = ctx.db.select().from(patients).$dynamic()
     if (input.status) {
@@ -33,6 +34,7 @@ export const patientRouter = router({
   }),
 
   byId: protectedProcedure
+    .use(requirePermission('patient:read'))
     .input(z.object({ id: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
       const rows = await ctx.db.select().from(patients).where(eq(patients.id, input.id)).limit(1)
@@ -52,7 +54,7 @@ export const patientRouter = router({
       })
     }),
 
-  create: protectedProcedure.input(patientCreateSchema).mutation(async ({ ctx, input }) => {
+  create: protectedProcedure.use(requirePermission('patient:write')).input(patientCreateSchema).mutation(async ({ ctx, input }) => {
     const [created] = await ctx.db.insert(patients).values(input).returning()
     return patientSchema.parse({
       id: created.id,
@@ -65,6 +67,7 @@ export const patientRouter = router({
   }),
 
   update: protectedProcedure
+    .use(requirePermission('patient:write'))
     .input(z.object({ id: z.string().uuid(), data: patientUpdateSchema }))
     .mutation(async ({ ctx, input }) => {
       const [updated] = await ctx.db
@@ -87,6 +90,7 @@ export const patientRouter = router({
     }),
 
   delete: protectedProcedure
+    .use(requirePermission('patient:delete'))
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
       await ctx.db.delete(patients).where(eq(patients.id, input.id))

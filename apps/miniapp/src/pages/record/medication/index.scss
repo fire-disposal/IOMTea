@@ -1,0 +1,87 @@
+.med-page {
+  min-height: 100vh;
+  padding: 24px;
+  background: #f8f9fa;
+}
+
+.med-header {
+  text-align: center;
+  padding: 32px 0 24px;
+}
+
+.med-title {
+  font-size: 28px;
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+.med-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.med-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.med-item--taken { opacity: 0.6; }
+.med-item--skipped { opacity: 0.6; }
+
+.med-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.med-drug {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+.med-dosage {
+  font-size: 14px;
+  color: #6c757d;
+}
+
+.med-time {
+  font-size: 14px;
+  color: #6c757d;
+}
+
+.med-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.med-btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.med-btn--take {
+  background: #28a745;
+  color: #fff;
+}
+
+.med-btn--skip {
+  background: #e9ecef;
+  color: #6c757d;
+}
+
+.med-status {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.med-status--taken { color: #28a745; }
+.med-status--skipped { color: #6c757d; }

@@ -15,18 +15,15 @@ export const patientSchema = z.object({
 
 export const patientCreateSchema = z.object({
   name: z.string().min(1).max(100),
-  birthDate: z.string().optional(),
-  gender: z.enum(GENDERS).optional(),
-  room: z.string().max(20).optional(),
-  bedNumber: z.string().max(20).optional(),
-  heightCm: z.number().min(0).max(300).optional(),
-  weightKg: z.number().min(0).max(500).optional(),
-  bloodType: z.enum(['A', 'B', 'AB', 'O']).optional(),
-  phone: z.string().max(20).optional(),
-  address: z.string().optional(),
-  emergencyContact: z.string().max(100).optional(),
-  emergencyPhone: z.string().max(20).optional(),
-  tags: z.record(z.string(), z.unknown()).optional(),
+  birthDate: z.preprocess((v: any) => v === '' ? undefined : v, z.string().optional()),
+  gender: z.preprocess((v: any) => v === '' ? undefined : v, z.enum(GENDERS).optional()),
+  heightCm: z.preprocess((v: any) => v === '' ? undefined : v, z.number().min(0).max(300).optional()),
+  weightKg: z.preprocess((v: any) => v === '' ? undefined : v, z.number().min(0).max(500).optional()),
+  bloodType: z.preprocess((v: any) => v === '' ? undefined : v, z.enum(['A', 'B', 'AB', 'O']).optional()),
+  phone: z.preprocess((v: any) => v === '' ? undefined : v, z.string().max(20).optional()),
+  address: z.preprocess((v: any) => v === '' ? undefined : v, z.string().optional()),
+  emergencyContact: z.preprocess((v: any) => v === '' ? undefined : v, z.string().max(100).optional()),
+  emergencyPhone: z.preprocess((v: any) => v === '' ? undefined : v, z.string().max(20).optional()),
 })
 
 export const patientUpdateSchema = patientCreateSchema.partial()

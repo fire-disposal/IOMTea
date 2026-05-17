@@ -17,9 +17,14 @@ class _MqttConsolePageState extends State<MqttConsolePage> {
     final t = _topicCtrl.text.trim();
     final p = _payloadCtrl.text.trim();
     if (t.isEmpty || p.isEmpty) return;
+    if (MqttService.instance.currentStatus.name != 'connected') {
+      setState(() => _log.insert(0, '[ERR] MQTT 未连接'));
+      return;
+    }
     try {
       MqttService.instance.publish(topic: t, message: p, qos: MqttQos.atMostOnce);
-      setState(() => _log.insert(0, '[${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, "0")}] UP $t'));
+      final now = DateTime.now();
+      setState(() => _log.insert(0, '[${now.hour}:${now.minute.toString().padLeft(2, "0")}] UP $t'));
     } catch (e) {
       setState(() => _log.insert(0, '[ERR] $e'));
     }

@@ -8,11 +8,12 @@ import { WebSocketServer } from 'ws'
 import { db } from './core/db'
 import { users } from './core/db/schema'
 import { hashPassword } from './core/lib/password'
+import { verifyToken, type JwtPayload } from './core/lib/jwt'
 import { broadcastManager } from './core/realtime/broadcast'
 import { createContext } from './core/trpc/context'
 import { appRouter } from './core/trpc/routers/_app'
 import { env } from './env'
-import { startMqttIngest, startTcpIngest } from './ingest'
+import { startMqttListener } from './mqtt-ingest'
 import { seedPermissions } from './core/services/permission-seed'
 
 const logger = pino({
@@ -81,17 +82,11 @@ async function bootstrap() {
 
 bootstrap().then(() => {
   if (env.MQTT_ENABLED) {
-    logger.info({ broker: env.MQTT_BROKER }, 'starting MQTT ingest')
-    startMqttIngest(db, {
-      broker: env.MQTT_BROKER,
+    logger.info({ broker: env.MQTT_BROKER }, 'starting MQTT PIN listener')
+    startMqttListener(env.MQTT_BROKER, {
       username: env.MQTT_USERNAME,
       password: env.MQTT_PASSWORD,
     })
-  }
-
-  if (env.TCP_INGEST_ENABLED) {
-    logger.info({ port: env.TCP_INGEST_PORT }, 'starting TCP ingest')
-    startTcpIngest(db, { port: env.TCP_INGEST_PORT, preSharedToken: env.TCP_INGEST_TOKEN })
   }
 
   const server = serve({ fetch: app.fetch, port: env.PORT })
@@ -112,40 +107,52 @@ bootstrap().then(() => {
     const url = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`)
     const wardId = url.searchParams.get('wardId') || ''
     const mapId = url.searchParams.get('mapId') || ''
+    const token = url.searchParams.get('token') || ''
 
-    if (wardId) {
-      broadcastManager.subscribe(wardId, ws)
-      logger.info({ wardId }, 'websocket client subscribed')
+    if (!token) {
+      logger.warn({ wardId, mapId }, 'websocket connection rejected: missing token')
+      ws.close(4001, 'Unauthorized: missing token')
+      return
     }
 
-    if (mapId) {
-      broadcastManager.subscribeMap(mapId, ws)
-      logger.info({ mapId }, 'websocket client subscribed (twin)')
-    }
+    verifyToken(token)
+      .then((payload: JwtPayload) => {
+        logger.info({ userId: payload.sub, role: payload.role, wardId, mapId }, 'websocket client authenticated')
 
-    ws.on('message', (raw) => {
-      try {
-        const msg = JSON.parse(raw.toString())
-        if (msg.type === 'subscribe' && msg.wardId) {
-          broadcastManager.subscribe(msg.wardId, ws)
-          logger.info({ wardId: msg.wardId }, 'websocket client subscribed (message)')
+        if (wardId) {
+          broadcastManager.subscribe(wardId, ws)
         }
-        if (msg.type === 'subscribe_twin' && msg.mapId) {
-          broadcastManager.subscribeMap(msg.mapId, ws)
-          logger.info({ mapId: msg.mapId }, 'websocket client subscribed twin (message)')
+
+        if (mapId) {
+          broadcastManager.subscribeMap(mapId, ws)
         }
-      } catch {
-        // ignore malformed messages
-      }
-    })
 
-    ws.on('close', () => {
-      broadcastManager.unsubscribeAll(ws)
-    })
+        ws.on('message', (raw) => {
+          try {
+            const msg = JSON.parse(raw.toString())
+            if (msg.type === 'subscribe' && msg.wardId) {
+              broadcastManager.subscribe(msg.wardId, ws)
+            }
+            if (msg.type === 'subscribe_twin' && msg.mapId) {
+              broadcastManager.subscribeMap(msg.mapId, ws)
+            }
+          } catch {
+            // ignore malformed messages
+          }
+        })
 
-    ws.on('error', () => {
-      broadcastManager.unsubscribeAll(ws)
-    })
+        ws.on('close', () => {
+          broadcastManager.unsubscribeAll(ws)
+        })
+
+        ws.on('error', () => {
+          broadcastManager.unsubscribeAll(ws)
+        })
+      })
+      .catch(() => {
+        logger.warn({ wardId, mapId }, 'websocket connection rejected: invalid token')
+        ws.close(4001, 'Unauthorized: invalid token')
+      })
   })
 
   logger.info({ port: env.PORT, ws: true }, 'server ready')

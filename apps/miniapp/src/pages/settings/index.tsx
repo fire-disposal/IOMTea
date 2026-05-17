@@ -40,10 +40,7 @@ export default function Settings() {
       </View>
       <Button onClick={save}>保存</Button>
       <Button onClick={testConn}>测试连接</Button>
-      <Button
-        onClick={logout}
-        style={{ marginTop: '40px', backgroundColor: '#e03131', color: '#fff' }}
-      >
+      <Button className="btn-logout" onClick={logout}>
         退出登录
       </Button>
     </View>

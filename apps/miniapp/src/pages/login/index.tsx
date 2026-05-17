@@ -10,27 +10,29 @@ export default function Login() {
     setLoading(true)
     try {
       const { code } = await Taro.login()
-      // In a real app: send code to backend, get JWT back
-      // For now, demo mode: register with a default account
-      try {
-        const result = await trpc.auth.register.mutate({
-          username: `wx_${Date.now()}`,
-          password: 'wechat_demo',
-          displayName: '微信用户',
-        })
-        Taro.setStorageSync('token', result.accessToken)
-        Taro.setStorageSync('refreshToken', result.refreshToken)
-        Taro.redirectTo({ url: '/pages/index/index' })
-      } catch {
-        // Already registered — try login
-        const result = await trpc.auth.login.mutate({
-          username: 'demo',
-          password: 'demo123',
-        })
-        Taro.setStorageSync('token', result.accessToken)
-        Taro.setStorageSync('refreshToken', result.refreshToken)
-        Taro.redirectTo({ url: '/pages/index/index' })
-      }
+      const result = await trpc.auth.wechatLogin.mutate({ code })
+      Taro.setStorageSync('token', result.accessToken)
+      Taro.setStorageSync('refreshToken', result.refreshToken)
+      Taro.redirectTo({ url: '/pages/pin-overview/index' })
+    } catch (err: any) {
+      Taro.showToast({ title: err?.message || '登录失败', icon: 'none' })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleDemoLogin() {
+    setLoading(true)
+    try {
+      const result = await trpc.auth.login.mutate({
+        username: 'demo',
+        password: 'demo123',
+      })
+      Taro.setStorageSync('token', result.accessToken)
+      Taro.setStorageSync('refreshToken', result.refreshToken)
+      Taro.redirectTo({ url: '/pages/pin-overview/index' })
+    } catch (err: any) {
+      Taro.showToast({ title: err?.message || '演示登录失败', icon: 'none' })
     } finally {
       setLoading(false)
     }
@@ -40,12 +42,15 @@ export default function Login() {
     <View className="login">
       <View className="logo">
         <Text className="logo-text">IOMTea</Text>
-        <Text className="logo-sub">健康数据平台</Text>
+        <Text className="logo-sub">居家健康管理</Text>
       </View>
 
       <Button className="wechat-btn" type="primary" loading={loading} onClick={handleWechatLogin}>
         微信一键登录
       </Button>
+
+      <Text className="login-hint">首次登录将自动创建账号</Text>
+      <Text className="demo-link" onClick={handleDemoLogin}>演示模式</Text>
     </View>
   )
 }

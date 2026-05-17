@@ -1,0 +1,24 @@
+.pressure-grid {
+  display: flex;
+  gap: 16px;
+  width: 100%;
+  justify-content: center;
+}
+
+.pressure-field {
+  flex: 1;
+  max-width: 160px;
+  text-align: center;
+}
+
+.pressure-hr {
+  width: 100%;
+  max-width: 160px;
+  text-align: center;
+}
+
+.pressure-label {
+  font-size: 14px;
+  color: #6c757d;
+  margin-top: 4px;
+}

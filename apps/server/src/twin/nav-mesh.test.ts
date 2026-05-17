@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { generateNavGraph, findRoomForTile, getRoomPath, type NavGraph } from './nav-mesh'
+import { generateNavGraph, findRoomForTile, type NavGraph } from './nav-mesh'
 
 describe('generateNavGraph', () => {
   it('generates rooms and edges for a simple map', () => {
@@ -51,41 +51,4 @@ describe('findRoomForTile', () => {
   })
 })
 
-describe('getRoomPath', () => {
-  const nav: NavGraph = {
-    rooms: [
-      { roomId: 'r1', name: 'Room 1', centroid: { x: 1, y: 0 }, walkableTiles: [{ x: 0, y: 0 }] },
-      { roomId: 'r2', name: 'Room 2', centroid: { x: 3, y: 0 }, walkableTiles: [{ x: 3, y: 0 }] },
-      { roomId: 'r3', name: 'Room 3', centroid: { x: 5, y: 0 }, walkableTiles: [{ x: 5, y: 0 }] },
-    ],
-    edges: [
-      { fromRoomId: 'r1', toRoomId: 'r2', doorX: 2, doorY: 0 },
-      { fromRoomId: 'r2', toRoomId: 'r3', doorX: 4, doorY: 0 },
-    ],
-    passabilityGrid: [],
-  }
 
-  it('finds room path between adjacent rooms', () => {
-    const path = getRoomPath(nav, 'r1', 'r2')
-    expect(path).not.toBeNull()
-    expect(path!.map(r => r.roomId)).toEqual(['r1', 'r2'])
-  })
-
-  it('finds room path across multiple rooms', () => {
-    const path = getRoomPath(nav, 'r1', 'r3')
-    expect(path).not.toBeNull()
-    expect(path!.map(r => r.roomId)).toEqual(['r1', 'r2', 'r3'])
-  })
-
-  it('returns null for disconnected rooms', () => {
-    const disconnected: NavGraph = {
-      rooms: [
-        { roomId: 'a', name: 'A', centroid: { x: 0, y: 0 }, walkableTiles: [] },
-        { roomId: 'b', name: 'B', centroid: { x: 10, y: 0 }, walkableTiles: [] },
-      ],
-      edges: [],
-      passabilityGrid: [],
-    }
-    expect(getRoomPath(disconnected, 'a', 'b')).toBeNull()
-  })
-})

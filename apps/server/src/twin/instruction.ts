@@ -23,14 +23,4 @@ export function processNextInstruction(actor: ActorState): Instruction | null {
   return null
 }
 
-export function completeInstruction(actor: ActorState): void {
-  actor.activeInstruction = null
-}
 
-export function clearQueue(actor: ActorState): void {
-  actor.instructionQueue = []
-}
-
-export function peekQueue(actor: ActorState): Instruction[] {
-  return [...actor.instructionQueue]
-}

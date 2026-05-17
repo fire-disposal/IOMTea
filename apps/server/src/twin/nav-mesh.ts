@@ -97,39 +97,4 @@ export function findRoomForTile(navGraph: NavGraph, x: number, y: number): NavRo
   ) ?? null
 }
 
-export function getRoomPath(
-  navGraph: NavGraph,
-  fromRoomId: string,
-  toRoomId: string,
-): NavRoomNode[] | null {
-  // Build adjacency map
-  const adj = new Map<string, Set<string>>()
-  for (const node of navGraph.rooms) {
-    adj.set(node.roomId, new Set())
-  }
-  for (const edge of navGraph.edges) {
-    adj.get(edge.fromRoomId)?.add(edge.toRoomId)
-    adj.get(edge.toRoomId)?.add(edge.fromRoomId)
-  }
 
-  // BFS from room to room
-  const visited = new Set<string>()
-  const queue: { roomId: string; path: string[] }[] = [{ roomId: fromRoomId, path: [fromRoomId] }]
-  visited.add(fromRoomId)
-
-  while (queue.length > 0) {
-    const current = queue.shift()!
-    if (current.roomId === toRoomId) {
-      return current.path.map((id) => navGraph.rooms.find((r) => r.roomId === id)!).filter(Boolean)
-    }
-
-    for (const neighbor of adj.get(current.roomId) ?? []) {
-      if (!visited.has(neighbor)) {
-        visited.add(neighbor)
-        queue.push({ roomId: neighbor, path: [...current.path, neighbor] })
-      }
-    }
-  }
-
-  return null
-}

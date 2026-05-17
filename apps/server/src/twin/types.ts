@@ -54,19 +54,6 @@ export interface BPReading {
 
 export type PressureGrid = number[][]
 
-export interface PatientInstance {
-  id: string
-  name: string
-  profileId: string
-  patientDbId: string
-  deviceDbId: string
-  activity: ActivityLevel
-  baselines: PatientProfile['baseline']
-  conditions: string[]
-  alerts: PatientProfile['alerts']
-  customThresholds?: { metric: string; min?: number; max?: number; enabled: boolean }[]
-}
-
 export interface SimulatedEvent {
   patientId: string
   deviceId: string
@@ -80,12 +67,4 @@ export interface SimulatedEvent {
   recordedAt: Date
 }
 
-export interface WardState {
-  id: string
-  name: string
-  speed: number
-  running: boolean
-  patientCount: number
-  startedAt: Date | null
-  tick: number
-}
+

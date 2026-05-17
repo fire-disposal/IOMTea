@@ -42,6 +42,7 @@ export function PatientCard({ patient, alertCount = 0, onDelete }: PatientCardPr
       padding="lg"
       radius="md"
       withBorder
+      className="card-hover"
       style={{ cursor: 'pointer', position: 'relative' }}
       onClick={() => navigate(`/patients/${patient.id}`)}
     >

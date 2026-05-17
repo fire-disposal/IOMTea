@@ -1,21 +1,22 @@
 import { TRPCError } from '@trpc/server'
 import { eq } from 'drizzle-orm'
+import type { DbClient } from '../../db'
 import { permissions, rolePermissions } from '../../db'
+import type { Role } from '../../db/schema/enums'
 import { middleware, publicProcedure } from '../init'
 import { authMiddleware } from './auth'
 
 const roleCache = new Map<string, string[]>()
 
-async function getRolePermissions(db: any, role: string): Promise<string[]> {
-  if (roleCache.has(role)) {
-    return roleCache.get(role)!
-  }
+async function getRolePermissions(db: DbClient, role: string): Promise<string[]> {
+  const cached = roleCache.get(role)
+  if (cached) return cached
 
   const rows = await db
     .select({ code: permissions.code })
     .from(rolePermissions)
     .innerJoin(permissions, eq(rolePermissions.permissionCode, permissions.code))
-    .where(eq(rolePermissions.role, role as any))
+    .where(eq(rolePermissions.role, role as Role))
 
   const codes = rows.map((r: { code: string }) => r.code)
   roleCache.set(role, codes)
@@ -38,7 +39,10 @@ export function requirePermission(...codes: string[]) {
 
       const hasAny = codes.some((code) => allowed.includes(code))
       if (!hasAny) {
-        throw new TRPCError({ code: 'FORBIDDEN', message: `Missing required permission: ${codes.join(', ')}` })
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: `Missing required permission: ${codes.join(', ')}`,
+        })
       }
 
       return next()

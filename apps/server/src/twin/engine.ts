@@ -1,3 +1,4 @@
+import pino from 'pino'
 import { v4 as uuid } from 'uuid'
 import type { DbClient } from '../core/db'
 import { events, patients, devices } from '../core/db/schema'
@@ -17,7 +18,9 @@ import { enqueueInstruction, processNextInstruction } from './instruction'
 import { tickScheduler, formatHourMinute } from './scheduler'
 import { findPath } from './pathfinding'
 import { generateNavGraph, findRoomForTile } from './nav-mesh'
-import { loadMapData, saveActorState, saveActivityLog } from './db-writer'
+import { loadMapData, saveActorState } from './db-writer'
+
+const logger = pino({ name: 'twin:engine' })
 
 // ── Engine State ──
 
@@ -79,7 +82,7 @@ export async function createEngine(
   const serial = `eng-${config.name.replace(/\s/g, '-').toLowerCase()}-${Date.now()}`
   const [device] = await db.insert(devices).values({
     serialNumber: serial,
-    deviceType: deviceType as any,
+    deviceType: deviceType as 'mattress' | 'vision' | 'imu' | 'generic' | 'simulator' | 'custom',
     patientId: patient.id,
     tags: { simulated: true, profileId: profile.id },
   }).returning()
@@ -112,8 +115,8 @@ export async function createEngine(
         actorState.tileY = Math.floor(firstRoom.y + firstRoom.h / 2)
         actorState.currentRoomId = firstRoom.id
       }
-    } catch {
-      // Map load optional — engine runs without map
+    } catch (err) {
+      logger.warn({ err }, 'failed to load map data')
     }
   }
 
@@ -202,7 +205,7 @@ function tickBehavior(engine: PatientEngine): void {
   if (!engine.navGraph) return
 
   const scheduled = tickScheduler(
-    engine.behaviorRules as any[],
+    engine.behaviorRules,
     Array.from(engine.actors.values()).map((a) => ({ entityId: a.entityId, patientId: engine.patientId })),
     formatHourMinute(engine.simTime),
   )
@@ -308,19 +311,19 @@ export async function startEngine(db: DbClient, patientId: string): Promise<void
         const rows = physEvents.map((e) => ({
           patientId: e.patientId,
           deviceId: e.deviceId,
-          kind: e.kind as any,
+          kind: e.kind,
           metric: e.metric,
           value: e.value,
           unit: e.unit,
-          source: 'simulator' as any,
-          tags: e.tags as any,
+          source: 'simulator' as const,
+          tags: e.tags,
           recordedAt: e.recordedAt,
         }))
-        await db.insert(events).values(rows).catch(() => {})
+        await db.insert(events).values(rows).catch((err) => { logger.warn({ err }, 'failed to insert simulated events') })
       }
 
       for (const actor of engine.actors.values()) {
-        await saveActorState(db, actor).catch(() => {})
+        await saveActorState(db, actor).catch((err) => { logger.warn({ err }, 'failed to save actor state') })
       }
 
       broadcastManager.broadcastTwin(
@@ -337,7 +340,7 @@ export async function startEngine(db: DbClient, patientId: string): Promise<void
         })),
       )
     } catch (err) {
-      console.error('PatientEngine tick error:', err)
+      logger.error({ err }, 'PatientEngine tick error')
     }
   }, 1000)
 }
@@ -438,7 +441,7 @@ export async function injectScenario(
       source: 'manual' as const,
       tags: { scenario: scenarioType, injected: true },
       recordedAt: now,
-    }).catch(() => {})
+    }).catch((err) => { logger.warn({ err }, 'failed to insert scenario observation') })
   }
 
   if (scenario.alert) {
@@ -454,7 +457,7 @@ export async function injectScenario(
       source: 'manual' as const,
       tags: { scenario: scenarioType, injected: true },
       recordedAt: now,
-    }).catch(() => {})
+    }).catch((err) => { logger.warn({ err }, 'failed to insert scenario alert') })
   }
 
   return true

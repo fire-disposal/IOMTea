@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { createActorState, canTransition, tickActorMovement, postureForState, type ActorState } from './behavior'
+import { createActorState, tickActorMovement, type ActorState } from './behavior'
 
 describe('createActorState', () => {
   it('creates actor with defaults', () => {
@@ -16,26 +16,7 @@ describe('createActorState', () => {
   })
 })
 
-describe('canTransition', () => {
-  it('allows idle → moving', () => expect(canTransition('idle', 'moving')).toBe(true))
-  it('allows idle → sleeping', () => expect(canTransition('idle', 'sleeping')).toBe(true))
-  it('allows moving → idle', () => expect(canTransition('moving', 'idle')).toBe(true))
-  it('allows moving → waiting', () => expect(canTransition('moving', 'waiting')).toBe(true))
-  it('rejects moving → sleeping', () => expect(canTransition('moving', 'sleeping')).toBe(false))
-  it('rejects sleeping → eating', () => expect(canTransition('sleeping', 'eating')).toBe(false))
-  it('allows sleeping → idle', () => expect(canTransition('sleeping', 'idle')).toBe(true))
-  it('allows eating → idle', () => expect(canTransition('eating', 'idle')).toBe(true))
-  it('allows toilet → moving', () => expect(canTransition('toilet', 'moving')).toBe(true))
-})
 
-describe('postureForState', () => {
-  it('sleeping → lying', () => expect(postureForState('sleeping')).toBe('lying'))
-  it('moving → walking', () => expect(postureForState('moving')).toBe('walking'))
-  it('eating → sitting', () => expect(postureForState('eating')).toBe('sitting'))
-  it('toilet → sitting', () => expect(postureForState('toilet')).toBe('sitting'))
-  it('idle → standing', () => expect(postureForState('idle')).toBe('standing'))
-  it('acting → standing', () => expect(postureForState('acting')).toBe('standing'))
-})
 
 describe('tickActorMovement', () => {
   function makeActor(overrides: Partial<ActorState> = {}): ActorState {

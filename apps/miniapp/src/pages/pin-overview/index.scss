@@ -1,0 +1,90 @@
+.pin-page {
+  padding: 40px 32px;
+  min-height: 100vh;
+  background: var(--bg-page);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.pin-page__title {
+  font-size: 40px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.pin-page__subtitle {
+  font-size: 26px;
+  color: var(--text-secondary);
+  margin-bottom: 48px;
+  text-align: center;
+}
+
+.pin-page__skeleton {
+  width: 100%;
+  height: 200px;
+  background: var(--bg-card);
+  border-radius: 24px;
+  margin-bottom: 24px;
+  animation: skeletonPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes skeletonPulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+.pin-card {
+  width: 100%;
+  background: var(--bg-card);
+  border-radius: 24px;
+  padding: 40px 32px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.pin-card__code {
+  font-size: 80px;
+  font-weight: 800;
+  letter-spacing: 12px;
+  color: var(--brand-500);
+  font-family: 'Courier New', monospace;
+  margin-bottom: 12px;
+}
+
+.pin-card__nickname {
+  font-size: 28px;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.pin-card__label {
+  font-size: 24px;
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+}
+
+.pin-card__actions {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.pin-card__copy {
+  width: 240px;
+  height: 72px;
+  line-height: 72px;
+  font-size: 28px;
+  border-radius: 12px;
+  background: var(--brand-500);
+  color: #fff;
+  text-align: center;
+}
+
+.pin-page__nav {
+  margin-top: 32px;
+}
