@@ -16,7 +16,6 @@ export function PatientDetailShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname })
   const patient = trpc.patient.byId.useQuery({ id: id! }, { enabled: !!id })
   const latestVitals = trpc.data.latest.useQuery({ patientId: id! }, { enabled: !!id, refetchInterval: 15000 })
-  const engineStatus = trpc.twin.engine.status.useQuery({ patientId: id! }, { enabled: !!id, refetchInterval: 5000 })
 
   const hr = latestVitals.data?.find((v: any) => v.metric === 'heart_rate')?.value
   const spo2 = latestVitals.data?.find((v: any) => v.metric === 'spo2')?.value

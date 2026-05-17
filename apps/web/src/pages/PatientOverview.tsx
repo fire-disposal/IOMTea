@@ -23,11 +23,12 @@ export function PatientOverview() {
 
   const timeMap: Record<string, number> = { '1h': 3600000, '6h': 21600000, '24h': 86400000, '7d': 604800000 }
   const from = now - (timeMap[timeRange] || 21600000)
+  const METRICS = ['heart_rate', 'spo2', 'systolic_bp', 'temperature']
 
-  const hrQuery = trpc.data.timeseries.useQuery({ patientId: id!, metric: 'heart_rate', from, to: now }, { enabled: !!id, refetchInterval: 10000 })
-  const spo2Query = trpc.data.timeseries.useQuery({ patientId: id!, metric: 'spo2', from, to: now }, { enabled: !!id, refetchInterval: 10000 })
-  const bpQuery = trpc.data.timeseries.useQuery({ patientId: id!, metric: 'systolic_bp', from, to: now }, { enabled: !!id, refetchInterval: 10000 })
-  const tempQuery = trpc.data.timeseries.useQuery({ patientId: id!, metric: 'temperature', from, to: now }, { enabled: !!id, refetchInterval: 10000 })
+  const tsBatch = trpc.data.timeseriesBatch.useQuery(
+    { patientId: id!, metrics: METRICS, from, to: now },
+    { enabled: !!id, refetchInterval: 10000 },
+  )
 
   const { runtime: mapData, isLoading: mapLoading, error: mapError, refetch: refetchMap } = useHomeMap(id)
   const createMapMut = trpc.homeMap.generateFromTemplate.useMutation()
@@ -48,22 +49,21 @@ export function PatientOverview() {
   const currentSpeed = es?.speed ?? 1
 
   const chartData = useMemo(() => {
+    const batch = tsBatch.data ?? {}
     const bucket = (ts: number) => Math.floor(ts / 60000) * 60000
     const map = new Map<number, Record<string, number>>()
-    const add = (arr: Array<{ recordedAt: number; value: number }> | undefined, key: string) => {
-      if (!arr) return
-      for (const e of arr) {
-        const b = bucket(e.recordedAt)
+    const metricKeys: Record<string, string> = { heart_rate: 'hr', spo2: 'spo2', systolic_bp: 'systolic_bp', temperature: 'temp' }
+    for (const [metric, points] of Object.entries(batch)) {
+      const key = metricKeys[metric]
+      if (!key) continue
+      for (const p of points as any[]) {
+        const b = bucket(p.recordedAt)
         if (!map.has(b)) map.set(b, { ts: b })
-        map.get(b)![key] = e.value
+        map.get(b)![key] = p.value
       }
     }
-    add(hrQuery.data as any, 'hr')
-    add(spo2Query.data as any, 'spo2')
-    add(bpQuery.data as any, 'systolic_bp')
-    add(tempQuery.data as any, 'temp')
-    return Array.from(map.entries()).sort(([a], [b]) => a - b).map(([, d]) => d as { ts: number; [k: string]: number | undefined })
-  }, [hrQuery.data, spo2Query.data, bpQuery.data, tempQuery.data])
+    return Array.from(map.entries()).sort(([a], [b]) => a - b).map(([, d]) => d as { ts: number; hr?: number; spo2?: number; systolic_bp?: number; temp?: number })
+  }, [tsBatch.data])
 
   const handlePlayPause = useCallback(() => {
     if (!id) return

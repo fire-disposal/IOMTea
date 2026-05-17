@@ -2,7 +2,7 @@ import {
   eventTimeSeriesInputSchema,
   observationSchema,
 } from '@iomtea/shared-types'
-import { and, desc, eq, gte, lte } from 'drizzle-orm'
+import { and, desc, eq, gte, inArray, lte } from 'drizzle-orm'
 import { z } from 'zod'
 import { events } from '../../db/schema'
 import { protectedProcedure, router } from '../index'
@@ -32,16 +32,51 @@ export const dataRouter = router({
       .limit(1000)
 
     return z
-      .array(observationSchema.pick({ recordedAt: true, value: true, unit: true, tags: true }))
-      .parse(
-        rows.map((r) => ({
-          recordedAt: r.recordedAt.getTime(),
-          value: r.value,
-          unit: r.unit,
-          tags: r.tags,
-        })),
-      )
+        .array(observationSchema.pick({ recordedAt: true, value: true, unit: true, tags: true }))
+        .parse(
+          rows.map((r) => ({
+            recordedAt: r.recordedAt.getTime(),
+            value: r.value,
+            unit: r.unit,
+            tags: r.tags,
+          })),
+        )
   }),
+
+  timeseriesBatch: protectedProcedure
+    .input(z.object({
+      patientId: z.string().uuid(),
+      metrics: z.array(z.string()).min(1).max(10),
+      from: z.number(),
+      to: z.number().optional(),
+    }))
+    .query(async ({ ctx, input }) => {
+      const conditions = [
+        eq(events.patientId, input.patientId),
+        inArray(events.metric, input.metrics),
+        eq(events.kind, 'observation'),
+        gte(events.recordedAt, new Date(input.from)),
+      ]
+      if (input.to) conditions.push(lte(events.recordedAt, new Date(input.to)))
+
+      const rows = await ctx.db
+        .select({
+          metric: events.metric,
+          recordedAt: events.recordedAt,
+          value: events.value,
+        })
+        .from(events)
+        .where(and(...conditions))
+        .orderBy(events.recordedAt)
+        .limit(4000)
+
+      const grouped: Record<string, { recordedAt: number; value: number | null }[]> = {}
+      for (const r of rows) {
+        if (!grouped[r.metric]) grouped[r.metric] = []
+        grouped[r.metric].push({ recordedAt: r.recordedAt.getTime(), value: r.value })
+      }
+      return grouped
+    }),
 
   latest: protectedProcedure
     .input(z.object({ patientId: z.string().uuid() }))
