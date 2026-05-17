@@ -13,7 +13,6 @@ import {
   TextInput,
   Title,
 } from '@mantine/core'
-import { useForm } from '@mantine/form'
 import { notifications } from '@mantine/notifications'
 import {
   IconAlertTriangle,
@@ -24,6 +23,7 @@ import {
   IconX,
 } from '@tabler/icons-react'
 import { useState } from 'react'
+import { useForm } from '@tanstack/react-form'
 import { PatientCard } from '../components/patients/PatientCard'
 import { StateEmpty, StateError, StateSkeleton } from '../components/shared/StateComponents'
 import { StatsBar, type StatsBarItem } from '../components/shared/StatsBar'
@@ -57,17 +57,16 @@ export function PatientWall() {
   })
 
   const form = useForm({
-    initialValues: {
-      name: '',
-      gender: '',
-      birthDate: '',
-      heightCm: undefined as number | undefined,
-      weightKg: undefined as number | undefined,
-      phone: '',
-      address: '',
+    defaultValues: { name: '', gender: '', birthDate: '', heightCm: undefined as number | undefined, weightKg: undefined as number | undefined, phone: '', address: '' },
+    onSubmit: ({ value }) => {
+      const clean = Object.fromEntries(
+        Object.entries(value).filter(([_, val]) => val !== '' && val !== undefined && val !== null),
+      )
+      createPatient.mutate(clean as any)
     },
-    validate: { name: (v) => (!v ? '请输入姓名' : null) },
   })
+
+  const nameRequired = ({ value }: { value: unknown }) => (!value ? '请输入姓名' : undefined)
 
   const filtered = (patients.data || []).filter(
     (p: any) => !search || p.name.toLowerCase().includes(search.toLowerCase()),
@@ -144,51 +143,54 @@ export function PatientWall() {
       )}
 
       <Modal opened={createOpen} onClose={() => setCreateOpen(false)} title="添加患者" size="md">
-        <form
-          onSubmit={form.onSubmit((v) => {
-            const clean = Object.fromEntries(
-              Object.entries(v).filter(
-                ([_, val]) => val !== '' && val !== undefined && val !== null,
-              ),
-            )
-            createPatient.mutate(clean as any)
-          })}
-        >
+        <form onSubmit={(e) => { e.preventDefault(); form.handleSubmit() }}>
           <Stack>
             <SimpleGrid cols={2}>
-              <TextInput label="姓名" required {...form.getInputProps('name')} />
-              <Select
-                label="性别"
-                data={[
-                  { value: 'male', label: '男' },
-                  { value: 'female', label: '女' },
-                  { value: 'other', label: '其他' },
-                ]}
-                {...form.getInputProps('gender')}
-              />
+              <form.Field name="name" validators={{ onChange: nameRequired }}>
+                {(field) => (
+                  <TextInput label="姓名" required value={field.state.value} onChange={(e) => field.handleChange(e.currentTarget.value)} error={field.state.meta.errors?.[0]} />
+                )}
+              </form.Field>
+              <form.Field name="gender">
+                {(field) => (
+                  <Select label="性别" data={[{ value: 'male', label: '男' }, { value: 'female', label: '女' }, { value: 'other', label: '其他' }]} value={field.state.value ?? ''} onChange={(v) => field.handleChange(v ?? '')} />
+                )}
+              </form.Field>
             </SimpleGrid>
             <SimpleGrid cols={2}>
-              <TextInput label="出生日期" type="date" {...form.getInputProps('birthDate')} />
-              <NumberInput
-                label="身高 (cm)"
-                min={0}
-                max={250}
-                {...form.getInputProps('heightCm')}
-              />
+              <form.Field name="birthDate">
+                {(field) => (
+                  <TextInput label="出生日期" type="date" value={field.state.value} onChange={(e) => field.handleChange(e.currentTarget.value)} />
+                )}
+              </form.Field>
+              <form.Field name="heightCm">
+                {(field) => (
+                  <NumberInput label="身高 (cm)" min={0} max={250} value={field.state.value ?? ''} onChange={(v) => field.handleChange(typeof v === 'number' ? v : undefined)} />
+                )}
+              </form.Field>
             </SimpleGrid>
             <SimpleGrid cols={2}>
-              <NumberInput
-                label="体重 (kg)"
-                min={0}
-                max={300}
-                {...form.getInputProps('weightKg')}
-              />
-              <TextInput label="电话" {...form.getInputProps('phone')} />
+              <form.Field name="weightKg">
+                {(field) => (
+                  <NumberInput label="体重 (kg)" min={0} max={300} value={field.state.value ?? ''} onChange={(v) => field.handleChange(typeof v === 'number' ? v : undefined)} />
+                )}
+              </form.Field>
+              <form.Field name="phone">
+                {(field) => (
+                  <TextInput label="电话" value={field.state.value} onChange={(e) => field.handleChange(e.currentTarget.value)} />
+                )}
+              </form.Field>
             </SimpleGrid>
-            <TextInput label="地址" {...form.getInputProps('address')} />
-            <Button type="submit" loading={createPatient.isPending} fullWidth mt="md">
-              创建患者
-            </Button>
+            <form.Field name="address">
+              {(field) => (
+                <TextInput label="地址" value={field.state.value} onChange={(e) => field.handleChange(e.currentTarget.value)} />
+              )}
+            </form.Field>
+            <form.Subscribe selector={(state) => state.isSubmitting}>
+              {(isSubmitting) => (
+                <Button type="submit" loading={isSubmitting || createPatient.isPending} fullWidth mt="md">创建患者</Button>
+              )}
+            </form.Subscribe>
           </Stack>
         </form>
       </Modal>

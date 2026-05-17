@@ -1,7 +1,9 @@
 import { useState, useMemo } from 'react'
-import { Container, Paper, Table, Badge, Text, Title, Skeleton, SimpleGrid, ThemeIcon, Group, SegmentedControl, Button } from '@mantine/core'
+import { Badge, Button, Container, Group, Paper, SegmentedControl, SimpleGrid, Text, ThemeIcon, Title } from '@mantine/core'
 import { IconCalendar, IconCalendarWeek, IconList } from '@tabler/icons-react'
+import { createColumnHelper } from '@tanstack/react-table'
 import { trpc } from '../trpc'
+import { DataTable } from '../components/shared/DataTable'
 import { QueryGate } from '../components/shared/QueryGate'
 import { useNavigate } from '@tanstack/react-router'
 
@@ -67,6 +69,15 @@ export function GlobalAppointments() {
     }
   }, [filter, todayAppts, weekAppts, pendingAppts, allAppointments])
 
+  const columnHelper = createColumnHelper<any>()
+  const columns = useMemo(() => [
+    columnHelper.accessor('patientName', { header: '患者', cell: (info) => <Text fw={500}>{info.getValue()}</Text> }),
+    columnHelper.accessor('appointmentType', { header: '类型', cell: (info) => <Badge size="sm" variant="light" color="gray">{APPOINTMENT_TYPE_LABELS[info.getValue()] || info.getValue()}</Badge> }),
+    columnHelper.accessor('scheduledAt', { header: '时间', cell: (info) => <Text size="sm">{new Date(info.getValue() as string).toLocaleString()}</Text> }),
+    columnHelper.accessor('status', { header: '状态', cell: (info) => <Badge size="sm" color={STATUS_COLORS[info.getValue()] || 'gray'}>{STATUS_LABELS[info.getValue()] || info.getValue()}</Badge> }),
+    columnHelper.display({ id: 'actions', header: '操作', cell: (info) => <Button size="xs" variant="light" onClick={() => navigate({ to: '/patients/$id/appointments', params: { id: info.row.original.patientId } })}>查看</Button> }),
+  ], [navigate])
+
   return (
     <Container size="xl" py="xl">
       <Title order={2} mb="md">预约管理</Title>
@@ -116,27 +127,8 @@ export function GlobalAppointments() {
           onRetry={() => patientsQuery.refetch()}
         >
           {(data) => (
-            <Table striped highlightOnHover>
-              <Table.Thead><Table.Tr>
-                <Table.Th>患者</Table.Th><Table.Th>类型</Table.Th><Table.Th>时间</Table.Th><Table.Th>状态</Table.Th><Table.Th>操作</Table.Th>
-              </Table.Tr></Table.Thead>
-              <Table.Tbody>
-                {data.map((a: any) => (
-                <Table.Tr key={a.id}>
-                  <Table.Td><Text fw={500}>{a.patientName}</Text></Table.Td>
-                  <Table.Td><Badge size="sm" variant="light" color="gray">{APPOINTMENT_TYPE_LABELS[a.appointmentType] || a.appointmentType}</Badge></Table.Td>
-                  <Table.Td><Text size="sm">{new Date(a.scheduledAt).toLocaleString()}</Text></Table.Td>
-                  <Table.Td><Badge size="sm" color={STATUS_COLORS[a.status] || 'gray'}>{STATUS_LABELS[a.status] || a.status}</Badge></Table.Td>
-                  <Table.Td>
-                    <Button size="xs" variant="light" onClick={() =>                       navigate({ to: '/patients/$id/appointments', params: { id: a.patientId } })}>
-                      查看
-                    </Button>
-                  </Table.Td>
-                </Table.Tr>
-              ))}
-            </Table.Tbody>
-          </Table>
-        )}
+            <DataTable data={data} columns={columns} />
+          )}
       </QueryGate>
       </Paper>
     </Container>

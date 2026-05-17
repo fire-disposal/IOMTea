@@ -1,7 +1,9 @@
 import { useMemo } from 'react'
-import { Container, Paper, Table, Badge, Text, Title, SimpleGrid, ThemeIcon, Group, Button } from '@mantine/core'
+import { Badge, Button, Container, Group, Paper, SimpleGrid, Text, ThemeIcon, Title } from '@mantine/core'
 import { IconPill, IconUsers } from '@tabler/icons-react'
+import { createColumnHelper } from '@tanstack/react-table'
 import { trpc } from '../trpc'
+import { DataTable } from '../components/shared/DataTable'
 import { QueryGate } from '../components/shared/QueryGate'
 import { useNavigate } from '@tanstack/react-router'
 
@@ -35,6 +37,16 @@ export function GlobalMedications() {
 
   const activeCount = allMeds.length
   const patientsOnMeds = useMemo(() => new Set(allMeds.map((m: any) => m.patientId)).size, [allMeds])
+
+  const columnHelper = createColumnHelper<any>()
+  const columns = useMemo(() => [
+    columnHelper.accessor('patientName', { header: '患者', cell: (info) => <Text fw={500}>{info.getValue()}</Text> }),
+    columnHelper.accessor('drugName', { header: '药物', cell: (info) => info.getValue() }),
+    columnHelper.accessor('dosage', { header: '剂量', cell: (info) => `${info.getValue()}${info.row.original.dosageUnit}` }),
+    columnHelper.accessor('route', { header: '途径', cell: (info) => <Badge size="sm" variant="light" color="gray">{ROUTE_LABELS[info.getValue()] || info.getValue()}</Badge> }),
+    columnHelper.accessor('status', { header: '状态', cell: (info) => <Badge size="sm" color={STATUS_COLORS[info.getValue()] || 'gray'}>{STATUS_LABELS[info.getValue()] || info.getValue()}</Badge> }),
+    columnHelper.display({ id: 'actions', header: '操作', cell: (info) => <Button size="xs" variant="light" onClick={() => navigate({ to: '/patients/$id/medications', params: { id: info.row.original.patientId } })}>查看</Button> }),
+  ], [navigate])
 
   return (
     <Container size="xl" py="xl">
@@ -74,28 +86,8 @@ export function GlobalMedications() {
           onRetry={() => patientsQuery.refetch()}
         >
           {(data) => (
-            <Table striped highlightOnHover>
-              <Table.Thead><Table.Tr>
-                <Table.Th>患者</Table.Th><Table.Th>药物</Table.Th><Table.Th>剂量</Table.Th><Table.Th>途径</Table.Th><Table.Th>状态</Table.Th><Table.Th>操作</Table.Th>
-              </Table.Tr></Table.Thead>
-              <Table.Tbody>
-                {data.map((m: any) => (
-                <Table.Tr key={m.id}>
-                  <Table.Td><Text fw={500}>{m.patientName}</Text></Table.Td>
-                  <Table.Td>{m.drugName}</Table.Td>
-                  <Table.Td>{m.dosage}{m.dosageUnit}</Table.Td>
-                  <Table.Td><Badge size="sm" variant="light" color="gray">{ROUTE_LABELS[m.route] || m.route}</Badge></Table.Td>
-                  <Table.Td><Badge size="sm" color={STATUS_COLORS[m.status] || 'gray'}>{STATUS_LABELS[m.status] || m.status}</Badge></Table.Td>
-                  <Table.Td>
-                    <Button size="xs" variant="light" onClick={() =>                       navigate({ to: '/patients/$id/medications', params: { id: m.patientId } })}>
-                      查看
-                    </Button>
-                  </Table.Td>
-                </Table.Tr>
-              ))}
-            </Table.Tbody>
-          </Table>
-        )}
+            <DataTable data={data} columns={columns} />
+          )}
       </QueryGate>
       </Paper>
     </Container>
