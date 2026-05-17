@@ -53,9 +53,6 @@ export function PatientDetailShell({ children }: { children: ReactNode }) {
   }
 
   const p = patient.data as any
-  const es = (engineStatus.data && !Array.isArray(engineStatus.data)) ? engineStatus.data : null
-  const isRunning = es?.running ?? false
-  const speed = es?.speed ?? 1
   const age = p.birthDate ? Math.floor((Date.now() - new Date(p.birthDate).getTime()) / 31557600000) : null
 
   return (
@@ -100,11 +97,6 @@ export function PatientDetailShell({ children }: { children: ReactNode }) {
           <div style={{ width: 1, height: 20, background: 'var(--mantine-color-gray-4)' }} />
           <div style={{ width: 8, height: 8, borderRadius: '50%', background: isOnline ? 'var(--mantine-color-green-6)' : 'var(--mantine-color-gray-5)' }} />
           <Text size="xs" c={isOnline ? 'green' : 'dimmed'}>{isOnline ? '在线' : '离线'}</Text>
-          <div style={{ width: 1, height: 20, background: 'var(--mantine-color-gray-4)' }} />
-          <Badge color={isRunning ? 'green' : 'gray'} variant="light" size="sm">
-            {isRunning ? '运行中' : '已暂停'}
-          </Badge>
-          <Badge variant="outline" size="sm">{speed}x</Badge>
         </Group>
       </Group>
 

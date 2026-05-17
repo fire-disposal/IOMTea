@@ -3,8 +3,8 @@ import { notifications } from '@mantine/notifications'
 import { useState } from 'react'
 import { useForm } from '@tanstack/react-form'
 import { z } from 'zod'
-import { useAuthStore } from './store/auth'
-import { trpc } from './trpc'
+import { useAuthStore } from '../store/auth'
+import { trpc } from '../trpc'
 
 const loginSchema = z.object({
   username: z.string().min(2, '用户名至少 2 个字符'),

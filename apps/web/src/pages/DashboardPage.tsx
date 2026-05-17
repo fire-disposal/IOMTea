@@ -46,9 +46,11 @@ export function DashboardPage() {
       <Paper p="md" radius="md" withBorder className="card-hover">
         <Group justify="space-between" mb="sm">
           <Text fw={600}>最近告警</Text>
-          <Button variant="subtle" size="xs" rightSection={<IconChevronRight size={14} />} onClick={() => navigate({ to: '/alerts' })}>
-            查看全部
-          </Button>
+          {(alerts.data?.length ?? 0) > 0 && (
+            <Button variant="subtle" size="xs" rightSection={<IconChevronRight size={14} />} onClick={() => navigate({ to: '/alerts' })}>
+              查看全部
+            </Button>
+          )}
         </Group>
         <QueryGate
           isLoading={alerts.isLoading}
