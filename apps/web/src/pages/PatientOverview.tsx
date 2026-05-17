@@ -3,7 +3,7 @@ import { useParams, useNavigate } from '@tanstack/react-router'
 import { trpc } from '../trpc'
 import { useHomeMap } from '../hooks/useHomeMap'
 import { VitalsChart } from './components/VitalsChart'
-import { TwinViewer } from './components/TwinViewer'
+import { TwinViewer3D } from '../twin3d/TwinViewer3D'
 import { ScenarioModal } from './components/ScenarioModal'
 
 const SPEEDS = [1, 2, 5, 10]
@@ -13,7 +13,6 @@ export function PatientOverview() {
   const navigate = useNavigate()
   const [timeRange, setTimeRange] = useState('6h')
   const [chartVisible, setChartVisible] = useState(true)
-  const [isFullscreen, setIsFullscreen] = useState(false)
   const [scenarioOpen, setScenarioOpen] = useState(false)
 
   const [now, setNow] = useState(() => Date.now())
@@ -94,7 +93,7 @@ export function PatientOverview() {
         onToggle={() => setChartVisible((v) => !v)}
       />
 
-      <TwinViewer
+      <TwinViewer3D
         mapRuntime={mapData}
         mapLoading={mapLoading}
         mapError={mapError}
@@ -109,9 +108,6 @@ export function PatientOverview() {
         isSpeedPending={setSpeedMut.isPending}
         onInjectScenario={() => setScenarioOpen(true)}
         onEditMap={() => navigate({ to: '/patients/$id/map-editor', params: { id: id! } })}
-        fullscreenOpen={isFullscreen}
-        onFullscreenOpen={() => setIsFullscreen(true)}
-        onFullscreenClose={() => setIsFullscreen(false)}
       />
 
       <ScenarioModal

@@ -1,1 +1,0 @@
-export { HomeMapCanvas } from './HomeMapCanvas'

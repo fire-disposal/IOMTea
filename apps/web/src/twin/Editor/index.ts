@@ -1,6 +1,0 @@
-export { MapEditorPage } from './MapEditorPage'
-export { PaintTool } from './PaintTool'
-export { ThingPlacer } from './ThingPlacer'
-export { EditorPalette } from './EditorPalette'
-export { Toolbar } from './Toolbar'
-export type { EditorMode, PaintType, EditorState } from './EditorTypes'
