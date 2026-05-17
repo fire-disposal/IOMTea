@@ -1,7 +1,7 @@
 import { ActionIcon, Badge, Button, Group, Modal, Select, Stack, Table, Text, TextInput, Title, Alert, Skeleton, Paper, Container } from '@mantine/core'
-import { useForm } from '@mantine/form'
 import { notifications } from '@mantine/notifications'
 import { useState } from 'react'
+import { useForm } from '@tanstack/react-form'
 import { trpc } from '../trpc'
 
 const typeLabels: Record<string, string> = { mattress: '床垫', vision: '视觉', imu: 'IMU', generic: '通用', simulator: '仿真', custom: '自定义' }
@@ -13,6 +13,7 @@ export function DeviceListPage() {
   const [createOpen, setCreateOpen] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [editingTarget, setEditingTarget] = useState<any>(null)
+  const [editKey, setEditKey] = useState(0)
 
   const utils = trpc.useUtils()
   const { data, isLoading, isError, error } = trpc.device.list.useQuery({ pageSize: 100 })
@@ -28,29 +29,18 @@ export function DeviceListPage() {
   })
 
   const form = useForm({
-    initialValues: { serialNumber: '', deviceType: 'generic' },
-    validate: { serialNumber: (v: string) => (v.trim() ? null : '序列号为必填项') },
+    defaultValues: { serialNumber: '', deviceType: 'generic' as string },
+    onSubmit: ({ value }) => create.mutate({ serialNumber: value.serialNumber.trim(), deviceType: value.deviceType as any }),
   })
 
-  const editForm = useForm({
-    initialValues: { serialNumber: '', deviceType: 'generic', status: 'active', patientId: '' },
-    validate: { serialNumber: (v: string) => (v.trim() ? null : '序列号为必填项') },
-  })
+  const startEdit = (d: any) => {
+    setEditingTarget({ ...d })
+    setEditKey((k) => k + 1)
+  }
 
   const patientMap = new Map((patients.data || []).map((p: any) => [p.id, p.name]))
   const patientOptions = [{ value: '', label: '未绑定' }, ...(patients.data || []).map((p: any) => ({ value: p.id, label: p.name }))]
-
   const devices = (data as any[]) || []
-
-  const startEdit = (d: any) => {
-    editForm.setValues({
-      serialNumber: d.serialNumber || '',
-      deviceType: d.deviceType || 'generic',
-      status: d.status || 'active',
-      patientId: d.patientId || '',
-    })
-    setEditingTarget(d)
-  }
 
   if (isLoading) return (
     <Container size="xl" py="xl">
@@ -102,25 +92,21 @@ export function DeviceListPage() {
       </Paper>
 
       <Modal opened={createOpen} onClose={() => setCreateOpen(false)} title="添加设备">
-        <form onSubmit={form.onSubmit(() => create.mutate(form.values as any))}>
+        <form onSubmit={(e) => { e.preventDefault(); form.handleSubmit() }}>
           <Stack gap="sm">
-            <TextInput label="序列号" required {...form.getInputProps('serialNumber')} />
-            <Select label="类型" data={deviceTypeOptions} {...form.getInputProps('deviceType')} />
+            <form.Field name="serialNumber">
+              {(f) => <TextInput label="序列号" required value={f.state.value} onChange={(e) => f.handleChange(e.currentTarget.value)} error={f.state.meta.errors?.[0]} />}
+            </form.Field>
+            <form.Field name="deviceType">
+              {(f) => <Select label="类型" data={deviceTypeOptions} value={f.state.value} onChange={(v) => f.handleChange(v ?? 'generic')} />}
+            </form.Field>
             <Button type="submit" fullWidth loading={create.isPending}>创建</Button>
           </Stack>
         </form>
       </Modal>
 
       <Modal opened={!!editingTarget} onClose={() => setEditingTarget(null)} title="编辑设备">
-        <form onSubmit={editForm.onSubmit((vals) => updateMutation.mutate({ id: editingTarget!.id, data: vals } as any))}>
-          <Stack gap="sm">
-            <TextInput label="序列号" required {...editForm.getInputProps('serialNumber')} />
-            <Select label="类型" data={deviceTypeOptions} {...editForm.getInputProps('deviceType')} />
-            <Select label="患者" data={patientOptions} {...editForm.getInputProps('patientId')} />
-            <Select label="状态" data={statusOptions} {...editForm.getInputProps('status')} />
-            <Button type="submit" fullWidth loading={updateMutation.isPending}>保存</Button>
-          </Stack>
-        </form>
+        <EditForm key={editKey} target={editingTarget} updateMutation={updateMutation} onClose={() => setEditingTarget(null)} patientOptions={patientOptions} />
       </Modal>
 
       <Modal opened={!!deleteConfirm} onClose={() => setDeleteConfirm(null)} title="确认删除" size="sm">
@@ -131,5 +117,39 @@ export function DeviceListPage() {
         </Group>
       </Modal>
     </Container>
+  )
+}
+
+function EditForm({ target, updateMutation, onClose, patientOptions }: { target: any; updateMutation: any; onClose: () => void; patientOptions: { value: string; label: string }[] }) {
+  const form = useForm({
+    defaultValues: {
+      serialNumber: target?.serialNumber || '',
+      deviceType: (target?.deviceType || 'generic') as string,
+      status: (target?.status || 'active') as string,
+      patientId: target?.patientId || '',
+    },
+    onSubmit: ({ value }) => {
+      updateMutation.mutate({ id: target.id, data: { serialNumber: value.serialNumber.trim(), deviceType: value.deviceType, status: value.status, patientId: value.patientId || null } } as any)
+    },
+  })
+
+  return (
+    <form onSubmit={(e) => { e.preventDefault(); form.handleSubmit() }}>
+      <Stack gap="sm">
+        <form.Field name="serialNumber">
+          {(f) => <TextInput label="序列号" required value={f.state.value} onChange={(e) => f.handleChange(e.currentTarget.value)} />}
+        </form.Field>
+        <form.Field name="deviceType">
+          {(f) => <Select label="类型" data={deviceTypeOptions} value={f.state.value} onChange={(v) => f.handleChange(v ?? 'generic')} />}
+        </form.Field>
+        <form.Field name="patientId">
+          {(f) => <Select label="患者" data={patientOptions} value={f.state.value ?? ''} onChange={(v) => f.handleChange(v ?? '')} />}
+        </form.Field>
+        <form.Field name="status">
+          {(f) => <Select label="状态" data={statusOptions} value={f.state.value} onChange={(v) => f.handleChange(v ?? 'active')} />}
+        </form.Field>
+        <Button type="submit" fullWidth loading={updateMutation.isPending}>保存</Button>
+      </Stack>
+    </form>
   )
 }

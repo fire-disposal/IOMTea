@@ -1,7 +1,7 @@
 import { Badge, Button, Group, Modal, NumberInput, Paper, Select, Skeleton, Stack, Table, Text, TextInput, Title } from '@mantine/core'
-import { useForm } from '@mantine/form'
 import { notifications } from '@mantine/notifications'
 import { useState } from 'react'
+import { useForm } from '@tanstack/react-form'
 import { useParams, useNavigate } from '@tanstack/react-router'
 import { trpc } from '../trpc'
 
@@ -10,7 +10,6 @@ const genderOptions = [
   { value: 'female', label: '女' },
   { value: 'other', label: '其他' },
 ]
-
 const bloodTypeOptions = ['A', 'B', 'AB', 'O']
 
 function genderLabel(g: string) {
@@ -24,6 +23,7 @@ export function PatientProfile() {
   const { id } = (useParams as any)({ from: '/_auth/patients/$id' })
   const navigate = useNavigate()
   const [editing, setEditing] = useState(false)
+  const [editKey, setEditKey] = useState(0)
   const [deleteConfirm, setDeleteConfirm] = useState(false)
   const utils = trpc.useUtils()
 
@@ -46,41 +46,7 @@ export function PatientProfile() {
     onError: (err) => notifications.show({ title: '失败', message: err.message, color: 'red' }),
   })
 
-  const form = useForm({
-    initialValues: {
-      name: '',
-      gender: '',
-      birthDate: '',
-      heightCm: undefined as number | undefined,
-      weightKg: undefined as number | undefined,
-      bloodType: '',
-      phone: '',
-      address: '',
-      emergencyContact: '',
-      emergencyPhone: '',
-    },
-  })
-
-  const startEdit = () => {
-    const p = patient.data as any
-    form.setValues({
-      name: p.name || '',
-      gender: p.gender || '',
-      birthDate: p.birthDate ? p.birthDate.slice(0, 10) : '',
-      heightCm: p.heightCm ?? undefined,
-      weightKg: p.weightKg ?? undefined,
-      bloodType: p.bloodType || '',
-      phone: p.phone || '',
-      address: p.address || '',
-      emergencyContact: p.emergencyContact || '',
-      emergencyPhone: p.emergencyPhone || '',
-    })
-    setEditing(true)
-  }
-
-  const save = () => {
-    updateMutation.mutate({ id: id!, data: form.values } as any)
-  }
+  const startEdit = () => { setEditKey((k) => k + 1); setEditing(true) }
 
   if (patient.isLoading) {
     return (
@@ -97,37 +63,7 @@ export function PatientProfile() {
   const p = patient.data as any
 
   if (editing) {
-    return (
-      <Paper p="lg" radius="md" withBorder>
-        <Title order={4} mb="md">编辑信息</Title>
-        <form onSubmit={form.onSubmit(save)}>
-          <Stack gap="md">
-            <Group gap="md">
-              <TextInput label="姓名" required {...form.getInputProps('name')} />
-              <Select label="性别" data={genderOptions} {...form.getInputProps('gender')} />
-              <TextInput label="出生日期" type="date" {...form.getInputProps('birthDate')} />
-            </Group>
-            <Group gap="md">
-              <NumberInput label="身高 (cm)" min={0} {...form.getInputProps('heightCm')} />
-              <NumberInput label="体重 (kg)" min={0} {...form.getInputProps('weightKg')} />
-              <Select label="血型" data={bloodTypeOptions} {...form.getInputProps('bloodType')} />
-            </Group>
-            <Group gap="md">
-              <TextInput label="电话" {...form.getInputProps('phone')} />
-              <TextInput label="地址" {...form.getInputProps('address')} />
-            </Group>
-            <Group gap="md">
-              <TextInput label="紧急联系人" {...form.getInputProps('emergencyContact')} />
-              <TextInput label="紧急电话" {...form.getInputProps('emergencyPhone')} />
-            </Group>
-            <Group>
-              <Button type="submit" loading={updateMutation.isPending}>保存</Button>
-              <Button variant="subtle" onClick={() => setEditing(false)}>取消</Button>
-            </Group>
-          </Stack>
-        </form>
-      </Paper>
-    )
+    return <EditPatientForm key={editKey} patient={p} updateMutation={updateMutation} onCancel={() => setEditing(false)} patientId={id!} utils={utils} />
   }
 
   return (
@@ -176,22 +112,10 @@ export function PatientProfile() {
           <Skeleton height={100} />
         ) : (
           <Table striped highlightOnHover>
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>序列号</Table.Th>
-                <Table.Th>类型</Table.Th>
-                <Table.Th>状态</Table.Th>
-                <Table.Th>最后在线</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
+            <Table.Thead><Table.Tr><Table.Th>序列号</Table.Th><Table.Th>类型</Table.Th><Table.Th>状态</Table.Th><Table.Th>最后在线</Table.Th></Table.Tr></Table.Thead>
             <Table.Tbody>
               {devices.data?.map((d: any) => (
-                <Table.Tr key={d.id}>
-                  <Table.Td>{d.serialNumber}</Table.Td>
-                  <Table.Td><Badge variant="light">{d.deviceType}</Badge></Table.Td>
-                  <Table.Td><Badge color={d.status === 'active' ? 'green' : 'gray'}>{d.status}</Badge></Table.Td>
-                  <Table.Td>{d.lastSeen ? new Date(d.lastSeen).toLocaleString() : '—'}</Table.Td>
-                </Table.Tr>
+                <Table.Tr key={d.id}><Table.Td>{d.serialNumber}</Table.Td><Table.Td><Badge variant="light">{d.deviceType}</Badge></Table.Td><Table.Td><Badge color={d.status === 'active' ? 'green' : 'gray'}>{d.status}</Badge></Table.Td><Table.Td>{d.lastSeen ? new Date(d.lastSeen).toLocaleString() : '—'}</Table.Td></Table.Tr>
               ))}
             </Table.Tbody>
           </Table>
@@ -206,5 +130,83 @@ export function PatientProfile() {
         </Group>
       </Modal>
     </Stack>
+  )
+}
+
+function EditPatientForm({ patient, updateMutation, onCancel, patientId, utils }: { patient: any; updateMutation: any; onCancel: () => void; patientId: string; utils: any }) {
+  const form = useForm({
+    defaultValues: {
+      name: patient.name || '',
+      gender: patient.gender || '',
+      birthDate: patient.birthDate ? patient.birthDate.slice(0, 10) : '',
+      heightCm: patient.heightCm ?? undefined as number | undefined,
+      weightKg: patient.weightKg ?? undefined as number | undefined,
+      bloodType: patient.bloodType || '',
+      phone: patient.phone || '',
+      address: patient.address || '',
+      emergencyContact: patient.emergencyContact || '',
+      emergencyPhone: patient.emergencyPhone || '',
+    },
+    onSubmit: ({ value }) => {
+      const clean = Object.fromEntries(Object.entries(value).filter(([_, v]) => v !== '' && v !== undefined && v !== null))
+      updateMutation.mutate({ id: patientId, data: clean } as any)
+    },
+  })
+
+  return (
+    <Paper p="lg" radius="md" withBorder>
+      <Title order={4} mb="md">编辑信息</Title>
+      <form onSubmit={(e) => { e.preventDefault(); form.handleSubmit() }}>
+        <Stack gap="md">
+          <Group gap="md">
+            <FormField form={form} name="name" label="姓名" required />
+            <SelectField form={form} name="gender" label="性别" data={genderOptions} />
+            <FormField form={form} name="birthDate" label="出生日期" type="date" />
+          </Group>
+          <Group gap="md">
+            <NumberField form={form} name="heightCm" label="身高 (cm)" min={0} />
+            <NumberField form={form} name="weightKg" label="体重 (kg)" min={0} />
+            <SelectField form={form} name="bloodType" label="血型" data={bloodTypeOptions} />
+          </Group>
+          <Group gap="md">
+            <FormField form={form} name="phone" label="电话" />
+            <FormField form={form} name="address" label="地址" />
+          </Group>
+          <Group gap="md">
+            <FormField form={form} name="emergencyContact" label="紧急联系人" />
+            <FormField form={form} name="emergencyPhone" label="紧急电话" />
+          </Group>
+          <Group>
+            <Button type="submit" loading={updateMutation.isPending}>保存</Button>
+            <Button variant="subtle" onClick={onCancel}>取消</Button>
+          </Group>
+        </Stack>
+      </form>
+    </Paper>
+  )
+}
+
+function FormField({ form, name, label, required, type }: { form: any; name: string; label: string; required?: boolean; type?: string }) {
+  return (
+    <form.Field name={name}>
+      {(f: any) => <TextInput label={label} required={required} type={type} value={f.state.value ?? ''} onChange={(e: any) => f.handleChange(e.currentTarget.value)} />}
+    </form.Field>
+  )
+}
+
+function SelectField({ form, name, label, data }: { form: any; name: string; label: string; data: { value: string; label: string }[] | string[] }) {
+  const options = typeof data[0] === 'string' ? data.map((v) => ({ value: v as string, label: v as string })) : data as { value: string; label: string }[]
+  return (
+    <form.Field name={name}>
+      {(f: any) => <Select label={label} data={options} value={f.state.value ?? ''} onChange={(v: any) => f.handleChange(v ?? '')} />}
+    </form.Field>
+  )
+}
+
+function NumberField({ form, name, label, min }: { form: any; name: string; label: string; min?: number }) {
+  return (
+    <form.Field name={name}>
+      {(f: any) => <NumberInput label={label} min={min} value={f.state.value ?? ''} onChange={(v: any) => f.handleChange(typeof v === 'number' ? v : undefined)} />}
+    </form.Field>
   )
 }
