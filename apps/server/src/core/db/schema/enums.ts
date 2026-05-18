@@ -27,12 +27,6 @@ export const confirmationMethodEnum = pgEnum('confirmation_method', ['self', 'fa
 export const appointmentTypeEnum = pgEnum('appointment_type', ['checkup', 'followup', 'emergency', 'consultation', 'rehabilitation'])
 export const appointmentStatusEnum = pgEnum('appointment_status', ['scheduled', 'confirmed', 'in_progress', 'completed', 'cancelled', 'no_show'])
 export const followupTypeEnum = pgEnum('followup_type', ['phone', 'video', 'home_visit', 'clinic', 'message'])
-export const entityCategoryEnum = pgEnum('entity_category', ['furniture', 'structure', 'sensor', 'actor', 'marker'])
-export const orientationEnum = pgEnum('orientation', ['N', 'S', 'E', 'W'])
-export const actorPostureEnum = pgEnum('actor_posture', ['lying', 'sitting', 'standing', 'walking'])
-export const behaviorStateEnum = pgEnum('behavior_state', ['idle', 'moving', 'acting', 'sleeping', 'eating', 'toilet', 'shower'])
-export const behaviorRuleTypeEnum = pgEnum('behavior_rule_type', ['schedule', 'trigger', 'routine'])
-export const roomTypeEnum = pgEnum('room_type', ['bedroom', 'livingroom', 'kitchen', 'bathroom', 'study', 'corridor', 'custom'])
 
 // ── Type exports: single source of truth for strict TypeScript usage ──
 export type Role = 'admin' | 'doctor' | 'nurse' | 'caregiver' | 'patient' | 'family'

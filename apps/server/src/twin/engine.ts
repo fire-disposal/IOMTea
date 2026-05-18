@@ -17,8 +17,7 @@ import { createActorState, tickActorMovement, type ActorState } from './behavior
 import { enqueueInstruction, processNextInstruction } from './instruction'
 import { tickScheduler, formatHourMinute } from './scheduler'
 import { findPath } from './pathfinding'
-import { generateNavGraph, findRoomForTile } from './nav-mesh'
-import { loadMapData, saveActorState } from './db-writer'
+
 
 const logger = pino({ name: 'twin:engine' })
 
@@ -94,31 +93,6 @@ export async function createEngine(
   let grid: number[][] | null = null
   let navGraph = null
   let behaviorRules: any[] = []
-  let roomMap: any[] = []
-
-  if (config.mapId) {
-    try {
-      const mapData = await loadMapData(db, config.mapId)
-      grid = buildGrid(mapData)
-      roomMap = mapData.rooms.map((r: any) => ({
-        id: r.id, name: r.name, x: r.boundsX, y: r.boundsY, w: r.boundsW, h: r.boundsH,
-      }))
-      navGraph = generateNavGraph(grid, roomMap)
-      behaviorRules = mapData.behaviorRules.map((r: any) => ({
-        id: r.id, patientId: r.patientId, ruleType: r.ruleType,
-        name: r.name, triggerTime: r.triggerTime, triggerCondition: r.triggerCondition,
-        actions: r.actions, priority: r.priority, isEnabled: r.isEnabled,
-      }))
-      const firstRoom = roomMap[0]
-      if (firstRoom) {
-        actorState.tileX = Math.floor(firstRoom.x + firstRoom.w / 2)
-        actorState.tileY = Math.floor(firstRoom.y + firstRoom.h / 2)
-        actorState.currentRoomId = firstRoom.id
-      }
-    } catch (err) {
-      logger.warn({ err }, 'failed to load map data')
-    }
-  }
 
   const engine: PatientEngine = {
     id: uuid(),
@@ -265,30 +239,6 @@ function handleInstruction(engine: PatientEngine, actor: ActorState, instruction
   }
 }
 
-// ── Grid builder ──
-
-function buildGrid(mapData: any): number[][] {
-  const grid: number[][] = Array.from({ length: mapData.map.height }, () =>
-    Array.from({ length: mapData.map.width }, () => 0),
-  )
-  for (const room of mapData.rooms) {
-    for (let y = room.boundsY; y < room.boundsY + room.boundsH && y < mapData.map.height; y++) {
-      for (let x = room.boundsX; x < room.boundsX + room.boundsW && x < mapData.map.width; x++) {
-        grid[y][x] = 1
-      }
-    }
-  }
-  for (const entity of mapData.entities) {
-    if (entity.defId === 'door') {
-      const x = entity.gridX; const y = entity.gridY
-      if (y >= 0 && y < mapData.map.height && x >= 0 && x < mapData.map.width) {
-        grid[y][x] = 2
-      }
-    }
-  }
-  return grid
-}
-
 // ── Start / Stop ──
 
 export async function startEngine(db: DbClient, patientId: string): Promise<void> {
@@ -320,10 +270,6 @@ export async function startEngine(db: DbClient, patientId: string): Promise<void
           recordedAt: e.recordedAt,
         }))
         await db.insert(events).values(rows).catch((err) => { logger.warn({ err }, 'failed to insert simulated events') })
-      }
-
-      for (const actor of engine.actors.values()) {
-        await saveActorState(db, actor).catch((err) => { logger.warn({ err }, 'failed to save actor state') })
       }
 
       broadcastManager.broadcastTwin(

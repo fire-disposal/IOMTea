@@ -24,6 +24,7 @@ class _FixedDevicePageState extends State<FixedDevicePage> {
   final _classifier = ActionClassifier();
   bool _camReady = false, _poseReady = false, _processing = false;
   String? _roomName;
+  String? _roomId;
   int _entryCount = 0, _exitCount = 0;
   bool _personPresent = false;
   int _lastReportTime = 0;
@@ -39,6 +40,7 @@ class _FixedDevicePageState extends State<FixedDevicePage> {
   Future<void> _checkRoomThenInit() async {
     final prefs = await SharedPreferences.getInstance();
     _roomName = prefs.getString('bound_room_name');
+    _roomId = prefs.getString('bound_room_id');
     if (_roomName == null && !widget.fromRoomBind && mounted) {
       context.push('/room-bind');
       return;
@@ -85,7 +87,8 @@ class _FixedDevicePageState extends State<FixedDevicePage> {
         _personPresent = hasPerson;
         _lastReportTime = now;
         final pin = PinService.instance.currentPin?.pin ?? '';
-        EventEmitter.emitPresence(pin, _roomName ?? '', _personPresent, action: newAction.name);
+        EventEmitter.emitPresence(pin, _roomId ?? '', _personPresent, action: newAction.name);
+        if (_personPresent) { _entryCount++; } else { _exitCount++; }
         setState(() {});
       }
       _processing = false;

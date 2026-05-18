@@ -31,8 +31,14 @@ class _RoomBindingPageState extends State<RoomBindingPage> {
       final url = '${PinService.instance.serverUrl}/trpc/homeGraph.roomsByPin?input=${Uri.encodeComponent(jsonEncode({"pin": pin.pin}))}';
       final res = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 5));
       if (res.statusCode == 200) {
-        final data = jsonDecode(res.body);
-        final rooms = (data['result']?['data'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+        final body = jsonDecode(res.body);
+        Map<String, dynamic>? result;
+        if (body is List && body.isNotEmpty) {
+          result = body[0]['result'] as Map<String, dynamic>?;
+        } else if (body is Map) {
+          result = body['result'] as Map<String, dynamic>?;
+        }
+        final rooms = (result?['data'] as List?)?.cast<Map<String, dynamic>>() ?? [];
         setState(() { _rooms = rooms; _loading = false; });
       } else {
         setState(() => _loading = false);

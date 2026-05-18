@@ -31,6 +31,8 @@ class EventEmitter {
       'event': event.type.name,
       'roomId': event.roomId,
       'action': event.action,
+      'confidence': event.confidence,
+      'metadata': event.metadata,
     });
   }
 

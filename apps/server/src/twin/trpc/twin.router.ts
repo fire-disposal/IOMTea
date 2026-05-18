@@ -1,29 +1,12 @@
-import { mapGetSchema } from '@iomtea/shared-types'
 import { z } from 'zod'
-import { eq } from 'drizzle-orm'
 import { protectedProcedure, router } from '../../core/trpc/index'
 import { requirePermission } from '../../core/trpc/middleware/rbac'
-import { twinMaps } from '../../core/db'
-import { loadMapData } from '../db-writer'
 import { startEngine, stopEngine, setSpeed, getEngineStatus, listEngines, injectScenario, type PatientEngine } from '../engine'
 import { SCENARIO_TYPES } from '../types'
 
 export const engines = new Map<string, PatientEngine>()
 
 export const twinRouter = router({
-  maps: router({
-    get: protectedProcedure
-      .use(requirePermission('twin:read')).input(mapGetSchema).query(async ({ ctx, input }) => {
-        if (input.id) return (await loadMapData(ctx.db as any, input.id)).map
-        if (input.patientId) {
-          const rows = await (ctx.db as any).select().from(twinMaps).where(eq(twinMaps.patientId, input.patientId)).limit(1)
-          if (rows.length === 0) return null
-          return (await loadMapData(ctx.db as any, rows[0].id)).map
-        }
-        return null
-      }),
-  }),
-
   engine: router({
     pause: protectedProcedure
       .use(requirePermission('twin:manage')).input(z.object({ patientId: z.string().uuid() })).mutation(async ({ ctx, input }) => {
