@@ -92,10 +92,15 @@ export const homeGraphRouter = router({
   reportDeviceEvent: publicProcedure
     .input(z.object({
       pin: z.string().min(4).max(6),
-      event: z.enum(['roomEnter', 'roomExit', 'actionDetected', 'fallDetected', 'presenceUpdate']),
+      event: z.enum(['roomEnter', 'roomExit', 'actionDetected', 'fallDetected', 'presenceUpdate', 'healthObservation', 'healthAlert']),
       roomId: z.string().optional(),
       personPresent: z.boolean().optional(),
       action: z.string().optional(),
+      metric: z.string().optional(),
+      value: z.number().optional(),
+      unit: z.string().optional(),
+      source: z.enum(['iot', 'cv', 'simulator', 'manual']).optional(),
+      severity: z.enum(['critical', 'warning', 'info']).optional(),
       metadata: z.record(z.unknown()).optional(),
     }))
     .mutation(async ({ ctx, input }) => {
@@ -141,16 +146,31 @@ export const homeGraphRouter = router({
         result = { event: 'fallDetected', severity: 'critical' }
       } else if (input.event === 'actionDetected') {
         await ctx.db.insert(events).values({
-          patientId: patient.id,
-          pinCode: input.pin,
-          kind: 'observation',
-          metric: 'action',
-          value: null,
-          source: 'iot',
+          patientId: patient.id, pinCode: input.pin, kind: 'observation',
+          metric: 'action', value: null, source: 'iot',
           tags: { action: input.action, roomId: input.roomId, ...(input.metadata || {}), pin: input.pin },
           recordedAt: new Date(),
         } as any).catch(() => {})
         result = { event: 'actionDetected', action: input.action }
+      } else if (input.event === 'healthObservation' && input.metric) {
+        await ctx.db.insert(events).values({
+          patientId: patient.id, pinCode: input.pin, kind: 'observation',
+          metric: input.metric, value: input.value ?? null, unit: input.unit ?? undefined,
+          source: (input.source || 'simulator') as any,
+          tags: { ...(input.metadata || {}), pin: input.pin },
+          recordedAt: new Date(),
+        } as any).catch(() => {})
+        result = { event: 'healthObservation', metric: input.metric, value: input.value }
+      } else if (input.event === 'healthAlert' && input.metric) {
+        await ctx.db.insert(events).values({
+          patientId: patient.id, pinCode: input.pin, kind: 'alert',
+          metric: input.metric, value: input.value ?? null, unit: input.unit ?? undefined,
+          severity: (input.severity || 'warning') as any, status: 'active' as any,
+          source: (input.source || 'simulator') as any,
+          tags: { ...(input.metadata || {}), pin: input.pin },
+          recordedAt: new Date(),
+        } as any).catch(() => {})
+        result = { event: 'healthAlert', metric: input.metric, severity: input.severity }
       }
 
       graph.personLocation = twinState.getCurrentLocation()

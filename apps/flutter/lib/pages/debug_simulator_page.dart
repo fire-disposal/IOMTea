@@ -1,7 +1,9 @@
+import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../services/event_emitter.dart';
 import '../services/mqtt_service.dart';
 import '../services/pin_service.dart';
 import '../theme.dart';
@@ -52,22 +54,38 @@ class _DebugSimulatorPageState extends State<DebugSimulatorPage> {
     final pin = _pinCtrl.text.trim();
     if (pin.isEmpty) { _addLog('❌ PIN 为空'); return; }
 
-    final roomId = _roomCtrl.text.trim();
-    EventEmitter.emit(DeviceEvent(
-      type: _metric == 'fall_detected' ? DeviceEventType.fallDetected : DeviceEventType.actionDetected,
-      pinCode: pin,
-      roomId: roomId.isNotEmpty ? roomId : null,
-      action: _metric,
-      metadata: {
-        'value': double.tryParse(_valueCtrl.text) ?? 0,
-        'unit': _getUnit(_metric),
-        'source': _source,
-        'kind': kind ?? 'observation',
-        if (kind == 'alert') 'severity': 'warning',
-      },
-    ));
+    final payload = <String, dynamic>{
+      'pin': pin,
+      'event': kind == 'alert' ? 'healthAlert' : 'healthObservation',
+      'metric': _metric,
+      'value': double.tryParse(_valueCtrl.text) ?? 0,
+      'unit': _getUnit(_metric),
+      'source': _source,
+      'roomId': _roomCtrl.text.trim().isEmpty ? null : _roomCtrl.text.trim(),
+    };
+    if (kind == 'alert') payload['severity'] = 'warning';
 
+    if (MqttService.instance.currentStatus.name == 'connected') {
+      try {
+        MqttService.instance.publish(
+          topic: 'iomtea/device/$pin/events',
+          message: jsonEncode(payload),
+        );
+      } catch (_) {}
+    }
+
+    unawaited(_httpPost(jsonEncode(payload)));
     _addLog('📤 ${_metric}=${_valueCtrl.text} ${_getUnit(_metric)} (${kind ?? "observation"})');
+  }
+
+  Future<void> _httpPost(String body) async {
+    try {
+      await http.post(
+        Uri.parse('${PinService.instance.serverUrl}/trpc/homeGraph.reportDeviceEvent'),
+        headers: {'Content-Type': 'application/json'},
+        body: body,
+      ).timeout(const Duration(seconds: 3));
+    } catch (_) {}
   }
 
   String _getUnit(String metric) => switch (metric) {
