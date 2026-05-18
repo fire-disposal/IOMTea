@@ -6,7 +6,7 @@ import { cors } from 'hono/cors'
 import pino from 'pino'
 import { WebSocketServer } from 'ws'
 import { db } from './core/db'
-import { users } from './core/db/schema'
+import { users, patients } from './core/db/schema'
 import { hashPassword } from './core/lib/password'
 import { verifyToken, type JwtPayload } from './core/lib/jwt'
 import { broadcastManager } from './core/realtime/broadcast'
@@ -15,6 +15,7 @@ import { appRouter } from './core/trpc/routers/_app'
 import { env } from './env'
 import { startMqttListener } from './mqtt-ingest'
 import { seedPermissions } from './core/services/permission-seed'
+import { seedDemoData } from './core/services/demo-seed'
 
 const logger = pino({
   transport: { target: 'pino-pretty', options: { colorize: true } },
@@ -53,6 +54,17 @@ async function bootstrap() {
     logger.info('demo account created (demo / demo123)')
   }
 
+  // Seed demo data if patients table is empty
+  try {
+    const patientCount = await db.select().from(patients)
+    if (patientCount.length === 0) {
+      await seedDemoData(db)
+      logger.info('demo data seeded (3 patients, events, alerts, medications)')
+    }
+  } catch (err) {
+    logger.warn({ err }, 'demo data seed failed')
+  }
+
   // Seed RBAC permissions
   try {
     await seedPermissions(db)
@@ -64,7 +76,6 @@ async function bootstrap() {
   // Auto-start engines for all patients with homeGraph
   try {
     const { reconstructEngine, startEngine, getEngine } = await import('./twin/engine')
-    const { patients } = await import('./core/db/schema')
     const allPatients = await db.select().from(patients)
 
     for (const patient of allPatients) {

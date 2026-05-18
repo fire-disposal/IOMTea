@@ -35,7 +35,7 @@ services:
       mosquitto:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://iomtea:${DB_PASSWORD}@postgres:5432/iomtea
+      DATABASE_URL: postgresql://postgres:${DB_PASSWORD:-postgres}@postgres:5432/iomtea
       JWT_SECRET: "${JWT_SECRET:-dev-secret-change-in-production}"
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-2h}
       JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}

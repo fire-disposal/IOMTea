@@ -1,5 +1,5 @@
-import Taro from '@tarojs/taro'
 import { getUnsyncedRecords, markSynced } from './storage'
+import { trpc } from './trpc'
 
 const SYNC_INTERVAL = 5 * 60 * 1000
 
@@ -8,14 +8,9 @@ export async function syncUnsyncedRecords(): Promise<void> {
   if (unsynced.length === 0) return
 
   try {
-    const result = await Taro.request({
-      url: `/trpc/health-records.batchCreate`,
-      method: 'POST',
-      data: { records: unsynced },
-    })
-
-    if (result.data?.result?.data?.syncedIds) {
-      markSynced(result.data.result.data.syncedIds)
+    const result = await trpc.healthRecords.batchCreate.mutate({ records: unsynced })
+    if (result?.syncedIds) {
+      markSynced(result.syncedIds)
     }
   } catch (err) {
     console.warn('[Sync] failed, will retry later:', err)
