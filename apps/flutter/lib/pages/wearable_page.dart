@@ -20,32 +20,32 @@ class _WearablePageState extends State<WearablePage> {
   final _detector = FallDetector();
   StreamSubscription<ImuData>? _sub;
   ImuData? _latest;
-  bool _running = false;
   int _fallCount = 0;
   int _sampleCount = 0;
   final List<ImuData> _history = [];
 
-  void _toggle() {
-    if (_running) {
-      _sub?.cancel(); _sub = null; _sensor.stop();
-    } else {
-      _sensor.start();
-      _sub = _sensor.dataStream.listen((d) {
-        final mag = d.accelMagnitude;
-        if (_detector.feed(mag)) {
-          _fallCount++;
-          final pin = PinService.instance.currentPin?.pin ?? '';
-          EventEmitter.emit(DeviceEvent(
-            type: DeviceEventType.fallDetected,
-            pinCode: pin,
-            confidence: 0.9,
-            metadata: {'accel_magnitude': mag, 'sample_count': _sampleCount},
-          ));
-        }
-        setState(() { _latest = d; _history.add(d); _sampleCount++; if (_history.length > 200) _history.removeAt(0); });
-      });
-    }
-    setState(() => _running = !_running);
+  @override
+  void initState() {
+    super.initState();
+    _start();
+  }
+
+  void _start() {
+    _sensor.start();
+    _sub = _sensor.dataStream.listen((d) {
+      final mag = d.accelMagnitude;
+      if (_detector.feed(mag)) {
+        _fallCount++;
+        final pin = PinService.instance.currentPin?.pin ?? '';
+        EventEmitter.emit(DeviceEvent(
+          type: DeviceEventType.fallDetected,
+          pinCode: pin,
+          confidence: 0.9,
+          metadata: {'accel_magnitude': mag},
+        ));
+      }
+      setState(() { _latest = d; _history.add(d); _sampleCount++; if (_history.length > 200) _history.removeAt(0); });
+    });
   }
 
   @override
@@ -61,73 +61,63 @@ class _WearablePageState extends State<WearablePage> {
       appBar: AppBar(
         title: const Text('可穿戴监测'),
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop()),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              Container(width: 6, height: 6, decoration: BoxDecoration(shape: BoxShape.circle, color: connected ? successGreen : Colors.grey)),
+              const SizedBox(width: 4),
+              Text(connected ? '在线' : '离线', style: TextStyle(fontSize: 12, color: connected ? successGreen : Colors.grey)),
+            ]),
+          ),
+        ],
       ),
-      body: Column(children: [
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-          color: Colors.white,
-          child: Row(children: [
-            Icon(Icons.watch, size: 16, color: matchaPrimary),
-            const SizedBox(width: 6),
-            Text(PinService.instance.currentPin?.pin ?? '未绑定', style: TextStyle(fontSize: 13, color: textSecondary)),
-            const Spacer(),
-            Container(width: 8, height: 8, decoration: BoxDecoration(shape: BoxShape.circle, color: connected ? successGreen : Colors.grey)),
-            const SizedBox(width: 6),
-            Text(connected ? 'MQTT 在线' : 'MQTT 离线', style: TextStyle(fontSize: 13, color: connected ? successGreen : Colors.grey)),
-          ]),
-        ),
-        Expanded(
-          child: ListView(padding: const EdgeInsets.all(16), children: [
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
+      body: _latest == null
+        ? const Center(child: CircularProgressIndicator())
+        : Column(children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            color: Colors.white,
+            child: Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
+              _MiniStat('加速度', '${mag.toStringAsFixed(2)} m/s²', mag > 2.5 ? warningOrange : textPrimary),
+              _MiniStat('样本', '$_sampleCount', textPrimary),
+              _MiniStat('跌倒', '$_fallCount', _fallCount > 0 ? errorRed : textSecondary),
+            ]),
+          ),
+          Expanded(
+            child: Column(children: [
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
-                  _StatCard(label: '状态', value: _running ? '监测中' : '已停止', color: _running ? successGreen : Colors.grey),
-                  _StatCard(label: '样本', value: '$_sampleCount', color: textPrimary),
-                  _StatCard(label: '跌倒', value: '$_fallCount', color: _fallCount > 0 ? errorRed : textSecondary),
-                  _StatCard(label: '加速度', value: mag.toStringAsFixed(2), color: mag > 2.5 ? warningOrange : textPrimary),
+                  _Stat('X', _latest!.accelX), _Stat('Y', _latest!.accelY), _Stat('Z', _latest!.accelZ),
                 ]),
               ),
-            ),
-            const SizedBox(height: 12),
-            if (_latest != null) ...[
-              Card(
+              const SizedBox(height: 16),
+              Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: SizedBox(height: 160, child: ImuWaveform(data: _history)),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(color: Colors.white, child: ImuWaveform(data: _history)),
+                  ),
                 ),
               ),
-              const SizedBox(height: 12),
-              Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
-                _Stat('X', _latest!.accelX), _Stat('Y', _latest!.accelY), _Stat('Z', _latest!.accelZ),
-                _Stat('陀螺', _latest!.gyroMagnitude),
-              ]),
-            ] else
-              const SizedBox(height: 160, child: Center(child: Text('点击开始监测', style: TextStyle(color: Colors.grey)))),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: _toggle,
-                icon: Icon(_running ? Icons.stop : Icons.play_arrow),
-                label: Text(_running ? '停止监测' : '开始监测'),
-              ),
-            ),
-          ]),
-        ),
-      ]),
+            ]),
+          ),
+        ]),
     );
   }
 }
 
-class _StatCard extends StatelessWidget {
+class _MiniStat extends StatelessWidget {
   final String label, value;
   final Color color;
-  const _StatCard({required this.label, required this.value, required this.color});
+  const _MiniStat(this.label, this.value, this.color);
   @override
   Widget build(BuildContext context) => Column(children: [
-    Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: color)),
+    Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: color)),
     Text(label, style: TextStyle(fontSize: 11, color: textSecondary)),
   ]);
 }
