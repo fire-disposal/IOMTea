@@ -1,10 +1,10 @@
 import { TRPCError } from '@trpc/server'
 import { eq } from 'drizzle-orm'
 import { z } from 'zod'
-import { patients } from '../../db/schema'
+import { events, patients } from '../../db/schema'
 import { usersPin } from '../../db/schema/pin'
 import { publicProcedure, protectedProcedure, router } from '../index'
-import { twinState, type CoverageReport } from '../../../twin/twin-state'
+import { twinState } from '../../../twin/twin-state'
 
 const roomSchema = z.object({
   id: z.string(),
@@ -57,6 +57,22 @@ export const homeGraphRouter = router({
       return { success: true }
     }),
 
+  roomsByPin: publicProcedure
+    .input(z.object({ pin: z.string().min(4).max(6) }))
+    .query(async ({ ctx, input }) => {
+      const pinRows = await ctx.db.select().from(usersPin).where(eq(usersPin.pin, input.pin)).limit(1)
+      if (pinRows.length === 0) return []
+      const userId = pinRows[0].userId
+      const patientRows = await ctx.db.select({ tags: patients.tags }).from(patients).where(eq(patients.userId, userId)).limit(1)
+      if (patientRows.length === 0) return []
+      const tags = (patientRows[0].tags as Record<string, unknown>) || {}
+      const graph = tags.homeGraph as any
+      return (graph?.rooms || []).map((r: any) => ({
+        id: r.id, name: r.name || r.id, type: r.type || 'bedroom',
+        hasCamera: r.hasCamera ?? false, connections: r.connections ?? [],
+      }))
+    }),
+
   reportDeviceEvent: publicProcedure
     .input(z.object({
       pin: z.string().min(4).max(6),
@@ -93,6 +109,32 @@ export const homeGraphRouter = router({
         result = twinState.reportPresence(input.roomId, true, input.pin)
       } else if (input.event === 'roomExit' && input.roomId) {
         result = twinState.reportPresence(input.roomId, false, input.pin)
+      } else if (input.event === 'fallDetected') {
+        await ctx.db.insert(events).values({
+          patientId: patient.id,
+          pinCode: input.pin,
+          kind: 'alert',
+          metric: 'fall_detected',
+          value: null,
+          severity: 'critical',
+          status: 'active',
+          source: 'iot',
+          tags: { ...(input.metadata || {}), pin: input.pin },
+          recordedAt: new Date(),
+        } as any).catch(() => {})
+        result = { event: 'fallDetected', severity: 'critical' }
+      } else if (input.event === 'actionDetected') {
+        await ctx.db.insert(events).values({
+          patientId: patient.id,
+          pinCode: input.pin,
+          kind: 'observation',
+          metric: 'action',
+          value: null,
+          source: 'iot',
+          tags: { action: input.action, roomId: input.roomId, ...(input.metadata || {}), pin: input.pin },
+          recordedAt: new Date(),
+        } as any).catch(() => {})
+        result = { event: 'actionDetected', action: input.action }
       }
 
       graph.personLocation = twinState.getCurrentLocation()

@@ -28,7 +28,7 @@ class _RoomBindingPageState extends State<RoomBindingPage> {
     if (pin == null) { setState(() => _loading = false); return; }
 
     try {
-      final url = '${PinService.instance.serverUrl}/trpc/homeMap.roomsByPin?input=${Uri.encodeComponent(jsonEncode({"pin": pin.pin}))}';
+      final url = '${PinService.instance.serverUrl}/trpc/homeGraph.roomsByPin?input=${Uri.encodeComponent(jsonEncode({"pin": pin.pin}))}';
       final res = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 5));
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
