@@ -16,6 +16,16 @@ interface AlertItem {
   createdAt: number
 }
 
+const STATUS_LABELS: Record<string, string> = {
+  new: '新建',
+  active: '活跃',
+  assigned: '已指派',
+  acknowledged: '已确认',
+  handled: '已处理',
+  closed: '已关闭',
+  resolved: '已解决',
+}
+
 export function AlertBoard() {
   const { data: alerts, refetch, isLoading, isError } = trpc.alert.list.useQuery({ pageSize: 100 })
   const { data: users } = trpc.user.list.useQuery({ page: 1, pageSize: 100 })
@@ -81,7 +91,7 @@ export function AlertBoard() {
     <Container size="xl" py="md">
       <Title order={2} mb="lg">异常处置</Title>
       <Group align="flex-start" gap="md">
-        <Paper shadow="xs" p="md" withBorder style={{ flex: 1, minHeight: 400 }}>
+        <Paper shadow="xs" p="md" withBorder style={{ flex: 1, minHeight: 400, borderTop: '3px solid var(--mantine-color-red-5)' }}>
           <Group mb="sm">
             <Badge color="red" size="lg">{newAlerts.length}</Badge>
             <Text fw={600}>待处理</Text>
@@ -97,7 +107,7 @@ export function AlertBoard() {
           ))}
         </Paper>
 
-        <Paper shadow="xs" p="md" withBorder style={{ flex: 1, minHeight: 400 }}>
+        <Paper shadow="xs" p="md" withBorder style={{ flex: 1, minHeight: 400, borderTop: '3px solid var(--mantine-color-yellow-5)' }}>
           <Group mb="sm">
             <Badge color="yellow" size="lg">{inProgress.length}</Badge>
             <Text fw={600}>处理中</Text>
@@ -108,12 +118,12 @@ export function AlertBoard() {
               style={{ cursor: 'pointer', borderLeft: `3px solid ${a.severity === 'critical' ? 'var(--mantine-color-red-5)' : a.severity === 'warning' ? 'var(--mantine-color-yellow-5)' : 'var(--mantine-color-blue-5)'}` }}
               onClick={() => openDetail(a)}>
               <Text size="sm">{a.metric}</Text>
-              <Text size="xs" c="dimmed">{a.status}</Text>
+              <Text size="xs" c="dimmed">{STATUS_LABELS[a.status as string] || a.status}</Text>
             </Card>
           ))}
         </Paper>
 
-        <Paper shadow="xs" p="md" withBorder style={{ flex: 1, minHeight: 400 }}>
+        <Paper shadow="xs" p="md" withBorder style={{ flex: 1, minHeight: 400, borderTop: '3px solid var(--mantine-color-green-5)' }}>
           <Group mb="sm">
             <Badge color="green" size="lg">{completed.length}</Badge>
             <Text fw={600}>已完成</Text>

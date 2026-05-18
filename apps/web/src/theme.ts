@@ -16,7 +16,11 @@ export const theme = createTheme({
       '#17210C',  // 9 - darkest
     ],
   },
+  primaryShade: 5,
   defaultRadius: 'md',
+  shadows: {
+    cardHover: '0 4px 12px rgba(0,0,0,0.08)',
+  },
   fontFamily: '"Noto Sans SC", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
   headings: {
     fontFamily: '"Noto Sans SC", sans-serif',

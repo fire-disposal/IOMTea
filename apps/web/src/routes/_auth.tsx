@@ -34,6 +34,7 @@ const pageStyles = [
   '.page-fade-in{animation:pageFadeIn .2s ease-out}',
   '.card-hover{transition:transform .2s ease,box-shadow .2s ease}',
   '.card-hover:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.08)}',
+  '.card-hover:active{transform:translateY(0);box-shadow:0 2px 4px rgba(0,0,0,.04);transition:transform .05s}',
   '.alert-card{transition:transform .15s ease,box-shadow .15s ease}',
   '.alert-card:hover{transform:translateX(3px)}',
 ].join('')

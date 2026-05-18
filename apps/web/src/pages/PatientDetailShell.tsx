@@ -1,4 +1,4 @@
-import { Alert, Badge, Group, Skeleton, Tabs, Text } from '@mantine/core'
+import { ActionIcon, Alert, Badge, Group, Skeleton, Tabs, Text } from '@mantine/core'
 import { IconArrowLeft, IconHeart, IconLungs, IconHeartbeat, IconTemperatureCelsius } from '@tabler/icons-react'
 import { useNavigate, useParams, useRouterState } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
@@ -64,7 +64,9 @@ export function PatientDetailShell({ children }: { children: ReactNode }) {
         wrap="nowrap"
       >
         <Group gap="sm" wrap="nowrap">
-          <IconArrowLeft size={20} style={{ cursor: 'pointer', flexShrink: 0 }} onClick={() => navigate({ to: '/patients' })} />
+          <ActionIcon variant="subtle" color="matchaGreen" onClick={() => navigate({ to: '/patients' })}>
+            <IconArrowLeft size={20} />
+          </ActionIcon>
           <div>
             <Text fw={700} size="md">{p.name}</Text>
             <Text size="xs" c="dimmed">
@@ -94,12 +96,12 @@ export function PatientDetailShell({ children }: { children: ReactNode }) {
             <Text size="sm" fw={500}>{temp != null ? temp : '--'}<Text span size="xs" c="dimmed">°C</Text></Text>
           </Group>
           <div style={{ width: 1, height: 20, background: 'var(--mantine-color-gray-4)' }} />
-          <div style={{ width: 8, height: 8, borderRadius: '50%', background: isOnline ? 'var(--mantine-color-green-6)' : 'var(--mantine-color-gray-5)' }} />
+           <div style={{ width: 8, height: 8, borderRadius: '50%', background: isOnline ? 'var(--mantine-color-green-6)' : 'var(--mantine-color-gray-5)', transition: 'background 0.4s ease' }} />
           <Text size="xs" c={isOnline ? 'green' : 'dimmed'}>{isOnline ? '在线' : '离线'}</Text>
         </Group>
       </Group>
 
-      <Tabs value={tabValue} onChange={(v) => {
+      <Tabs color="matchaGreen" value={tabValue} onChange={(v) => {
         if (!id) return
         if (v === 'overview') navigate({ to: '/patients/$id', params: { id } as any })
         else navigate({ to: '/patients/$id/' + v as any, params: { id } as any })

@@ -57,7 +57,7 @@ export function HealthTimeline() {
     <Paper p="md" radius="md" withBorder>
       <Group justify="space-between" mb="md">
         <Text fw={600}>健康时间轴</Text>
-        <SegmentedControl size="xs" value={hours} onChange={(v) => setHours(v as string)}
+        <SegmentedControl color="matchaGreen" size="xs" value={hours} onChange={(v) => setHours(v as string)}
           data={[{ label: '24h', value: '24' }, { label: '48h', value: '48' }]} />
       </Group>
 
@@ -73,7 +73,7 @@ export function HealthTimeline() {
                   {METRIC_LABELS[metric] || metric}
                 </Badge>
 
-                <div style={{ flex: 1, height: 20, position: 'relative', background: 'var(--mantine-color-gray-1)', borderRadius: 4, overflow: 'hidden' }}>
+                <div style={{ flex: 1, height: 20, position: 'relative', background: 'var(--mantine-color-gray-2)', borderRadius: 4, overflow: 'hidden' }}>
                   {events.map((e, idx) => {
                     const left = ((e.time - from) / timeRange) * 100
                     return (

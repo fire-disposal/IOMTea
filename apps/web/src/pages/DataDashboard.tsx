@@ -23,7 +23,7 @@ function SparkLine({ data, color, height = 60 }: { data: number[]; color: string
   return (
     <ResponsiveContainer width="100%" height={height}>
       <LineChart data={data.map((v, i) => ({ t: i, v }))}>
-        <Line type="monotone" dataKey="v" stroke={`var(--mantine-color-${color}-6)`} strokeWidth={1.5} dot={false} isAnimationActive={false} />
+        <Line type="monotone" dataKey="v" stroke={`var(--mantine-color-${color}-6)`} strokeWidth={2} dot={false} isAnimationActive />
         <YAxis domain={['dataMin - 1', 'dataMax + 1']} hide />
       </LineChart>
     </ResponsiveContainer>
@@ -37,9 +37,23 @@ export function DataDashboard() {
   const latestVitals = trpc.useQueries((t) => patientIds.map((pid: string) => t.data.latest({ patientId: pid })))
   useRealtime(undefined, undefined, patientIds[0])
 
-  const [hrHistory] = useState<number[]>(Array(20).fill(0))
+  const [hrHistory, setHrHistory] = useState<number[]>(Array(20).fill(0))
   const activeAlerts = (alerts.data ?? []).filter((a: any) => a.status === 'active' || a.status === 'new')
   const patientCount = patients.data?.length ?? 0
+
+  useEffect(() => {
+    const hrs: number[] = []
+    for (const v of latestVitals) {
+      const hr = (v.data as any[])?.find((m: any) => m.metric === 'heart_rate')?.value
+      if (hr != null) hrs.push(hr)
+    }
+    if (hrs.length > 0) {
+      setHrHistory(prev => {
+        const next = [...prev.slice(1), hrs.reduce((a, b) => a + b, 0) / hrs.length]
+        return next
+      })
+    }
+  }, [latestVitals])
 
   return (
     <div style={{ minHeight: 'calc(100vh - 56px)', background: '#f5f3ee', padding: '16px 24px' }}>
