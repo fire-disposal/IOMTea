@@ -144,6 +144,12 @@ bootstrap().then(() => {
           broadcastManager.subscribeMap(mapId, ws)
         }
 
+        const patientId = url.searchParams.get('patientId') || ''
+        if (patientId) {
+          broadcastManager.subscribePatient(patientId, ws)
+          logger.info({ patientId }, 'websocket client subscribed (patient)')
+        }
+
         ws.on('message', (raw) => {
           try {
             const msg = JSON.parse(raw.toString())
@@ -152,6 +158,9 @@ bootstrap().then(() => {
             }
             if (msg.type === 'subscribe_twin' && msg.mapId) {
               broadcastManager.subscribeMap(msg.mapId, ws)
+            }
+            if (msg.type === 'subscribe_patient' && msg.patientId) {
+              broadcastManager.subscribePatient(msg.patientId, ws)
             }
           } catch {
             // ignore malformed messages

@@ -5,6 +5,7 @@ import { events, patients, devices } from '../../db/schema'
 import { usersPin } from '../../db/schema/pin'
 import { publicProcedure, protectedProcedure, router } from '../index'
 import { twinState } from '../../../twin/twin-state'
+import { broadcastManager } from '../../realtime/broadcast'
 
 const roomSchema = z.object({
   id: z.string(),
@@ -176,6 +177,16 @@ export const homeGraphRouter = router({
       graph.personLocation = twinState.getCurrentLocation()
       const newTags = { ...tags, homeGraph: graph }
       await ctx.db.update(patients).set({ tags: newTags as any }).where(eq(patients.id, patient.id))
+
+      if (result.changed && graph.personLocation) {
+        broadcastManager.broadcastPersonLocation(patient.id, {
+          roomId: graph.personLocation,
+          fromRoomId: result.fromRoom,
+          path: result.path,
+          event: result.event ?? 'update',
+          timestamp: Date.now(),
+        })
+      }
 
       return {
         success: true,

@@ -2,6 +2,7 @@ import { ActionIcon, Badge, Button, Group, Paper, Text, Tooltip } from '@mantine
 import { IconBolt, IconMap, IconPlayerPause, IconPlayerPlay, IconSpeedboat } from '@tabler/icons-react'
 import { RoomNodeGraph } from './RoomNodeGraph'
 import { trpc } from '../trpc'
+import { useRealtime } from '../hooks/useRealtime'
 
 const SPEEDS = [1, 2, 5, 10]
 
@@ -27,7 +28,8 @@ export function GraphViewer({
   onSpeedCycle, isSpeedPending,
   onInjectScenario, onEditMap,
 }: GraphViewerProps) {
-  const graph = trpc.homeGraph.get.useQuery({ patientId }, { enabled: !!patientId, refetchInterval: 3000 })
+  const graph = trpc.homeGraph.get.useQuery({ patientId }, { enabled: !!patientId })
+  useRealtime(undefined, undefined, patientId)
 
   const rooms = graph.data?.rooms ?? []
   const personRoomId = graph.data?.personLocation ?? null
