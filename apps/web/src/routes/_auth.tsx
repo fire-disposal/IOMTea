@@ -5,13 +5,14 @@ import {
 import { useDisclosure } from '@mantine/hooks'
 import {
   IconDashboard, IconSettings, IconLogout, IconUsers,
-  IconChartLine, IconBell, IconPill, IconDevices,
+  IconChartLine, IconBell, IconPill, IconDevices, IconScreenShare,
 } from '@tabler/icons-react'
 import { Outlet, createFileRoute, redirect, useNavigate, useRouterState } from '@tanstack/react-router'
 import { useAuthStore } from '../store/auth'
 import { StoreProvider } from '../StoreProvider'
 
 const monitorItems = [
+  { label: '数据大屏', icon: IconScreenShare, path: '/data-dashboard' },
   { label: '工作台', icon: IconDashboard, path: '/' },
   { label: '居民管理', icon: IconUsers, path: '/patients' },
   { label: '健康趋势', icon: IconChartLine, path: '/trends' },

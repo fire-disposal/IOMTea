@@ -29,6 +29,8 @@
     "@trpc/react-query": "^11.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-grid-layout": "^2.2.3",
+    "react-resizable": "^4.0.1",
     "react-router-dom": "^7.15.0",
     "recharts": "^3.8.1",
     "three": "^0.184.0",

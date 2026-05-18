@@ -8,6 +8,7 @@ const rootRoute = createRootRoute({} as any)
 const loginRoute = createRoute({ getParentRoute: () => rootRoute, path: '/login' } as any)
 const authRoute = createRoute({ getParentRoute: () => rootRoute, id: '_auth' } as any)
 const authIndexRoute = createRoute({ getParentRoute: () => authRoute, path: '/' } as any)
+const authDashboardRoute = createRoute({ getParentRoute: () => authRoute, path: 'data-dashboard' } as any)
 const authPatientsRoute = createRoute({ getParentRoute: () => authRoute, path: 'patients' } as any)
 const authTrendsRoute = createRoute({ getParentRoute: () => authRoute, path: 'trends' } as any)
 const authAlertsRoute = createRoute({ getParentRoute: () => authRoute, path: 'alerts' } as any)
@@ -26,7 +27,7 @@ const authPatientMapEditorRoute = createRoute({ getParentRoute: () => authPatien
 const routeTree = rootRoute.addChildren([
   loginRoute,
   authRoute.addChildren([
-    authIndexRoute, authPatientsRoute, authTrendsRoute,
+    authIndexRoute, authDashboardRoute, authPatientsRoute, authTrendsRoute,
     authAlertsRoute, authMedicationsRoute,
     authIotPinsRoute, authSettingsRoute, authSettingsUsersRoute,
     authPatientDetailRoute.addChildren([
