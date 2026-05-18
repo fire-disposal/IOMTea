@@ -1,7 +1,7 @@
 import { TRPCError } from '@trpc/server'
 import { eq } from 'drizzle-orm'
 import { z } from 'zod'
-import { events, patients } from '../../db/schema'
+import { events, patients, devices } from '../../db/schema'
 import { usersPin } from '../../db/schema/pin'
 import { publicProcedure, protectedProcedure, router } from '../index'
 import { twinState } from '../../../twin/twin-state'
@@ -13,6 +13,11 @@ const roomSchema = z.object({
   x: z.number().default(0),
   y: z.number().default(0),
   connections: z.array(z.string()).default([]),
+  hasCamera: z.boolean().default(false),
+  devices: z.array(z.object({
+    id: z.string(), serialNumber: z.string(), deviceType: z.string(),
+    status: z.string(), pin: z.string().optional(),
+  })).default([]),
 })
 
 const graphSchema = z.object({
@@ -31,6 +36,17 @@ export const homeGraphRouter = router({
       const graph = ((tags.homeGraph as any) || null) as any
 
       if (graph?.rooms) {
+        const allDevices = await ctx.db.select({
+          id: devices.id, serialNumber: devices.serialNumber, deviceType: devices.deviceType,
+          status: devices.status, roomId: devices.roomId, tags: devices.tags,
+        }).from(devices).where(eq(devices.patientId, input.patientId))
+
+        for (const room of graph.rooms) {
+          room.devices = allDevices
+            .filter((d: any) => d.roomId === room.id)
+            .map((d: any) => ({ id: d.id, serialNumber: d.serialNumber, deviceType: d.deviceType, status: d.status }))
+        }
+
         twinState.initRooms(
           graph.rooms.map((r: any) => ({ id: r.id, name: r.name })),
           graph.rooms.map((r: any) => ({ id: r.id, connections: r.connections ?? [], hasCamera: r.hasCamera ?? false })),

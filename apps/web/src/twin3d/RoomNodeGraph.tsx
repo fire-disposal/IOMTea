@@ -1,10 +1,11 @@
-import { Badge, Paper, Text, ThemeIcon } from '@mantine/core'
-import { IconCamera, IconEyeOff } from '@tabler/icons-react'
+import { Badge, Paper, Text } from '@mantine/core'
+import { IconCamera, IconEyeOff, IconDeviceMobile } from '@tabler/icons-react'
 import { useMemo } from 'react'
 
 interface RoomNode {
   id: string; name: string; type: string; x: number; y: number; connections: string[]
   hasCamera?: boolean; inferrable?: boolean
+  devices?: { id: string; serialNumber: string; deviceType: string; status: string }[]
 }
 interface RoomState {
   roomId: string; personPresent: boolean; hasCamera: boolean; inferrable: boolean; deviceCount: number
@@ -85,6 +86,15 @@ export function RoomNodeGraph({ rooms, personRoomId, roomStates }: {
                   {state.personPresent ? '🟢 有人' : '⚪ 无人'}
                   {state.deviceCount > 0 ? ` · ${state.deviceCount} 设备` : ''}
                 </Text>
+              )}
+              {room.devices && room.devices.length > 0 && (
+                <div style={{ display: 'flex', gap: 2, marginTop: 2, flexWrap: 'wrap' }}>
+                  {room.devices.map((d) => (
+                    <Badge key={d.id} size="xs" variant="light" color={d.status === 'active' ? 'green' : 'gray'} leftSection={<IconDeviceMobile size={8} />}>
+                      {d.deviceType}
+                    </Badge>
+                  ))}
+                </div>
               )}
             </Paper>
 
