@@ -6,6 +6,7 @@ import 'pages/mode_select_page.dart';
 import 'pages/wearable_page.dart';
 import 'pages/room_binding_page.dart';
 import 'pages/fixed_device_page.dart';
+import 'pages/debug_simulator_page.dart';
 import 'pages/settings_page.dart';
 import 'pages/mqtt_console_page.dart';
 import 'pages/vision_page.dart';
@@ -26,6 +27,7 @@ final router = GoRouter(
     GoRoute(path: '/mqtt', builder: (_, __) => const MqttConsolePage()),
     GoRoute(path: '/vision', builder: (_, __) => const VisionPage()),
     GoRoute(path: '/imu', builder: (_, __) => const ImuPage()),
+    GoRoute(path: '/debug', builder: (_, __) => const DebugSimulatorPage()),
   ],
 );
 
