@@ -1,10 +1,17 @@
+import { randomInt } from 'node:crypto'
 import { TRPCError } from '@trpc/server'
 import { eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { usersPin } from '../../db/schema/pin'
-import { protectedProcedure, router } from '../index'
+import { publicProcedure, protectedProcedure, router } from '../index'
 
 export const pinRouter = router({
+  verify: publicProcedure
+    .input(z.object({ pin: z.string().min(4).max(6) }))
+    .query(async ({ ctx, input }) => {
+      const [record] = await ctx.db.select().from(usersPin).where(eq(usersPin.pin, input.pin)).limit(1)
+      return { valid: !!record, userId: record?.userId ?? null }
+    }),
   list: protectedProcedure
     .input(z.object({ userId: z.string().uuid().optional() }).optional())
     .query(async ({ ctx, input }) => {
@@ -20,7 +27,7 @@ export const pinRouter = router({
       nickname: z.string().max(32).optional(),
     }))
     .mutation(async ({ ctx, input }) => {
-      const pin = String(Math.floor(100000 + Math.random() * 900000))
+      const pin = String(randomInt(100000, 1000000))
       const [record] = await ctx.db.insert(usersPin).values({
         pin,
         userId: input.userId,
@@ -47,13 +54,31 @@ export const pinRouter = router({
       return record
     }),
 
+  bindRoom: protectedProcedure
+    .input(z.object({ pin: z.string().min(4).max(6), roomId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const [record] = await ctx.db.update(usersPin)
+        .set({ roomId: input.roomId })
+        .where(eq(usersPin.pin, input.pin))
+        .returning()
+      if (!record) throw new TRPCError({ code: 'NOT_FOUND', message: 'PIN不存在' })
+      return record
+    }),
+
+  getRoom: publicProcedure
+    .input(z.object({ pin: z.string().min(4).max(6) }))
+    .query(async ({ ctx, input }) => {
+      const [record] = await ctx.db.select({ roomId: usersPin.roomId }).from(usersPin).where(eq(usersPin.pin, input.pin)).limit(1)
+      return { roomId: record?.roomId ?? null }
+    }),
+
   reset: protectedProcedure
     .input(z.object({ oldPin: z.string().length(6) }))
     .mutation(async ({ ctx, input }) => {
       const [existing] = await ctx.db.select().from(usersPin)
         .where(eq(usersPin.pin, input.oldPin)).limit(1)
       if (!existing) throw new TRPCError({ code: 'NOT_FOUND', message: 'PIN不存在' })
-      const newPin = String(Math.floor(100000 + Math.random() * 900000))
+      const newPin = String(randomInt(100000, 1000000))
       await ctx.db.delete(usersPin).where(eq(usersPin.pin, input.oldPin))
       const [record] = await ctx.db.insert(usersPin).values({
         pin: newPin,

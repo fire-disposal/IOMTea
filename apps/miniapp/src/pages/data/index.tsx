@@ -8,7 +8,7 @@ export default function Data() {
   const [vitals, setVitals] = useState<any[]>([])
 
   useEffect(() => {
-    trpc.patient.list.query({ pageSize: 100, status: 'active' }).then((r) => {
+    trpc.patient.list.query({ pageSize: 100, status: 'active' }).then((r: any) => {
       setPatients(r || [])
       if (r && r.length > 0) setSelectedId(r[0].id)
     })
@@ -16,7 +16,7 @@ export default function Data() {
 
   useEffect(() => {
     if (!selectedId) return
-    trpc.data.latest.query({ patientId: selectedId }).then((r) => setVitals(r || []))
+    trpc.data.latest.query({ patientId: selectedId }).then((r: any) => setVitals(r || []))
   }, [selectedId])
 
   const selectedName = patients.find((p) => p.id === selectedId)?.name || ''

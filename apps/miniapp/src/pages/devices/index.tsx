@@ -20,7 +20,7 @@ export default function Devices() {
   const [devices, setDevices] = useState<any[]>([])
 
   useEffect(() => {
-    trpc.device.list.query({ pageSize: 100 }).then((r) => setDevices(r || []))
+    trpc.device.list.query({ pageSize: 100 }).then((r: any) => setDevices(r || []))
   }, [])
 
   return (

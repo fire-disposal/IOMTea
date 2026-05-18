@@ -46,9 +46,10 @@ function formatRecordContent(r: HealthRecord): string {
     case 'spo2': return `${r.data.percentage}%`
     case 'medication': return `${r.data.drug} · ${r.data.action === 'taken' ? '已服用' : '已跳过'}`
     case 'period': {
+      const d = r.data as { flow?: string; symptoms?: string[]; notes?: string | null; date?: string }
       const parts: string[] = []
-      if (r.data.flow) parts.push(`流量 ${FLOW_LABELS[r.data.flow as string] || r.data.flow}`)
-      if (r.data.symptoms?.length) parts.push(r.data.symptoms.join(', '))
+      if (d.flow) parts.push(`流量 ${FLOW_LABELS[d.flow] || d.flow}`)
+      if (d.symptoms?.length) parts.push(d.symptoms.join(', '))
       return parts.join(' · ')
     }
     default: return ''

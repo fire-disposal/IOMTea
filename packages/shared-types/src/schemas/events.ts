@@ -1,14 +1,14 @@
 import { z } from 'zod'
 import { ALERT_SEVERITIES, ALERT_STATUSES } from '../constants'
 
-export const kindEnum = z.enum(['observation', 'alert'])
+export const kindEnum = z.enum(['observation', 'alert', 'behavior', 'location'])
 
 export const eventTagsSchema = z.record(z.string(), z.unknown()).default({})
 
 export const observationSchema = z.object({
   id: z.string().uuid(),
   patientId: z.string().uuid(),
-  deviceId: z.string().uuid(),
+  deviceId: z.string().uuid().nullable(),
   kind: z.literal('observation'),
   metric: z.string().max(50),
   value: z.number().nullable(),
@@ -21,7 +21,7 @@ export const observationSchema = z.object({
 export const alertSchema = z.object({
   id: z.string().uuid(),
   patientId: z.string().uuid(),
-  deviceId: z.string().uuid(),
+  deviceId: z.string().uuid().nullable(),
   kind: z.literal('alert'),
   metric: z.string().max(50),
   value: z.number().nullable(),

@@ -47,8 +47,8 @@ export default function ProfilePage() {
   useEffect(() => { loadStats() }, [])
 
   useEffect(() => {
-    trpc.user.me.query().then(me => {
-      if (me?.id) trpc.pin.list.query({ userId: me.id }).then(data => {
+    trpc.user.me.query().then((me: any) => {
+      if (me?.id) trpc.pin.list.query({ userId: me.id }).then((data: any) => {
         setPins(data)
         setPinsLoading(false)
       }).catch(() => setPinsLoading(false))

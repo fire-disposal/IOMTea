@@ -1,4 +1,3 @@
-export { TwinScene3D } from './TwinScene3D'
-export { RoomGraph3D } from './RoomGraph3D'
+export { RoomNodeGraph } from './RoomNodeGraph'
 export { GraphViewer } from './GraphViewer'
 export { GraphEditorPage } from './GraphEditorPage'

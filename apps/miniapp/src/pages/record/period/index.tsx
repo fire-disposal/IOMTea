@@ -1,8 +1,8 @@
 import { View, Text, Input } from '@tarojs/components'
 import { useState, useCallback, useEffect } from 'react'
 import Taro from '@tarojs/taro'
-import { FormShell, SegmentPicker } from '../../components/FormShell'
-import { addLocalRecord, getTrendData } from '../../utils/storage'
+import { FormShell, SegmentPicker } from '../../../components/FormShell'
+import { addLocalRecord, getTrendData } from '../../../utils/storage'
 import './index.scss'
 
 const FLOW_OPTIONS = [

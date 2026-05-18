@@ -6,8 +6,6 @@ export const patientSchema = z.object({
   name: z.string().max(100),
   birthDate: z.string().max(10).nullable(),
   gender: z.enum(GENDERS).nullable(),
-  room: z.string().nullable(),
-  bedNumber: z.string().nullable(),
   status: z.enum(PATIENT_STATUSES),
   tags: z.record(z.string(), z.unknown()).default({}),
   createdAt: z.number(),

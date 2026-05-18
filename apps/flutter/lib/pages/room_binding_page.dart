@@ -55,6 +55,16 @@ class _RoomBindingPageState extends State<RoomBindingPage> {
     await prefs.setString('bound_room_id', _selectedRoomId!);
     final room = _rooms.firstWhere((r) => r['id'] == _selectedRoomId);
     await prefs.setString('bound_room_name', (room['name'] ?? room['id']) as String);
+
+    final pin = PinService.instance.currentPin?.pin ?? '';
+    try {
+      await http.post(
+        Uri.parse('${PinService.instance.serverUrl}/trpc/pin.bindRoom'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'pin': pin, 'roomId': _selectedRoomId}),
+      ).timeout(const Duration(seconds: 3));
+    } catch (_) {}
+
     if (mounted) context.push('/fixed-device');
   }
 

@@ -83,7 +83,7 @@ export const devices = pgTable('devices', {
   firmwareVersion: varchar('firmware_version', { length: 50 }),
   status: deviceStatusEnum('status').notNull().default('inactive'),
   patientId: uuid('patient_id').references(() => patients.id, { onDelete: 'set null' }),
-  roomId: uuid('room_id'),  // FK to twin_rooms.id — added via migration to prevent circular import
+  roomId: varchar('room_id', { length: 64 }),
   config: jsonb('config').default({}).notNull(),
   lastSeenAt: timestamp('last_seen', { withTimezone: true }),
   tags: jsonb('tags').default({}).notNull(),

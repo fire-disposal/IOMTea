@@ -1,15 +1,20 @@
 import Taro from '@tarojs/taro'
 import { TRPCClientError, createTRPCClient, httpLink } from '@trpc/client'
 
-const API_BASE = 'http://localhost:3000'
+function getApiBase(): string {
+  return (Taro.getStorageSync('server_url') as string) || 'http://localhost:3000'
+}
+
+export const API_BASE = getApiBase()
 
 function taroFetcher(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   const url = typeof input === 'string' ? input : input.toString()
+  const base = getApiBase()
   const body = init?.body as string | undefined
 
   return new Promise((resolve, reject) => {
     Taro.request({
-      url: url.startsWith('http') ? url : `${API_BASE}${url}`,
+      url: url.startsWith('http') ? url : `${base}${url}`,
       method: (init?.method || 'GET') as any,
       header: {
         'content-type': 'application/json',
@@ -31,10 +36,11 @@ function taroFetcher(input: RequestInfo | URL, init?: RequestInit): Promise<Resp
   })
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const trpc = createTRPCClient<any>({
   links: [
     httpLink({
-      url: `${API_BASE}/trpc`,
+      url: `${getApiBase()}/trpc`,
       fetch: taroFetcher as any,
       headers() {
         const token = Taro.getStorageSync('token')
@@ -42,4 +48,5 @@ export const trpc = createTRPCClient<any>({
       },
     }),
   ],
-})
+}) as any
+

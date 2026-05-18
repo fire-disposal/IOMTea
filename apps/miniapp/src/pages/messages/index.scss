@@ -14,9 +14,35 @@
 
 .messages-page__empty {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 80px 0;
+}
+
+.messages-page__empty-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--bg-card, #F0F0EB);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.messages-page__empty-icon-text {
+  font-size: 36px;
+}
+
+.messages-page__empty-title {
+  color: var(--text-primary, #3C3C3C);
+  font-size: 17px;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.messages-page__empty-hint {
   color: var(--text-secondary, #8C8C7E);
-  font-size: 16px;
+  font-size: 14px;
 }

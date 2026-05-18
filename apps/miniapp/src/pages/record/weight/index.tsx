@@ -1,8 +1,8 @@
 import { View, Text } from '@tarojs/components'
 import { useState, useCallback, useEffect } from 'react'
 import Taro from '@tarojs/taro'
-import { FormShell, NumberInput, SegmentPicker } from '../../components/FormShell'
-import { addLocalRecord, getTrendData } from '../../utils/storage'
+import { FormShell, NumberInput, SegmentPicker } from '../../../components/FormShell'
+import { addLocalRecord, getTrendData } from '../../../utils/storage'
 import './index.scss'
 
 const TOGGLE_OPTIONS = [

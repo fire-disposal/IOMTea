@@ -74,7 +74,7 @@ export default function HealthPage() {
         ) : (
           <View className='health-page__grid'>
             {modules.map(m => (
-              <View key={m.key} className='health-module' onClick={() => Taro.navigateTo({ url: m.page })}>
+              <View key={m.key} className={`health-module ${(counts[m.key] ?? 0) > 0 ? 'health-module--active' : ''}`} onClick={() => Taro.navigateTo({ url: m.page })}>
                 <Text className='health-module__icon'>{m.icon}</Text>
                 <Text className='health-module__label'>{m.label}</Text>
                 <Text className='health-module__count'>今日 {counts[m.key] ?? 0} 次</Text>

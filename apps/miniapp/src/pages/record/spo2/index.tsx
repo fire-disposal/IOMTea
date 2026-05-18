@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react'
 import Taro from '@tarojs/taro'
-import { FormShell, NumberInput } from '../../components/FormShell'
-import { addLocalRecord, getTrendData } from '../../utils/storage'
+import { FormShell, NumberInput } from '../../../components/FormShell'
+import { addLocalRecord, getTrendData } from '../../../utils/storage'
 import './index.scss'
 
 export default function Spo2Record() {

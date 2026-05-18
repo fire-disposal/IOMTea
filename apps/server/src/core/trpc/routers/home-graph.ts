@@ -42,10 +42,20 @@ export const homeGraphRouter = router({
           status: devices.status, roomId: devices.roomId, tags: devices.tags,
         }).from(devices).where(eq(devices.patientId, input.patientId))
 
+        const pinDevicesForGraph = await ctx.db.select({
+          pin: usersPin.pin, roomId: usersPin.roomId, nickname: usersPin.nickname, lastSeenAt: usersPin.lastSeenAt,
+        }).from(usersPin).innerJoin(patients, eq(patients.userId, usersPin.userId)).where(eq(patients.id, input.patientId))
+
         for (const room of graph.rooms) {
-          room.devices = allDevices
+          const roomDevices = allDevices
             .filter((d: any) => d.roomId === room.id)
             .map((d: any) => ({ id: d.id, serialNumber: d.serialNumber, deviceType: d.deviceType, status: d.status }))
+
+          const pinDevices = pinDevicesForGraph
+            .filter((p: any) => p.roomId === room.id)
+            .map((p: any) => ({ id: p.pin, serialNumber: p.pin, deviceType: 'pin', status: p.lastSeenAt ? 'active' : 'inactive', pin: p.pin, nickname: p.nickname }))
+
+          room.devices = [...roomDevices, ...pinDevices]
         }
 
         twinState.initRooms(

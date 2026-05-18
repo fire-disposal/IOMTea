@@ -9,6 +9,15 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
+.animation-slide-in {
+  animation: slideInRight 0.28s ease-out both;
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(36px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
 .page {
   padding: 24px;
   min-height: 100vh;
@@ -21,6 +30,13 @@
   color: var(--text-secondary);
   padding: 60px 0;
   font-size: 28px;
+}
+.empty::before {
+  content: '📋';
+  display: block;
+  font-size: 52px;
+  margin-bottom: 16px;
+  opacity: 0.35;
 }
 
 .alert-item {

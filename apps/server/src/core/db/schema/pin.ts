@@ -7,6 +7,7 @@ export const usersPin = pgTable('users_pin', {
   label: varchar('label', { length: 64 }).default(''),
   nickname: varchar('nickname', { length: 32 }).default(''),
   thingId: uuid('thing_id'),
+  roomId: varchar('room_id', { length: 64 }),
   lastSeenAt: timestamp('last_seen_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 })

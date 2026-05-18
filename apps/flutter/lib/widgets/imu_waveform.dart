@@ -9,10 +9,10 @@ class ImuWaveformPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     if (data.length < 2) return;
-    final paint = Paint()..color = Colors.deepPurple..strokeWidth = 1.5..style = PaintingStyle.stroke;
+
+    final maxMag = data.map((d) => d.accelMagnitude).reduce(max).clamp(1.0, 100.0);
     final midY = size.height / 2;
     final scaleX = size.width / max(1, data.length - 1);
-    final maxMag = data.map((d) => d.accelMagnitude).reduce(max).clamp(1.0, 100.0);
 
     final path = Path();
     for (int i = 0; i < data.length; i++) {
@@ -20,7 +20,21 @@ class ImuWaveformPainter extends CustomPainter {
       final y = midY - (data[i].accelMagnitude / maxMag) * (size.height / 2 - 10);
       if (i == 0) { path.moveTo(x, y); } else { path.lineTo(x, y); }
     }
-    canvas.drawPath(path, paint);
+
+    final glowPaint = Paint()
+      ..color = const Color(0xFF7C4DFF).withValues(alpha: 0.3)
+      ..strokeWidth = 6.0
+      ..style = PaintingStyle.stroke
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+
+    canvas.drawPath(path, glowPaint);
+
+    final linePaint = Paint()
+      ..color = Colors.deepPurple
+      ..strokeWidth = 1.5
+      ..style = PaintingStyle.stroke;
+
+    canvas.drawPath(path, linePaint);
   }
 
   @override

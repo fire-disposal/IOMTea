@@ -4,7 +4,7 @@ export type UserRole = (typeof USER_ROLES)[number]
 export const ALERT_SEVERITIES = ['critical', 'warning', 'info'] as const
 export type AlertSeverity = (typeof ALERT_SEVERITIES)[number]
 
-export const ALERT_STATUSES = ['active', 'acknowledged', 'resolved', 'new', 'assigned', 'handled', 'closed'] as const
+export const ALERT_STATUSES = ['active', 'acknowledged', 'resolved', 'expired', 'new', 'assigned', 'handled', 'closed'] as const
 export type AlertStatus = (typeof ALERT_STATUSES)[number]
 
 export const PATIENT_STATUSES = ['active', 'discharged', 'archived'] as const

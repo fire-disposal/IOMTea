@@ -7,7 +7,7 @@ export default function Alerts() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    trpc.alert.list.query({ pageSize: 50 }).then((r) => {
+    trpc.alert.list.query({ pageSize: 50 }).then((r: any) => {
       setAlerts(r || [])
       setLoading(false)
     }).catch(() => setLoading(false))

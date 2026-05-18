@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { trpc } from '../../utils/trpc'
 
 export default function Settings() {
-  const [serverUrl, setServerUrl] = useState(
+  const [serverUrl, setServerUrl] = useState<string>(
     Taro.getStorageSync('server_url') || 'http://localhost:3000',
   )
 

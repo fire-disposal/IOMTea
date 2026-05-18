@@ -1,7 +1,7 @@
 import { View, Text, ScrollView } from '@tarojs/components'
 import { useState, useCallback } from 'react'
 import Taro from '@tarojs/taro'
-import { addLocalRecord } from '../../utils/storage'
+import { addLocalRecord } from '../../../utils/storage'
 import './index.scss'
 
 interface MedItem {

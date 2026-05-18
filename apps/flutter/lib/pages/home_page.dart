@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../services/pin_service.dart';
@@ -10,20 +11,32 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-enum _PinScreenState { loading, input, verifying, verified }
+enum _PinScreenState { loading, input, verifying, verified, success }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage>
+    with SingleTickerProviderStateMixin {
   _PinScreenState _pinState = _PinScreenState.loading;
   final _pinInput = <String>[];
   String? _pinError;
+  late final AnimationController _bgAnim;
 
   @override
   void initState() {
     super.initState();
+    _bgAnim = AnimationController(
+      duration: const Duration(seconds: 6),
+      vsync: this,
+    )..repeat();
     _initPin();
     MqttService.instance.statusStream.listen((s) {
       if (mounted) setState(() {});
     });
+  }
+
+  @override
+  void dispose() {
+    _bgAnim.dispose();
+    super.dispose();
   }
 
   void _initPin() {
@@ -57,7 +70,9 @@ class _HomePageState extends State<HomePage> {
     if (!mounted) return;
     if (ok) {
       await PinService.instance.savePin(_pinInput.join());
-      setState(() { _pinState = _PinScreenState.verified; _pinInput.clear(); _pinError = null; });
+      setState(() { _pinState = _PinScreenState.success; _pinInput.clear(); _pinError = null; });
+      await Future.delayed(const Duration(milliseconds: 900));
+      if (mounted) setState(() => _pinState = _PinScreenState.verified);
     } else {
       setState(() { _pinState = _PinScreenState.input; _pinError = 'PIN码验证失败，请重试'; _pinInput.clear(); });
     }
@@ -65,54 +80,143 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    if (_pinState == _PinScreenState.success) return _buildSuccessScreen();
     if (_pinState != _PinScreenState.verified) return _buildPinScreen();
     return _buildMainContent();
+  }
+
+  Widget _buildSuccessScreen() {
+    return Scaffold(
+      backgroundColor: creamBg,
+      body: AnimatedBuilder(
+        animation: _bgAnim,
+        builder: (context, child) {
+          final t = _bgAnim.value;
+          return Stack(
+            children: [
+              CustomPaint(
+                size: MediaQuery.of(context).size,
+                painter: _SuccessBgPainter(t: t),
+              ),
+              Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TweenAnimationBuilder<double>(
+                      tween: Tween(begin: 0.0, end: 1.0),
+                      duration: const Duration(milliseconds: 500),
+                      curve: Curves.elasticOut,
+                      builder: (context, value, child) {
+                        return Transform.scale(
+                          scale: value,
+                          child: Container(
+                            width: 80, height: 80,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: successGreen.withValues(alpha: 0.15),
+                              boxShadow: [
+                                BoxShadow(color: successGreen.withValues(alpha: 0.4), blurRadius: 24, spreadRadius: 4),
+                              ],
+                            ),
+                            child: const Icon(Icons.check, size: 44, color: successGreen),
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    TweenAnimationBuilder<double>(
+                      tween: Tween(begin: 0.0, end: 1.0),
+                      duration: const Duration(milliseconds: 400),
+                      curve: Curves.easeOut,
+                      builder: (context, value, child) {
+                        return Opacity(
+                          opacity: value,
+                          child: const Text('验证成功', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600, color: textPrimary)),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
   }
 
   Widget _buildPinScreen() {
     final verifying = _pinState == _PinScreenState.verifying;
     return Scaffold(
       backgroundColor: creamBg,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32),
-          child: Column(
+      body: AnimatedBuilder(
+        animation: _bgAnim,
+        builder: (context, child) {
+          final t = _bgAnim.value;
+          return Stack(
             children: [
-              const Spacer(flex: 2),
-              Icon(Icons.lock_outline, size: 52, color: matchaPrimary),
-              const SizedBox(height: 16),
-              Text('设备验证', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w600, color: textPrimary)),
-              const SizedBox(height: 8),
-              Text('请输入设备PIN码', style: TextStyle(color: textSecondary, fontSize: 15)),
-              const SizedBox(height: 36),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(6, (i) {
-                  final filled = i < _pinInput.length;
-                  return Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 6),
-                    width: 20, height: 20,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: filled ? matchaPrimary : Colors.transparent,
-                      border: Border.all(color: filled ? matchaPrimary : Colors.grey.shade300, width: 2),
-                    ),
-                  );
-                }),
+              CustomPaint(
+                size: MediaQuery.of(context).size,
+                painter: _PinBgPainter(t: t),
               ),
-              const SizedBox(height: 16),
-              if (_pinError != null)
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 200),
-                  child: Text(_pinError!, key: ValueKey(_pinError),
-                    style: const TextStyle(color: errorRed, fontSize: 14)),
+              SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 32),
+                  child: Column(
+                    children: [
+                      const Spacer(flex: 2),
+                      Icon(Icons.lock_outline, size: 52, color: matchaPrimary),
+                      const SizedBox(height: 16),
+                      Text('设备验证', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w600, color: textPrimary)),
+                      const SizedBox(height: 8),
+                      Text('请输入设备PIN码', style: TextStyle(color: textSecondary, fontSize: 15)),
+                      const SizedBox(height: 36),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(6, (i) {
+                          final filled = i < _pinInput.length;
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 6),
+                            child: AnimatedScale(
+                              scale: filled ? 1.0 : 0.85,
+                              duration: const Duration(milliseconds: 200),
+                              curve: Curves.easeOutBack,
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                width: 20, height: 20,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: filled ? matchaPrimary : Colors.transparent,
+                                  border: Border.all(
+                                    color: filled ? matchaPrimary : Colors.grey.shade300,
+                                    width: 2,
+                                  ),
+                                  boxShadow: filled
+                                    ? [BoxShadow(color: matchaPrimary.withValues(alpha: 0.5), blurRadius: 10, spreadRadius: 2)]
+                                    : null,
+                                ),
+                              ),
+                            ),
+                          );
+                        }),
+                      ),
+                      const SizedBox(height: 16),
+                      if (_pinError != null)
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 200),
+                          child: Text(_pinError!, key: ValueKey(_pinError),
+                            style: const TextStyle(color: errorRed, fontSize: 14)),
+                        ),
+                      const Spacer(flex: 1),
+                      _buildKeypad(verifying),
+                      const SizedBox(height: 24),
+                    ],
+                  ),
                 ),
-              const Spacer(flex: 1),
-              _buildKeypad(verifying),
-              const SizedBox(height: 24),
+              ),
             ],
-          ),
-        ),
+          );
+        },
       ),
     );
   }
@@ -283,4 +387,45 @@ class _ToolCard extends StatelessWidget {
       onTap: onTap,
     ),
   );
+}
+
+class _PinBgPainter extends CustomPainter {
+  final double t;
+  _PinBgPainter({required this.t});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint();
+    for (int i = 0; i < 3; i++) {
+      final cx = size.width * (0.2 + i * 0.3);
+      final cy = size.height * (0.3 + i * 0.2);
+      final radius = 80 + math.sin(t * 1.5 + i * 2.0) * 20;
+      paint.color = matchaLight.withValues(alpha: 0.06 + 0.03 * math.sin(t * 0.8 + i));
+      canvas.drawCircle(Offset(cx, cy), radius, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _PinBgPainter old) => old.t != t;
+}
+
+class _SuccessBgPainter extends CustomPainter {
+  final double t;
+  _SuccessBgPainter({required this.t});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint();
+    final cx = size.width / 2;
+    final cy = size.height / 2;
+    for (int i = 0; i < 6; i++) {
+      final angle = i * math.pi / 3 + t * math.pi;
+      final r = 60 + math.sin(t * 3 + i) * 15;
+      paint.color = successGreen.withValues(alpha: 0.08 + 0.04 * math.sin(t * 2 + i));
+      canvas.drawCircle(Offset(cx + math.cos(angle) * r, cy + math.sin(angle) * r), 40, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _SuccessBgPainter old) => old.t != t;
 }
