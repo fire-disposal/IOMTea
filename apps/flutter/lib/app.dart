@@ -18,7 +18,10 @@ final router = GoRouter(
     GoRoute(path: '/mode-select', builder: (_, __) => const ModeSelectPage()),
     GoRoute(path: '/wearable', builder: (_, __) => const WearablePage()),
     GoRoute(path: '/room-bind', builder: (_, __) => const RoomBindingPage()),
-    GoRoute(path: '/fixed-device', builder: (_, __) => const FixedDevicePage()),
+    GoRoute(path: '/fixed-device', builder: (_, state) {
+      final fromRoomBind = state.extra == 'fromRoomBind';
+      return FixedDevicePage(fromRoomBind: fromRoomBind);
+    }),
     GoRoute(path: '/settings', builder: (_, __) => const SettingsPage()),
     GoRoute(path: '/mqtt', builder: (_, __) => const MqttConsolePage()),
     GoRoute(path: '/vision', builder: (_, __) => const VisionPage()),

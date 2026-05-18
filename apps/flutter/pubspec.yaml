@@ -28,6 +28,8 @@ dependencies:
 
   # 存储
   shared_preferences: ^2.3.0
+  tflite_flutter: ^0.12.1
+  camera: ^0.12.0+1
 
 dev_dependencies:
   flutter_test:
