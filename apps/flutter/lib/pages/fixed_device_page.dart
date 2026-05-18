@@ -26,6 +26,7 @@ class _FixedDevicePageState extends State<FixedDevicePage> {
   String? _roomName;
   int _entryCount = 0, _exitCount = 0;
   bool _personPresent = false;
+  int _lastReportTime = 0;
   ActionState _action = ActionState.unknown;
   String? _error;
 
@@ -76,20 +77,19 @@ class _FixedDevicePageState extends State<FixedDevicePage> {
 
       final newAction = _classifier.classify(pose);
       final hasPerson = pose.keypoints[5].score > 0.3;
-      final pin = PinService.instance.currentPin?.pin ?? '';
 
-      setState(() {
-        _action = newAction;
-        if (hasPerson && !_personPresent) { _entryCount++; _personPresent = true; _emit(DeviceEventType.roomEnter, pin); }
-        else if (!hasPerson && _personPresent) { _exitCount++; _personPresent = false; _emit(DeviceEventType.roomExit, pin); }
-        if (newAction != ActionState.unknown && hasPerson) _emit(DeviceEventType.actionDetected, pin, action: newAction.name);
-      });
+      setState(() => _action = newAction);
+
+      final now = DateTime.now().millisecondsSinceEpoch;
+      if (hasPerson != _personPresent && now - _lastReportTime > 2000) {
+        _personPresent = hasPerson;
+        _lastReportTime = now;
+        final pin = PinService.instance.currentPin?.pin ?? '';
+        EventEmitter.emitPresence(pin, _roomName ?? '', _personPresent, action: newAction.name);
+        setState(() {});
+      }
       _processing = false;
     }).catchError((_) { _processing = false; });
-  }
-
-  void _emit(DeviceEventType type, String pin, {String? action}) {
-    EventEmitter.emit(DeviceEvent(type: type, pinCode: pin, roomId: _roomName, action: action, metadata: {'room_name': _roomName}));
   }
 
   Future<ui.Image?> _toUiImage(CameraImage image) {

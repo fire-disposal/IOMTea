@@ -2,7 +2,6 @@ import { db } from '../core/db'
 import { usersPin } from '../core/db/schema/pin'
 import { events } from '../core/db/schema'
 import { eq } from 'drizzle-orm'
-import { getThingRoom } from '../core/services/thing-room-lookup'
 
 export async function routeMessage(topic: string, payload: Buffer): Promise<void> {
   const parts = topic.split('/')
@@ -12,11 +11,7 @@ export async function routeMessage(topic: string, payload: Buffer): Promise<void
   const topicSource = parts[2]
 
   let body: Record<string, unknown>
-  try {
-    body = JSON.parse(payload.toString())
-  } catch {
-    return
-  }
+  try { body = JSON.parse(payload.toString()) } catch { return }
   if (!body.metric || body.value === undefined) return
 
   const [pinRecord] = await db.select().from(usersPin).where(eq(usersPin.pin, pin)).limit(1)
@@ -25,17 +20,8 @@ export async function routeMessage(topic: string, payload: Buffer): Promise<void
   const numValue = Number(body.value)
   if (isNaN(numValue)) return
 
-  const tags: Record<string, unknown> = {
-    topicSource,
-  }
-  if (pinRecord.thingId) {
-    tags.thingId = pinRecord.thingId
-    const room = await getThingRoom(pinRecord.thingId)
-    if (room) {
-      tags.roomId = room.roomId
-      tags.roomType = room.roomType
-    }
-  }
+  const tags: Record<string, unknown> = { topicSource }
+  if (pinRecord.thingId) tags.thingId = pinRecord.thingId
 
   await db.insert(events).values({
     patientId: pinRecord.userId,

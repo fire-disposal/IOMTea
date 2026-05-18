@@ -5,7 +5,6 @@ import { alertRuleRouter } from './alertRule'
 import { appointmentRouter } from './appointment'
 import { authRouter } from './auth'
 import { homeGraphRouter } from './home-graph'
-import { homeMapRouter } from './home-map'
 import { dataRouter } from './data'
 import { deviceRouter } from './device'
 import { medicationRouter } from './medication'
@@ -24,7 +23,6 @@ export const appRouter = router({
   alert: alertRouter,
   data: dataRouter,
   alertRule: alertRuleRouter,
-  homeMap: homeMapRouter,
   homeGraph: homeGraphRouter,
   twin: twinRouter,
 })

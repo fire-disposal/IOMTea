@@ -30,7 +30,7 @@ export function GraphViewer({
   onInjectScenario, onEditMap,
 }: GraphViewerProps) {
   const [fullscreen, setFullscreen] = useState(false)
-  const graph = trpc.homeGraph.get.useQuery({ patientId }, { enabled: !!patientId })
+  const graph = trpc.homeGraph.get.useQuery({ patientId }, { enabled: !!patientId, refetchInterval: 3000 })
 
   const rooms = graph.data?.rooms ?? []
   const personRoomId = graph.data?.personLocation ?? null

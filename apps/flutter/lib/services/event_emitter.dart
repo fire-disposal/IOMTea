@@ -1,5 +1,8 @@
+import 'dart:async';
 import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'mqtt_service.dart';
+import 'pin_service.dart';
 
 enum DeviceEventType { roomEnter, roomExit, fallDetected, actionDetected }
 
@@ -19,24 +22,46 @@ class DeviceEvent {
     this.confidence,
     this.metadata = const {},
   });
-
-  Map<String, dynamic> toJson() => {
-    'type': type.name,
-    'pin_code': pinCode,
-    if (roomId != null) 'room_id': roomId,
-    if (action != null) 'action': action,
-    if (confidence != null) 'confidence': confidence,
-    'timestamp': DateTime.now().toIso8601String(),
-    ...metadata,
-  };
 }
 
 class EventEmitter {
-  static const _baseTopic = 'iomtea/device';
-
   static void emit(DeviceEvent event) {
-    if (MqttService.instance.currentStatus.name != 'connected') return;
-    final topic = '$_baseTopic/${event.pinCode}/events';
-    MqttService.instance.publish(topic: topic, message: jsonEncode(event.toJson()));
+    _send({
+      'pin': event.pinCode,
+      'event': event.type.name,
+      'roomId': event.roomId,
+      'action': event.action,
+    });
+  }
+
+  static void emitPresence(String pin, String roomId, bool present, {String? action}) {
+    _send({
+      'pin': pin,
+      'event': 'presenceUpdate',
+      'roomId': roomId,
+      'personPresent': present,
+      'action': action,
+    });
+  }
+
+  static void _send(Map<String, dynamic> payload) {
+    if (MqttService.instance.currentStatus.name == 'connected') {
+      MqttService.instance.publish(
+        topic: 'iomtea/device/${payload['pin']}/events',
+        message: jsonEncode(payload),
+      );
+    }
+
+    unawaited(_httpSend(payload));
+  }
+
+  static Future<void> _httpSend(Map<String, dynamic> payload) async {
+    try {
+      await http.post(
+        Uri.parse('${PinService.instance.serverUrl}/trpc/homeGraph.reportDeviceEvent'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(payload),
+      ).timeout(const Duration(seconds: 3));
+    } catch (_) {}
   }
 }
