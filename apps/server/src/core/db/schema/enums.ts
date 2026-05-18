@@ -24,9 +24,7 @@ export const medicationStatusEnum = pgEnum('medication_status', ['active', 'comp
 export const medicationRouteEnum = pgEnum('medication_route', ['oral', 'injection', 'topical', 'inhalation', 'other'])
 export const adherenceStatusEnum = pgEnum('adherence_status', ['taken', 'missed', 'skipped', 'delayed'])
 export const confirmationMethodEnum = pgEnum('confirmation_method', ['self', 'family', 'auto', 'unknown'])
-export const appointmentTypeEnum = pgEnum('appointment_type', ['checkup', 'followup', 'emergency', 'consultation', 'rehabilitation'])
-export const appointmentStatusEnum = pgEnum('appointment_status', ['scheduled', 'confirmed', 'in_progress', 'completed', 'cancelled', 'no_show'])
-export const followupTypeEnum = pgEnum('followup_type', ['phone', 'video', 'home_visit', 'clinic', 'message'])
+
 
 // ── Type exports: single source of truth for strict TypeScript usage ──
 export type Role = 'admin' | 'doctor' | 'nurse' | 'caregiver' | 'patient' | 'family'
@@ -45,6 +43,4 @@ export type MedicationStatus = 'active' | 'completed' | 'paused' | 'cancelled'
 export type MedicationRoute = 'oral' | 'injection' | 'topical' | 'inhalation' | 'other'
 export type AdherenceStatus = 'taken' | 'missed' | 'skipped' | 'delayed'
 export type ConfirmationMethod = 'self' | 'family' | 'auto' | 'unknown'
-export type AppointmentType = 'checkup' | 'followup' | 'emergency' | 'consultation' | 'rehabilitation'
-export type AppointmentStatus = 'scheduled' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'no_show'
-export type FollowupType = 'phone' | 'video' | 'home_visit' | 'clinic' | 'message'
+

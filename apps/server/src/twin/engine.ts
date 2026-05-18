@@ -1,3 +1,4 @@
+import { eq } from 'drizzle-orm'
 import pino from 'pino'
 import { v4 as uuid } from 'uuid'
 import type { DbClient } from '../core/db'
@@ -110,6 +111,58 @@ export async function createEngine(
     simTime: new Date(),
     tickCount: 0,
     behaviorRules,
+  }
+
+  engines.set(engine.patientId, engine)
+  return engine
+}
+
+// ── Reconstruct Engine from existing patient ──
+
+export async function reconstructEngine(
+  db: DbClient,
+  opts: { patientId: string; name: string; tags?: Record<string, unknown> },
+): Promise<PatientEngine> {
+  const tags = opts.tags || {}
+  const profileId = (tags.profileId as string) || 'elderly-cardiac'
+  const profile = getProfile(profileId)
+
+  let [device] = await db.select().from(devices).where(eq(devices.patientId, opts.patientId)).limit(1)
+  if (!device) {
+    const deviceType = profile.devices[0] || 'simulator'
+    const serial = `eng-${opts.name.replace(/\s/g, '-').toLowerCase()}-${Date.now()}`
+    const [newDevice] = await db.insert(devices).values({
+      serialNumber: serial,
+      deviceType: deviceType as 'mattress' | 'vision' | 'imu' | 'generic' | 'simulator' | 'custom',
+      patientId: opts.patientId,
+      tags: { simulated: true, profileId: profile.id },
+    }).returning()
+    device = newDevice
+  }
+
+  const homeGraph = (tags.homeGraph as any) || {}
+  const firstRoomId = homeGraph.rooms?.[0]?.id || null
+
+  const actorState = createActorState(`actor-${opts.patientId}`, 1, 1, firstRoomId)
+  const actors = new Map<string, ActorState>()
+  actors.set(actorState.entityId, actorState)
+
+  const engine: PatientEngine = {
+    id: uuid(),
+    patientId: opts.patientId,
+    patientDbId: opts.patientId,
+    deviceDbId: device.id,
+    name: opts.name,
+    profile,
+    mapId: null,
+    actors,
+    grid: null,
+    navGraph: null,
+    speed: 1,
+    running: false,
+    simTime: new Date(),
+    tickCount: 0,
+    behaviorRules: [],
   }
 
   engines.set(engine.patientId, engine)

@@ -61,22 +61,28 @@ async function bootstrap() {
     logger.warn({ err }, 'permission seed failed (run db:migrate first)')
   }
 
-  // Auto-start demo engine
+  // Auto-start engines for all patients with homeGraph
   try {
-    const { createEngine, startEngine } = await import('./twin/engine')
+    const { reconstructEngine, startEngine, getEngine } = await import('./twin/engine')
     const { patients } = await import('./core/db/schema')
-    const existingPatients = await db.select().from(patients).limit(1)
-    if (existingPatients.length > 0) {
-      const engine = await createEngine(db, {
-        profileId: 'elderly-cardiac',
-        name: '演示患者',
-        speed: 1,
+    const allPatients = await db.select().from(patients)
+
+    for (const patient of allPatients) {
+      const tags = (patient.tags as Record<string, unknown>) || {}
+      const homeGraph = tags.homeGraph as any
+      if (!homeGraph?.rooms?.length) continue
+      if (getEngine(patient.id)) continue
+
+      const engine = await reconstructEngine(db, {
+        patientId: patient.id,
+        name: patient.name,
+        tags: patient.tags as Record<string, unknown>,
       })
       await startEngine(db, engine.patientId)
-      logger.info({ patientId: engine.patientId, name: '演示患者' }, 'demo engine auto-started')
+      logger.info({ patientId: engine.patientId, name: patient.name }, 'engine auto-started')
     }
   } catch (err) {
-    logger.warn({ err }, 'demo engine auto-start failed')
+    logger.warn({ err }, 'engine auto-start failed')
   }
 }
 

@@ -2,8 +2,8 @@ import { twinRouter } from '../../../twin/trpc/twin.router'
 import { router } from '../index'
 import { alertRouter } from './alert'
 import { alertRuleRouter } from './alertRule'
-import { appointmentRouter } from './appointment'
 import { authRouter } from './auth'
+import { healthRecordsRouter } from './health-records'
 import { homeGraphRouter } from './home-graph'
 import { dataRouter } from './data'
 import { deviceRouter } from './device'
@@ -18,11 +18,11 @@ export const appRouter = router({
   patient: patientRouter,
   pin: pinRouter,
   medication: medicationRouter,
-  appointment: appointmentRouter,
   device: deviceRouter,
   alert: alertRouter,
   data: dataRouter,
   alertRule: alertRuleRouter,
+  healthRecords: healthRecordsRouter,
   homeGraph: homeGraphRouter,
   twin: twinRouter,
 })
