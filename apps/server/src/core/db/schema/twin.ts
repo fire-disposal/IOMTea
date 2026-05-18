@@ -85,29 +85,3 @@ export const twinBehaviorRules = pgTable('twin_behavior_rules', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 })
-
-export const twinActivityLog = pgTable('twin_activity_log', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  actorEntityId: uuid('actor_entity_id').references(() => twinEntities.id, { onDelete: 'cascade' }).notNull(),
-  action: text('action').notNull(),
-  fromRoomId: uuid('from_room_id').references(() => twinRooms.id, { onDelete: 'set null' }),
-  toRoomId: uuid('to_room_id').references(() => twinRooms.id, { onDelete: 'set null' }),
-  durationMs: integer('duration_ms'),
-  metadata: jsonb('metadata').default(sql`'{}'`),
-  recordedAt: timestamp('recorded_at', { withTimezone: true }).defaultNow().notNull(),
-})
-
-export const twinCvDetections = pgTable('twin_cv_detections', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  patientId: uuid('patient_id').references(() => patients.id, { onDelete: 'cascade' }).notNull(),
-  mapId: uuid('map_id').references(() => twinMaps.id, { onDelete: 'cascade' }).notNull(),
-  cameraId: text('camera_id').notNull(),
-  detectedAt: timestamp('detected_at', { withTimezone: true }).notNull(),
-  detectedClass: text('detected_class').notNull(),
-  confidence: real('confidence').notNull(),
-  bbox: jsonb('bbox').notNull(),
-  inferredRoomId: uuid('inferred_room_id').references(() => twinRooms.id, { onDelete: 'set null' }),
-  synced: boolean('synced').default(false),
-  syncedAt: timestamp('synced_at', { withTimezone: true }),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-})

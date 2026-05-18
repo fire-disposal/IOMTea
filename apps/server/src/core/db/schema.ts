@@ -21,7 +21,6 @@ import {
   kindEnum,
   patientStatusEnum,
   roleEnum,
-  snapshotTypeEnum,
   userStatusEnum,
 } from './schema/enums'
 
@@ -118,15 +117,5 @@ export const events = pgTable(
     patientSourceIdx: index('events_patient_source_idx').on(t.patientId, t.source),
   }),
 )
-
-export const patientSnapshots = pgTable('patient_snapshots', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  patientId: uuid('patient_id').references(() => patients.id, { onDelete: 'cascade' }).notNull(),
-  snapshotType: snapshotTypeEnum('snapshot_type').notNull(),
-  data: jsonb('data').notNull(),
-  periodStart: timestamp('period_start', { withTimezone: true }).notNull(),
-  periodEnd: timestamp('period_end', { withTimezone: true }).notNull(),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-})
 
 

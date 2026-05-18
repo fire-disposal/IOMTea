@@ -14,6 +14,5 @@ export * from './schema/auth-ext'
 export * from './schema/medication'
 export * from './schema/appointment'
 export * from './schema/twin'
-export * from './schema/home-map'
 export * from './schema/pin'
 
