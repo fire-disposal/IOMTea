@@ -1,5 +1,5 @@
 export { TwinScene3D } from './TwinScene3D'
-export { TileMap3D } from './TileMap3D'
+export { RoomGraph3D } from './RoomGraph3D'
 export { ThingModels3D } from './ThingModels3D'
-export { MapEditor3D } from './MapEditor3D'
-export { TwinViewer3D } from './TwinViewer3D'
+export { GraphViewer } from './GraphViewer'
+export { GraphEditorPage } from './GraphEditorPage'

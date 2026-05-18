@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useParams, useNavigate } from '@tanstack/react-router'
 import { trpc } from '../trpc'
-import { useHomeMap } from '../hooks/useHomeMap'
 import { VitalsChart } from './components/VitalsChart'
-import { TwinViewer3D } from '../twin3d/TwinViewer3D'
+import { GraphViewer } from '../twin3d/GraphViewer'
 import { ScenarioModal } from './components/ScenarioModal'
 
 const SPEEDS = [1, 2, 5, 10]
@@ -30,13 +29,20 @@ export function PatientOverview() {
     { enabled: !!id, refetchInterval: 10000 },
   )
 
-  const { runtime: mapData, isLoading: mapLoading, error: mapError, refetch: refetchMap } = useHomeMap(id)
-  const createMapMut = trpc.homeMap.generateFromTemplate.useMutation()
+  const createMapMut = trpc.homeGraph.upsert.useMutation()
+  const utils = trpc.useUtils()
 
   const handleCreateMap = useCallback(() => {
     if (!id) return
-    createMapMut.mutate({ patientId: id, templateId: 'two_bedroom' }, { onSuccess: () => refetchMap() })
-  }, [id, createMapMut, refetchMap])
+    createMapMut.mutate({
+      patientId: id,
+      graph: {
+        rooms: [{ id: 'living', name: '客厅', type: 'livingroom', x: 0, y: 0, connections: [] }],
+        entryRoomId: 'living',
+        personLocation: null,
+      },
+    }, { onSuccess: () => utils.homeGraph.get.invalidate({ patientId: id }) })
+  }, [id, createMapMut, utils])
 
   const engineStatus = trpc.twin.engine.status.useQuery({ patientId: id! }, { enabled: !!id, refetchInterval: 5000 })
   const resumeMut = trpc.twin.engine.resume.useMutation()
@@ -93,10 +99,8 @@ export function PatientOverview() {
         onToggle={() => setChartVisible((v) => !v)}
       />
 
-      <TwinViewer3D
-        mapRuntime={mapData}
-        mapLoading={mapLoading}
-        mapError={mapError}
+      <GraphViewer
+        patientId={id!}
         isRunning={isRunning}
         speed={currentSpeed}
         onCreateMap={handleCreateMap}
