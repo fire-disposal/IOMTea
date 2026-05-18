@@ -1,8 +1,6 @@
-import { ActionIcon, Badge, Button, Group, Modal, Paper, Text, Tooltip } from '@mantine/core'
-import { IconBolt, IconMap, IconMaximize, IconPlayerPause, IconPlayerPlay, IconSpeedboat } from '@tabler/icons-react'
-import { useState } from 'react'
-import { TwinScene3D } from './TwinScene3D'
-import { RoomGraph3D } from './RoomGraph3D'
+import { ActionIcon, Badge, Button, Group, Paper, Text, Tooltip } from '@mantine/core'
+import { IconBolt, IconMap, IconPlayerPause, IconPlayerPlay, IconSpeedboat } from '@tabler/icons-react'
+import { RoomNodeGraph } from './RoomNodeGraph'
 import { trpc } from '../trpc'
 
 const SPEEDS = [1, 2, 5, 10]
@@ -29,11 +27,12 @@ export function GraphViewer({
   onSpeedCycle, isSpeedPending,
   onInjectScenario, onEditMap,
 }: GraphViewerProps) {
-  const [fullscreen, setFullscreen] = useState(false)
   const graph = trpc.homeGraph.get.useQuery({ patientId }, { enabled: !!patientId, refetchInterval: 3000 })
 
   const rooms = graph.data?.rooms ?? []
   const personRoomId = graph.data?.personLocation ?? null
+  const roomStates = graph.data?.roomStates ?? []
+  const coverage = graph.data?.coverage
   const hasGraph = rooms.length > 0
 
   const renderScene = () => {
@@ -47,14 +46,7 @@ export function GraphViewer({
       )
     }
 
-    const avgX = rooms.reduce((s: number, r: any) => s + r.x, 0) / rooms.length
-    const avgZ = rooms.reduce((s: number, r: any) => s + r.y, 0) / rooms.length
-
-    return (
-      <TwinScene3D centerX={avgX} centerZ={avgZ}>
-        <RoomGraph3D rooms={rooms} personRoomId={personRoomId} />
-      </TwinScene3D>
-    )
+    return <RoomNodeGraph rooms={rooms} personRoomId={personRoomId} roomStates={roomStates} />
   }
 
   return (
@@ -64,6 +56,11 @@ export function GraphViewer({
           <Group gap={8}>
             <Text fw={600}>数字孪生</Text>
             {personRoomId && <Badge color="red" variant="light" size="sm">有人</Badge>}
+            {coverage && (
+              <Badge color="gray" variant="outline" size="sm">
+                📷{coverage.covered.length} 🔮{coverage.inferrable.length} ❓{coverage.blind.length}
+              </Badge>
+            )}
             <Badge color={isRunning ? 'green' : 'gray'} variant="light" size="sm">{isRunning ? '运行中' : '已暂停'}</Badge>
           </Group>
           <Group gap={4}>
@@ -87,11 +84,6 @@ export function GraphViewer({
                 <IconMap size={18} />
               </ActionIcon>
             </Tooltip>
-            <Tooltip label="全屏">
-              <ActionIcon variant="subtle" onClick={() => setFullscreen(true)}>
-                <IconMaximize size={18} />
-              </ActionIcon>
-            </Tooltip>
           </Group>
         </Group>
 
@@ -99,12 +91,6 @@ export function GraphViewer({
           {renderScene()}
         </div>
       </Paper>
-
-      <Modal opened={fullscreen} onClose={() => setFullscreen(false)} fullScreen title="数字孪生 — 全屏">
-        <div style={{ width: '100%', height: 'calc(100vh - 100px)', borderRadius: 8, overflow: 'hidden' }}>
-          {renderScene()}
-        </div>
-      </Modal>
     </>
   )
 }

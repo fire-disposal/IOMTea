@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { patients } from '../../db/schema'
 import { usersPin } from '../../db/schema/pin'
 import { publicProcedure, protectedProcedure, router } from '../index'
-import { twinState } from '../../../twin/twin-state'
+import { twinState, type CoverageReport } from '../../../twin/twin-state'
 
 const roomSchema = z.object({
   id: z.string(),
@@ -31,10 +31,10 @@ export const homeGraphRouter = router({
       const graph = ((tags.homeGraph as any) || null) as any
 
       if (graph?.rooms) {
-        twinState.initRooms(graph.rooms.map((r: any) => ({ id: r.id, name: r.name })))
-        const adj = new Map<string, string[]>()
-        for (const r of graph.rooms) adj.set(r.id, r.connections ?? [])
-        twinState.setAdjacency(adj)
+        twinState.initRooms(
+          graph.rooms.map((r: any) => ({ id: r.id, name: r.name })),
+          graph.rooms.map((r: any) => ({ id: r.id, connections: r.connections ?? [], hasCamera: r.hasCamera ?? false })),
+        )
         graph.personLocation = twinState.getCurrentLocation() ?? graph.personLocation
       }
 
@@ -42,6 +42,7 @@ export const homeGraphRouter = router({
         ...(graph || { rooms: [], entryRoomId: null, personLocation: null }),
         trajectory: twinState.getRecentTrajectory(20),
         roomStates: twinState.getAllRooms(),
+        coverage: twinState.getCoverageAnalysis(),
       }
     }),
 
@@ -78,10 +79,10 @@ export const homeGraphRouter = router({
       const graph = ((tags.homeGraph as any) || {}) as any
 
       const rooms = graph.rooms || []
-      twinState.initRooms(rooms.map((r: any) => ({ id: r.id, name: r.name })))
-      const adj = new Map<string, string[]>()
-      for (const r of rooms) adj.set(r.id, r.connections ?? [])
-      twinState.setAdjacency(adj)
+      twinState.initRooms(
+        rooms.map((r: any) => ({ id: r.id, name: r.name })),
+        rooms.map((r: any) => ({ id: r.id, connections: r.connections ?? [], hasCamera: r.hasCamera ?? false })),
+      )
 
       let result: any = { success: true }
 

@@ -12,7 +12,7 @@ const ROOM_TYPES = [
   { value: 'dining', label: '餐厅' }, { value: 'storage', label: '储物间' },
 ]
 
-interface RoomNode { id: string; name: string; type: string; x?: number; y?: number; connections?: string[] }
+interface RoomNode { id: string; name: string; type: string; x?: number; y?: number; connections?: string[]; hasCamera?: boolean }
 
 function autoPos(index: number): { x: number; y: number } {
   const positions = [
@@ -44,7 +44,7 @@ export function GraphEditorPage({ patientId }: { patientId: string }) {
   const save = () => upsert.mutate({
     patientId,
     graph: {
-      rooms: rooms.map((r) => ({ ...r, x: r.x ?? 0, y: r.y ?? 0, connections: r.connections ?? [] })),
+      rooms: rooms.map((r) => ({ ...r, x: r.x ?? 0, y: r.y ?? 0, connections: r.connections ?? [], hasCamera: r.hasCamera ?? false })),
       entryRoomId,
       personLocation: null,
     } as any,
@@ -97,6 +97,13 @@ export function GraphEditorPage({ patientId }: { patientId: string }) {
               <Group grow mb="sm">
                 <TextInput label="名称" value={room.name} onChange={(e) => updateRoom(room.id, { name: e.currentTarget.value })} size="xs" />
                 <Select label="类型" data={ROOM_TYPES} value={room.type} onChange={(v) => v && updateRoom(room.id, { type: v })} size="xs" />
+              </Group>
+              <Group grow mb="sm">
+                <Badge size="sm" color={room.hasCamera ? 'green' : 'gray'} variant={room.hasCamera ? 'filled' : 'outline'}
+                  style={{ cursor: 'pointer', alignSelf: 'center' }}
+                  onClick={() => updateRoom(room.id, { hasCamera: !room.hasCamera })}>
+                  {room.hasCamera ? '📷 有摄像头' : '无摄像头'}
+                </Badge>
               </Group>
               <Text size="xs" c="dimmed" mb="xs">连接:</Text>
               <Group gap="xs">
