@@ -4,7 +4,7 @@ import { TRPCError } from '@trpc/server'
 import { eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { wechatAccounts } from '../../db'
-import { refreshTokens, users } from '../../db/schema'
+import { refreshTokens, users, patients } from '../../db/schema'
 import { signAccessToken, signRefreshToken, verifyToken } from '../../lib/jwt'
 import { hashPassword, verifyPassword } from '../../lib/password'
 import { code2session } from '../../lib/wechat'
@@ -51,6 +51,7 @@ export const authRouter = router({
       accessToken,
       refreshToken: refreshToken.token,
       expiresAt: refreshToken.expiresAt.getTime(),
+      displayName: user.displayName,
     })
   }),
 
@@ -89,6 +90,7 @@ export const authRouter = router({
       accessToken,
       refreshToken: refreshToken.token,
       expiresAt: refreshToken.expiresAt.getTime(),
+      displayName: user.displayName,
     })
   }),
 
@@ -104,6 +106,7 @@ export const authRouter = router({
 
     let userId: string
     let role: string
+    let displayName: string
 
     if (existing.length > 0) {
       const user = await ctx.db.select().from(users).where(eq(users.id, existing[0].userId)).limit(1)
@@ -112,6 +115,7 @@ export const authRouter = router({
       }
       userId = user[0].id
       role = user[0].role
+      displayName = user[0].displayName
     } else {
       const [newUser] = await ctx.db
         .insert(users)
@@ -128,8 +132,15 @@ export const authRouter = router({
         unionId: unionid || null,
       })
 
+      await ctx.db.insert(patients).values({
+        userId: newUser.id,
+        name: `微信用户${openid.slice(-6)}`,
+        status: 'active',
+      }).catch(() => {})
+
       userId = newUser.id
       role = newUser.role
+      displayName = newUser.displayName
     }
 
     await ctx.db.update(users).set({ lastLoginAt: new Date() }).where(eq(users.id, userId))
@@ -148,6 +159,7 @@ export const authRouter = router({
       accessToken,
       refreshToken: refreshToken.token,
       expiresAt: refreshToken.expiresAt.getTime(),
+      displayName,
     })
   }),
 

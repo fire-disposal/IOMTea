@@ -15,6 +15,7 @@ export const tokenPairSchema = z.object({
   accessToken: z.string(),
   refreshToken: z.string(),
   expiresAt: z.number().int().positive(),
+  displayName: z.string().optional(),
 })
 
 export const wechatLoginSchema = z.object({
