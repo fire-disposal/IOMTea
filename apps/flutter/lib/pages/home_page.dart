@@ -28,7 +28,10 @@ class _HomePageState extends State<HomePage> {
 
   void _initPin() {
     if (PinService.instance.hasPin) {
-      if (mounted) setState(() => _pinState = _PinScreenState.verified);
+      if (mounted) {
+        setState(() => _pinState = _PinScreenState.verified);
+        WidgetsBinding.instance.addPostFrameCallback((_) => context.push('/mode-select'));
+      }
     } else {
       if (mounted) setState(() => _pinState = _PinScreenState.input);
     }

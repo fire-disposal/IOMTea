@@ -1,9 +1,10 @@
 import { TRPCError } from '@trpc/server'
-import { createFromTemplate } from '@iomtea/shared-types'
+import { createFromTemplate, unpackGrid, detectRooms } from '@iomtea/shared-types'
 import { eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { homeMaps, homeThings } from '../../db/schema/home-map'
-import { protectedProcedure, router } from '../index'
+import { usersPin } from '../../db/schema/pin'
+import { publicProcedure, protectedProcedure, router } from '../index'
 
 const thingInputSchema = z.object({
   thingType: z.string(),
@@ -80,6 +81,35 @@ export const homeMapRouter = router({
         ...input.thing,
       }).returning()
       return thing
+    }),
+
+  roomsByPin: publicProcedure
+    .input(z.object({ pin: z.string().min(4).max(6) }))
+    .query(async ({ ctx, input }) => {
+      const pinRows = await ctx.db.select().from(usersPin).where(eq(usersPin.pin, input.pin)).limit(1)
+      if (pinRows.length === 0) throw new TRPCError({ code: 'NOT_FOUND', message: 'PIN 不存在' })
+
+      const userId = pinRows[0].userId
+      const { patients } = await import('../../db/schema')
+      const patientRows = await ctx.db.select().from(patients).where(eq(patients.userId, userId)).limit(1)
+
+      if (patientRows.length === 0) {
+        return []
+      }
+
+      const mapRows = await ctx.db.select().from(homeMaps).where(eq(homeMaps.patientId, patientRows[0].id)).limit(1)
+      if (mapRows.length === 0) return []
+
+      const grid = unpackGrid(mapRows[0].packedGrid)
+      const thingRows = await ctx.db.select().from(homeThings).where(eq(homeThings.mapId, mapRows[0].id))
+      const { rooms } = detectRooms(grid, thingRows.map((t) => ({ id: t.id, thingType: t.thingType, tileX: t.tileX, tileY: t.tileY })))
+
+      return rooms.map((r) => ({
+        id: r.id,
+        name: r.label || r.type,
+        type: r.type,
+        tileCount: r.tiles.length,
+      }))
     }),
 
 })
