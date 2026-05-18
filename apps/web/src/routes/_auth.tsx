@@ -37,6 +37,8 @@ const pageStyles = [
   '.card-hover:active{transform:translateY(0);box-shadow:0 2px 4px rgba(0,0,0,.04);transition:transform .05s}',
   '.alert-card{transition:transform .15s ease,box-shadow .15s ease}',
   '.alert-card:hover{transform:translateX(3px)}',
+  '.anim-stagger-item{opacity:0;animation:fadeUp 0.3s ease-out forwards}',
+  '@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}',
 ].join('')
 
 function DashboardLayout() {

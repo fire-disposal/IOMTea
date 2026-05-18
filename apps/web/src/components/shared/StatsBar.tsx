@@ -1,4 +1,4 @@
-import { Group, Paper, SimpleGrid, Text, ThemeIcon } from '@mantine/core'
+import { Group, Paper, SimpleGrid, Skeleton, Text, ThemeIcon } from '@mantine/core'
 import type { ReactNode } from 'react'
 
 export interface StatsBarItem {
@@ -11,9 +11,10 @@ export interface StatsBarItem {
 interface StatsBarProps {
   items: StatsBarItem[]
   cols?: number
+  loading?: boolean
 }
 
-export function StatsBar({ items, cols = 3 }: StatsBarProps) {
+export function StatsBar({ items, cols = 3, loading = false }: StatsBarProps) {
   return (
     <SimpleGrid cols={cols} mb="lg">
       {items.map((item) => (
@@ -34,7 +35,7 @@ export function StatsBar({ items, cols = 3 }: StatsBarProps) {
                 {item.label}
               </Text>
               <Text fw={700} size="xl">
-                {item.value}
+                {loading ? <Skeleton height={40} /> : item.value}
               </Text>
             </div>
           </Group>

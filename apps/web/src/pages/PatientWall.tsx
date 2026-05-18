@@ -96,14 +96,14 @@ export function PatientWall() {
         </Button>
       </Group>
 
-      <StatsBar items={statsItems} />
+      <StatsBar items={statsItems} loading={patients.isLoading} />
 
       <TextInput
         placeholder="搜索患者..."
         leftSection={<IconSearch size={16} />}
         rightSection={
           search ? (
-            <ActionIcon size="sm" variant="subtle" onClick={() => setSearch('')}>
+            <ActionIcon size="sm" variant="light" color="gray" onClick={() => setSearch('')}>
               <IconX size={14} />
             </ActionIcon>
           ) : undefined
@@ -128,16 +128,17 @@ export function PatientWall() {
       )}
       {!patients.isLoading && !patients.isError && filtered.length > 0 && (
         <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="lg">
-          {filtered.map((p: any) => (
-            <PatientCard
-              key={p.id}
-              patient={p}
-              alertCount={
-                alerts.data?.filter((a: any) => a.patientId === p.id && a.status === 'active')
-                  .length
-              }
-              onDelete={(id) => setDeleteTarget(id)}
-            />
+          {filtered.map((p: any, index: number) => (
+            <div key={p.id} className="anim-stagger-item" style={{ animationDelay: `${index * 60}ms` }}>
+              <PatientCard
+                patient={p}
+                alertCount={
+                  alerts.data?.filter((a: any) => a.patientId === p.id && a.status === 'active')
+                    .length
+                }
+                onDelete={(id) => setDeleteTarget(id)}
+              />
+            </div>
           ))}
         </SimpleGrid>
       )}

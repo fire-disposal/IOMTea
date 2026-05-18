@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Container, Title, Group, Paper, Badge, Text, Button, Select, Textarea, Modal, Stack, Card } from '@mantine/core'
+import { Container, Title, Group, Paper, Badge, Text, Button, Select, Textarea, Modal, Stack, Card, SimpleGrid } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { trpc } from '../trpc'
 import { StateSkeleton, StateError } from '../components/shared/StateComponents'
@@ -90,8 +90,8 @@ export function AlertBoard() {
   return (
     <Container size="xl" py="md">
       <Title order={2} mb="lg">异常处置</Title>
-      <Group align="flex-start" gap="md">
-        <Paper shadow="xs" p="md" withBorder style={{ flex: 1, minHeight: 400, borderTop: '3px solid var(--mantine-color-red-5)' }}>
+      <SimpleGrid cols={{ base: 1, md: 3 }} spacing="md">
+        <Paper shadow="xs" p="md" withBorder style={{ minHeight: 400, borderTop: '3px solid var(--mantine-color-red-5)' }}>
           <Group mb="sm">
             <Badge color="red" size="lg">{newAlerts.length}</Badge>
             <Text fw={600}>待处理</Text>
@@ -107,7 +107,7 @@ export function AlertBoard() {
           ))}
         </Paper>
 
-        <Paper shadow="xs" p="md" withBorder style={{ flex: 1, minHeight: 400, borderTop: '3px solid var(--mantine-color-yellow-5)' }}>
+        <Paper shadow="xs" p="md" withBorder style={{ minHeight: 400, borderTop: '3px solid var(--mantine-color-yellow-5)' }}>
           <Group mb="sm">
             <Badge color="yellow" size="lg">{inProgress.length}</Badge>
             <Text fw={600}>处理中</Text>
@@ -123,7 +123,7 @@ export function AlertBoard() {
           ))}
         </Paper>
 
-        <Paper shadow="xs" p="md" withBorder style={{ flex: 1, minHeight: 400, borderTop: '3px solid var(--mantine-color-green-5)' }}>
+        <Paper shadow="xs" p="md" withBorder style={{ minHeight: 400, borderTop: '3px solid var(--mantine-color-green-5)' }}>
           <Group mb="sm">
             <Badge color="green" size="lg">{completed.length}</Badge>
             <Text fw={600}>已完成</Text>
@@ -137,7 +137,7 @@ export function AlertBoard() {
             </Card>
           ))}
         </Paper>
-      </Group>
+      </SimpleGrid>
 
       <Modal opened={opened} onClose={close} title="告警详情" size="lg">
         {selected && (

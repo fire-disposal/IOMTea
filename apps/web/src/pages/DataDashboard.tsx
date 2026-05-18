@@ -1,4 +1,4 @@
-import { Badge, Group, Paper, SimpleGrid, Text, ThemeIcon, Title } from '@mantine/core'
+import { Badge, Box, Group, Paper, SimpleGrid, Skeleton, Text, ThemeIcon, Title } from '@mantine/core'
 import { IconAlertTriangle, IconHeart, IconLungs, IconUsers } from '@tabler/icons-react'
 import { useEffect, useMemo, useState } from 'react'
 import { LineChart, Line, ResponsiveContainer, YAxis } from 'recharts'
@@ -56,7 +56,7 @@ export function DataDashboard() {
   }, [latestVitals])
 
   return (
-    <div style={{ minHeight: 'calc(100vh - 56px)', background: '#f5f3ee', padding: '16px 24px' }}>
+    <Box bg="matchaGreen.0" style={{ minHeight: 'calc(100vh - 56px)', padding: '16px 24px' }}>
       <Group justify="space-between" mb="md">
         <Title order={3}>数据监控大屏</Title>
         <Text size="xs" c="dimmed">{patientCount} 位患者 · {activeAlerts.length} 条活跃告警</Text>
@@ -112,6 +112,6 @@ export function DataDashboard() {
         <Text size="xs" c="dimmed" mb="sm">心率趋势</Text>
         <SparkLine data={hrHistory} color="red" height={80} />
       </Paper>
-    </div>
+    </Box>
   )
 }

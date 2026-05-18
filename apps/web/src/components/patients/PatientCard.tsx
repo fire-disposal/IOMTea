@@ -67,7 +67,7 @@ export function PatientCard({ patient, alertCount = 0, onDelete }: PatientCardPr
           <Group gap={6} mt={2}>
             {age != null && <Text size="xs" c="dimmed">{age}岁</Text>}
             {patient.gender && <Text size="xs" c="dimmed">{patient.gender === 'male' ? '男' : patient.gender === 'female' ? '女' : '其他'}</Text>}
-            <Badge size="xs" color={isOnline ? 'green' : 'gray'} variant="dot">{isOnline ? '在线' : '离线'}</Badge>
+            <Badge size="xs" color={isOnline ? 'green' : 'gray'} variant="light">{isOnline ? '在线' : '离线'}</Badge>
           </Group>
         </div>
         {alertCount > 0 && (
@@ -80,7 +80,7 @@ export function PatientCard({ patient, alertCount = 0, onDelete }: PatientCardPr
       {conditions.length > 0 && (
         <Group gap={4} mb="md">
           {conditions.slice(0, 3).map((c: any) => (
-            <Badge key={c} size="xs" variant="light" color="matchaGreen">{c}</Badge>
+            <Badge key={c} size="xs" variant="outline" color="matchaGreen">{c}</Badge>
           ))}
         </Group>
       )}

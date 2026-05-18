@@ -11,18 +11,28 @@ interface RoomState {
   roomId: string; personPresent: boolean; hasCamera: boolean; inferrable: boolean; deviceCount: number
 }
 
-const ROOM_COLORS: Record<string, string> = {
-  bedroom: 'blue', livingroom: 'matchaGreen', kitchen: 'orange',
-  bathroom: 'cyan', study: 'violet', corridor: 'gray',
-  entry: 'yellow', balcony: 'lime', storage: 'gray', dining: 'pink',
+const ROOM_STYLES: Record<string, { border: string; bg: string; badge: string }> = {
+  bedroom: { border: '#8B6914', bg: 'linear-gradient(135deg, #fff9f0, #fff)', badge: 'orange' },
+  livingroom: { border: '#6B8E23', bg: 'linear-gradient(135deg, #f4fff0, #fff)', badge: 'matchaGreen' },
+  kitchen: { border: '#CD853F', bg: 'linear-gradient(135deg, #fff8f0, #fff)', badge: 'yellow' },
+  bathroom: { border: '#4682B4', bg: 'linear-gradient(135deg, #f0f8ff, #fff)', badge: 'blue' },
+  study: { border: '#9370DB', bg: 'linear-gradient(135deg, #f8f0ff, #fff)', badge: 'grape' },
+  corridor: { border: '#B0B0B0', bg: 'linear-gradient(135deg, #fafafa, #fff)', badge: 'gray' },
+  entry: { border: '#B8860B', bg: 'linear-gradient(135deg, #fffff0, #fff)', badge: 'yellow' },
+  balcony: { border: '#32CD32', bg: 'linear-gradient(135deg, #f0fff0, #fff)', badge: 'green' },
+  storage: { border: '#808080', bg: 'linear-gradient(135deg, #fafafa, #fff)', badge: 'gray' },
+  dining: { border: '#CD5C5C', bg: 'linear-gradient(135deg, #fff5f5, #fff)', badge: 'red' },
+}
+
+const DEVICE_COLORS: Record<string, string> = {
+  mattress: 'green', vision: 'blue', imu: 'violet', generic: 'gray',
+  simulator: 'orange', custom: 'cyan', pin: 'matchaGreen', camera: 'red',
 }
 
 export function RoomNodeGraph({ rooms, personRoomId, roomStates }: {
   rooms: RoomNode[]; personRoomId?: string | null; roomStates?: RoomState[]
 }) {
   const scale = 60
-  const cx = rooms.reduce((s, r) => s + r.x, 0) / Math.max(rooms.length, 1)
-  const cy = rooms.reduce((s, r) => s + r.y, 0) / Math.max(rooms.length, 1)
 
   const stateMap = useMemo(() => {
     const m = new Map<string, RoomState>()
@@ -38,7 +48,7 @@ export function RoomNodeGraph({ rooms, personRoomId, roomStates }: {
   const h = (maxY - minY) * scale + 200
 
   return (
-    <div style={{ width: '100%', height: '100%', overflow: 'auto', position: 'relative', background: '#f8f6f0' }}>
+    <div style={{ width: '100%', height: '100%', overflow: 'auto', position: 'relative', background: '#faf8f4' }}>
       <svg style={{ position: 'absolute', top: 0, left: 0, width: w, height: h, pointerEvents: 'none' }}>
         {rooms.map((room) =>
           room.connections.map((connId) => {
@@ -57,29 +67,28 @@ export function RoomNodeGraph({ rooms, personRoomId, roomStates }: {
       {rooms.map((room) => {
         const state = stateMap.get(room.id)
         const isPersonHere = personRoomId === room.id
-        const color = ROOM_COLORS[room.type] || 'gray'
+        const style = ROOM_STYLES[room.type] || ROOM_STYLES.storage
         const hasCam = state?.hasCamera ?? room.hasCamera ?? false
         const inferrable = state?.inferrable ?? room.inferrable ?? false
         const left = (room.x - minX) * scale + 10
         const top = (room.y - minY) * scale + 10
 
         return (
-          <div key={room.id} style={{ position: 'absolute', left, top, width: 140, transition: 'all 0.3s ease' }}>
-            <Paper
-              p="xs"
-              radius="md"
-              withBorder
+          <div key={room.id} style={{ position: 'absolute', left, top, width: 142, transition: 'all 0.3s ease' }}>
+            <Paper p="xs" radius="md" withBorder
               shadow={isPersonHere ? 'md' : 'sm'}
               style={{
-                borderColor: isPersonHere ? 'var(--mantine-color-red-5)' : 'var(--mantine-color-gray-3)',
+                borderColor: isPersonHere ? 'var(--mantine-color-red-5)' : style.border,
                 borderWidth: isPersonHere ? 2 : 1,
-                background: isPersonHere ? 'var(--mantine-color-red-0)' : '#fff',
+                background: isPersonHere ? 'var(--mantine-color-red-0)' : style.bg,
+                borderTopWidth: 3,
+                borderTopColor: isPersonHere ? 'var(--mantine-color-red-5)' : style.border,
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 2 }}>
-                <Badge size="xs" color={color} variant="filled" style={{ flexShrink: 0 }}>{room.name}</Badge>
-                {hasCam && <IconCamera size={10} color="var(--mantine-color-gray-6)" />}
-                {!hasCam && !inferrable && <IconEyeOff size={10} color="var(--mantine-color-red-6)" />}
+                <Badge size="sm" color={style.badge} variant="filled" style={{ flexShrink: 0 }}>{room.name}</Badge>
+                {hasCam && <IconCamera size={12} color="var(--mantine-color-red-6)" />}
+                {!hasCam && !inferrable && <IconEyeOff size={12} color="var(--mantine-color-gray-5)" />}
               </div>
               {state && (
                 <Text size="10px" c="dimmed">
@@ -88,10 +97,10 @@ export function RoomNodeGraph({ rooms, personRoomId, roomStates }: {
                 </Text>
               )}
               {room.devices && room.devices.length > 0 && (
-                <div style={{ display: 'flex', gap: 2, marginTop: 2, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: 2, marginTop: 3, flexWrap: 'wrap' }}>
                   {room.devices.map((d) => (
-                    <Badge key={d.id} size="xs" variant="light" color={d.status === 'active' ? 'green' : 'gray'} leftSection={<IconDeviceMobile size={8} />}>
-                      {d.deviceType}
+                    <Badge key={d.id} size="xs" variant="light" color={d.status === 'active' ? (DEVICE_COLORS[d.deviceType] || 'gray') : 'gray'}>
+                      {d.deviceType === 'pin' ? `🔑 ${d.serialNumber}` : d.deviceType}
                     </Badge>
                   ))}
                 </div>
@@ -100,15 +109,18 @@ export function RoomNodeGraph({ rooms, personRoomId, roomStates }: {
 
             {isPersonHere && (
               <div style={{
-                position: 'absolute', top: -16, left: '50%', transform: 'translateX(-50%)',
-                width: 20, height: 20, borderRadius: '50%', background: '#e03131',
-                border: '2px solid white', boxShadow: '0 0 8px rgba(224,49,49,0.5)',
-                transition: 'all 0.5s ease',
+                position: 'absolute', top: -18, left: '50%', transform: 'translateX(-50%)',
+                width: 22, height: 22, borderRadius: '50%',
+                background: 'var(--mantine-color-red-6)',
+                border: '3px solid white', boxShadow: '0 0 12px rgba(224,49,49,0.6)',
+                animation: 'pulse 1.5s ease-in-out infinite',
               }} />
             )}
           </div>
         )
       })}
+
+      <style>{'@keyframes pulse{0%,100%{box-shadow:0 0 12px rgba(224,49,49,0.6)}50%{box-shadow:0 0 24px rgba(224,49,49,0.9),0 0 36px rgba(224,49,49,0.3)}}'}</style>
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import { Badge, Group, Paper, SegmentedControl, Text } from '@mantine/core'
+import { Badge, Group, Paper, SegmentedControl, Text, Tooltip } from '@mantine/core'
 import { useMemo, useState } from 'react'
 import { useParams } from '@tanstack/react-router'
 import { trpc } from '../trpc'
@@ -62,6 +62,14 @@ export function HealthTimeline() {
       </Group>
 
       <div style={{ maxHeight: 500, overflowY: 'auto', position: 'relative' }}>
+        <Group gap={4} mb="sm">
+          {METRICS.map((m) => (
+            <Badge key={m} size="xs" color={METRIC_COLORS[m]} variant="light">
+              {METRIC_LABELS[m]}
+            </Badge>
+          ))}
+          <Badge size="xs" color="red" variant="filled">告警</Badge>
+        </Group>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {METRICS.map((metric, rowIdx) => {
             const events = timeline.filter((e) => e.metric === metric)
@@ -77,17 +85,18 @@ export function HealthTimeline() {
                   {events.map((e, idx) => {
                     const left = ((e.time - from) / timeRange) * 100
                     return (
-                      <div key={idx}
-                        title={`${e.metric}: ${e.value} at ${new Date(e.time).toLocaleTimeString('zh-CN')}`}
-                        style={{
-                          position: 'absolute', left: `${left}%`, top: 2, width: e.isAlert ? 6 : 3, height: 16,
-                          borderRadius: e.isAlert ? 3 : '50%',
-                          background: e.isAlert
-                            ? ((e.severity as string) === 'critical' ? 'var(--mantine-color-red-6)' : 'var(--mantine-color-orange-6)')
-                            : `var(--mantine-color-${METRIC_COLORS[metric]}-6)`,
-                          opacity: 0.8, cursor: 'pointer',
-                        }}
-                      />
+                      <Tooltip key={idx} label={`${e.metric}: ${e.value} at ${new Date(e.time).toLocaleTimeString('zh-CN')}`} position="top" withArrow>
+                        <div
+                          style={{
+                            position: 'absolute', left: `${left}%`, top: 2, width: e.isAlert ? 6 : 3, height: 16,
+                            borderRadius: e.isAlert ? 3 : '50%',
+                            background: e.isAlert
+                              ? ((e.severity as string) === 'critical' ? 'var(--mantine-color-red-6)' : 'var(--mantine-color-orange-6)')
+                              : `var(--mantine-color-${METRIC_COLORS[metric]}-6)`,
+                            opacity: 0.8, cursor: 'pointer',
+                          }}
+                        />
+                      </Tooltip>
                     )
                   })}
                 </div>
