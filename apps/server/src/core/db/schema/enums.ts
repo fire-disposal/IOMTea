@@ -25,6 +25,17 @@ export const medicationRouteEnum = pgEnum('medication_route', ['oral', 'injectio
 export const adherenceStatusEnum = pgEnum('adherence_status', ['taken', 'missed', 'skipped', 'delayed'])
 export const confirmationMethodEnum = pgEnum('confirmation_method', ['self', 'family', 'auto', 'unknown'])
 
+export const checklistStatusEnum = pgEnum('checklist_status', [
+  'pending',
+  'done',
+  'skipped',
+])
+
+export const transactionTypeEnum = pgEnum('transaction_type', [
+  'earn',
+  'spend',
+  'adjust',
+])
 
 // ── Type exports: single source of truth for strict TypeScript usage ──
 export type Role = 'admin' | 'doctor' | 'nurse' | 'caregiver' | 'patient' | 'family'
@@ -43,4 +54,6 @@ export type MedicationStatus = 'active' | 'completed' | 'paused' | 'cancelled'
 export type MedicationRoute = 'oral' | 'injection' | 'topical' | 'inhalation' | 'other'
 export type AdherenceStatus = 'taken' | 'missed' | 'skipped' | 'delayed'
 export type ConfirmationMethod = 'self' | 'family' | 'auto' | 'unknown'
+export type ChecklistStatus = 'pending' | 'done' | 'skipped'
+export type TransactionType = 'earn' | 'spend' | 'adjust'
 

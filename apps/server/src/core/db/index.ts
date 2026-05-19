@@ -13,4 +13,5 @@ export * from './schema/enums'
 export * from './schema/auth-ext'
 export * from './schema/medication'
 export * from './schema/pin'
+export * from './schema/plan'
 
