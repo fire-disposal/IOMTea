@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Container, Group, Paper, SegmentedControl, Table, Badge, Text, Title, Skeleton, Button, SimpleGrid, ThemeIcon } from '@mantine/core'
+import { AccentPaper } from '../components/shared/AccentPaper'
 import { notifications } from '@mantine/notifications'
 import { IconAlertTriangle, IconBell, IconCheck } from '@tabler/icons-react'
 import { trpc } from '../trpc'
@@ -33,7 +34,7 @@ export function GlobalAlerts() {
       <Title order={2} mb="md">告警中心</Title>
 
       <SimpleGrid cols={3} mb="lg">
-        <Paper p="md" radius="md" withBorder style={{ borderLeft: '3px solid var(--mantine-color-red-5)' }}>
+        <AccentPaper p="md" radius="md" withBorder color="red">
           <Group>
             <ThemeIcon color="red" variant="light"><IconAlertTriangle size={20} /></ThemeIcon>
             <div>
@@ -41,8 +42,8 @@ export function GlobalAlerts() {
               <Text fw={700} size="xl" c="red">{activeCount}</Text>
             </div>
           </Group>
-        </Paper>
-        <Paper p="md" radius="md" withBorder style={{ borderLeft: '3px solid var(--mantine-color-orange-5)' }}>
+        </AccentPaper>
+        <AccentPaper p="md" radius="md" withBorder color="orange">
           <Group>
             <ThemeIcon color="orange" variant="light"><IconBell size={20} /></ThemeIcon>
             <div>
@@ -50,8 +51,8 @@ export function GlobalAlerts() {
               <Text fw={700} size="xl">{criticalCount}</Text>
             </div>
           </Group>
-        </Paper>
-        <Paper p="md" radius="md" withBorder style={{ borderLeft: '3px solid var(--mantine-color-blue-5)' }}>
+        </AccentPaper>
+        <AccentPaper p="md" radius="md" withBorder color="blue">
           <Group>
             <ThemeIcon color="blue" variant="light"><IconCheck size={20} /></ThemeIcon>
             <div>
@@ -59,7 +60,7 @@ export function GlobalAlerts() {
               <Text fw={700} size="xl">{totalCount}</Text>
             </div>
           </Group>
-        </Paper>
+        </AccentPaper>
       </SimpleGrid>
 
       <Paper p="lg" radius="md" withBorder>

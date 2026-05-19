@@ -1,4 +1,4 @@
-import { ActionIcon, Badge, Button, Group, Paper, Text, Tooltip } from '@mantine/core'
+import { ActionIcon, Badge, Box, Button, Group, Paper, Stack, Text, Tooltip } from '@mantine/core'
 import { IconBolt, IconMap, IconPlayerPause, IconPlayerPlay, IconSpeedboat } from '@tabler/icons-react'
 import { RoomNodeGraph } from './RoomNodeGraph'
 import { trpc } from '../trpc'
@@ -41,10 +41,10 @@ export function GraphViewer({
     if (graph.isLoading) return <Text c="dimmed" ta="center" pt="xl">加载中...</Text>
     if (!hasGraph) {
       return (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 16 }}>
+        <Stack h="100%" align="center" justify="center" gap="md">
           <Text c="dimmed" size="sm">居家图尚未配置</Text>
           <Button size="sm" onClick={onCreateMap} loading={onCreateMapPending}>创建居家图</Button>
-        </div>
+        </Stack>
       )
     }
 
@@ -89,9 +89,9 @@ export function GraphViewer({
           </Group>
         </Group>
 
-        <div style={{ flex: 1, minHeight: 0, borderRadius: 8, overflow: 'hidden' }}>
+        <Box flex={1} mih={0} style={{ borderRadius: 8, overflow: 'hidden' }}>
           {renderScene()}
-        </div>
+        </Box>
       </Paper>
     </>
   )

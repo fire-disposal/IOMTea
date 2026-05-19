@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { Badge, Button, Container, Group, Paper, SimpleGrid, Text, ThemeIcon, Title } from '@mantine/core'
+import { AccentPaper } from '../components/shared/AccentPaper'
 import { IconPill, IconUsers } from '@tabler/icons-react'
 import { createColumnHelper } from '@tanstack/react-table'
 import { trpc } from '../trpc'
@@ -53,7 +54,7 @@ export function GlobalMedications() {
       <Title order={2} mb="md">用药管理</Title>
 
       <SimpleGrid cols={2} mb="lg">
-        <Paper p="md" radius="md" withBorder style={{ borderLeft: '3px solid var(--mantine-color-matchaGreen-5)' }}>
+        <AccentPaper p="md" radius="md" withBorder color="matchaGreen">
           <Group>
             <ThemeIcon color="matchaGreen" variant="light"><IconPill size={20} /></ThemeIcon>
             <div>
@@ -61,8 +62,8 @@ export function GlobalMedications() {
               <Text fw={700} size="xl">{activeCount}</Text>
             </div>
           </Group>
-        </Paper>
-        <Paper p="md" radius="md" withBorder style={{ borderLeft: '3px solid var(--mantine-color-blue-5)' }}>
+        </AccentPaper>
+        <AccentPaper p="md" radius="md" withBorder color="blue">
           <Group>
             <ThemeIcon color="blue" variant="light"><IconUsers size={20} /></ThemeIcon>
             <div>
@@ -70,7 +71,7 @@ export function GlobalMedications() {
               <Text fw={700} size="xl">{patientsOnMeds}</Text>
             </div>
           </Group>
-        </Paper>
+        </AccentPaper>
       </SimpleGrid>
 
       <Paper p="lg" radius="md" withBorder>

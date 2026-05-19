@@ -1,11 +1,11 @@
-import { Button, Center, Skeleton, Stack, Text, ThemeIcon } from '@mantine/core'
+import { ActionIcon, Button, Center, Skeleton, Stack, Text, ThemeIcon } from '@mantine/core'
 import { IconAlertTriangle, IconDatabaseOff, IconRefresh } from '@tabler/icons-react'
 
 export function StateSkeleton({ count = 3, variant = 'card' }: { count?: number; variant?: 'card' | 'table' | 'chart' }) {
   const height = variant === 'chart' ? 400 : variant === 'table' ? 52 : 140
   return (
     <>{Array.from({ length: count }).map((_, i) => (
-      <Skeleton key={i} height={height} radius="md" style={variant === 'table' ? { marginBottom: 4 } : undefined} />
+      <Skeleton key={i} height={height} radius="md" mb={variant === 'table' ? 4 : undefined} />
     ))}</>
   )
 }
@@ -36,7 +36,7 @@ export function StateError({ message = '加载失败', onRetry }: { message?: st
           <IconAlertTriangle size={32} />
         </ThemeIcon>
         <Text c="red" size="lg">{message}</Text>
-        {onRetry && <IconRefresh size={24} style={{ cursor: 'pointer' }} onClick={onRetry} />}
+        {onRetry && <ActionIcon variant="subtle" onClick={onRetry}><IconRefresh size={24} /></ActionIcon>}
       </Stack>
     </Center>
   )

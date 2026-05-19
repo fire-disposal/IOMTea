@@ -1,4 +1,4 @@
-import { ActionIcon, Avatar, Badge, Card, Group, Text } from '@mantine/core'
+import { ActionIcon, Avatar, Badge, Box, Card, Group, Text } from '@mantine/core'
 import { IconHeart, IconLungs, IconAlertCircle, IconTrash } from '@tabler/icons-react'
 import { useNavigate } from '@tanstack/react-router'
 import { trpc } from '../../trpc'
@@ -51,7 +51,7 @@ export function PatientCard({ patient, alertCount = 0, onDelete }: PatientCardPr
           variant="subtle"
           color="red"
           size="sm"
-          style={{ position: 'absolute', top: 8, right: 8, zIndex: 1 }}
+          pos="absolute" top={8} right={8} style={{ zIndex: 1 }}
           onClick={(e) => { e.stopPropagation(); onDelete(patient.id) }}
         >
           <IconTrash size={14} />
@@ -62,14 +62,14 @@ export function PatientCard({ patient, alertCount = 0, onDelete }: PatientCardPr
         <Avatar color="matchaGreen" radius="xl" size="lg">
           {patient.name.charAt(0)}
         </Avatar>
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <Box flex={1} style={{ minWidth: 0 }}>
           <Text fw={600} truncate>{patient.name}</Text>
           <Group gap={6} mt={2}>
             {age != null && <Text size="xs" c="dimmed">{age}岁</Text>}
             {patient.gender && <Text size="xs" c="dimmed">{patient.gender === 'male' ? '男' : patient.gender === 'female' ? '女' : '其他'}</Text>}
             <Badge size="xs" color={isOnline ? 'green' : 'gray'} variant="light">{isOnline ? '在线' : '离线'}</Badge>
           </Group>
-        </div>
+        </Box>
         {alertCount > 0 && (
           <Badge color="red" variant="filled" leftSection={<IconAlertCircle size={12} />}>
             {alertCount}

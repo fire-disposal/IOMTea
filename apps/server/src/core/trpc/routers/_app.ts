@@ -1,4 +1,5 @@
 import { twinRouter } from '../../../twin/trpc/twin.router'
+import { virtualPinRouter } from './virtual-pin'
 import { router } from '../index'
 import { alertRouter } from './alert'
 import { alertRuleRouter } from './alertRule'
@@ -24,6 +25,7 @@ export const appRouter = router({
   alertRule: alertRuleRouter,
   healthRecords: healthRecordsRouter,
   homeGraph: homeGraphRouter,
+  virtualPin: virtualPinRouter,
   twin: twinRouter,
 })
 

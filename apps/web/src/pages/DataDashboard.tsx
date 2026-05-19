@@ -1,4 +1,5 @@
 import { Badge, Box, Group, Paper, SimpleGrid, Skeleton, Text, ThemeIcon, Title } from '@mantine/core'
+import { AccentPaper } from '../components/shared/AccentPaper'
 import { IconAlertTriangle, IconHeart, IconLungs, IconUsers } from '@tabler/icons-react'
 import { useEffect, useMemo, useState } from 'react'
 import { LineChart, Line, ResponsiveContainer, YAxis } from 'recharts'
@@ -7,14 +8,14 @@ import { useRealtime } from '../hooks/useRealtime'
 
 function StatCard({ label, value, unit, color, icon }: { label: string; value: string | number; unit?: string; color: string; icon: React.ReactNode }) {
   return (
-    <Paper p="md" withBorder style={{ borderLeft: `3px solid var(--mantine-color-${color}-5)` }}>
+    <AccentPaper p="md" withBorder color={color}>
       <Group gap="xs" mb={4}>
         <ThemeIcon size="sm" color={color} variant="light">{icon}</ThemeIcon>
         <Text size="xs" c="dimmed">{label}</Text>
       </Group>
-      <Text fw={700} style={{ fontSize: 28 }}>{value}</Text>
+      <Text fw={700} fz={28}>{value}</Text>
       {unit && <Text size="xs" c="dimmed">{unit}</Text>}
-    </Paper>
+    </AccentPaper>
   )
 }
 
@@ -56,7 +57,7 @@ export function DataDashboard() {
   }, [latestVitals])
 
   return (
-    <Box bg="matchaGreen.0" style={{ minHeight: 'calc(100vh - 56px)', padding: '16px 24px' }}>
+    <Box bg="matchaGreen.0" mih="calc(100vh - 56px)" py="md" px="xl">
       <Group justify="space-between" mb="md">
         <Title order={3}>数据监控大屏</Title>
         <Text size="xs" c="dimmed">{patientCount} 位患者 · {activeAlerts.length} 条活跃告警</Text>

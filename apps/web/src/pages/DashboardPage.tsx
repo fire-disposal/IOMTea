@@ -10,6 +10,7 @@ import {
   ThemeIcon,
   Title,
 } from '@mantine/core'
+import { AccentPaper } from '../components/shared/AccentPaper'
 import {
   IconAlertTriangle,
   IconCalendar,
@@ -63,7 +64,7 @@ export function DashboardPage() {
           {(data) => (
             <Stack gap="xs">
               {data.slice(0, 10).map((alert) => (
-                <Paper key={alert.id} p="xs" withBorder radius="sm" style={{ borderLeft: `3px solid ${alert.severity === 'critical' ? 'var(--mantine-color-red-5)' : alert.severity === 'warning' ? 'var(--mantine-color-yellow-5)' : 'var(--mantine-color-blue-5)'}` }}>
+                <AccentPaper key={alert.id} p="xs" withBorder radius="sm" color={alert.severity === 'critical' ? 'red' : alert.severity === 'warning' ? 'yellow' : 'blue'}>
                   <Group justify="space-between">
                     <div>
                       <Text size="sm" fw={500}>{alert.metric}</Text>
@@ -78,7 +79,7 @@ export function DashboardPage() {
                       {alert.severity}
                     </Badge>
                   </Group>
-                </Paper>
+                </AccentPaper>
               ))}
             </Stack>
           )}

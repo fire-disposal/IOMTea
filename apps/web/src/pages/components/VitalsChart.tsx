@@ -1,4 +1,4 @@
-import { ActionIcon, Button, Group, Paper, SegmentedControl, Text } from '@mantine/core'
+import { ActionIcon, Box, Button, Group, Paper, SegmentedControl, Text } from '@mantine/core'
 import { IconChevronDown, IconChevronUp } from '@tabler/icons-react'
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
@@ -55,7 +55,7 @@ export function VitalsChart({ data, timeRange, onTimeRangeChange, visible, onTog
         />
       </Group>
 
-      <div style={{ height: 260 }}>
+      <Box h={260}>
         {data.length === 0 ? (
           <Text c="dimmed" size="sm" ta="center" mt="xl">暂无数据</Text>
         ) : (
@@ -82,7 +82,7 @@ export function VitalsChart({ data, timeRange, onTimeRangeChange, visible, onTog
             </LineChart>
           </ResponsiveContainer>
         )}
-      </div>
+      </Box>
     </Paper>
   )
 }

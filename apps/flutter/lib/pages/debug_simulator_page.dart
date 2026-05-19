@@ -75,7 +75,7 @@ class _DebugSimulatorPageState extends State<DebugSimulatorPage> {
     }
 
     unawaited(_httpPost(jsonEncode(payload)));
-    _addLog('📤 ${_metric}=${_valueCtrl.text} ${_getUnit(_metric)} (${kind ?? "observation"})');
+    _addLog('📤 $_metric=${_valueCtrl.text} ${_getUnit(_metric)} (${kind ?? "observation"})');
   }
 
   Future<void> _httpPost(String body) async {
@@ -141,7 +141,7 @@ class _DebugSimulatorPageState extends State<DebugSimulatorPage> {
             Card(
               child: Padding(padding: const EdgeInsets.all(16), child: Column(children: [
                 DropdownButtonFormField(
-                  value: _metric, decoration: const InputDecoration(labelText: '指标', border: OutlineInputBorder(), isDense: true),
+                  initialValue: _metric, decoration: const InputDecoration(labelText: '指标', border: OutlineInputBorder(), isDense: true),
                   items: _metrics.map((m) => DropdownMenuItem(value: m, child: Text(m, style: const TextStyle(fontSize: 13)))).toList(),
                   onChanged: (v) => setState(() => _metric = v ?? 'heart_rate'),
                 ),

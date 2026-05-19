@@ -49,21 +49,21 @@ export function TrendsPage() {
           onChange={setPatientId}
           searchable
           clearable
-          style={{ minWidth: 200 }}
+          miw={200}
         />
         <Select
           placeholder="选择指标"
           data={METRICS}
           value={metric}
           onChange={(v) => setMetric(v ?? 'heart_rate')}
-          style={{ minWidth: 180 }}
+          miw={180}
         />
         <Select
           placeholder="时间范围"
           data={TIME_RANGES}
           value={days}
           onChange={(v) => setDays(v ?? '7')}
-          style={{ minWidth: 120 }}
+          miw={120}
         />
       </Group>
 

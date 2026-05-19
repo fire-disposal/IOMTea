@@ -1,4 +1,4 @@
-import { ActionIcon, Alert, Badge, Group, Skeleton, Tabs, Text } from '@mantine/core'
+import { ActionIcon, Alert, Badge, Box, Center, Divider, Group, Skeleton, Stack, Tabs, Text } from '@mantine/core'
 import { IconArrowLeft, IconHeart, IconLungs, IconHeartbeat, IconTemperatureCelsius } from '@tabler/icons-react'
 import { useNavigate, useParams, useRouterState } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
@@ -33,21 +33,21 @@ export function PatientDetailShell({ children }: { children: ReactNode }) {
 
   if (patient.isLoading) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 56px)' }}>
+      <Stack h="calc(100vh - 56px)" gap={0}>
         <Group px="lg" py="sm" bg="matchaGreen.1">
           <Skeleton height={24} width={200} radius="sm" />
         </Group>
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Center flex={1}>
           <Skeleton height={300} width="90%" radius="md" />
-        </div>
-      </div>
+        </Center>
+      </Stack>
     )
   }
   if (!patient.data) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 56px)', alignItems: 'center', justifyContent: 'center' }}>
+      <Stack h="calc(100vh - 56px)" align="center" justify="center">
         <Alert color="red" title="患者不存在">无法加载该患者信息，请返回列表重试。</Alert>
-      </div>
+      </Stack>
     )
   }
 
@@ -55,7 +55,7 @@ export function PatientDetailShell({ children }: { children: ReactNode }) {
   const age = p.birthDate ? Math.floor((Date.now() - new Date(p.birthDate).getTime()) / 31557600000) : null
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 56px)' }}>
+    <Stack h="calc(100vh - 56px)" gap={0}>
       <Group
         px="lg" py="sm"
         bg="matchaGreen.1"
@@ -95,8 +95,8 @@ export function PatientDetailShell({ children }: { children: ReactNode }) {
             <IconTemperatureCelsius size={14} color="var(--mantine-color-green-6)" />
             <Text size="sm" fw={500}>{temp != null ? temp : '--'}<Text span size="xs" c="dimmed">°C</Text></Text>
           </Group>
-          <div style={{ width: 1, height: 20, background: 'var(--mantine-color-gray-4)' }} />
-           <div style={{ width: 8, height: 8, borderRadius: '50%', background: isOnline ? 'var(--mantine-color-green-6)' : 'var(--mantine-color-gray-5)', transition: 'background 0.4s ease' }} />
+          <Divider orientation="vertical" size="sm" />
+           <Box w={8} h={8} style={{ borderRadius: '50%', background: isOnline ? 'var(--mantine-color-green-6)' : 'var(--mantine-color-gray-5)', transition: 'background 0.4s ease' }} />
           <Text size="xs" c={isOnline ? 'green' : 'dimmed'}>{isOnline ? '在线' : '离线'}</Text>
         </Group>
       </Group>
@@ -116,9 +116,9 @@ export function PatientDetailShell({ children }: { children: ReactNode }) {
         </Tabs.List>
       </Tabs>
 
-      <div style={{ flex: 1, minHeight: 0, overflow: 'auto', padding: 16 }}>
+      <Box flex={1} mih={0} p="md" style={{ overflow: 'auto' }}>
         {children}
-      </div>
-    </div>
+      </Box>
+    </Stack>
   )
 }

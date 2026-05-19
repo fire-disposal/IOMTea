@@ -1,4 +1,4 @@
-import { Badge, Group, Paper, SegmentedControl, Text, Tooltip } from '@mantine/core'
+import { Badge, Box, Group, Paper, SegmentedControl, Stack, Text, Tooltip } from '@mantine/core'
 import { useMemo, useState } from 'react'
 import { useParams } from '@tanstack/react-router'
 import { trpc } from '../trpc'
@@ -70,18 +70,18 @@ export function HealthTimeline() {
           ))}
           <Badge size="xs" color="red" variant="filled">告警</Badge>
         </Group>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <Stack gap={2}>
           {METRICS.map((metric, rowIdx) => {
             const events = timeline.filter((e) => e.metric === metric)
             if (events.length === 0) return null
 
             return (
-              <div key={metric} style={{ display: 'flex', alignItems: 'center', height: 32, gap: 4 }}>
+              <Group key={metric} h={32} gap={4} align="center" wrap="nowrap">
                 <Badge size="xs" color={METRIC_COLORS[metric]} variant="light" style={{ width: 50, flexShrink: 0, textAlign: 'center' }}>
                   {METRIC_LABELS[metric] || metric}
                 </Badge>
 
-                <div style={{ flex: 1, height: 20, position: 'relative', background: 'var(--mantine-color-gray-2)', borderRadius: 4, overflow: 'hidden' }}>
+                <Box flex={1} h={20} pos="relative" style={{ background: 'var(--mantine-color-gray-2)', borderRadius: 4, overflow: 'hidden' }}>
                   {events.map((e, idx) => {
                     const left = ((e.time - from) / timeRange) * 100
                     return (
@@ -99,11 +99,11 @@ export function HealthTimeline() {
                       </Tooltip>
                     )
                   })}
-                </div>
-              </div>
+                </Box>
+              </Group>
             )
           })}
-        </div>
+        </Stack>
       </div>
     </Paper>
   )

@@ -95,6 +95,14 @@ async function bootstrap() {
   } catch (err) {
     logger.warn({ err }, 'engine auto-start failed')
   }
+
+  try {
+    const { startAllVirtualPins } = await import('./core/trpc/routers/virtual-pin')
+    await startAllVirtualPins()
+    logger.info('virtual pin generators started')
+  } catch (err) {
+    logger.warn({ err }, 'virtual pin start failed')
+  }
 }
 
 bootstrap().then(() => {

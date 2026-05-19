@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Stack } from '@mantine/core'
 import { useParams, useNavigate } from '@tanstack/react-router'
 import { trpc } from '../trpc'
 import { VitalsChart } from './components/VitalsChart'
@@ -90,7 +91,7 @@ export function PatientOverview() {
   }, [id, injectMut])
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <Stack h="100%" gap="md">
       <VitalsChart
         data={chartData}
         timeRange={timeRange}
@@ -120,6 +121,6 @@ export function PatientOverview() {
         onInject={handleInject}
         pending={injectMut.isPending}
       />
-    </div>
+    </Stack>
   )
 }

@@ -1,4 +1,5 @@
 import { Group, Paper, SimpleGrid, Skeleton, Text, ThemeIcon } from '@mantine/core'
+import { AccentPaper } from './AccentPaper'
 import type { ReactNode } from 'react'
 
 export interface StatsBarItem {
@@ -18,13 +19,13 @@ export function StatsBar({ items, cols = 3, loading = false }: StatsBarProps) {
   return (
     <SimpleGrid cols={cols} mb="lg">
       {items.map((item) => (
-        <Paper
+        <AccentPaper
           key={item.label}
           p="md"
           radius="md"
           withBorder
           className="card-hover"
-          style={{ borderLeft: `3px solid var(--mantine-color-${item.color}-5)` }}
+          color={item.color}
         >
           <Group>
             <ThemeIcon color={item.color} variant="light" size="lg">
@@ -39,7 +40,7 @@ export function StatsBar({ items, cols = 3, loading = false }: StatsBarProps) {
               </Text>
             </div>
           </Group>
-        </Paper>
+        </AccentPaper>
       ))}
     </SimpleGrid>
   )

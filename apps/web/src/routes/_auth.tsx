@@ -5,7 +5,7 @@ import {
 import { useDisclosure } from '@mantine/hooks'
 import {
   IconDashboard, IconSettings, IconLogout, IconUsers,
-  IconChartLine, IconBell, IconPill, IconDevices, IconScreenShare,
+  IconChartLine, IconBell, IconPill, IconDevices, IconScreenShare, IconRobot,
 } from '@tabler/icons-react'
 import { Outlet, createFileRoute, redirect, useNavigate, useRouterState } from '@tanstack/react-router'
 import { useAuthStore } from '../store/auth'
@@ -24,6 +24,7 @@ const manageItems = [
 ]
 
 const adminItems = [
+  { label: '虚拟PIN', icon: IconRobot, path: '/settings/virtual-pins' },
   { label: 'IoT 配置', icon: IconSettings, path: '/iot/pins' },
   { label: '系统设置', icon: IconDevices, path: '/settings' },
   { label: '用户管理', icon: IconSettings, path: '/settings/users' },

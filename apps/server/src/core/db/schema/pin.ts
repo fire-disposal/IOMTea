@@ -1,4 +1,4 @@
-import { pgTable, timestamp, uuid, varchar } from 'drizzle-orm/pg-core'
+import { boolean, jsonb, pgTable, timestamp, uuid, varchar } from 'drizzle-orm/pg-core'
 import { users } from '../schema'
 
 export const usersPin = pgTable('users_pin', {
@@ -8,6 +8,8 @@ export const usersPin = pgTable('users_pin', {
   nickname: varchar('nickname', { length: 32 }).default(''),
   thingId: uuid('thing_id'),
   roomId: varchar('room_id', { length: 64 }),
+  isVirtual: boolean('is_virtual').default(false),
+  generatorConfig: jsonb('generator_config').default('{}'),
   lastSeenAt: timestamp('last_seen_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 })

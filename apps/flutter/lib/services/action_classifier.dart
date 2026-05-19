@@ -28,15 +28,16 @@ class ActionClassifier {
 
     final torsoAngle = ((leftHip.x - leftShoulder.x).abs() / torsoLength).clamp(0.0, 1.0);
     final hipKneeRatio = (kneeY - hipY).abs() / torsoLength;
-    final shoulderHipRatio = (hipY - shoulderY).abs() / torsoLength;
+    final bodyHeight = (nose.y - kneeY).abs().clamp(0.01, double.infinity);
+    final bodyLeanRatio = torsoLength / bodyHeight;
 
     ActionState detected;
 
-    if (shoulderHipRatio < 0.25 && nose.y > hipY) {
+    if (bodyLeanRatio < 0.25 && nose.y > hipY) {
       detected = ActionState.lying;
     } else if (hipKneeRatio < 0.4 && torsoAngle < 0.35) {
       detected = ActionState.sitting;
-    } else if (torsoAngle < 0.35 && shoulderY < hipY * 0.9) {
+    } else if (torsoAngle < 0.35 && shoulderY < hipY) {
       detected = ActionState.standing;
     } else {
       detected = ActionState.walking;

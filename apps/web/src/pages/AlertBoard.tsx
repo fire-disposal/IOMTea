@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Container, Title, Group, Paper, Badge, Text, Button, Select, Textarea, Modal, Stack, Card, SimpleGrid } from '@mantine/core'
+import { AccentPaper } from '../components/shared/AccentPaper'
 import { useDisclosure } from '@mantine/hooks'
 import { trpc } from '../trpc'
 import { StateSkeleton, StateError } from '../components/shared/StateComponents'
@@ -98,12 +99,13 @@ export function AlertBoard() {
           </Group>
           {newAlerts.length === 0 && <Text size="sm" c="dimmed">暂无</Text>}
           {newAlerts.map(a => (
-            <Card key={a.id} shadow="xs" p="sm" mb="xs" withBorder className="alert-card"
-              style={{ cursor: 'pointer', borderLeft: `3px solid ${a.severity === 'critical' ? 'var(--mantine-color-red-5)' : a.severity === 'warning' ? 'var(--mantine-color-yellow-5)' : 'var(--mantine-color-blue-5)'}` }}
-              onClick={() => openDetail(a)}>
+              <AccentPaper key={a.id} component="div" shadow="xs" p="sm" mb="xs" withBorder className="alert-card"
+                style={{ cursor: 'pointer' }}
+                color={a.severity === 'critical' ? 'red' : a.severity === 'warning' ? 'yellow' : 'blue'}
+                onClick={() => openDetail(a)}>
               <Text size="sm" fw={500}>{a.metric}</Text>
               <Text size="xs" c="dimmed">{a.patientId?.slice(0, 8)}</Text>
-            </Card>
+            </AccentPaper>
           ))}
         </Paper>
 
@@ -114,12 +116,13 @@ export function AlertBoard() {
           </Group>
           {inProgress.length === 0 && <Text size="sm" c="dimmed">暂无</Text>}
           {inProgress.map(a => (
-            <Card key={a.id} shadow="xs" p="sm" mb="xs" withBorder className="alert-card"
-              style={{ cursor: 'pointer', borderLeft: `3px solid ${a.severity === 'critical' ? 'var(--mantine-color-red-5)' : a.severity === 'warning' ? 'var(--mantine-color-yellow-5)' : 'var(--mantine-color-blue-5)'}` }}
-              onClick={() => openDetail(a)}>
+              <AccentPaper key={a.id} component="div" shadow="xs" p="sm" mb="xs" withBorder className="alert-card"
+                style={{ cursor: 'pointer' }}
+                color={a.severity === 'critical' ? 'red' : a.severity === 'warning' ? 'yellow' : 'blue'}
+                onClick={() => openDetail(a)}>
               <Text size="sm">{a.metric}</Text>
               <Text size="xs" c="dimmed">{STATUS_LABELS[a.status as string] || a.status}</Text>
-            </Card>
+            </AccentPaper>
           ))}
         </Paper>
 
@@ -130,11 +133,11 @@ export function AlertBoard() {
           </Group>
           {completed.length === 0 && <Text size="sm" c="dimmed">暂无</Text>}
           {completed.map(a => (
-            <Card key={a.id} shadow="xs" p="sm" mb="xs" withBorder className="alert-card"
-              style={{ borderLeft: '3px solid var(--mantine-color-green-5)' }}>
+            <AccentPaper key={a.id} component="div" shadow="xs" p="sm" mb="xs" withBorder className="alert-card"
+                color="green">
               <Text size="sm">{a.metric}</Text>
               <Text size="xs" c="dimmed">{new Date(a.recordedAt).toLocaleDateString()}</Text>
-            </Card>
+            </AccentPaper>
           ))}
         </Paper>
       </SimpleGrid>
