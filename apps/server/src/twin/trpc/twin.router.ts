@@ -1,10 +1,8 @@
 import { z } from 'zod'
 import { protectedProcedure, router } from '../../core/trpc/index'
 import { requirePermission } from '../../core/trpc/middleware/rbac'
-import { startEngine, stopEngine, setSpeed, getEngineStatus, listEngines, injectScenario, type PatientEngine } from '../engine'
+import { startEngine, stopEngine, setSpeed, getEngineStatus, listEngines, injectScenario } from '../engine'
 import { SCENARIO_TYPES } from '../types'
-
-export const engines = new Map<string, PatientEngine>()
 
 export const twinRouter = router({
   engine: router({

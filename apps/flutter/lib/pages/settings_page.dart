@@ -1,5 +1,8 @@
+import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mqtt_client/mqtt_client.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/mqtt_models.dart';
 import '../services/mqtt_service.dart';
@@ -20,6 +23,7 @@ class _SettingsPageState extends State<SettingsPage> {
   final _serverUrlCtrl = TextEditingController(text: 'http://localhost:3000');
   bool _connecting = false;
   String? _status;
+  String? _testResult;
 
   @override
   void initState() {
@@ -39,6 +43,68 @@ class _SettingsPageState extends State<SettingsPage> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('server_url', _serverUrlCtrl.text);
     PinService.instance.serverUrl = _serverUrlCtrl.text;
+  }
+
+  void _testMqtt() {
+    final connected = MqttService.instance.currentStatus.name == 'connected';
+    setState(() {
+      _testResult = connected ? 'MQTT 连接测试成功 — 已连接至 ${_brokerCtrl.text}' : 'MQTT 连接测试失败 — 未连接，请先点击连接按钮';
+    });
+    Future.delayed(const Duration(seconds: 5), () {
+      if (mounted) setState(() => _testResult = null);
+    });
+  }
+
+  void _verifyPinMqtt() {
+    final connected = MqttService.instance.currentStatus.name == 'connected';
+    if (!connected) {
+      setState(() => _testResult = 'PIN 验证失败 — MQTT 未连接');
+      return;
+    }
+    final pin = PinService.instance.currentPin;
+    if (pin == null) {
+      setState(() => _testResult = 'PIN 验证失败 — 本地未设置 PIN');
+      return;
+    }
+
+    final requestId = DateTime.now().millisecondsSinceEpoch.toString();
+    final topic = 'users/${pin.pin}/admin/verify';
+    final payload = jsonEncode({'pin': pin.pin, 'requestId': requestId});
+
+    MqttService.instance.publish(topic: topic, message: payload);
+
+    StreamSubscription? sub;
+    final completer = Completer<void>();
+    sub = MqttService.instance.messages?.listen((msgs) {
+      for (final m in msgs) {
+        final t = m.topic;
+        if (t.contains('iomtea/admin/pin/verify') && t.contains('result')) {
+          try {
+            final pubMsg = m.payload as MqttPublishMessage;
+            final str = String.fromCharCodes(pubMsg.payload.message);
+            final body = jsonDecode(str) as Map<String, dynamic>;
+            if (body['requestId'] == requestId || body['pin'] == pin.pin) {
+              final valid = body['valid'] == true;
+              setState(() {
+                _testResult = valid ? 'PIN 验证成功 — ${body['nickname'] ?? pin.pin} 有效' : 'PIN 验证失败 — 后端未识别此 PIN';
+              });
+              completer.complete();
+            }
+          } catch (_) {}
+        }
+      }
+    });
+
+    MqttService.instance.subscribe('iomtea/admin/pin/verify/${pin.pin}/result');
+
+    completer.future.timeout(const Duration(seconds: 5)).catchError((_) {
+      if (mounted) setState(() => _testResult = 'PIN 验证超时 — 无后端响应');
+    }).whenComplete(() {
+      sub?.cancel();
+      Future.delayed(const Duration(seconds: 5), () {
+        if (mounted) setState(() => _testResult = null);
+      });
+    });
   }
 
   Future<void> _connect() async {
@@ -155,7 +221,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('设置')),
+    appBar: AnimatedGradientAppBar(title: '设置'),
     body: ListView(
       padding: const EdgeInsets.all(24),
       children: [
@@ -238,13 +304,45 @@ class _SettingsPageState extends State<SettingsPage> {
           icon: _connecting ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.link),
           label: Text(_connecting ? '连接中...' : '连接'),
         )),
+        const SizedBox(height: 10),
+        Row(children: [
+          Expanded(
+            child: OutlinedButton.icon(
+              onPressed: _testMqtt,
+              icon: const Icon(Icons.wifi_find, size: 16),
+              label: const Text('测试 MQTT', style: TextStyle(fontSize: 13)),
+              style: OutlinedButton.styleFrom(foregroundColor: infoBlue),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: OutlinedButton.icon(
+              onPressed: _verifyPinMqtt,
+              icon: const Icon(Icons.verified_user, size: 16),
+              label: const Text('验证 PIN', style: TextStyle(fontSize: 13)),
+              style: OutlinedButton.styleFrom(foregroundColor: matchaPrimary),
+            ),
+          ),
+        ]),
+        if (_testResult != null) ...[
+          const SizedBox(height: 8),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: (_testResult?.contains('成功') ?? false) ? Colors.green.shade50 : Colors.red.shade50,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(_testResult!, style: TextStyle(fontSize: 13, color: (_testResult?.contains('成功') ?? false) ? Colors.green : Colors.red)),
+          ),
+        ],
         if (_status != null) ...[
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(color: _status == 'connected' ? Colors.green.shade50 : Colors.red.shade50, borderRadius: BorderRadius.circular(8)),
-            child: Text(_status == 'connected' ? '已连接' : _status!, style: TextStyle(color: _status == 'connected' ? Colors.green : Colors.red)),
+            child: Text(_status == 'connected' ? '已连接' : _status!, style: TextStyle(fontSize: 13, color: _status == 'connected' ? Colors.green : Colors.red)),
           ),
         ],
       ],

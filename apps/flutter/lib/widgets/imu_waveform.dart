@@ -1,5 +1,4 @@
 import 'dart:math';
-import 'dart:ui' show Size;
 import 'package:flutter/material.dart';
 import '../services/imu_sensor_service.dart';
 

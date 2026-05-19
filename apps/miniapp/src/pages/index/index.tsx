@@ -1,98 +1,99 @@
 import { View, Text } from '@tarojs/components'
-import { Badge, Grid, GridItem } from '@nutui/nutui-react'
 import Taro from '@tarojs/taro'
-import { useState, useEffect, useMemo } from 'react'
-import { getLocalRecords } from '../../utils/storage'
+import { useState, useEffect } from 'react'
+import { TopBar } from '../../components/TopBar'
+import { ChecklistCard } from '../../components/ChecklistCard'
 import { TabBar } from '../../components/TabBar'
+import { STORAGE_KEYS } from '../../constants/storage-keys'
+import { HEALTH_MODULE_META, type HealthModuleKey } from '../../constants/modules'
+import { trpc } from '../../utils/trpc'
 import './index.scss'
 
-const QUICK = [
-  { key: 'blood_glucose', label: '血糖', icon: '🩸', page: '/pages/record/glucose/index' },
-  { key: 'blood_pressure', label: '血压', icon: '❤️', page: '/pages/record/pressure/index' },
-  { key: 'weight', label: '体重', icon: '⚖️', page: '/pages/record/weight/index' },
-  { key: 'medication', label: '用药', icon: '💊', page: '/pages/record/medication/index' },
-]
-
-const WEEKDAY_NAMES = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六']
-
-function getGreeting(): string {
-  const hour = new Date().getHours()
-  if (hour >= 5 && hour < 12) return '早上好'
-  if (hour >= 12 && hour < 14) return '中午好'
-  if (hour >= 14 && hour < 18) return '下午好'
-  return '晚上好'
+interface ChecklistItem {
+  id: string
+  moduleKey: string
+  status: 'pending' | 'done' | 'skipped'
 }
 
-function formatDateZh(): string {
-  const now = new Date()
-  return `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日 ${WEEKDAY_NAMES[now.getDay()]}`
+function getRecordPage(key: string): string {
+  const pages: Record<string, string> = {
+    blood_glucose: '/pages/record/glucose/index',
+    blood_pressure: '/pages/record/pressure/index',
+    weight: '/pages/record/weight/index',
+    heart_rate: '/pages/record/heart-rate/index',
+    temperature: '/pages/record/temperature/index',
+    spo2: '/pages/record/spo2/index',
+    medication: '/pages/record/medication/index',
+    period: '/pages/record/period/index',
+  }
+  return pages[key] || ''
 }
 
 export default function Index() {
-  const [totalToday, setTotalToday] = useState(0)
-  const [weeklyData, setWeeklyData] = useState<Map<string, string[]>>(new Map())
-  const userName = Taro.getStorageSync('user_name') || '用户'
+  const [checklist, setChecklist] = useState<ChecklistItem[]>([])
+  const [credit, setCredit] = useState(0)
+
+  const userName = Taro.getStorageSync(STORAGE_KEYS.USER_NAME) || '用户'
 
   useEffect(() => {
-    const token = Taro.getStorageSync('token')
+    const token = Taro.getStorageSync(STORAGE_KEYS.TOKEN)
     if (!token) { Taro.redirectTo({ url: '/pages/login/index' }); return }
-    const today = new Date().toISOString().slice(0, 10)
-    const all = getLocalRecords()
-    setTotalToday(all.filter((r) => r.recordedAt.startsWith(today)).length)
 
-    const grouped = new Map<string, string[]>()
-    for (const r of all) {
-      const date = r.recordedAt.slice(0, 10)
-      if (!grouped.has(date)) grouped.set(date, [])
-      const types = grouped.get(date)!
-      if (!types.includes(r.type)) types.push(r.type)
-    }
-    setWeeklyData(grouped)
+    loadData()
   }, [])
 
-  const weekDays = useMemo(() => {
-    const now = new Date()
-    const start = new Date(now); start.setDate(now.getDate() - 6)
-    return Array.from({ length: 7 }).map((_, i) => {
-      const d = new Date(start); d.setDate(start.getDate() + i)
-      const dateStr = d.toISOString().slice(0, 10)
-      return { date: dateStr, day: d.getDate(), isToday: dateStr === now.toISOString().slice(0, 10), records: weeklyData.get(dateStr) || [] }
-    })
-  }, [weeklyData])
+  const loadData = async () => {
+    try {
+      const [list, bal] = await Promise.all([
+        trpc.checklist.today.query(),
+        trpc.credit.balance.query(),
+      ])
+      if (list) setChecklist(list)
+      if (bal) setCredit(bal.balance)
+    } catch {
+      // offline fallback
+    }
+  }
 
   return (
     <View className='home-page'>
-      <View className='home-header anim-fade-up'>
-        <Text className='home-greeting'>{getGreeting()}，{userName}</Text>
-        <Text className='home-date'>{formatDateZh()}</Text>
+      <TopBar displayName={userName} credit={credit} />
+
+      <View className='home-checklist anim-stagger'>
+        {checklist.map((item) => {
+          const meta = HEALTH_MODULE_META[item.moduleKey as HealthModuleKey]
+          return (
+            <ChecklistCard
+              key={item.id}
+              moduleKey={item.moduleKey}
+              label={meta?.label ?? item.moduleKey}
+              icon={meta?.icon ?? '📋'}
+              status={item.status}
+              recordPage={getRecordPage(item.moduleKey)}
+            />
+          )
+        })}
+
+        {checklist.length === 0 && (
+          <View className='home-checklist__empty'>
+            <Text className='home-checklist__empty-icon'>📋</Text>
+            <Text className='home-checklist__empty-text'>暂无计划</Text>
+            <Text className='home-checklist__empty-hint' onClick={() => Taro.navigateTo({ url: '/pages/plan/index' })}>
+              去制定健康计划 →
+            </Text>
+          </View>
+        )}
       </View>
 
-      <View className='home-summary anim-scale-in' style='animation-delay:100ms'>
-        <Text className='home-summary-num'>{totalToday}</Text>
-        <Text className='home-summary-label'>今日记录</Text>
-      </View>
-
-      <View className='home-week anim-fade-up' style='animation-delay:200ms'>
-        <Text className='home-section-title'>本周动态</Text>
-        <View className='week-strip'>
-          {weekDays.map((d) => (
-            <View key={d.date} className={`week-day ${d.isToday ? 'week-day--today' : ''}`}>
-              <Text className='week-day__num'>{d.day}</Text>
-              {d.records.length > 0 && <View className='week-day__dot' />}
-            </View>
-          ))}
+      <View className='home-actions'>
+        <View className='home-action-btn' onClick={() => Taro.navigateTo({ url: '/pages/plan/index' })}>
+          <Text className='home-action-btn__icon'>📋</Text>
+          <Text className='home-action-btn__label'>管理计划</Text>
         </View>
-      </View>
-
-      <View className='home-quick anim-fade-up' style='animation-delay:300ms'>
-        <Text className='home-section-title'>快速记录</Text>
-        <Grid columns={2} className='anim-stagger'>
-          {QUICK.map((q) => (
-            <GridItem key={q.key} text={q.label} onClick={() => Taro.navigateTo({ url: q.page })}>
-              <Text style='font-size:36px'>{q.icon}</Text>
-            </GridItem>
-          ))}
-        </Grid>
+        <View className='home-action-btn' onClick={() => Taro.navigateTo({ url: '/pages/health/index' })}>
+          <Text className='home-action-btn__icon'>📊</Text>
+          <Text className='home-action-btn__label'>历史记录</Text>
+        </View>
       </View>
 
       <TabBar current='index' />

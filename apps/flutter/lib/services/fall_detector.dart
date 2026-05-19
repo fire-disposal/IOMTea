@@ -2,7 +2,7 @@ class FallDetector {
   static const _windowSize = 30;
   static const _fallThreshold = 25.0;
   static const _freeFallLow = 0.3;
-  static const _impactHigh = 3.5;
+  static const _impactHigh = 15.0;
   static const _cooldownMs = 5000;
 
   final List<double> _buffer = [];

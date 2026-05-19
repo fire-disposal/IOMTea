@@ -1,5 +1,5 @@
-import 'dart:typed_data';
-import 'package:tflite_flutter/tflite_flutter.dart';
+import 'package:flutter/foundation.dart';
+import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 
 class Keypoint {
   final double x, y, score;
@@ -12,57 +12,61 @@ class PoseResult {
 }
 
 class PoseEstimator {
-  static const _inputSize = 192;
-  static const _numKeypoints = 17;
-  static const _outputDims = 3;
-
-  Interpreter? _interpreter;
+  PoseDetector? _detector;
   bool _loaded = false;
 
-  Future<void> load({String modelPath = 'assets/models/movenet_lightning.tflite'}) async {
-    _interpreter = await Interpreter.fromAsset(modelPath,
-      options: InterpreterOptions()..threads = 4,
+  Future<void> load() async {
+    _detector = PoseDetector(
+      options: PoseDetectorOptions(
+        mode: PoseDetectionMode.stream,
+        model: PoseDetectionModel.base,
+      ),
     );
     _loaded = true;
   }
 
   bool get isLoaded => _loaded;
 
-  PoseResult? estimate(ByteData bytes, int w, int h) {
-    if (!_loaded || _interpreter == null) return null;
-    if (w <= 0 || h <= 0) return null;
-
-    final input = _preprocess(bytes, w, h);
-    final flat = Float32List(_numKeypoints * _outputDims);
-    _interpreter!.run(input, flat);
-
-    final kps = <Keypoint>[];
-    for (int i = 0; i < _numKeypoints; i++) {
-      final idx = i * _outputDims;
-      kps.add(Keypoint(
-        flat[idx + 1].toDouble(),
-        flat[idx + 0].toDouble(),
-        flat[idx + 2].toDouble(),
-      ));
+  Future<PoseResult?> processImage(InputImage inputImage) async {
+    if (!_loaded || _detector == null) return null;
+    try {
+      final poses = await _detector!.processImage(inputImage);
+      if (poses.isEmpty) return null;
+      return _mapPose(poses.first);
+    } catch (e) {
+      debugPrint('ML Kit error: $e');
+      return null;
     }
-    return PoseResult(kps);
   }
 
-  Float32List _preprocess(ByteData bytes, int w, int h) {
-    final input = Float32List(1 * _inputSize * _inputSize * 3);
-    for (int py = 0; py < _inputSize; py++) {
-      for (int px = 0; px < _inputSize; px++) {
-        final sx = (px * w / _inputSize).floor().clamp(0, w - 1);
-        final sy = (py * h / _inputSize).floor().clamp(0, h - 1);
-        final si = (sy * w + sx) * 4;
-        final di = (py * _inputSize + px) * 3;
-        input[di] = bytes.getUint8(si).toDouble() / 127.5 - 1.0;
-        input[di + 1] = bytes.getUint8(si + 1).toDouble() / 127.5 - 1.0;
-        input[di + 2] = bytes.getUint8(si + 2).toDouble() / 127.5 - 1.0;
-      }
-    }
-    return input;
+  PoseResult _mapPose(Pose pose) {
+    final lm = pose.landmarks;
+    return PoseResult([
+      _kp(lm, PoseLandmarkType.nose),
+      _kp(lm, PoseLandmarkType.leftEye),
+      _kp(lm, PoseLandmarkType.rightEye),
+      _kp(lm, PoseLandmarkType.leftEar),
+      _kp(lm, PoseLandmarkType.rightEar),
+      _kp(lm, PoseLandmarkType.leftShoulder),
+      _kp(lm, PoseLandmarkType.rightShoulder),
+      _kp(lm, PoseLandmarkType.leftElbow),
+      _kp(lm, PoseLandmarkType.rightElbow),
+      _kp(lm, PoseLandmarkType.leftWrist),
+      _kp(lm, PoseLandmarkType.rightWrist),
+      _kp(lm, PoseLandmarkType.leftHip),
+      _kp(lm, PoseLandmarkType.rightHip),
+      _kp(lm, PoseLandmarkType.leftKnee),
+      _kp(lm, PoseLandmarkType.rightKnee),
+      _kp(lm, PoseLandmarkType.leftAnkle),
+      _kp(lm, PoseLandmarkType.rightAnkle),
+    ]);
   }
 
-  void dispose() => _interpreter?.close();
+  Keypoint _kp(Map<PoseLandmarkType, PoseLandmark> lm, PoseLandmarkType type) {
+    final l = lm[type];
+    if (l == null) return const Keypoint(0, 0, 0);
+    return Keypoint(l.x, l.y, l.likelihood);
+  }
+
+  void dispose() => _detector?.close();
 }

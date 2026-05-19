@@ -25,3 +25,4 @@ export const wechatLoginSchema = z.object({
 export type LoginInput = z.infer<typeof loginSchema>
 export type RegisterInput = z.infer<typeof registerSchema>
 export type TokenPair = z.infer<typeof tokenPairSchema>
+export type WechatLoginInput = z.infer<typeof wechatLoginSchema>

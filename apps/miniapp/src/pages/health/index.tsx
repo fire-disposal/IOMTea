@@ -5,18 +5,22 @@ import { useState, useEffect } from 'react'
 import { getLocalRecords } from '../../utils/storage'
 import { Calendar } from '../../components/Calendar'
 import { TabBar } from '../../components/TabBar'
+import { HEALTH_MODULE_META, HEALTH_MODULE_KEYS, type HealthModuleKey } from '../../constants/modules'
 import './index.scss'
 
-const ALL_MODULES = [
-  { key: 'blood_glucose', label: '血糖', unit: 'mmol/L', icon: '🩸', page: '/pages/record/glucose/index' },
-  { key: 'blood_pressure', label: '血压', unit: 'mmHg', icon: '❤️', page: '/pages/record/pressure/index' },
-  { key: 'weight', label: '体重', unit: 'kg', icon: '⚖️', page: '/pages/record/weight/index' },
-  { key: 'heart_rate', label: '心率', unit: 'bpm', icon: '💓', page: '/pages/record/heart-rate/index' },
-  { key: 'temperature', label: '体温', unit: '°C', icon: '🌡️', page: '/pages/record/temperature/index' },
-  { key: 'spo2', label: '血氧', unit: '%', icon: '🫁', page: '/pages/record/spo2/index' },
-  { key: 'medication', label: '用药', unit: '', icon: '💊', page: '/pages/record/medication/index' },
-  { key: 'period', label: '生理期', unit: '', icon: '🌸', page: '/pages/record/period/index' },
-]
+function getRecordPage(key: string): string {
+  const pages: Record<string, string> = {
+    blood_glucose: '/pages/record/glucose/index',
+    blood_pressure: '/pages/record/pressure/index',
+    weight: '/pages/record/weight/index',
+    heart_rate: '/pages/record/heart-rate/index',
+    temperature: '/pages/record/temperature/index',
+    spo2: '/pages/record/spo2/index',
+    medication: '/pages/record/medication/index',
+    period: '/pages/record/period/index',
+  }
+  return pages[key] || ''
+}
 
 export default function HealthPage() {
   const [counts, setCounts] = useState<Record<string, number>>({})
@@ -27,7 +31,13 @@ export default function HealthPage() {
   const [loaded, setLoaded] = useState(false)
 
   const trackingConfig = Taro.getStorageSync('tracking_config') || {}
-  const modules = ALL_MODULES.filter((m) => trackingConfig[m.key]?.enabled !== false)
+  const modules = HEALTH_MODULE_KEYS
+    .filter((k) => trackingConfig[k]?.enabled !== false)
+    .map((k) => ({
+      key: k,
+      ...HEALTH_MODULE_META[k],
+      page: getRecordPage(k),
+    }))
 
   useEffect(() => {
     const all = getLocalRecords()

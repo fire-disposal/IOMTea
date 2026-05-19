@@ -41,10 +41,7 @@ class _HomePageState extends State<HomePage>
 
   void _initPin() {
     if (PinService.instance.hasPin) {
-      if (mounted) {
-        setState(() => _pinState = _PinScreenState.verified);
-        WidgetsBinding.instance.addPostFrameCallback((_) => context.push('/mode-select'));
-      }
+      if (mounted) setState(() => _pinState = _PinScreenState.verified);
     } else {
       if (mounted) setState(() => _pinState = _PinScreenState.input);
     }
@@ -145,6 +142,10 @@ class _HomePageState extends State<HomePage>
     );
   }
 
+  void _skipPin() {
+    setState(() { _pinState = _PinScreenState.verified; _pinInput.clear(); _pinError = null; });
+  }
+
   Widget _buildPinScreen() {
     final verifying = _pinState == _PinScreenState.verifying;
     return Scaffold(
@@ -214,6 +215,18 @@ class _HomePageState extends State<HomePage>
                   ),
                 ),
               ),
+              Positioned(
+                top: MediaQuery.of(context).padding.top + 8,
+                right: 16,
+                child: TextButton.icon(
+                  onPressed: verifying ? null : _skipPin,
+                  icon: const Icon(Icons.science, size: 16),
+                  label: const Text('测试', style: TextStyle(fontSize: 12)),
+                  style: TextButton.styleFrom(
+                    foregroundColor: warningOrange.withValues(alpha: 0.7),
+                  ),
+                ),
+              ),
             ],
           );
         },
@@ -272,56 +285,101 @@ class _HomePageState extends State<HomePage>
     final mqttOk = MqttService.instance.currentStatus.name == 'connected';
     return Scaffold(
       backgroundColor: creamBg,
-      appBar: AppBar(
-        title: const Text('IOMTea Tools'),
+      appBar: AnimatedGradientAppBar(
+        title: 'IOMTea Tools',
+        subtitle: Row(mainAxisSize: MainAxisSize.min, children: [
+          Icon(Icons.fingerprint, size: 12, color: Colors.white.withValues(alpha: 0.7)),
+          const SizedBox(width: 4),
+          Text('已认证', style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.7))),
+          const SizedBox(width: 10),
+          Container(width: 5, height: 5, decoration: BoxDecoration(shape: BoxShape.circle, color: mqttOk ? const Color(0xFF81C784) : Colors.white38)),
+          const SizedBox(width: 4),
+          Text(mqttOk ? 'MQTT 在线' : '离线', style: TextStyle(fontSize: 11, color: mqttOk ? const Color(0xFF81C784) : Colors.white38)),
+        ]),
         actions: [
-          IconButton(icon: const Icon(Icons.settings), onPressed: () async {
+          IconButton(icon: const Icon(Icons.settings_outlined), onPressed: () async {
             await context.push('/settings');
             if (mounted) _initPin();
           }),
         ],
       ),
-      body: Column(
-        children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            color: Colors.white,
-            child: Row(
-              children: [
-                Icon(Icons.fingerprint, size: 16, color: matchaPrimary),
-                const SizedBox(width: 6),
-                Text('PIN: ****', style: TextStyle(fontSize: 13, color: textSecondary)),
-                const Spacer(),
-                Container(
-                  width: 8, height: 8, decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: mqttOk ? successGreen : Colors.grey,
+      body: Padding(
+        padding: const EdgeInsets.all(20),
+        child: GridView.count(
+          crossAxisCount: 2,
+          mainAxisSpacing: 16,
+          crossAxisSpacing: 16,
+          childAspectRatio: 0.85,
+          children: [
+            _ModeCard(
+              icon: Icons.watch, label: '可穿戴设备',
+              sublabel: 'IMU 跌倒检测\n加速度·陀螺仪', color: matchaPrimary,
+              onTap: () => context.push('/wearable'),
+            ),
+            _ModeCard(
+              icon: Icons.videocam, label: '固定设备',
+              sublabel: 'MoveNet 姿态估计\n识别框 + 骨架', color: infoBlue,
+              onTap: () => context.push('/fixed-device'),
+            ),
+            _ModeCard(
+              icon: Icons.bug_report, label: '事件模拟',
+              sublabel: '健康数据生成\n批量事件上报', color: warningOrange,
+              onTap: () => context.push('/debug'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ModeCard extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String sublabel;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _ModeCard({
+    required this.icon,
+    required this.label,
+    required this.sublabel,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Material(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        elevation: 1,
+        shadowColor: Colors.black12,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 56, height: 56,
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    colors: [color.withValues(alpha: 0.85), color.withValues(alpha: 0.25)],
                   ),
+                  shape: BoxShape.circle,
+                  boxShadow: [BoxShadow(color: color.withValues(alpha: 0.3), blurRadius: 16)],
                 ),
-                const SizedBox(width: 6),
-                Text(mqttOk ? 'MQTT 已连接' : 'MQTT 未连接',
-                  style: TextStyle(fontSize: 13, color: mqttOk ? successGreen : Colors.grey)),
-              ],
-            ),
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 8),
-                  Text('调试工具', style: Theme.of(context).textTheme.titleMedium),
-                  const SizedBox(height: 12),
-                  _ToolCard(icon: Icons.chat, title: 'MQTT 控制台', subtitle: '消息收发与 Topic 监控', onTap: () => context.push('/mqtt')),
-                  _ToolCard(icon: Icons.videocam, title: '视觉跌倒检测', subtitle: 'YOLO 实时推理', onTap: () => context.push('/vision')),
-                  _ToolCard(icon: Icons.sensors, title: 'IMU 运动监测', subtitle: '加速度计 + 陀螺仪波形', onTap: () => context.push('/imu')),
-                ],
+                child: Icon(icon, size: 28, color: Colors.white),
               ),
-            ),
+              const SizedBox(height: 14),
+              Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: textPrimary), textAlign: TextAlign.center),
+              const SizedBox(height: 6),
+              Text(sublabel, style: TextStyle(fontSize: 10, color: textSecondary, height: 1.4), textAlign: TextAlign.center),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -371,22 +429,6 @@ class _BackBtn extends StatelessWidget {
       ),
     );
   }
-}
-
-class _ToolCard extends StatelessWidget {
-  final IconData icon; final String title; final String subtitle; final VoidCallback onTap;
-  const _ToolCard({required this.icon, required this.title, required this.subtitle, required this.onTap});
-  @override
-  Widget build(BuildContext context) => Card(
-    margin: const EdgeInsets.only(bottom: 8),
-    child: ListTile(
-      leading: Icon(icon, size: 28),
-      title: Text(title),
-      subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
-      trailing: const Icon(Icons.chevron_right),
-      onTap: onTap,
-    ),
-  );
 }
 
 class _PinBgPainter extends CustomPainter {

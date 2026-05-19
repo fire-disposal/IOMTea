@@ -12,3 +12,27 @@ export type PatientStatus = (typeof PATIENT_STATUSES)[number]
 
 export const GENDERS = ['male', 'female', 'other'] as const
 export type Gender = (typeof GENDERS)[number]
+
+export const HEALTH_MODULE_KEYS = [
+  'blood_glucose',
+  'blood_pressure',
+  'weight',
+  'heart_rate',
+  'temperature',
+  'spo2',
+  'medication',
+  'period',
+] as const
+
+export type HealthModuleKey = (typeof HEALTH_MODULE_KEYS)[number]
+
+export const HEALTH_MODULE_META: Record<HealthModuleKey, { label: string; unit: string; icon: string }> = {
+  blood_glucose:  { label: '血糖', unit: 'mmol/L', icon: '🩸' },
+  blood_pressure: { label: '血压', unit: 'mmHg',  icon: '❤️' },
+  weight:         { label: '体重', unit: 'kg',     icon: '⚖️' },
+  heart_rate:     { label: '心率', unit: 'bpm',    icon: '💓' },
+  temperature:    { label: '体温', unit: '°C',     icon: '🌡️' },
+  spo2:           { label: '血氧', unit: '%',      icon: '🫁' },
+  medication:     { label: '用药', unit: '',        icon: '💊' },
+  period:         { label: '生理期', unit: '',       icon: '🌸' },
+}

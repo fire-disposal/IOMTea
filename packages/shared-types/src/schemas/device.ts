@@ -37,3 +37,4 @@ export const deviceListInputSchema = z.object({
 export type Device = z.infer<typeof deviceSchema>
 export type DeviceCreateInput = z.infer<typeof deviceCreateSchema>
 export type DeviceUpdateInput = z.infer<typeof deviceUpdateSchema>
+export type DeviceListInput = z.infer<typeof deviceListInputSchema>

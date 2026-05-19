@@ -29,3 +29,9 @@ export const entityListInputSchema = z.object({
 export const behaviorListInputSchema = z.object({
   patientId: z.string().uuid(),
 })
+
+export type MapGetInput = z.infer<typeof mapGetSchema>
+export type MapCreateInput = z.infer<typeof mapCreateSchema>
+export type MapUpdateInput = z.infer<typeof mapUpdateSchema>
+export type EntityListInput = z.infer<typeof entityListInputSchema>
+export type BehaviorListInput = z.infer<typeof behaviorListInputSchema>

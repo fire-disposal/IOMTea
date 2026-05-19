@@ -66,3 +66,6 @@ export const eventTimeSeriesInputSchema = z.object({
 export type Kind = z.infer<typeof kindEnum>
 export type Observation = z.infer<typeof observationSchema>
 export type Alert = z.infer<typeof alertSchema>
+export type ObservationIngestInput = z.infer<typeof observationIngestSchema>
+export type EventListInput = z.infer<typeof eventListInputSchema>
+export type EventTimeSeriesInput = z.infer<typeof eventTimeSeriesInputSchema>

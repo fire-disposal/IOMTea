@@ -1,0 +1,10 @@
+export const STORAGE_KEYS = {
+  RECORDS: 'health_records',
+  TRACKING_CONFIG: 'tracking_config',
+  HEALTH_GOALS: 'health_goals',
+  TOKEN: 'token',
+  USER_NAME: 'user_name',
+  SERVER_URL: 'server_url',
+  PLAN_CACHE: 'plan_cache',
+  CREDIT_BALANCE: 'credit_balance',
+} as const

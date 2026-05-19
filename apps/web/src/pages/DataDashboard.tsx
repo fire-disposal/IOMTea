@@ -1,8 +1,8 @@
 import { Badge, Box, Group, Paper, SimpleGrid, Skeleton, Text, ThemeIcon, Title } from '@mantine/core'
 import { AccentPaper } from '../components/shared/AccentPaper'
 import { IconAlertTriangle, IconHeart, IconLungs, IconUsers } from '@tabler/icons-react'
-import { useEffect, useMemo, useState } from 'react'
-import { LineChart, Line, ResponsiveContainer, YAxis } from 'recharts'
+import { useMemo } from 'react'
+
 import { trpc } from '../trpc'
 import { useRealtime } from '../hooks/useRealtime'
 
@@ -19,17 +19,6 @@ function StatCard({ label, value, unit, color, icon }: { label: string; value: s
   )
 }
 
-function SparkLine({ data, color, height = 60 }: { data: number[]; color: string; height?: number }) {
-  if (data.length < 2) return null
-  return (
-    <ResponsiveContainer width="100%" height={height}>
-      <LineChart data={data.map((v, i) => ({ t: i, v }))}>
-        <Line type="monotone" dataKey="v" stroke={`var(--mantine-color-${color}-6)`} strokeWidth={2} dot={false} isAnimationActive />
-        <YAxis domain={['dataMin - 1', 'dataMax + 1']} hide />
-      </LineChart>
-    </ResponsiveContainer>
-  )
-}
 
 export function DataDashboard() {
   const patients = trpc.patient.list.useQuery({ pageSize: 100, status: 'active' })
@@ -38,23 +27,8 @@ export function DataDashboard() {
   const latestVitals = trpc.useQueries((t) => patientIds.map((pid: string) => t.data.latest({ patientId: pid })))
   useRealtime(undefined, undefined, patientIds[0])
 
-  const [hrHistory, setHrHistory] = useState<number[]>(Array(20).fill(0))
   const activeAlerts = (alerts.data ?? []).filter((a: any) => a.status === 'active' || a.status === 'new')
   const patientCount = patients.data?.length ?? 0
-
-  useEffect(() => {
-    const hrs: number[] = []
-    for (const v of latestVitals) {
-      const hr = (v.data as any[])?.find((m: any) => m.metric === 'heart_rate')?.value
-      if (hr != null) hrs.push(hr)
-    }
-    if (hrs.length > 0) {
-      setHrHistory(prev => {
-        const next = [...prev.slice(1), hrs.reduce((a, b) => a + b, 0) / hrs.length]
-        return next
-      })
-    }
-  }, [latestVitals])
 
   return (
     <Box bg="matchaGreen.0" mih="calc(100vh - 56px)" py="md" px="xl">
@@ -108,11 +82,6 @@ export function DataDashboard() {
           </SimpleGrid>
         </Paper>
       </SimpleGrid>
-
-      <Paper p="md" withBorder>
-        <Text size="xs" c="dimmed" mb="sm">心率趋势</Text>
-        <SparkLine data={hrHistory} color="red" height={80} />
-      </Paper>
     </Box>
   )
 }

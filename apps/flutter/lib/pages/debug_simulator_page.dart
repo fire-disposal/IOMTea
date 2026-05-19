@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:go_router/go_router.dart';
@@ -8,14 +9,56 @@ import '../services/mqtt_service.dart';
 import '../services/pin_service.dart';
 import '../theme.dart';
 
-const _metrics = [
-  'heart_rate', 'spo2', 'temperature', 'systolic_bp', 'diastolic_bp',
-  'resp_rate', 'glucose', 'weight', 'motion_index', 'bed_status',
-  'posture', 'ecg_waveform', 'resp_waveform', 'pressure_grid',
-  'fall_detected', 'medication_taken', 'medication_missed',
-];
+enum _HealthMode { cardiac, vital, activity, alert }
 
-const _sources = ['iot', 'simulator', 'manual'];
+const _modeMeta = {
+  _HealthMode.cardiac: (_ModeInfo('心血管', Icons.favorite, infoBlue)),
+  _HealthMode.vital: (_ModeInfo('生命体征', Icons.monitor_heart, matchaPrimary)),
+  _HealthMode.activity: (_ModeInfo('活动状态', Icons.directions_walk, warningOrange)),
+  _HealthMode.alert: (_ModeInfo('告警事件', Icons.warning_amber, errorRed)),
+};
+
+class _ModeInfo {
+  final String label;
+  final IconData icon;
+  final Color color;
+  const _ModeInfo(this.label, this.icon, this.color);
+}
+
+class _MetricDef {
+  final String key, unit;
+  final double min, max, normal;
+  const _MetricDef(this.key, this.unit, this.min, this.max, this.normal);
+}
+
+const _modeMetrics = <_HealthMode, List<_MetricDef>>{
+  _HealthMode.cardiac: [
+    _MetricDef('heart_rate', 'bpm', 50, 180, 72),
+    _MetricDef('spo2', '%', 85, 100, 98),
+    _MetricDef('resp_rate', 'rpm', 8, 30, 16),
+    _MetricDef('ecg_waveform', 'mV', -2, 4, 0),
+  ],
+  _HealthMode.vital: [
+    _MetricDef('temperature', '°C', 35.0, 42.0, 36.6),
+    _MetricDef('systolic_bp', 'mmHg', 80, 200, 120),
+    _MetricDef('diastolic_bp', 'mmHg', 50, 130, 80),
+    _MetricDef('glucose', 'mmol/L', 3.0, 15.0, 5.5),
+    _MetricDef('weight', 'kg', 30, 200, 70),
+  ],
+  _HealthMode.activity: [
+    _MetricDef('motion_index', '', 0, 100, 10),
+    _MetricDef('posture', '', 0, 3, 1),
+    _MetricDef('bed_status', '', 0, 1, 0),
+    _MetricDef('pressure_grid', 'kPa', 0, 50, 5),
+  ],
+  _HealthMode.alert: [
+    _MetricDef('fall_detected', '', 0, 1, 0),
+    _MetricDef('medication_taken', '', 0, 1, 1),
+    _MetricDef('medication_missed', '', 0, 1, 0),
+  ],
+};
+
+final _rng = math.Random();
 
 class DebugSimulatorPage extends StatefulWidget {
   const DebugSimulatorPage({super.key});
@@ -24,58 +67,59 @@ class DebugSimulatorPage extends StatefulWidget {
 }
 
 class _DebugSimulatorPageState extends State<DebugSimulatorPage> {
-  final _pinCtrl = TextEditingController(text: PinService.instance.currentPin?.pin ?? '123456');
-  final _valueCtrl = TextEditingController(text: '72');
-  final _roomCtrl = TextEditingController();
   final _log = <String>[];
-  String _metric = 'heart_rate';
-  String _source = 'simulator';
-  int _batchCount = 1;
-  int _batchIntervalMs = 500;
-  bool _running = false;
+  _HealthMode _mode = _HealthMode.cardiac;
+  bool _pumping = false;
+  String _pin = '';
+  String _roomId = '';
+  Timer? _pumpTimer;
+  int _batchCount = 0;
 
   @override
   void initState() {
     super.initState();
-    _loadRoomId();
+    _load();
   }
 
-  Future<void> _loadRoomId() async {
+  Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
-    _roomCtrl.text = prefs.getString('bound_room_id') ?? '';
+    _pin = PinService.instance.currentPin?.pin ?? '';
+    _roomId = prefs.getString('bound_room_id') ?? '';
+    if (mounted) setState(() {});
   }
 
-  void _addLog(String msg) {
-    setState(() => _log.insert(0, '[${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')}] $msg'));
-    if (_log.length > 100) _log.removeLast();
+  @override
+  void dispose() {
+    _pumpTimer?.cancel();
+    super.dispose();
   }
 
-  void _sendEvent({String? kind}) {
-    final pin = _pinCtrl.text.trim();
-    if (pin.isEmpty) { _addLog('❌ PIN 为空'); return; }
+  double _genValue(_MetricDef def) {
+    final noise = (_rng.nextDouble() - 0.5) * (def.max - def.min) * 0.15;
+    return (def.normal + noise).clamp(def.min, def.max);
+  }
 
+  Future<void> _sendMetric(String metric, double value, String unit) async {
     final payload = <String, dynamic>{
-      'pin': pin,
-      'event': kind == 'alert' ? 'healthAlert' : 'healthObservation',
-      'metric': _metric,
-      'value': double.tryParse(_valueCtrl.text) ?? 0,
-      'unit': _getUnit(_metric),
-      'source': _source,
-      'roomId': _roomCtrl.text.trim().isEmpty ? null : _roomCtrl.text.trim(),
+      'pin': _pin,
+      'event': metric == 'fall_detected' && value > 0.5 ? 'healthAlert' : 'healthObservation',
+      'metric': metric,
+      'value': value,
+      'unit': unit,
+      'source': 'simulator',
+      'roomId': _roomId.isEmpty ? null : _roomId,
     };
-    if (kind == 'alert') payload['severity'] = 'warning';
+    if (payload['event'] == 'healthAlert') payload['severity'] = 'warning';
 
     if (MqttService.instance.currentStatus.name == 'connected') {
       try {
         MqttService.instance.publish(
-          topic: 'iomtea/device/$pin/events',
+          topic: 'iomtea/device/$_pin/events',
           message: jsonEncode(payload),
         );
       } catch (_) {}
     }
-
     unawaited(_httpPost(jsonEncode(payload)));
-    _addLog('📤 $_metric=${_valueCtrl.text} ${_getUnit(_metric)} (${kind ?? "observation"})');
   }
 
   Future<void> _httpPost(String body) async {
@@ -88,25 +132,47 @@ class _DebugSimulatorPageState extends State<DebugSimulatorPage> {
     } catch (_) {}
   }
 
-  String _getUnit(String metric) => switch (metric) {
-    'heart_rate' => 'bpm', 'spo2' => '%', 'temperature' => '°C',
-    'systolic_bp' || 'diastolic_bp' => 'mmHg', 'resp_rate' => 'rpm',
-    'glucose' => 'mmol/L', 'weight' => 'kg', _ => '',
-  };
-
-  Future<void> _sendBatch() async {
-    _running = true;
-    for (int i = 0; i < _batchCount; i++) {
-      _sendEvent();
-      await Future.delayed(Duration(milliseconds: _batchIntervalMs));
-    }
-    _running = false;
-    if (mounted) setState(() {});
-    _addLog('✅ 批量发送完成 ($_batchCount 条)');
+  void _addLog(String msg) {
+    setState(() {
+      _log.insert(0, msg);
+      if (_log.length > 80) _log.removeLast();
+    });
   }
 
-  @override
-  void dispose() { _pinCtrl.dispose(); _valueCtrl.dispose(); _roomCtrl.dispose(); super.dispose(); }
+  void _togglePumping() {
+    if (_pumping) {
+      _pumpTimer?.cancel();
+      _pumping = false;
+      _batchCount = 0;
+      _addLog('⏹ 数据流已停止');
+    } else {
+      _pumping = true;
+      _batchCount = 0;
+      _pumpTimer = Timer.periodic(const Duration(milliseconds: 800), (_) {
+        if (!_pumping) return;
+        _batchCount++;
+        final defs = _modeMetrics[_mode]!;
+        for (final d in defs) {
+          final v = _genValue(d);
+          unawaited(_sendMetric(d.key, v, d.unit));
+        }
+        if (_batchCount % 5 == 0) {
+          _addLog('📤 #$_batchCount · ${_modeMeta[_mode]!.label} · ${defs.length}项');
+        }
+      });
+      _addLog('▶ 数据流已启动 · ${_modeMeta[_mode]!.label}模式');
+    }
+    setState(() {});
+  }
+
+  void _sendSingleShot() {
+    final defs = _modeMetrics[_mode]!;
+    for (final d in defs) {
+      final v = _genValue(d);
+      _sendMetric(d.key, v, d.unit);
+    }
+    _addLog('📤 单次发送 · ${_modeMeta[_mode]!.label} · ${defs.length}项');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -114,8 +180,8 @@ class _DebugSimulatorPageState extends State<DebugSimulatorPage> {
 
     return Scaffold(
       backgroundColor: creamBg,
-      appBar: AppBar(
-        title: const Text('事件模拟器'),
+      appBar: AnimatedGradientAppBar(
+        title: '健康事件构建器',
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop()),
         actions: [
           Padding(
@@ -129,102 +195,278 @@ class _DebugSimulatorPageState extends State<DebugSimulatorPage> {
         ],
       ),
       body: Column(children: [
+        _buildModeSelector(),
         Expanded(
-          child: ListView(padding: const EdgeInsets.all(16), children: [
-            Card(
-              child: Padding(padding: const EdgeInsets.all(16), child: Column(children: [
-                TextField(controller: _pinCtrl, decoration: const InputDecoration(labelText: 'PIN', border: OutlineInputBorder(), isDense: true), style: const TextStyle(fontFamily: 'monospace', fontSize: 14)),
-                const SizedBox(height: 8),
-                TextField(controller: _roomCtrl, decoration: const InputDecoration(labelText: 'Room ID (可选)', border: OutlineInputBorder(), isDense: true), style: const TextStyle(fontFamily: 'monospace', fontSize: 12)),
-              ])),
-            ),
-            Card(
-              child: Padding(padding: const EdgeInsets.all(16), child: Column(children: [
-                DropdownButtonFormField(
-                  initialValue: _metric, decoration: const InputDecoration(labelText: '指标', border: OutlineInputBorder(), isDense: true),
-                  items: _metrics.map((m) => DropdownMenuItem(value: m, child: Text(m, style: const TextStyle(fontSize: 13)))).toList(),
-                  onChanged: (v) => setState(() => _metric = v ?? 'heart_rate'),
-                ),
-                const SizedBox(height: 8),
-                Row(children: [
-                  Expanded(flex: 2, child: TextField(controller: _valueCtrl, decoration: const InputDecoration(labelText: '数值', border: OutlineInputBorder(), isDense: true), keyboardType: TextInputType.number, style: const TextStyle(fontFamily: 'monospace', fontSize: 14))),
-                  const SizedBox(width: 8),
-                  Expanded(child: DropdownButtonFormField(
-                    value: _source, decoration: const InputDecoration(labelText: '来源', border: OutlineInputBorder(), isDense: true),
-                    items: _sources.map((s) => DropdownMenuItem(value: s, child: Text(s, style: const TextStyle(fontSize: 12)))).toList(),
-                    onChanged: (v) => setState(() => _source = v ?? 'simulator'),
-                  )),
-                ]),
-              ])),
-            ),
-            Card(
-              child: Padding(padding: const EdgeInsets.all(16), child: Column(children: [
-                Row(children: [
-                  Expanded(child: Text('批量发送', style: TextStyle(fontWeight: FontWeight.w600, color: textPrimary))),
-                  Row(children: [
-                    IconButton(icon: const Icon(Icons.remove), onPressed: _batchCount > 1 ? () => setState(() => _batchCount--) : null),
-                    Text('$_batchCount', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-                    IconButton(icon: const Icon(Icons.add), onPressed: _batchCount < 100 ? () => setState(() => _batchCount++) : null),
-                  ]),
-                ]),
-                const SizedBox(height: 8),
-                Row(children: [
-                  const Text('间隔: ', style: TextStyle(color: Colors.grey, fontSize: 12)),
-                  Expanded(
-                    child: Slider(value: _batchIntervalMs.toDouble(), min: 100, max: 5000, divisions: 49,
-                      label: '${_batchIntervalMs}ms',
-                      onChanged: (v) => setState(() => _batchIntervalMs = v.round()),
-                    ),
-                  ),
-                  Text('${_batchIntervalMs}ms', style: const TextStyle(fontSize: 11, color: Colors.grey)),
-                ]),
-              ])),
-            ),
-            const SizedBox(height: 8),
-            Row(children: [
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: _running ? null : () => _sendEvent(kind: 'observation'),
-                  icon: const Icon(Icons.send, size: 16),
-                  label: const Text('发送观测'),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: _running ? null : () => _sendEvent(kind: 'alert'),
-                  icon: const Icon(Icons.warning_amber, size: 16),
-                  label: const Text('发送告警'),
-                  style: FilledButton.styleFrom(backgroundColor: warningOrange),
-                ),
-              ),
-            ]),
-            const SizedBox(height: 8),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: _running ? null : _sendBatch,
-                icon: _running ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.repeat, size: 16),
-                label: Text(_running ? '发送中...' : '批量发送 ($_batchCount 条)'),
-                style: FilledButton.styleFrom(backgroundColor: matchaDark),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text('日志', style: TextStyle(fontWeight: FontWeight.w600, color: textPrimary)),
-            const SizedBox(height: 4),
+          child: ListView(padding: const EdgeInsets.fromLTRB(16, 8, 16, 16), children: [
+            _buildMetricsCard(),
+            const SizedBox(height: 12),
+            _buildControls(),
           ]),
         ),
+        _buildLogPanel(),
+      ]),
+    );
+  }
+
+  Widget _buildModeSelector() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
+      color: Colors.white,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(children: _HealthMode.values.map((m) {
+          final meta = _modeMeta[m]!;
+          final active = _mode == m;
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: ChoiceChip(
+              label: Row(mainAxisSize: MainAxisSize.min, children: [
+                Icon(meta.icon, size: 16, color: active ? Colors.white : meta.color),
+                const SizedBox(width: 6),
+                Text(meta.label, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: active ? Colors.white : textPrimary)),
+              ]),
+              selected: active,
+              selectedColor: meta.color,
+              backgroundColor: Colors.white,
+              side: BorderSide(color: active ? meta.color : Colors.grey.shade300),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              onSelected: (_) {
+                if (_pumping) {
+                  _pumpTimer?.cancel();
+                  _pumping = false;
+                }
+                setState(() => _mode = m);
+              },
+            ),
+          );
+        }).toList()),
+      ),
+    );
+  }
+
+  Widget _buildMetricsCard() {
+    final defs = _modeMetrics[_mode]!;
+    final meta = _modeMeta[_mode]!;
+    return AppSectionCard(
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Container(
+            width: 36, height: 36,
+            decoration: BoxDecoration(color: meta.color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+            child: Icon(meta.icon, size: 20, color: meta.color),
+          ),
+          const SizedBox(width: 12),
+          Text('${meta.label}指标', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: textPrimary)),
+          if (_pumping) ...[
+            const SizedBox(width: 8),
+            _PulseDot(color: meta.color),
+          ],
+          const Spacer(),
+          if (_pumping)
+            Text('#$_batchCount', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: meta.color, fontFamily: 'monospace')),
+        ]),
+        const SizedBox(height: 16),
+        ...defs.map((d) => _MetricRow(def: d, genValue: () => _genValue(d))),
+      ]),
+    );
+  }
+
+  Widget _buildControls() {
+    final connected = MqttService.instance.currentStatus.name == 'connected';
+    return Column(children: [
+      SizedBox(
+        width: double.infinity,
+        height: 50,
+        child: FilledButton.icon(
+          onPressed: _togglePumping,
+          icon: Icon(_pumping ? Icons.stop_rounded : Icons.play_arrow_rounded, size: 22),
+          label: Text(_pumping ? '停止数据流' : '启动模拟数据流', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+          style: _pumping ? FilledButton.styleFrom(backgroundColor: errorRed) : null,
+        ),
+      ),
+      if (!_pumping) ...[
+        const SizedBox(height: 8),
+        SizedBox(
+          width: double.infinity,
+          height: 44,
+          child: OutlinedButton.icon(
+            onPressed: _sendSingleShot,
+            icon: const Icon(Icons.send_rounded, size: 18),
+            label: const Text('单次发送当前模式数据'),
+          ),
+        ),
+      ],
+      const SizedBox(height: 16),
+      Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade50,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade200),
+        ),
+        child: Column(children: [
+          Row(children: [
+            const Icon(Icons.info_outline, size: 14, color: Colors.grey),
+            const SizedBox(width: 6),
+            Expanded(child: Text('手动构建MQTT事件请使用 MQTT 控制台', style: TextStyle(fontSize: 11, color: textSecondary))),
+            TextButton(
+              onPressed: () => context.push('/mqtt'),
+              style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8), minimumSize: Size.zero, tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+              child: const Text('打开', style: TextStyle(fontSize: 12)),
+            ),
+          ]),
+          if (!connected)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Row(children: [
+                Icon(Icons.cloud_off, size: 12, color: warningOrange),
+                const SizedBox(width: 4),
+                Text('MQTT未连接，数据仅通过HTTP上报', style: TextStyle(fontSize: 11, color: warningOrange)),
+              ]),
+            ),
+        ]),
+      ),
+    ]);
+  }
+
+  Widget _buildLogPanel() {
+    if (_log.isEmpty) return const SizedBox.shrink();
+    return Container(
+      constraints: const BoxConstraints(maxHeight: 180),
+      color: const Color(0xFF0F0F23),
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
         Container(
-          constraints: const BoxConstraints(maxHeight: 200),
-          color: Colors.black87,
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+          child: Row(children: [
+            const Icon(Icons.terminal, size: 12, color: Colors.white38),
+            const SizedBox(width: 6),
+            Text('事件日志', style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.4))),
+            const Spacer(),
+            GestureDetector(
+              onTap: () => setState(() => _log.clear()),
+              child: Text('清空', style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.25))),
+            ),
+          ]),
+        ),
+        Expanded(
           child: ListView.builder(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
             itemCount: _log.length,
             itemBuilder: (_, i) => Text(_log[i],
-              style: TextStyle(fontSize: 10, fontFamily: 'monospace', color: _log[i].startsWith('✅') ? successGreen : _log[i].startsWith('❌') ? errorRed : Colors.green.shade300)),
+              style: TextStyle(fontSize: 10, fontFamily: 'monospace',
+                color: _log[i].contains('⏹') ? Colors.grey : _log[i].contains('▶') || _log[i].contains('✅') ? successGreen : Colors.green.shade300)),
           ),
         ),
       ]),
+    );
+  }
+}
+
+class _MetricRow extends StatefulWidget {
+  final _MetricDef def;
+  final double Function() genValue;
+  const _MetricRow({required this.def, required this.genValue});
+  @override
+  State<_MetricRow> createState() => _MetricRowState();
+}
+
+class _MetricRowState extends State<_MetricRow> {
+  double _val = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _val = widget.def.normal;
+  }
+
+  void _refresh() => setState(() => _val = widget.genValue());
+
+  @override
+  Widget build(BuildContext context) {
+    final pct = ((_val - widget.def.min) / (widget.def.max - widget.def.min)).clamp(0.0, 1.0);
+    final isAlert = _val > widget.def.normal * 1.3 || _val < widget.def.normal * 0.7;
+    final barColor = isAlert ? errorRed : matchaPrimary;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(children: [
+        SizedBox(
+          width: 80,
+          child: Text(widget.def.key.replaceAll('_', ' '), style: TextStyle(fontSize: 12, color: textSecondary, fontWeight: FontWeight.w500)),
+        ),
+        Expanded(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: SizedBox(
+              height: 28,
+              child: Stack(children: [
+                Container(color: Colors.grey.shade100),
+                FractionallySizedBox(
+                  widthFactor: pct,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(colors: [barColor.withValues(alpha: 0.5), barColor.withValues(alpha: 0.3)]),
+                    ),
+                  ),
+                ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 8),
+                    child: Text('${_val.toStringAsFixed(1)} ${widget.def.unit}',
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: textPrimary)),
+                  ),
+                ),
+              ]),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        SizedBox(
+          width: 32, height: 28,
+          child: IconButton(
+            padding: EdgeInsets.zero,
+            iconSize: 16,
+            icon: const Icon(Icons.refresh),
+            color: textSecondary,
+            onPressed: _refresh,
+          ),
+        ),
+      ]),
+    );
+  }
+}
+
+class _PulseDot extends StatefulWidget {
+  final Color color;
+  const _PulseDot({required this.color});
+  @override
+  State<_PulseDot> createState() => _PulseDotState();
+}
+
+class _PulseDotState extends State<_PulseDot> with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(duration: const Duration(milliseconds: 900), vsync: this)..repeat(reverse: true);
+  }
+  @override
+  void dispose() { _ctrl.dispose(); super.dispose(); }
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _ctrl,
+      builder: (_, __) => Container(
+        width: 8, height: 8,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: widget.color.withValues(alpha: 0.3 + _ctrl.value * 0.7),
+          boxShadow: [BoxShadow(color: widget.color.withValues(alpha: 0.4 * _ctrl.value), blurRadius: 6)],
+        ),
+      ),
     );
   }
 }

@@ -1,0 +1,143 @@
+<h2>小程序精简方案：删减与聚焦</h2>
+<p class="subtitle">定位：个人健康终端 + PIN 绑定管理。选择你同意的方向。</p>
+
+<div class="section">
+<h3>当前 22 个页面 → 精简后的结构</h3>
+
+<div class="mockup">
+<div class="mockup-header">TabBar 导航（4 Tab → 3 Tab）</div>
+<div class="mockup-body">
+  <div class="mock-nav">📋 记录 | 📊 健康 | 👤 我的（去掉"消息"Tab）</div>
+</div>
+</div>
+</div>
+
+<div class="section">
+<h3>✂️ 建议删除的页面</h3>
+
+<div class="options" data-multiselect>
+  <div class="option" data-choice="del-messages">
+    <div class="letter">1</div>
+    <div class="content">
+      <h3>消息页 (messages/) — 纯占位，0 功能</h3>
+      <p>页面只显示"暂无消息"，无任何数据源、无通知系统。删除并从 TabBar 移除。</p>
+    </div>
+  </div>
+  <div class="option" data-choice="del-alerts">
+    <div class="letter">2</div>
+    <div class="content">
+      <h3>告警页 (alerts/) — 仅后端依赖，只读</h3>
+      <p>个人终端场景下无 IoT 设备产生告警。可删除，或保留为"后端有数据时才显示"。</p>
+    </div>
+  </div>
+  <div class="option" data-choice="del-devices">
+    <div class="letter">3</div>
+    <div class="content">
+      <h3>设备页 (devices/) — 只读列表，无管理功能</h3>
+      <p>设备管理在 Web 端完成。小程序端只需要 PIN 绑定，不需要设备列表。</p>
+    </div>
+  </div>
+  <div class="option" data-choice="del-data">
+    <div class="letter">4</div>
+    <div class="content">
+      <h3>实时数据页 (data/) — 无 IoT 设备时空白</h3>
+      <p>依赖后端患者+设备数据，个人终端场景下体验为空。建议删除。</p>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="section">
+<h3>✏️ 建议改造的页面</h3>
+
+<div class="options" data-multiselect>
+  <div class="option" data-choice="fix-medication">
+    <div class="letter">5</div>
+    <div class="content">
+      <h3>用药记录 — 支持从后端加载用药方案</h3>
+      <p>当前 meds=[] 永不填充。改造：从 trpc.medication.list 加载用户用药方案，支持小程序端添加药物。</p>
+    </div>
+  </div>
+  <div class="option" data-choice="fix-goals">
+    <div class="letter">6</div>
+    <div class="content">
+      <h3>健康目标 — 让目标值在记录页生效</h3>
+      <p>当前目标只能设置但从不显示。改造：记录页显示目标参考线，超出范围时标红提醒。</p>
+    </div>
+  </div>
+  <div class="option" data-choice="fix-sync">
+    <div class="letter">7</div>
+    <div class="content">
+      <h3>数据同步 — 完善双向同步机制</h3>
+      <p>当前 sync.ts 基于 fragile 的 patientId 查找。改造：服务端同步拉取 + 本地合并。</p>
+    </div>
+  </div>
+  <div class="option" data-choice="fix-profile">
+    <div class="letter">8</div>
+    <div class="content">
+      <h3>个人中心 — 集成账号信息与 PIN 管理</h3>
+      <p>当前 profile 混合了太多功能。改造：拆分为"统计概览"+"PIN管理"+"设置"三个清晰区块。</p>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="section">
+<h3>✅ 保留完整的页面（无需改动）</h3>
+<div class="cards">
+  <div class="card">
+    <div class="card-body">
+      <h3>首页</h3>
+      <p>问候语 + 今日记录 + 快捷录入</p>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-body">
+      <h3>登录</h3>
+      <p>微信 OAuth 登录</p>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-body">
+      <h3>健康中心</h3>
+      <p>日历热力图 + 8 模块入口</p>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-body">
+      <h3>历史记录</h3>
+      <p>按类型筛选、时间倒序</p>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-body">
+      <h3>8 项记录表单</h3>
+      <p>血糖/血压/体重/心率/体温/血氧/用药/经期</p>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-body">
+      <h3>数据导出</h3>
+      <p>CSV 导出 + 微信分享</p>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-body">
+      <h3>PIN 概览</h3>
+      <p>查看/复制 PIN、自动创建</p>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-body">
+      <h3>提醒设置</h3>
+      <p>模块开关 + 时段提醒</p>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-body">
+      <h3>系统设置</h3>
+      <p>服务器地址 + 退出登录</p>
+    </div>
+  </div>
+</div>
+</div>

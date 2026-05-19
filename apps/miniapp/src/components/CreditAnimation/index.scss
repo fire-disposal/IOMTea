@@ -1,0 +1,12 @@
+.credit-anim {
+  position: fixed;
+  z-index: 999;
+  pointer-events: none;
+
+  &__text {
+    font-size: 18px;
+    font-weight: 800;
+    color: #E6A817;
+    text-shadow: 0 1px 4px rgba(230, 168, 23, 0.3);
+  }
+}

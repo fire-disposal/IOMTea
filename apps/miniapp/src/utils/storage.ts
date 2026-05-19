@@ -1,6 +1,7 @@
 import Taro from '@tarojs/taro'
+import { STORAGE_KEYS } from '../constants/storage-keys'
 
-const STORAGE_KEY = 'health_records'
+const STORAGE_KEY = STORAGE_KEYS.RECORDS
 
 export interface HealthRecord {
   id: string

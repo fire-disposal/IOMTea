@@ -21,3 +21,4 @@ export const userListInputSchema = z.object({
 
 export type User = z.infer<typeof userSchema>
 export type UserUpdateInput = z.infer<typeof userUpdateSchema>
+export type UserListInput = z.infer<typeof userListInputSchema>

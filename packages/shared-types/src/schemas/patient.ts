@@ -35,3 +35,4 @@ export const patientListInputSchema = z.object({
 export type Patient = z.infer<typeof patientSchema>
 export type PatientCreateInput = z.infer<typeof patientCreateSchema>
 export type PatientUpdateInput = z.infer<typeof patientUpdateSchema>
+export type PatientListInput = z.infer<typeof patientListInputSchema>

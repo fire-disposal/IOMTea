@@ -25,11 +25,15 @@ export function startMqttListener(brokerUrl: string, opts?: { username?: string;
       if (err) logger.error({ err }, 'subscribe error')
       else logger.info({ topic: TOPIC }, 'subscribed')
     })
+    client!.subscribe('users/+/admin/+', { qos: 1 }, (err) => {
+      if (err) logger.error({ err }, 'admin subscribe error')
+      else logger.info({ topic: 'users/+/admin/+' }, 'admin topic subscribed')
+    })
   })
 
   client.on('message', async (topic, payload) => {
     try {
-      await routeMessage(topic, payload)
+      await routeMessage(topic, payload, client ?? undefined)
     } catch (err) {
       logger.error({ err, topic }, 'route error')
     }

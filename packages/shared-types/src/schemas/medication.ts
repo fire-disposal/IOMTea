@@ -49,3 +49,11 @@ export const markMissedSchema = z.object({
   dueTime: z.string(),
   notes: z.string().optional(),
 })
+
+export type MedicationCreateInput = z.infer<typeof medicationCreateSchema>
+export type MedicationUpdateInput = z.infer<typeof medicationUpdateSchema>
+export type MedicationListInput = z.infer<typeof medicationListInputSchema>
+export type MedicationScheduleInput = z.infer<typeof medicationScheduleSchema>
+export type MedicationAdherenceListInput = z.infer<typeof medicationAdherenceListInputSchema>
+export type MarkTakenInput = z.infer<typeof markTakenSchema>
+export type MarkMissedInput = z.infer<typeof markMissedSchema>
