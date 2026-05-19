@@ -14,6 +14,9 @@ export default defineAppConfig({
     'pages/settings/goals/index',
     'pages/settings/tracking/index',
     'pages/pin-overview/index',
+    'pages/plan/index',
+    'pages/plan/detail/index',
+    'pages/credit/index',
   ],
   window: {
     backgroundTextStyle: 'light',

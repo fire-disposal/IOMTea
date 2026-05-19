@@ -245,3 +245,48 @@
   background: var(--brand-500, #6BA539);
   color: #fff;
 }
+
+.profile-page__credit-card {
+  margin: 12px 16px;
+  background: linear-gradient(135deg, #FFF8E1, #FFF3CD);
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid #FFE082;
+}
+
+.profile-credit-card__balance {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.profile-credit-card__num {
+  font-size: 28px;
+  font-weight: 800;
+  color: #E6A817;
+}
+
+.profile-credit-card__label {
+  font-size: 13px;
+  color: #B8860B;
+  margin-left: 2px;
+}
+
+.profile-credit-card__link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 10px;
+  border-top: 1px solid #FFE082;
+}
+
+.profile-credit-card__link-text {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.profile-credit-card__arrow {
+  font-size: 16px;
+  color: var(--text-secondary);
+}

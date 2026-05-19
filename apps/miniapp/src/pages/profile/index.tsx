@@ -2,6 +2,7 @@ import { View, Text, Button, Input } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useState, useEffect } from 'react'
 import { TabBar } from '../../components/TabBar'
+import { CreditIcon } from '../../components/CreditIcon'
 import { getLocalRecords, getUnsyncedRecords } from '../../utils/storage'
 import { syncUnsyncedRecords } from '../../utils/sync'
 import { trpc } from '../../utils/trpc'
@@ -29,6 +30,7 @@ export default function ProfilePage() {
   const [syncing, setSyncing] = useState(false)
   const [pins, setPins] = useState<PinInfo[]>([])
   const [pinsLoading, setPinsLoading] = useState(true)
+  const [credit, setCredit] = useState(0)
   const [editingPinId, setEditingPinId] = useState<string | null>(null)
   const [nicknameInput, setNicknameInput] = useState('')
 
@@ -45,6 +47,10 @@ export default function ProfilePage() {
   }
 
   useEffect(() => { loadStats() }, [])
+
+  useEffect(() => {
+    trpc.credit.balance.query().then((r: any) => { if (r) setCredit(r.balance) }).catch(() => {})
+  }, [])
 
   useEffect(() => {
     trpc.user.me.query().then((me: any) => {
@@ -93,6 +99,18 @@ export default function ProfilePage() {
           <Text className='profile-page__avatar-text'>我</Text>
         </View>
         <Text className='profile-page__name'>用户</Text>
+      </View>
+
+      <View className='profile-page__credit-card'>
+        <View className='profile-credit-card__balance'>
+          <CreditIcon size={24} />
+          <Text className='profile-credit-card__num'>{credit}</Text>
+          <Text className='profile-credit-card__label'>credits</Text>
+        </View>
+        <View className='profile-credit-card__link' onClick={() => Taro.navigateTo({ url: '/pages/credit/index' })}>
+          <Text className='profile-credit-card__link-text'>查看积分明细</Text>
+          <Text className='profile-credit-card__arrow'>›</Text>
+        </View>
       </View>
 
       <View className='profile-page__section'>
