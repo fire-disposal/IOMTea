@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 const envSchema = z.object({
+  NODE_ENV: z.enum(['development', 'production', 'test', 'staging']).default('development'),
   DATABASE_URL: z.string().default('postgresql://postgres:postgres@127.0.0.1:5432/iomtea'),
   JWT_SECRET: z.string().min(16, 'JWT_SECRET must be at least 16 characters').default('dev-secret-change-in-production'),
   JWT_EXPIRES_IN: z.string().default('2h'),
@@ -10,6 +11,9 @@ const envSchema = z.object({
   MQTT_USERNAME: z.string().optional(),
   MQTT_PASSWORD: z.string().optional(),
   MQTT_ENABLED: z.coerce.boolean().default(false),
+  DEMO_MODE: z.coerce.boolean().default(false),
+  TCP_INGEST_PORT: z.coerce.number().optional(),
+  TCP_INGEST_TOKEN: z.string().optional(),
   WECHAT_APP_ID: z.string().optional(),
   WECHAT_APP_SECRET: z.string().optional(),
   CORS_ORIGIN: z.string().optional(),

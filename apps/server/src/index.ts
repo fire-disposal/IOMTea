@@ -77,27 +77,31 @@ async function bootstrap() {
     process.exit(1)
   }
 
-  // ---- 演示账号 ----
-  const existing = await db.select().from(users).where(eq(users.username, 'demo')).limit(1)
-  if (existing.length === 0) {
-    await db.insert(users).values({
-      username: 'demo',
-      passwordHash: await hashPassword('demo123'),
-      displayName: '演示用户',
-      role: 'admin',
-    })
-    logger.info('√ 演示账号已创建 (demo / demo123)')
-  }
-
-  // ---- 演示数据 ----
-  try {
-    const patientCount = await db.select().from(patients)
-    if (patientCount.length === 0) {
-      await seedDemoData(db)
-      logger.info('√ 演示数据已就绪 (3 位居民、体征事件、告警、用药计划)')
+  if (env.DEMO_MODE) {
+    // ---- 演示账号 ----
+    const existing = await db.select().from(users).where(eq(users.username, 'demo')).limit(1)
+    if (existing.length === 0) {
+      await db.insert(users).values({
+        username: 'demo',
+        passwordHash: await hashPassword('demo123'),
+        displayName: '演示用户',
+        role: 'admin',
+      })
+      logger.info('√ 演示账号已创建 (demo / demo123)')
     }
-  } catch (err) {
-    logger.warn({ err }, '演示数据种子失败 (可忽略)')
+
+    // ---- 演示数据 ----
+    try {
+      const patientCount = await db.select().from(patients)
+      if (patientCount.length === 0) {
+        await seedDemoData(db)
+        logger.info('√ 演示数据已就绪 (3 位居民、体征事件、告警、用药计划)')
+      }
+    } catch (err) {
+      logger.warn({ err }, '演示数据种子失败 (可忽略)')
+    }
+  } else {
+    logger.info('演示模式未启用 (设置 DEMO_MODE=true 启用)')
   }
 
   // ---- 权限系统 ----
