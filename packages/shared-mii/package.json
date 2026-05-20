@@ -1,0 +1,23 @@
+{
+  "name": "@iomtea/shared-mii",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./procedural": "./src/procedural/index.ts",
+    "./svg": "./src/svg/index.ts"
+  },
+  "dependencies": {
+    "@iomtea/shared-types": "workspace:*",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.6"
+  }
+}
