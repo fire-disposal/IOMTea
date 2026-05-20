@@ -16,7 +16,8 @@ class CameraViewPage extends StatefulWidget {
   State<CameraViewPage> createState() => _CameraViewPageState();
 }
 
-class _CameraViewPageState extends State<CameraViewPage> {
+class _CameraViewPageState extends State<CameraViewPage> with WidgetsBindingObserver {
+  bool _isDisposed = false;
   CameraController? _cam;
   final _manager = VisionModeManager();
   VisionMode? _selectedMode;
@@ -30,6 +31,7 @@ class _CameraViewPageState extends State<CameraViewPage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) => _init());
   }
 
@@ -48,20 +50,20 @@ class _CameraViewPageState extends State<CameraViewPage> {
       await _cam!.initialize();
     } catch (e) {
       _error = 'Camera: $e';
-      if (mounted) setState(() {});
+      if (mounted && !_isDisposed) setState(() {});
       return;
     }
 
     final modes = VisionModeRegistry.modes;
     if (modes.isEmpty) {
       _error = 'No vision modes registered';
-      if (mounted) setState(() {});
+      if (mounted && !_isDisposed) setState(() {});
       return;
     }
 
     _selectedMode = modes.first;
 
-    if (mounted) {
+    if (mounted && !_isDisposed) {
       setState(() => _ready = true);
       _startListening();
     }
@@ -69,20 +71,20 @@ class _CameraViewPageState extends State<CameraViewPage> {
 
   void _startListening() {
     _manager.logEntries.listen((logs) {
-      if (mounted) setState(() {
+      if (mounted && !_isDisposed) setState(() {
         _logs.clear();
         _logs.addAll(logs);
         _statusText = _manager.status.text;
       });
     });
     _manager.addListener(() {
-      if (mounted) setState(() => _statusText = _manager.status.text);
+      if (mounted && !_isDisposed) setState(() => _statusText = _manager.status.text);
     });
   }
 
   Future<void> _switchMode(VisionMode mode) async {
     if (_selectedMode?.id == mode.id || _isSwitching) return;
-    setState(() => _isSwitching = true);
+    if (mounted && !_isDisposed) setState(() => _isSwitching = true);
     try {
       await _manager.switchTo(mode);
       _selectedMode = mode;
@@ -93,17 +95,32 @@ class _CameraViewPageState extends State<CameraViewPage> {
         );
       }
     } finally {
-      if (mounted) setState(() => _isSwitching = false);
+      if (mounted && !_isDisposed) setState(() => _isSwitching = false);
     }
   }
 
   void _toggleInference() {
     _manager.toggleInference();
-    setState(() {});
+    if (mounted && !_isDisposed) setState(() {});
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+      _cam?.stopImageStream();
+      _manager.toggleInference();
+    } else if (state == AppLifecycleState.resumed) {
+      if (!_manager.inferenceActive) {
+        _manager.toggleInference();
+      }
+    }
   }
 
   @override
   void dispose() {
+    _isDisposed = true;
+    WidgetsBinding.instance.removeObserver(this);
+    _cam?.stopImageStream();
     _cam?.dispose();
     _manager.dispose();
     super.dispose();
@@ -259,7 +276,7 @@ class _CameraViewPageState extends State<CameraViewPage> {
           child: VisionLogPanel(
             entries: _logs,
             statusText: _statusText,
-            onClear: () { _manager.clearLogs(); setState(() => _logs.clear()); },
+            onClear: () { _manager.clearLogs(); if (mounted && !_isDisposed) setState(() => _logs.clear()); },
           ),
         ),
       ]),

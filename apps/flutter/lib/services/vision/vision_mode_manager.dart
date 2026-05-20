@@ -26,20 +26,31 @@ class VisionModeManager extends ChangeNotifier {
 
   Future<void> switchTo(VisionMode mode) async {
     if (_active?.id == mode.id) return;
-    await _active?.onDeactivate();
+
+    final previous = _active;
+    _active = null;
+    await previous?.onDeactivate();
     _logSub?.cancel();
-    _active = mode;
-    _logEntries.clear();
-    _logController.add(List.unmodifiable(_logEntries));
-    if (_controller != null) {
-      await _controller!.switchModel(mode.modelId, mode.task);
+
+    try {
+      _logEntries.clear();
+      _logController.add(List.unmodifiable(_logEntries));
+      if (_controller != null) {
+        await _controller!.switchModel(mode.modelId, mode.task);
+      }
       await mode.onActivate(_controller!);
+      _active = mode;
+      _logSub = mode.logStream.listen(_onLogEntry);
+    } catch (e) {
+      _active = previous;
+      notifyListeners();
+      rethrow;
     }
-    _logSub = mode.logStream.listen(_onLogEntry);
     notifyListeners();
   }
 
   void toggleInference() {
+    if (_active == null && !_inferenceActive) return;
     _inferenceActive = !_inferenceActive;
     notifyListeners();
   }

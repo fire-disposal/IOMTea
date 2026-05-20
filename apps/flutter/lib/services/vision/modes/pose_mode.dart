@@ -228,5 +228,6 @@ class PoseMode extends VisionMode {
     _tracked.clear();
     _nextId = 1;
     _painter.clear();
+    await _logController.close();
   }
 }

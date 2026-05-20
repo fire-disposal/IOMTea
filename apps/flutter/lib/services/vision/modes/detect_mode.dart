@@ -135,6 +135,7 @@ class DetectMode extends VisionMode {
     _objects.clear();
     _nextId = 1;
     _painter.clear();
+    await _logController.close();
   }
 
   @override
