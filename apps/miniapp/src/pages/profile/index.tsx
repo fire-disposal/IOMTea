@@ -146,6 +146,11 @@ export default function ProfilePage() {
           <Text className='profile-menu-item__label'>设备管理</Text>
           <Text className='profile-menu-item__arrow'>›</Text>
         </View>
+        <View className='profile-menu-item' onClick={() => Taro.navigateTo({ url: '/pages/data/index' })}>
+          <Text className='profile-menu-item__icon'>📊</Text>
+          <Text className='profile-menu-item__label'>数据查看</Text>
+          <Text className='profile-menu-item__arrow'>›</Text>
+        </View>
       </View>
 
       {pinsLoading ? (

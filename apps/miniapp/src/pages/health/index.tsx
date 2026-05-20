@@ -91,6 +91,12 @@ export default function HealthPage() {
                 onClick={() => Taro.navigateTo({ url: m.page })}
               />
             ))}
+            <Cell
+              title='全部记录'
+              description='按类型筛选历史数据'
+              extra={<Text style={{ color: '#999', fontSize: '12px' }}>→</Text>}
+              onClick={() => Taro.navigateTo({ url: '/pages/records/index' })}
+            />
           </CellGroup>
         )}
       </ScrollView>
