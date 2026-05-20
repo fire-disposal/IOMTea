@@ -44,7 +44,6 @@ class PoseMode extends VisionMode {
 
   final _painter = PosePainter();
   final _logController = StreamController<VisionLogEntry>.broadcast();
-  final _statusController = StreamController<VisionStatus>.broadcast();
 
   final List<_Person> _tracked = [];
   int _nextId = 1;
@@ -114,13 +113,21 @@ class PoseMode extends VisionMode {
     for (final person in _tracked) {
       final newState = _classifyPose(person.lastResult);
 
-      if (newState != person.state) {
+      if (person.state == 'fallen') {
+        if (newState != 'lying') {
+          person.state = newState;
+          person.fallenFrames = 0;
+          _logController.add(VisionLogEntry(
+            time: DateTime.now(),
+            message: 'Person #${person.id} — $newState (${person.lastResult.confidence.toStringAsFixed(2)})',
+          ));
+        }
+      } else if (newState != person.state) {
         person.state = newState;
-        final isAlert = newState == 'fallen';
         _logController.add(VisionLogEntry(
           time: DateTime.now(),
           message: 'Person #${person.id} — $newState (${person.lastResult.confidence.toStringAsFixed(2)})',
-          isAlert: isAlert,
+          isAlert: newState == 'fallen',
         ));
       }
 
@@ -133,12 +140,17 @@ class PoseMode extends VisionMode {
         person.leftFrames = 0;
       }
 
-      if (newState == 'lying') {
+      if (newState == 'lying' && person.state != 'fallen') {
         person.fallenFrames++;
         if (person.fallenFrames >= _fallenConfirmFrames) {
           person.state = 'fallen';
+          _logController.add(VisionLogEntry(
+            time: DateTime.now(),
+            message: 'Person #${person.id} — fallen (${person.lastResult.confidence.toStringAsFixed(2)})',
+            isAlert: true,
+          ));
         }
-      } else {
+      } else if (newState != 'lying') {
         person.fallenFrames = 0;
       }
     }
@@ -154,7 +166,7 @@ class PoseMode extends VisionMode {
 
   String _classifyPose(YOLOResult result) {
     final kp = result.keypoints;
-    if (kp == null || kp.length < 11) return 'unknown';
+    if (kp == null || kp.length < 13) return 'unknown';
 
     final lShoulder = kp[5];
     final rShoulder = kp[6];

@@ -119,6 +119,21 @@ class PosePainter extends CustomPainter {
     canvas.drawLine(Offset(x1, y1), Offset(x1 + arm, y1), ln);
     canvas.drawLine(Offset(x1, y1), Offset(x1, y1 + arm), gl);
     canvas.drawLine(Offset(x1, y1), Offset(x1, y1 + arm), ln);
+    // top-right corner
+    canvas.drawLine(Offset(x2 - arm, y1), Offset(x2, y1), gl);
+    canvas.drawLine(Offset(x2 - arm, y1), Offset(x2, y1), ln);
+    canvas.drawLine(Offset(x2, y1), Offset(x2, y1 + arm), gl);
+    canvas.drawLine(Offset(x2, y1), Offset(x2, y1 + arm), ln);
+    // bottom-left corner
+    canvas.drawLine(Offset(x1, y2 - arm), Offset(x1, y2), gl);
+    canvas.drawLine(Offset(x1, y2 - arm), Offset(x1, y2), ln);
+    canvas.drawLine(Offset(x1, y2), Offset(x1 + arm, y2), gl);
+    canvas.drawLine(Offset(x1, y2), Offset(x1 + arm, y2), ln);
+    // bottom-right corner
+    canvas.drawLine(Offset(x2 - arm, y2), Offset(x2, y2), gl);
+    canvas.drawLine(Offset(x2 - arm, y2), Offset(x2, y2), ln);
+    canvas.drawLine(Offset(x2, y2 - arm), Offset(x2, y2), gl);
+    canvas.drawLine(Offset(x2, y2 - arm), Offset(x2, y2), ln);
 
     final label = fallen ? 'FALLEN!' : 'Person';
     final tp = TextPainter(
