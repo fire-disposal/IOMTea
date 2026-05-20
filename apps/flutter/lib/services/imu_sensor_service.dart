@@ -34,5 +34,24 @@ class ImuSensorService {
   }
 
   void stop() { _accel?.cancel(); _gyro?.cancel(); _timer?.cancel(); }
+
+  Future<ImuData?> readOnce() async {
+    final completer = Completer<ImuData?>();
+    late StreamSubscription<ImuData> sub;
+    sub = dataStream.listen((data) {
+      if (!completer.isCompleted) {
+        completer.complete(data);
+      }
+    });
+    start();
+    final result = await completer.future.timeout(
+      const Duration(seconds: 2),
+      onTimeout: () => null,
+    );
+    await sub.cancel();
+    stop();
+    return result;
+  }
+
   void dispose() { stop(); _ctrl.close(); }
 }
