@@ -1,11 +1,32 @@
 import Taro from '@tarojs/taro'
 import { TRPCClientError, createTRPCClient, httpLink } from '@trpc/client'
 
-function getApiBase(): string {
+export function getApiBase(): string {
   return (Taro.getStorageSync('server_url') as string) || 'http://localhost:3000'
 }
 
-export const API_BASE = getApiBase()
+let _client: ReturnType<typeof createTRPCClient> | null = null
+let _clientBase = ''
+
+function getClient() {
+  const base = getApiBase()
+  if (!_client || _clientBase !== base) {
+    _clientBase = base
+    _client = createTRPCClient<any>({
+      links: [
+        httpLink({
+          url: `${base}/trpc`,
+          fetch: taroFetcher,
+          headers() {
+            const token = Taro.getStorageSync('token')
+            return token ? { Authorization: `Bearer ${token}` } : {}
+          },
+        }),
+      ],
+    })
+  }
+  return _client
+}
 
 function taroFetcher(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   const url = typeof input === 'string' ? input : input.toString()
@@ -36,17 +57,9 @@ function taroFetcher(input: RequestInfo | URL, init?: RequestInit): Promise<Resp
   })
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const trpc = createTRPCClient<any>({
-  links: [
-    httpLink({
-      url: `${getApiBase()}/trpc`,
-      fetch: taroFetcher as any,
-      headers() {
-        const token = Taro.getStorageSync('token')
-        return token ? { Authorization: `Bearer ${token}` } : {}
-      },
-    }),
-  ],
-}) as any
+export const trpc = new Proxy({} as any, {
+  get(_, prop) {
+    return (getClient() as any)[prop]
+  },
+})
 

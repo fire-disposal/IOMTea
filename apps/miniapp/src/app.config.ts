@@ -17,12 +17,29 @@ export default defineAppConfig({
     'pages/plan/index',
     'pages/plan/detail/index',
     'pages/credit/index',
+    'pages/record/glucose/index',
+    'pages/record/pressure/index',
+    'pages/record/weight/index',
+    'pages/record/heart-rate/index',
+    'pages/record/temperature/index',
+    'pages/record/spo2/index',
+    'pages/record/medication/index',
+    'pages/record/period/index',
   ],
   window: {
     backgroundTextStyle: 'light',
     navigationBarBackgroundColor: '#416323',
     navigationBarTitleText: 'IOMTea',
     navigationBarTextStyle: 'white',
+  },
+  tabBar: {
+    custom: true,
+    list: [
+      { pagePath: 'pages/index/index', text: '首页' },
+      { pagePath: 'pages/health/index', text: '健康' },
+      { pagePath: 'pages/messages/index', text: '消息' },
+      { pagePath: 'pages/profile/index', text: '我的' },
+    ],
   },
   permission: {
     'scope.userLocation': {
