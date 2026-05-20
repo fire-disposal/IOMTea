@@ -1,10 +1,14 @@
 name: Deploy Miniapp
 
 on:
+  push:
+    tags:
+      - 'v*'
+      - 'weapp@*'
   workflow_dispatch:
     inputs:
       environment:
-        description: 'Build environment'
+        description: '编译环境'
         type: choice
         default: 'production'
         options:

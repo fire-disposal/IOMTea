@@ -1,10 +1,14 @@
 name: Deploy Server
 
 on:
+  push:
+    tags:
+      - 'v*'
+      - 'server@*'
   workflow_dispatch:
     inputs:
       environment:
-        description: 'Deployment environment'
+        description: '部署环境'
         type: choice
         default: 'production'
         options:
@@ -60,7 +64,9 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: type=sha,prefix=,format=short
+          tags: |
+            type=ref,event=tag
+            type=sha,prefix=,format=short
 
       - name: Build and push
         uses: docker/build-push-action@v6
@@ -94,4 +100,22 @@ jobs:
               echo "Waiting... ($i/30)"
               sleep 2
             done
+            docker compose exec -T server node apps/server/dist/db-migrate.js || echo "Migration skipped (no db-migrate.js)"
             docker logout ghcr.io
+
+  db-migrate:
+    needs: build-and-deploy
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') }}
+    environment:
+      name: production
+    steps:
+      - name: Run migration
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ${{ secrets.DEPLOY_PATH }}
+            docker compose run --rm server pnpm --filter @iomtea/server db:migrate
