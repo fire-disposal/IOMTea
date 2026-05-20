@@ -40,4 +40,5 @@ abstract class VisionMode {
   Stream<VisionLogEntry> get logStream;
   VisionStatus get currentStatus;
   Future<void> onDeactivate();
+  void flushFrame() {}
 }

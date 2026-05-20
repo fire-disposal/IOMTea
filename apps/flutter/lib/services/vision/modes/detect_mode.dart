@@ -45,6 +45,7 @@ class DetectMode extends VisionMode {
   int _nextId = 1;
   static const _iouThreshold = 0.3;
   static const _maxLeftFrames = 5;
+  bool _frameDirty = false;
 
   @override
   CustomPainter get painter => _painter;
@@ -65,8 +66,7 @@ class DetectMode extends VisionMode {
   @override
   void onFrame(YOLOResult result) {
     _matchOrCreate(result);
-    _removeStale();
-    _painter.update(_objects.map((o) => o.toPaintData()).toList());
+    _frameDirty = true;
   }
 
   void _matchOrCreate(YOLOResult result) {
@@ -135,5 +135,13 @@ class DetectMode extends VisionMode {
     _objects.clear();
     _nextId = 1;
     _painter.clear();
+  }
+
+  @override
+  void flushFrame() {
+    if (!_frameDirty) return;
+    _removeStale();
+    _painter.update(_objects.map((o) => o.toPaintData()).toList());
+    _frameDirty = false;
   }
 }

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ultralytics_yolo/ultralytics_yolo.dart';
 import '../vision_mode.dart';
 import '../painters/pose_painter.dart';
@@ -50,6 +51,7 @@ class PoseMode extends VisionMode {
   static const _iouThreshold = 0.3;
   static const _maxLeftFrames = 10;
   static const _fallenConfirmFrames = 6;
+  bool _invertY = false;
 
   @override
   CustomPainter get painter => _painter;
@@ -71,7 +73,11 @@ class PoseMode extends VisionMode {
   }
 
   @override
-  Future<void> onActivate(YOLOViewController controller) async {}
+  Future<void> onActivate(YOLOViewController controller) async {
+    final prefs = await SharedPreferences.getInstance();
+    final dir = prefs.getString('ground_direction') ?? 'portraitDown';
+    _invertY = dir == 'portraitUp';
+  }
 
   @override
   void onFrame(YOLOResult result) {
@@ -189,7 +195,7 @@ class PoseMode extends VisionMode {
 
     if (torsoAngle > 0.7) return 'lying';
     if (torsoDy < 0.08) return 'sitting';
-    if (shoulderY < hipY) return 'standing';
+    if (_invertY ? shoulderY > hipY : shoulderY < hipY) return 'standing';
 
     return 'walking';
   }
