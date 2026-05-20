@@ -116,7 +116,7 @@ export default function PlanDetailPage() {
         title='选择时间'
         type='hour-minutes'
         value={editingSlot >= 0 ? new Date(2024, 0, 1, slots[editingSlot].hour, slots[editingSlot].min) : new Date(2024, 0, 1, 8, 0)}
-        onConfirm={(_options, values: any[]) => {
+        onConfirm={(_options: any, values: any[]) => {
           const v0 = values[0] as Date
           const hour = v0.getHours()
           const min = v0.getMinutes()

@@ -41,11 +41,11 @@ export function NodeGraphPage() {
   })
   const assignDevice = trpc.nodeGraph.assignDevice.useMutation()
   const deleteRoom = trpc.nodeGraph.deleteRoom.useMutation({
-    onSuccess: () => notifications.show({ title: '已删除', color: 'orange' }),
+    onSuccess: () => (notifications as any).show({ title: '已删除', color: 'orange' }),
   })
 
-  const [nodes, setNodes, onNodesChange] = useNodesState([])
-  const [edges, setEdges, onEdgesChange] = useEdgesState([])
+  const [nodes, setNodes, onNodesChange] = useNodesState<FlowNode>([])
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; nodeId: string } | null>(null)
   const [creatingRoom, setCreatingRoom] = useState(false)
   const [editingRoom, setEditingRoom] = useState<any>(null)
@@ -74,7 +74,7 @@ export function NodeGraphPage() {
           if (n.id === roomId) {
             const subNodes = [...(n.data.subNodes as any[] || [])]
             if (!subNodes.find((sn) => sn.id === itemId)) {
-              const item = (graphData?.unassignedDevices || []).find((d: any) => d.id === itemId)
+              const item: any = (graphData?.unassignedDevices || []).find((d: any) => d.id === itemId)
               subNodes.push({
                 id: itemId, label: item?.label ?? item?.serialNumber ?? itemId,
                 deviceType: item?.deviceType, status: item?.status,
@@ -236,7 +236,7 @@ export function NodeGraphPage() {
         .map((e) => e.target),
       patientId: (n.data.patientId as string) || undefined,
     }))
-    saveGraph.mutate({ graph: { rooms } })
+    saveGraph.mutate({ graph: { rooms } } as any)
   }, [nodes, edges, saveGraph])
 
   const onNodeDragStop = useCallback(() => {

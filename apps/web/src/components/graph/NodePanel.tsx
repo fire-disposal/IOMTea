@@ -28,7 +28,7 @@ export function NodePanel({
     !search || d.label?.toLowerCase().includes(search.toLowerCase()),
   )
   const filteredPatients = patients.filter((p) =>
-    !search || p.name?.toLowerCase().includes(search.toLowerCase()),
+    !search || p.label?.toLowerCase().includes(search.toLowerCase()),
   )
 
   const handleDragStart = (item: NodePanelItem, type: 'device' | 'patient') => (e: React.DragEvent) => {

@@ -43,11 +43,11 @@ const roomLabels: Record<string, string> = {
 }
 
 export const RoomNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
-  const roomType: string = data.roomType ?? 'bedroom'
+  const roomType = (data.roomType as string) ?? 'bedroom'
   const icon = roomIcons[roomType] ?? <IconBuildingStore size={16} />
   const color = roomColors[roomType] ?? 'gray'
   const label = roomLabels[roomType] ?? roomType
-  const deviceCount = data.deviceCount ?? 0
+  const deviceCount = (data.deviceCount as number) ?? 0
   const patientName = data.patientName as string | undefined
   const [dragOver, setDragOver] = useState(false)
 
@@ -96,7 +96,7 @@ export const RoomNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
       >
         <Group gap="xs" mb={4}>
           <ThemeIcon size="sm" color={color} variant="light" radius="md">{icon}</ThemeIcon>
-          <Text size="sm" fw={600}>{data.label as string ?? label}</Text>
+          <Text size="sm" fw={600}>{(data.label as string) ?? label}</Text>
         </Group>
         <Group gap={4}>
           {deviceCount > 0 && <Badge size="xs" variant="light" color={color}>{deviceCount} 设备</Badge>}
@@ -111,7 +111,7 @@ export const RoomNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
                 </Badge>
               ))}
               {(data.subNodes as any[])?.length > 4 && (
-                <Badge size="xs" variant="subtle" color="gray">+{data.subNodes.length - 4}</Badge>
+                <Badge size="xs" variant="subtle" color="gray">+{(data.subNodes as any[]).length - 4}</Badge>
               )}
             </div>
           )}
