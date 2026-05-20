@@ -3,7 +3,7 @@ import { trpcServer } from '@hono/trpc-server'
 import { eq } from 'drizzle-orm'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
-import pino from 'pino'
+import { logger as honoLogger } from 'hono/logger'
 import { WebSocketServer } from 'ws'
 import { db } from './core/db'
 import { users, patients } from './core/db/schema'
@@ -16,15 +16,24 @@ import { env } from './env'
 import { startMqttListener } from './mqtt-ingest'
 import { seedPermissions } from './core/services/permission-seed'
 import { seedDemoData } from './core/services/demo-seed'
+import { logger } from './core/lib/logger'
+import { printBanner } from './core/lib/banner'
 
-const logger = pino({
-  transport: { target: 'pino-pretty', options: { colorize: true } },
-})
+// ============================================================
+// 横幅
+// ============================================================
+printBanner(logger)
 
+// ============================================================
+// 环境校验
+// ============================================================
 if (env.JWT_SECRET === 'dev-secret-change-in-production') {
-  logger.warn('Using default JWT_SECRET - set JWT_SECRET in production!')
+  logger.warn('⚠ 使用默认 JWT_SECRET，生产环境请设置环境变量 JWT_SECRET')
 }
 
+// ============================================================
+// 应用初始化
+// ============================================================
 const app = new Hono()
 
 app.use(
@@ -40,9 +49,35 @@ app.use(
 app.use('/trpc/*', trpcServer({ router: appRouter, createContext }))
 app.get('/health', (c) => c.json({ status: 'ok' }))
 
-// Bootstrap — seed demo account, default map, auto-start ward
+// HTTP 请求日志
+app.use(
+  '*',
+  honoLogger((str: string, ...rest: string[]) => {
+    logger.info(str.replace(/\s+/g, ' ').trim())
+  }),
+)
+
+// ============================================================
+// 启动流程
+// ============================================================
 async function bootstrap() {
-  // Seed demo account
+  // ---- 数据库连接 ----
+  logger.info('正在连接数据库 ...')
+  try {
+    const result = await db.execute('SELECT 1 AS db_ok')
+    const rows = result as unknown as { db_ok: number }[]
+    if (rows?.[0]?.db_ok === 1) {
+      logger.info('✓ 数据库连接成功')
+    } else {
+      logger.warn('⚠ 数据库返回异常响应')
+    }
+  } catch (err) {
+    logger.error({ err }, '✗ 数据库连接失败')
+    logger.error('请确认 DATABASE_URL 是否正确，PostgreSQL 是否已启动')
+    process.exit(1)
+  }
+
+  // ---- 演示账号 ----
   const existing = await db.select().from(users).where(eq(users.username, 'demo')).limit(1)
   if (existing.length === 0) {
     await db.insert(users).values({
@@ -51,32 +86,33 @@ async function bootstrap() {
       displayName: '演示用户',
       role: 'admin',
     })
-    logger.info('demo account created (demo / demo123)')
+    logger.info('√ 演示账号已创建 (demo / demo123)')
   }
 
-  // Seed demo data if patients table is empty
+  // ---- 演示数据 ----
   try {
     const patientCount = await db.select().from(patients)
     if (patientCount.length === 0) {
       await seedDemoData(db)
-      logger.info('demo data seeded (3 patients, events, alerts, medications)')
+      logger.info('√ 演示数据已就绪 (3 位居民、体征事件、告警、用药计划)')
     }
   } catch (err) {
-    logger.warn({ err }, 'demo data seed failed')
+    logger.warn({ err }, '演示数据种子失败 (可忽略)')
   }
 
-  // Seed RBAC permissions
+  // ---- 权限系统 ----
   try {
     await seedPermissions(db)
-    logger.info('rbac permissions seeded')
+    logger.info('√ RBAC 权限已就绪')
   } catch (err) {
-    logger.warn({ err }, 'permission seed failed (run db:migrate first)')
+    logger.warn({ err }, '权限种子失败 (请先执行 db:migrate)')
   }
 
-  // Auto-start engines for all patients with homeGraph
+  // ---- 孪生引擎 ----
   try {
     const { reconstructEngine, startEngine, getEngine } = await import('./twin/engine')
     const allPatients = await db.select().from(patients)
+    let engineCount = 0
 
     for (const patient of allPatients) {
       const tags = (patient.tags as Record<string, unknown>) || {}
@@ -90,31 +126,41 @@ async function bootstrap() {
         tags: patient.tags as Record<string, unknown>,
       })
       await startEngine(db, engine.patientId)
-      logger.info({ patientId: engine.patientId, name: patient.name }, 'engine auto-started')
+      engineCount++
+    }
+    if (engineCount > 0) {
+      logger.info(`√ ${engineCount} 个数字孪生引擎已启动`)
     }
   } catch (err) {
-    logger.warn({ err }, 'engine auto-start failed')
+    logger.warn({ err }, '孪生引擎自启动失败')
   }
 
+  // ---- 虚拟 PIN 生成器 ----
   try {
     const { startAllVirtualPins } = await import('./core/trpc/routers/virtual-pin')
     await startAllVirtualPins()
-    logger.info('virtual pin generators started')
+    logger.info('√ 虚拟 PIN 生成器已启动')
   } catch (err) {
-    logger.warn({ err }, 'virtual pin start failed')
+    logger.warn({ err }, '虚拟 PIN 启动失败')
   }
 }
 
 bootstrap().then(() => {
+  // ---- MQTT ----
   if (env.MQTT_ENABLED) {
-    logger.info({ broker: env.MQTT_BROKER }, 'starting MQTT PIN listener')
+    logger.info({ broker: env.MQTT_BROKER }, '→ 正在连接 MQTT Broker ...')
     startMqttListener(env.MQTT_BROKER, {
       username: env.MQTT_USERNAME,
       password: env.MQTT_PASSWORD,
     })
+  } else {
+    logger.info('⊙ MQTT 未启用 (设置 MQTT_ENABLED=true 以启用)')
   }
 
+  // ---- HTTP 服务器 ----
   const server = serve({ fetch: app.fetch, port: env.PORT })
+
+  // ---- WebSocket ----
   const wss = new WebSocketServer({ noServer: true })
 
   server.on('upgrade', (request, socket, head) => {
@@ -135,19 +181,18 @@ bootstrap().then(() => {
     const token = url.searchParams.get('token') || ''
 
     if (!token) {
-      logger.warn({ wardId, mapId }, 'websocket connection rejected: missing token')
+      logger.warn({ wardId, mapId }, 'WebSocket 连接被拒: 缺少 token')
       ws.close(4001, 'Unauthorized: missing token')
       return
     }
 
     verifyToken(token)
       .then((payload: JwtPayload) => {
-        logger.info({ userId: payload.sub, role: payload.role, wardId, mapId }, 'websocket client authenticated')
+        logger.info({ userId: payload.sub, role: payload.role, wardId, mapId }, 'WebSocket 客户端已认证')
 
         if (wardId) {
           broadcastManager.subscribe(wardId, ws)
         }
-
         if (mapId) {
           broadcastManager.subscribeMap(mapId, ws)
         }
@@ -155,7 +200,7 @@ bootstrap().then(() => {
         const patientId = url.searchParams.get('patientId') || ''
         if (patientId) {
           broadcastManager.subscribePatient(patientId, ws)
-          logger.info({ patientId }, 'websocket client subscribed (patient)')
+          logger.info({ patientId }, 'WebSocket 已订阅居民实时数据')
         }
 
         ws.on('message', (raw) => {
@@ -171,7 +216,7 @@ bootstrap().then(() => {
               broadcastManager.subscribePatient(msg.patientId, ws)
             }
           } catch {
-            // ignore malformed messages
+            // 忽略格式错误的消息
           }
         })
 
@@ -184,12 +229,31 @@ bootstrap().then(() => {
         })
       })
       .catch(() => {
-        logger.warn({ wardId, mapId }, 'websocket connection rejected: invalid token')
+        logger.warn({ wardId, mapId }, 'WebSocket 连接被拒: token 无效')
         ws.close(4001, 'Unauthorized: invalid token')
       })
   })
 
-  logger.info({ port: env.PORT, ws: true }, 'server ready')
+  // ============================================================
+  // 启动总结
+  // ============================================================
+  console.log('') // 空行分隔
+  logger.info('══════════════════════════════════════════════')
+  logger.info('  IOMTea 服务已启动')
+  logger.info('══════════════════════════════════════════════')
+  logger.info(`  本地地址:    http://localhost:${env.PORT}`)
+  logger.info(`  健康检查:    http://localhost:${env.PORT}/health`)
+  logger.info(`  tRPC 接口:   http://localhost:${env.PORT}/trpc`)
+  logger.info(`  WebSocket:   ws://localhost:${env.PORT}/ws`)
+  logger.info(`  CORS 白名单: ${env.CORS_ORIGIN || 'http://localhost:5173'}`)
+  if (env.MQTT_ENABLED) {
+    logger.info(`  MQTT Broker: ${env.MQTT_BROKER}`)
+    logger.info(`  MQTT 主题:   users/+/+/+  ·  users/+/admin/+`)
+  }
+  logger.info(`  API 文档:    建议引入 @hono/scalar 或 @hono/swagger-ui`)
+  logger.info('══════════════════════════════════════════════')
+  logger.info('  使用 Ctrl+C 停止服务')
+  logger.info('')
 })
 
 export type { AppRouter } from './core/trpc/routers/_app'

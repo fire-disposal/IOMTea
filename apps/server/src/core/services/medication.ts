@@ -1,6 +1,5 @@
 import { TRPCError } from '@trpc/server'
 import { and, desc, eq, inArray, sql } from 'drizzle-orm'
-import pino from 'pino'
 import type { DbClient } from '../db'
 import { events, medicationAdherence, medicationSchedules, medications } from '../db'
 import type {
@@ -11,8 +10,9 @@ import type {
   MedicationRoute,
   MedicationStatus,
 } from '../db/schema/enums'
+import { createChildLogger } from '../lib/logger'
 
-const logger = pino({ name: 'core:services:medication' })
+const logger = createChildLogger('medication')
 
 export async function listMedications(db: DbClient, patientId: string, status?: MedicationStatus) {
   const conditions = [eq(medications.patientId, patientId)]

@@ -1,5 +1,4 @@
 import { eq } from 'drizzle-orm'
-import pino from 'pino'
 import { v4 as uuid } from 'uuid'
 import type { DbClient } from '../core/db'
 import { events, patients, devices } from '../core/db/schema'
@@ -18,9 +17,10 @@ import { createActorState, tickActorMovement, type ActorState } from './behavior
 import { enqueueInstruction, processNextInstruction } from './instruction'
 import { tickScheduler, formatHourMinute } from './scheduler'
 import { findPath } from './pathfinding'
+import { createChildLogger } from '../core/lib/logger'
 
 
-const logger = pino({ name: 'twin:engine' })
+const logger = createChildLogger('twin')
 
 // ── Engine State ──
 

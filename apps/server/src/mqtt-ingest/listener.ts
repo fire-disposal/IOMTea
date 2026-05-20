@@ -1,10 +1,11 @@
-import pino from 'pino'
 import mqtt from 'mqtt'
 import { routeMessage } from './router'
+import { createChildLogger } from '../core/lib/logger'
 
-const logger = pino({ name: 'mqtt-ingest:listener' })
+const logger = createChildLogger('mqtt')
 
 const TOPIC = 'users/+/+/+'
+const ADMIN_TOPIC = 'users/+/admin/+'
 
 let client: mqtt.MqttClient | null = null
 
@@ -20,14 +21,22 @@ export function startMqttListener(brokerUrl: string, opts?: { username?: string;
   })
 
   client.on('connect', () => {
-    logger.info({ brokerUrl }, 'MQTT PIN connected')
+    logger.info('✓ MQTT Broker 已连接')
+
     client!.subscribe(TOPIC, { qos: 1 }, (err) => {
-      if (err) logger.error({ err }, 'subscribe error')
-      else logger.info({ topic: TOPIC }, 'subscribed')
+      if (err) {
+        logger.error({ err }, '✗ MQTT 主题订阅失败')
+      } else {
+        logger.info(`√ 已订阅 PIN 数据主题: ${TOPIC}`)
+      }
     })
-    client!.subscribe('users/+/admin/+', { qos: 1 }, (err) => {
-      if (err) logger.error({ err }, 'admin subscribe error')
-      else logger.info({ topic: 'users/+/admin/+' }, 'admin topic subscribed')
+
+    client!.subscribe(ADMIN_TOPIC, { qos: 1 }, (err) => {
+      if (err) {
+        logger.error({ err }, '✗ MQTT 管理主题订阅失败')
+      } else {
+        logger.info(`√ 已订阅管理主题: ${ADMIN_TOPIC}`)
+      }
     })
   })
 
@@ -35,16 +44,24 @@ export function startMqttListener(brokerUrl: string, opts?: { username?: string;
     try {
       await routeMessage(topic, payload, client ?? undefined)
     } catch (err) {
-      logger.error({ err, topic }, 'route error')
+      logger.error({ err, topic }, 'MQTT 消息路由失败')
     }
   })
 
   client.on('error', (err) => {
-    logger.error({ err }, 'connection error')
+    logger.error({ err }, 'MQTT 连接错误')
   })
 
   client.on('close', () => {
-    logger.warn('MQTT PIN disconnected')
+    logger.warn('MQTT Broker 连接已断开，将自动重连')
+  })
+
+  client.on('reconnect', () => {
+    logger.info('MQTT 正在重连 ...')
+  })
+
+  client.on('offline', () => {
+    logger.warn('MQTT 客户端离线')
   })
 
   return client
@@ -54,6 +71,6 @@ export function stopMqttListener(): void {
   if (client) {
     client.end()
     client = null
-    logger.info('MQTT PIN stopped')
+    logger.info('MQTT 监听已停止')
   }
 }
