@@ -12,12 +12,13 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as AuthIndexRouteImport } from './routes/_auth.index'
-import { Route as AuthNodeGraphRouteImport } from './routes/_auth.node-graph'
 import { Route as AuthTrendsRouteImport } from './routes/_auth.trends'
 import { Route as AuthSettingsRouteImport } from './routes/_auth.settings'
 import { Route as AuthPatientsRouteImport } from './routes/_auth.patients'
+import { Route as AuthNodeGraphRouteImport } from './routes/_auth.node-graph'
 import { Route as AuthMedicationsRouteImport } from './routes/_auth.medications'
 import { Route as AuthDataDashboardRouteImport } from './routes/_auth.data-dashboard'
+import { Route as AuthAvatarEditorRouteImport } from './routes/_auth.avatar-editor'
 import { Route as AuthAlertsRouteImport } from './routes/_auth.alerts'
 import { Route as AuthSettingsVirtualPinsRouteImport } from './routes/_auth.settings.virtual-pins'
 import { Route as AuthSettingsUsersRouteImport } from './routes/_auth.settings.users'
@@ -60,6 +61,11 @@ const AuthPatientsRoute = AuthPatientsRouteImport.update({
   path: '/patients',
   getParentRoute: () => AuthRoute,
 } as any)
+const AuthNodeGraphRoute = AuthNodeGraphRouteImport.update({
+  id: '/node-graph',
+  path: '/node-graph',
+  getParentRoute: () => AuthRoute,
+} as any)
 const AuthMedicationsRoute = AuthMedicationsRouteImport.update({
   id: '/medications',
   path: '/medications',
@@ -70,14 +76,14 @@ const AuthDataDashboardRoute = AuthDataDashboardRouteImport.update({
   path: '/data-dashboard',
   getParentRoute: () => AuthRoute,
 } as any)
+const AuthAvatarEditorRoute = AuthAvatarEditorRouteImport.update({
+  id: '/avatar-editor',
+  path: '/avatar-editor',
+  getParentRoute: () => AuthRoute,
+} as any)
 const AuthAlertsRoute = AuthAlertsRouteImport.update({
   id: '/alerts',
   path: '/alerts',
-  getParentRoute: () => AuthRoute,
-} as any)
-const AuthNodeGraphRoute = AuthNodeGraphRouteImport.update({
-  id: '/node-graph',
-  path: '/node-graph',
   getParentRoute: () => AuthRoute,
 } as any)
 const AuthSettingsVirtualPinsRoute = AuthSettingsVirtualPinsRouteImport.update({
@@ -143,6 +149,7 @@ export interface FileRoutesByFullPath {
   '/': typeof AuthIndexRoute
   '/login': typeof LoginRoute
   '/alerts': typeof AuthAlertsRoute
+  '/avatar-editor': typeof AuthAvatarEditorRoute
   '/data-dashboard': typeof AuthDataDashboardRoute
   '/medications': typeof AuthMedicationsRoute
   '/node-graph': typeof AuthNodeGraphRoute
@@ -164,6 +171,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/alerts': typeof AuthAlertsRoute
+  '/avatar-editor': typeof AuthAvatarEditorRoute
   '/data-dashboard': typeof AuthDataDashboardRoute
   '/medications': typeof AuthMedicationsRoute
   '/node-graph': typeof AuthNodeGraphRoute
@@ -187,6 +195,7 @@ export interface FileRoutesById {
   '/_auth': typeof AuthRouteWithChildren
   '/login': typeof LoginRoute
   '/_auth/alerts': typeof AuthAlertsRoute
+  '/_auth/avatar-editor': typeof AuthAvatarEditorRoute
   '/_auth/data-dashboard': typeof AuthDataDashboardRoute
   '/_auth/medications': typeof AuthMedicationsRoute
   '/_auth/node-graph': typeof AuthNodeGraphRoute
@@ -212,6 +221,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/alerts'
+    | '/avatar-editor'
     | '/data-dashboard'
     | '/medications'
     | '/node-graph'
@@ -233,6 +243,7 @@ export interface FileRouteTypes {
   to:
     | '/login'
     | '/alerts'
+    | '/avatar-editor'
     | '/data-dashboard'
     | '/medications'
     | '/node-graph'
@@ -255,6 +266,7 @@ export interface FileRouteTypes {
     | '/_auth'
     | '/login'
     | '/_auth/alerts'
+    | '/_auth/avatar-editor'
     | '/_auth/data-dashboard'
     | '/_auth/medications'
     | '/_auth/node-graph'
@@ -324,6 +336,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthPatientsRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_auth/node-graph': {
+      id: '/_auth/node-graph'
+      path: '/node-graph'
+      fullPath: '/node-graph'
+      preLoaderRoute: typeof AuthNodeGraphRouteImport
+      parentRoute: typeof AuthRoute
+    }
     '/_auth/medications': {
       id: '/_auth/medications'
       path: '/medications'
@@ -338,18 +357,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthDataDashboardRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_auth/avatar-editor': {
+      id: '/_auth/avatar-editor'
+      path: '/avatar-editor'
+      fullPath: '/avatar-editor'
+      preLoaderRoute: typeof AuthAvatarEditorRouteImport
+      parentRoute: typeof AuthRoute
+    }
     '/_auth/alerts': {
       id: '/_auth/alerts'
       path: '/alerts'
       fullPath: '/alerts'
       preLoaderRoute: typeof AuthAlertsRouteImport
-      parentRoute: typeof AuthRoute
-    }
-    '/_auth/node-graph': {
-      id: '/_auth/node-graph'
-      path: '/node-graph'
-      fullPath: '/node-graph'
-      preLoaderRoute: typeof AuthNodeGraphRouteImport
       parentRoute: typeof AuthRoute
     }
     '/_auth/settings/virtual-pins': {
@@ -484,6 +503,7 @@ const AuthSettingsRouteWithChildren = AuthSettingsRoute._addFileChildren(
 
 interface AuthRouteChildren {
   AuthAlertsRoute: typeof AuthAlertsRoute
+  AuthAvatarEditorRoute: typeof AuthAvatarEditorRoute
   AuthDataDashboardRoute: typeof AuthDataDashboardRoute
   AuthMedicationsRoute: typeof AuthMedicationsRoute
   AuthNodeGraphRoute: typeof AuthNodeGraphRoute
@@ -496,6 +516,7 @@ interface AuthRouteChildren {
 
 const AuthRouteChildren: AuthRouteChildren = {
   AuthAlertsRoute: AuthAlertsRoute,
+  AuthAvatarEditorRoute: AuthAvatarEditorRoute,
   AuthDataDashboardRoute: AuthDataDashboardRoute,
   AuthMedicationsRoute: AuthMedicationsRoute,
   AuthNodeGraphRoute: AuthNodeGraphRoute,
