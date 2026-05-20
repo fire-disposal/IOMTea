@@ -120,7 +120,7 @@ class PosePainter extends CustomPainter {
     canvas.drawLine(Offset(x1, y1), Offset(x1, y1 + arm), gl);
     canvas.drawLine(Offset(x1, y1), Offset(x1, y1 + arm), ln);
 
-    final label = fallen ? 'FALLEN!' : 'Person ${confidence.toStringAsFixed(2)}';
+    final label = fallen ? 'FALLEN!' : 'Person';
     final tp = TextPainter(
       text: TextSpan(text: label, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w700)),
       textDirection: TextDirection.ltr,

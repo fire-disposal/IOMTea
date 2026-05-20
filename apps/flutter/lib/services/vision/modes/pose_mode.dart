@@ -135,6 +135,9 @@ class PoseMode extends VisionMode {
 
       if (newState == 'lying') {
         person.fallenFrames++;
+        if (person.fallenFrames >= _fallenConfirmFrames) {
+          person.state = 'fallen';
+        }
       } else {
         person.fallenFrames = 0;
       }
