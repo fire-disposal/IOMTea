@@ -182,7 +182,6 @@ class _DebugSimulatorPageState extends State<DebugSimulatorPage> {
       backgroundColor: creamBg,
       appBar: AnimatedGradientAppBar(
         title: '健康事件构建器',
-        leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop()),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 12),

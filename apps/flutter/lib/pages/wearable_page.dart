@@ -92,7 +92,6 @@ class _WearablePageState extends State<WearablePage>
       backgroundColor: creamBg,
       appBar: AnimatedGradientAppBar(
         title: '可穿戴监测',
-        leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop()),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 12),
