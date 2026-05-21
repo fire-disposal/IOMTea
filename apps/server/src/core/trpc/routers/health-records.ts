@@ -1,6 +1,7 @@
 import { TRPCError } from '@trpc/server'
 import { eq, and, sql, inArray } from 'drizzle-orm'
 import { z } from 'zod'
+import type { DbClient } from '../../db'
 import { events, patients, users } from '../../db/schema'
 import { dailyChecklists, streaks, creditTransactions } from '../../db/schema/plan'
 import { calculateCredit, calcNewStreak } from '../../../services/credit-calculator'
@@ -31,8 +32,8 @@ const batchCreateInput = z.object({
 })
 
 type RawRecord = z.infer<typeof healthRecordSchema>
-type DbClient = any
 type EarnedCredit = { moduleKey: string; amount: number; streakDay: number }
+type ExistingRecordRow = { clientRecordId: string }
 
 interface EventInsert {
   patientId: string
@@ -45,7 +46,7 @@ interface EventInsert {
   source: 'manual'
 }
 
-function asFiniteNumber(value: unknown): number | null {
+function toFiniteNumber(value: unknown): number | null {
   if (typeof value === 'number' && Number.isFinite(value)) return value
   if (typeof value === 'string' && value.trim() !== '') {
     const parsed = Number(value)
@@ -63,7 +64,7 @@ function parseRecordedAt(recordedAt: string): Date {
 }
 
 function requireFiniteNumber(record: RawRecord, key: string): number {
-  const n = asFiniteNumber(record.data[key])
+  const n = toFiniteNumber(record.data[key])
   if (n === null) {
     throw new TRPCError({
       code: 'BAD_REQUEST',
@@ -290,7 +291,7 @@ async function findAlreadySyncedRecordIds(
   patientId: string,
   recordIds: string[],
 ): Promise<Set<string>> {
-  const existingRows = await db
+  const existingRows: ExistingRecordRow[] = await db
     .select({
       clientRecordId: sql<string>`tags->>'clientRecordId'`,
     })
@@ -303,7 +304,7 @@ async function findAlreadySyncedRecordIds(
       ),
     )
 
-  return new Set(existingRows.map((row: { clientRecordId: string }) => row.clientRecordId))
+  return new Set(existingRows.map((row) => row.clientRecordId))
 }
 
 function mapFirstEventIdByClientRecordId(

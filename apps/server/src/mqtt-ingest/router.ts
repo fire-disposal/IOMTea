@@ -4,11 +4,22 @@ import { events, patients } from '../core/db/schema'
 import { eq } from 'drizzle-orm'
 import mqtt from 'mqtt'
 
-const USERS_TOPIC_PREFIX = 'users'
+const TOPIC_ROOT_SEGMENT = 'users'
 const PIN_PATTERN = /^\d{4,6}$/
 const METRIC_PATTERN = /^[a-z][a-z0-9_]{1,63}$/
 
-const METRIC_ALIASES: Record<string, string> = {
+const CANONICAL_METRICS = [
+  'heart_rate',
+  'blood_glucose',
+  'spo2',
+  'temperature',
+  'weight',
+  'systolic_bp',
+  'diastolic_bp',
+] as const
+type CanonicalMetric = (typeof CANONICAL_METRICS)[number]
+
+const METRIC_ALIASES: Record<string, CanonicalMetric> = {
   hr: 'heart_rate',
   pulse: 'heart_rate',
   heartrate: 'heart_rate',
@@ -24,7 +35,7 @@ const METRIC_ALIASES: Record<string, string> = {
   diastolic_bp: 'diastolic_bp',
 }
 
-const DEFAULT_UNITS: Record<string, string> = {
+const DEFAULT_UNITS: Record<CanonicalMetric, string> = {
   heart_rate: 'bpm',
   blood_glucose: 'mg/dL',
   spo2: '%',
@@ -34,7 +45,7 @@ const DEFAULT_UNITS: Record<string, string> = {
   diastolic_bp: 'mmHg',
 }
 
-const METRIC_RANGES: Record<string, { min: number; max: number }> = {
+const METRIC_RANGES: Partial<Record<CanonicalMetric, { min: number; max: number }>> = {
   heart_rate: { min: 20, max: 260 },
   blood_glucose: { min: 20, max: 800 },
   spo2: { min: 40, max: 100 },
@@ -42,6 +53,10 @@ const METRIC_RANGES: Record<string, { min: number; max: number }> = {
   weight: { min: 1, max: 400 },
   systolic_bp: { min: 50, max: 280 },
   diastolic_bp: { min: 30, max: 180 },
+}
+
+function isCanonicalMetric(metric: string): metric is CanonicalMetric {
+  return (CANONICAL_METRICS as readonly string[]).includes(metric)
 }
 
 export function normalizeMetric(rawMetric: unknown): string | null {
@@ -53,7 +68,7 @@ export function normalizeMetric(rawMetric: unknown): string | null {
   return metric
 }
 
-function asFiniteNumber(raw: unknown): number | null {
+function toFiniteNumber(raw: unknown): number | null {
   if (typeof raw === 'number' && Number.isFinite(raw)) return raw
   if (typeof raw === 'string' && raw.trim() !== '') {
     const parsed = Number(raw)
@@ -71,11 +86,11 @@ function normalizeRecordedAt(raw: unknown): Date {
 
 function resolveUnit(metric: string, rawUnit: unknown): string | undefined {
   if (typeof rawUnit === 'string' && rawUnit.trim() !== '') return rawUnit.trim()
-  return DEFAULT_UNITS[metric]
+  return isCanonicalMetric(metric) ? DEFAULT_UNITS[metric] : undefined
 }
 
 function isValueInRange(metric: string, value: number): boolean {
-  const range = METRIC_RANGES[metric]
+  const range = isCanonicalMetric(metric) ? METRIC_RANGES[metric] : undefined
   if (!range) return true
   return value >= range.min && value <= range.max
 }
@@ -84,7 +99,7 @@ export function parseHealthPayload(body: Record<string, unknown>) {
   const metric = normalizeMetric(body.metric)
   if (!metric) return null
 
-  const value = asFiniteNumber(body.value)
+  const value = toFiniteNumber(body.value)
   if (value === null) return null
   if (!isValueInRange(metric, value)) return null
 
@@ -109,7 +124,7 @@ function parsePayloadObject(payload: Buffer): Record<string, unknown> | null {
 
 function parseTopic(topic: string): { pin: string; topicSource: string; routeType: string } | null {
   const parts = topic.split('/')
-  if (parts.length < 4 || parts[0] !== USERS_TOPIC_PREFIX) return null
+  if (parts.length < 4 || parts[0] !== TOPIC_ROOT_SEGMENT) return null
 
   const pin = parts[1]
   if (!PIN_PATTERN.test(pin)) return null
