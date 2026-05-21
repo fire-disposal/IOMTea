@@ -110,6 +110,10 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _connect() async {
+    if (_brokerCtrl.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('请输入Broker地址')));
+      return;
+    }
     setState(() { _connecting = true; _status = null; });
     try {
       final prefs = await SharedPreferences.getInstance();
