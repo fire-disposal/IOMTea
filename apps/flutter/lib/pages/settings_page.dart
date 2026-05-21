@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -8,6 +9,7 @@ import '../services/mqtt_models.dart';
 import '../services/mqtt_service.dart';
 import '../services/pin_service.dart';
 import '../theme.dart';
+import 'pin_setup_page.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -211,6 +213,13 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
+  Future<void> _openPinSetup() async {
+    await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => const PinSetupPage()),
+    );
+    if (mounted) setState(() {});
+  }
+
   @override
   void dispose() {
     _brokerCtrl.dispose(); _portCtrl.dispose();
@@ -220,132 +229,183 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AnimatedGradientAppBar(title: '设置'),
-    body: ListView(
-      padding: const EdgeInsets.all(24),
-      children: [
-        Text('PIN 验证', style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 12),
-        Card(
-          color: Colors.white,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.fingerprint, size: 20, color: matchaPrimary),
-                    const SizedBox(width: 8),
-                    Text('当前 PIN', style: TextStyle(color: textSecondary)),
-                    const Spacer(),
-                    Text(PinService.instance.currentPin?.pin ?? '未设置',
-                      style: TextStyle(fontWeight: FontWeight.w600, color: textPrimary)),
-                  ],
-                ),
-                if (PinService.instance.currentPin != null) ...[
-                  const SizedBox(height: 4),
-                  Text('昵称: ${PinService.instance.currentPin!.nickname.isEmpty ? "无" : PinService.instance.currentPin!.nickname}',
-                    style: TextStyle(fontSize: 12, color: textSecondary)),
-                ],
-              ],
+  Widget build(BuildContext context) {
+    final hasPin = PinService.instance.hasPin;
+
+    return Scaffold(
+      appBar: AnimatedGradientAppBar(title: '设置'),
+      body: ListView(
+        padding: const EdgeInsets.all(24),
+        children: [
+          _buildPinCard(hasPin)
+              .animate()
+              .fadeIn(delay: 50.ms, duration: 300.ms)
+              .slideY(begin: 0.05, duration: 300.ms),
+          const SizedBox(height: 28),
+          Text('服务器', style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _serverUrlCtrl,
+            decoration: const InputDecoration(
+              labelText: '服务器地址',
+              hintText: 'http://localhost:3000',
+              border: OutlineInputBorder(),
+              prefixIcon: Icon(Icons.dns_outlined),
             ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        TextField(
-          controller: _serverUrlCtrl,
-          decoration: const InputDecoration(
-            labelText: '服务器地址',
-            hintText: 'http://localhost:3000',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.dns_outlined),
-          ),
-          onChanged: (_) => _saveServerUrl(),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
+            onChanged: (_) => _saveServerUrl(),
+          ).animate().fadeIn(delay: 100.ms, duration: 300.ms),
+          const SizedBox(height: 32),
+          const Divider(),
+          const SizedBox(height: 16),
+          Text('MQTT 设置', style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 12),
+          ...[
+            TextField(controller: _brokerCtrl, decoration: const InputDecoration(labelText: 'Broker 地址', hintText: '192.168.1.100', border: OutlineInputBorder())),
+            const SizedBox(height: 12),
+            TextField(controller: _portCtrl, decoration: const InputDecoration(labelText: '端口', hintText: '1883', border: OutlineInputBorder()), keyboardType: TextInputType.number),
+            const SizedBox(height: 12),
+            TextField(controller: _usernameCtrl, decoration: const InputDecoration(labelText: '用户名 (可选)', border: OutlineInputBorder())),
+            const SizedBox(height: 12),
+            TextField(controller: _passwordCtrl, decoration: const InputDecoration(labelText: '密码 (可选)', border: OutlineInputBorder()), obscureText: true),
+          ].animate().fadeIn(delay: 150.ms, duration: 300.ms).slideY(begin: 0.05, duration: 300.ms),
+          const SizedBox(height: 24),
+          SizedBox(width: double.infinity, child: FilledButton.icon(
+            onPressed: _connecting ? null : _connect,
+            icon: _connecting ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.link),
+            label: Text(_connecting ? '连接中...' : '连接'),
+          )),
+          const SizedBox(height: 10),
+          Row(children: [
             Expanded(
               child: OutlinedButton.icon(
-                onPressed: _showChangePinDialog,
-                icon: const Icon(Icons.lock_reset, size: 18),
-                label: const Text('更换 PIN'),
+                onPressed: _testMqtt,
+                icon: const Icon(Icons.wifi_find, size: 16),
+                label: const Text('测试 MQTT', style: TextStyle(fontSize: 13)),
+                style: OutlinedButton.styleFrom(foregroundColor: infoBlue),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: _verifyPinMqtt,
+                icon: const Icon(Icons.verified_user, size: 16),
+                label: const Text('验证 PIN', style: TextStyle(fontSize: 13)),
                 style: OutlinedButton.styleFrom(foregroundColor: matchaPrimary),
               ),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: OutlinedButton.icon(
+          ]),
+          if (_testResult != null) ...[
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: (_testResult?.contains('成功') ?? false) ? Colors.green.shade50 : Colors.red.shade50,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(_testResult!, style: TextStyle(fontSize: 13, color: (_testResult?.contains('成功') ?? false) ? Colors.green : Colors.red)),
+            ),
+          ],
+          if (_status != null) ...[
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(color: _status == 'connected' ? Colors.green.shade50 : Colors.red.shade50, borderRadius: BorderRadius.circular(8)),
+              child: Text(_status == 'connected' ? '已连接' : _status!, style: TextStyle(fontSize: 13, color: _status == 'connected' ? Colors.green : Colors.red)),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPinCard(bool hasPin) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            hasPin ? successGreen.withValues(alpha: 0.1) : matchaPrimary.withValues(alpha: 0.1),
+            hasPin ? successGreen.withValues(alpha: 0.03) : matchaLight.withValues(alpha: 0.03),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: hasPin ? successGreen.withValues(alpha: 0.3) : matchaPrimary.withValues(alpha: 0.25),
+          width: 1,
+        ),
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Container(
+            width: 40, height: 40,
+            decoration: BoxDecoration(
+              color: hasPin ? successGreen.withValues(alpha: 0.15) : warningOrange.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              hasPin ? Icons.fingerprint : Icons.lock_outline,
+              color: hasPin ? successGreen : warningOrange,
+              size: 22,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(
+                hasPin ? 'PIN 已设置' : '未设置 PIN',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: textPrimary),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                hasPin
+                    ? '当前 PIN: ${PinService.instance.currentPin?.pin ?? ""}'
+                    : '设置后可解锁设备管理与事件上报',
+                style: TextStyle(fontSize: 12, color: textSecondary),
+              ),
+            ]),
+          ),
+          if (hasPin) ...[
+            SizedBox(
+              height: 32,
+              child: TextButton(
                 onPressed: _clearPin,
-                icon: const Icon(Icons.delete_outline, size: 18),
-                label: const Text('清除 PIN'),
-                style: OutlinedButton.styleFrom(foregroundColor: errorRed),
+                style: TextButton.styleFrom(foregroundColor: errorRed, padding: const EdgeInsets.symmetric(horizontal: 8)),
+                child: const Text('清除', style: TextStyle(fontSize: 12)),
+              ),
+            ),
+            const SizedBox(width: 4),
+            SizedBox(
+              height: 32,
+              child: OutlinedButton(
+                onPressed: _showChangePinDialog,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: matchaPrimary,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  side: BorderSide(color: matchaPrimary.withValues(alpha: 0.3)),
+                ),
+                child: const Text('更换', style: TextStyle(fontSize: 12)),
+              ),
+            ),
+          ] else ...[
+            SizedBox(
+              height: 34,
+              child: FilledButton(
+                onPressed: _openPinSetup,
+                style: FilledButton.styleFrom(
+                  backgroundColor: matchaPrimary,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                child: const Text('去设置', style: TextStyle(fontSize: 13)),
               ),
             ),
           ],
-        ),
-        const SizedBox(height: 32),
-        const Divider(),
-        const SizedBox(height: 16),
-        Text('MQTT 设置', style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 12),
-        TextField(controller: _brokerCtrl, decoration: const InputDecoration(labelText: 'Broker 地址', hintText: '192.168.1.100', border: OutlineInputBorder())),
-        const SizedBox(height: 12),
-        TextField(controller: _portCtrl, decoration: const InputDecoration(labelText: '端口', hintText: '1883', border: OutlineInputBorder()), keyboardType: TextInputType.number),
-        const SizedBox(height: 12),
-        TextField(controller: _usernameCtrl, decoration: const InputDecoration(labelText: '用户名 (可选)', border: OutlineInputBorder())),
-        const SizedBox(height: 12),
-        TextField(controller: _passwordCtrl, decoration: const InputDecoration(labelText: '密码 (可选)', border: OutlineInputBorder()), obscureText: true),
-        const SizedBox(height: 24),
-        SizedBox(width: double.infinity, child: FilledButton.icon(
-          onPressed: _connecting ? null : _connect,
-          icon: _connecting ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.link),
-          label: Text(_connecting ? '连接中...' : '连接'),
-        )),
-        const SizedBox(height: 10),
-        Row(children: [
-          Expanded(
-            child: OutlinedButton.icon(
-              onPressed: _testMqtt,
-              icon: const Icon(Icons.wifi_find, size: 16),
-              label: const Text('测试 MQTT', style: TextStyle(fontSize: 13)),
-              style: OutlinedButton.styleFrom(foregroundColor: infoBlue),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: OutlinedButton.icon(
-              onPressed: _verifyPinMqtt,
-              icon: const Icon(Icons.verified_user, size: 16),
-              label: const Text('验证 PIN', style: TextStyle(fontSize: 13)),
-              style: OutlinedButton.styleFrom(foregroundColor: matchaPrimary),
-            ),
-          ),
         ]),
-        if (_testResult != null) ...[
-          const SizedBox(height: 8),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: (_testResult?.contains('成功') ?? false) ? Colors.green.shade50 : Colors.red.shade50,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(_testResult!, style: TextStyle(fontSize: 13, color: (_testResult?.contains('成功') ?? false) ? Colors.green : Colors.red)),
-          ),
-        ],
-        if (_status != null) ...[
-          const SizedBox(height: 8),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: _status == 'connected' ? Colors.green.shade50 : Colors.red.shade50, borderRadius: BorderRadius.circular(8)),
-            child: Text(_status == 'connected' ? '已连接' : _status!, style: TextStyle(fontSize: 13, color: _status == 'connected' ? Colors.green : Colors.red)),
-          ),
-        ],
-      ],
-    ),
-  );
+      ]),
+    );
+  }
 }
