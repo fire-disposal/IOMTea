@@ -29,14 +29,14 @@ describe('enqueueInstruction', () => {
     enqueueInstruction(actor, makeInstruction({ id: 'high', priority: 1 }))
     enqueueInstruction(actor, makeInstruction({ id: 'mid', priority: 5 }))
 
-    expect(actor.instructionQueue.map(i => i.id)).toEqual(['high', 'mid', 'low'])
+    expect(actor.instructionQueue.map((i) => i.id)).toEqual(['high', 'mid', 'low'])
   })
 
   it('appends when all priorities are higher', () => {
     const actor = createActorState('a1', 0, 0, null)
     enqueueInstruction(actor, makeInstruction({ id: 'first', priority: 1 }))
     enqueueInstruction(actor, makeInstruction({ id: 'second', priority: 10 }))
-    expect(actor.instructionQueue.map(i => i.id)).toEqual(['first', 'second'])
+    expect(actor.instructionQueue.map((i) => i.id)).toEqual(['first', 'second'])
   })
 })
 
@@ -64,5 +64,3 @@ describe('processNextInstruction', () => {
     expect(actor.instructionQueue).toHaveLength(1)
   })
 })
-
-

@@ -1,7 +1,4 @@
-import {
-  eventTimeSeriesInputSchema,
-  observationSchema,
-} from '@iomtea/shared-types'
+import { eventTimeSeriesInputSchema, observationSchema } from '@iomtea/shared-types'
 import { and, desc, eq, gte, inArray, lte } from 'drizzle-orm'
 import { z } from 'zod'
 import { events } from '../../db/schema'
@@ -32,24 +29,26 @@ export const dataRouter = router({
       .limit(1000)
 
     return z
-        .array(observationSchema.pick({ recordedAt: true, value: true, unit: true, tags: true }))
-        .parse(
-          rows.map((r) => ({
-            recordedAt: r.recordedAt.getTime(),
-            value: r.value,
-            unit: r.unit,
-            tags: r.tags,
-          })),
-        )
+      .array(observationSchema.pick({ recordedAt: true, value: true, unit: true, tags: true }))
+      .parse(
+        rows.map((r) => ({
+          recordedAt: r.recordedAt.getTime(),
+          value: r.value,
+          unit: r.unit,
+          tags: r.tags,
+        })),
+      )
   }),
 
   timeseriesBatch: protectedProcedure
-    .input(z.object({
-      patientId: z.string().uuid(),
-      metrics: z.array(z.string()).min(1).max(10),
-      from: z.number(),
-      to: z.number().optional(),
-    }))
+    .input(
+      z.object({
+        patientId: z.string().uuid(),
+        metrics: z.array(z.string()).min(1).max(10),
+        from: z.number(),
+        to: z.number().optional(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       const conditions = [
         eq(events.patientId, input.patientId),
@@ -113,5 +112,4 @@ export const dataRouter = router({
           })),
         )
     }),
-
 })

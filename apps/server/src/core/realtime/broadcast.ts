@@ -89,26 +89,47 @@ class BroadcastManager {
 
   unsubscribePatient(patientId: string, ws: WebSocket): void {
     this.patientSubscribers.get(patientId)?.delete(ws)
-    if (this.patientSubscribers.get(patientId)?.size === 0) this.patientSubscribers.delete(patientId)
+    if (this.patientSubscribers.get(patientId)?.size === 0)
+      this.patientSubscribers.delete(patientId)
   }
 
   unsubscribeAll(ws: WebSocket): void {
-    for (const [key, sockets] of this.subscribers) { sockets.delete(ws); if (sockets.size === 0) this.subscribers.delete(key) }
-    for (const [key, sockets] of this.mapSubscribers) { sockets.delete(ws); if (sockets.size === 0) this.mapSubscribers.delete(key) }
-    for (const [key, sockets] of this.patientSubscribers) { sockets.delete(ws); if (sockets.size === 0) this.patientSubscribers.delete(key) }
+    for (const [key, sockets] of this.subscribers) {
+      sockets.delete(ws)
+      if (sockets.size === 0) this.subscribers.delete(key)
+    }
+    for (const [key, sockets] of this.mapSubscribers) {
+      sockets.delete(ws)
+      if (sockets.size === 0) this.mapSubscribers.delete(key)
+    }
+    for (const [key, sockets] of this.patientSubscribers) {
+      sockets.delete(ws)
+      if (sockets.size === 0) this.patientSubscribers.delete(key)
+    }
   }
 
-  broadcastPersonLocation(patientId: string, data: Omit<PersonLocationMessage, 'type' | 'patientId'>): void {
+  broadcastPersonLocation(
+    patientId: string,
+    data: Omit<PersonLocationMessage, 'type' | 'patientId'>,
+  ): void {
     const message: PersonLocationMessage = { type: 'person_location', patientId, ...data }
     this._sendToPatient(patientId, message)
   }
 
   broadcastVitals(patientId: string, metrics: VitalsUpdateMessage['metrics']): void {
-    const message: VitalsUpdateMessage = { type: 'vitals_update', patientId, metrics, timestamp: Date.now() }
+    const message: VitalsUpdateMessage = {
+      type: 'vitals_update',
+      patientId,
+      metrics,
+      timestamp: Date.now(),
+    }
     this._sendToPatient(patientId, message)
   }
 
-  private _sendToPatient(patientId: string, message: PersonLocationMessage | VitalsUpdateMessage): void {
+  private _sendToPatient(
+    patientId: string,
+    message: PersonLocationMessage | VitalsUpdateMessage,
+  ): void {
     const sockets = this.patientSubscribers.get(patientId)
     if (!sockets || sockets.size === 0) return
     const data = JSON.stringify(message)
@@ -128,7 +149,15 @@ class BroadcastManager {
     const sockets = this.subscribers.get(wardId)
     if (!sockets || sockets.size === 0) return
 
-    const message: SimServerMessage = { type: 'tick', wardId, simulatedTime, timezone, hourOfDay, events, entityStates }
+    const message: SimServerMessage = {
+      type: 'tick',
+      wardId,
+      simulatedTime,
+      timezone,
+      hourOfDay,
+      events,
+      entityStates,
+    }
     const data = JSON.stringify(message)
 
     for (const ws of sockets) {

@@ -1,19 +1,30 @@
 import { z } from 'zod'
 import { protectedProcedure, router } from '../../core/trpc/index'
 import { requirePermission } from '../../core/trpc/middleware/rbac'
-import { startEngine, stopEngine, setSpeed, getEngineStatus, listEngines, injectScenario } from '../engine'
+import {
+  startEngine,
+  stopEngine,
+  setSpeed,
+  getEngineStatus,
+  listEngines,
+  injectScenario,
+} from '../engine'
 import { SCENARIO_TYPES } from '../types'
 
 export const twinRouter = router({
   engine: router({
     pause: protectedProcedure
-      .use(requirePermission('twin:manage')).input(z.object({ patientId: z.string().uuid() })).mutation(async ({ ctx, input }) => {
+      .use(requirePermission('twin:manage'))
+      .input(z.object({ patientId: z.string().uuid() }))
+      .mutation(async ({ ctx, input }) => {
         stopEngine(input.patientId)
         return { success: true }
       }),
 
     resume: protectedProcedure
-      .use(requirePermission('twin:manage')).input(z.object({ patientId: z.string().uuid() })).mutation(async ({ ctx, input }) => {
+      .use(requirePermission('twin:manage'))
+      .input(z.object({ patientId: z.string().uuid() }))
+      .mutation(async ({ ctx, input }) => {
         await startEngine(ctx.db as any, input.patientId)
         return { success: true }
       }),
@@ -31,7 +42,9 @@ export const twinRouter = router({
       .input(z.object({ patientId: z.string().uuid().optional() }))
       .query(async ({ ctx, input }) => {
         if (input.patientId) return getEngineStatus(input.patientId) ?? null
-        return listEngines().map((e) => getEngineStatus(e.patientId)).filter(Boolean)
+        return listEngines()
+          .map((e) => getEngineStatus(e.patientId))
+          .filter(Boolean)
       }),
 
     injectScenario: protectedProcedure

@@ -34,7 +34,12 @@ export interface ActorState {
   pathProgress: number
 }
 
-export function createActorState(entityId: string, x: number, y: number, roomId: string | null): ActorState {
+export function createActorState(
+  entityId: string,
+  x: number,
+  y: number,
+  roomId: string | null,
+): ActorState {
   return {
     entityId,
     tileX: x,

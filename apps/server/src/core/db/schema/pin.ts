@@ -3,7 +3,9 @@ import { users } from '../schema'
 
 export const usersPin = pgTable('users_pin', {
   pin: varchar('pin', { length: 6 }).primaryKey(),
-  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
   label: varchar('label', { length: 64 }).default(''),
   nickname: varchar('nickname', { length: 32 }).default(''),
   thingId: uuid('thing_id'),

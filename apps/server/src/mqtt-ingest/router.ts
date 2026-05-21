@@ -61,7 +61,10 @@ function isCanonicalMetric(metric: string): metric is CanonicalMetric {
 
 export function normalizeMetric(rawMetric: unknown): string | null {
   if (typeof rawMetric !== 'string') return null
-  const normalized = rawMetric.trim().toLowerCase().replace(/[\s-]+/g, '_')
+  const normalized = rawMetric
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, '_')
   if (!normalized) return null
   const metric = METRIC_ALIASES[normalized] ?? normalized
   if (!METRIC_PATTERN.test(metric)) return null
@@ -162,7 +165,12 @@ function buildEventTags(
   return tags
 }
 
-async function handleHealthEvent(pin: string, topicSource: string, routeType: string, body: Record<string, unknown>): Promise<void> {
+async function handleHealthEvent(
+  pin: string,
+  topicSource: string,
+  routeType: string,
+  body: Record<string, unknown>,
+): Promise<void> {
   const normalized = parseHealthPayload(body)
   if (!normalized) return
 
@@ -172,12 +180,7 @@ async function handleHealthEvent(pin: string, topicSource: string, routeType: st
   const patientId = await resolvePatientId(pinRecord.userId)
   if (!patientId) return
 
-  const tags = buildEventTags(
-    topicSource,
-    routeType,
-    normalized.payloadSource,
-    pinRecord.thingId,
-  )
+  const tags = buildEventTags(topicSource, routeType, normalized.payloadSource, pinRecord.thingId)
 
   await db.insert(events).values({
     patientId,
@@ -198,7 +201,7 @@ async function handleAdminMessage(
   client: mqtt.MqttClient,
   pin: string,
   action: string,
-  body: Record<string, unknown>
+  body: Record<string, unknown>,
 ): Promise<void> {
   if (action === 'verify') {
     const [record] = await db.select().from(usersPin).where(eq(usersPin.pin, pin)).limit(1)
@@ -207,7 +210,7 @@ async function handleAdminMessage(
       valid: !!record,
       userId: record?.userId ?? null,
       nickname: record?.nickname ?? '',
-      requestId: body.requestId as string ?? '',
+      requestId: (body.requestId as string) ?? '',
     }
     client.publish(
       `iomtea/admin/pin/verify/${pin}/result`,
@@ -215,7 +218,7 @@ async function handleAdminMessage(
       { qos: 1 },
       (err) => {
         if (err) console.error('[mqtt-admin] publish error:', err)
-      }
+      },
     )
   }
 }

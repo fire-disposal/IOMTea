@@ -85,14 +85,16 @@ function mapRecordToEvents(record: RawRecord, patientId: string): EventInsert[] 
 
   switch (record.type) {
     case 'blood_glucose':
-      return [{
-        ...base,
-        kind: 'observation',
-        metric: 'glucose',
-        value: requireFiniteNumber(record, 'value_mgdl'),
-        unit: 'mg/dL',
-        tags: baseTags,
-      }]
+      return [
+        {
+          ...base,
+          kind: 'observation',
+          metric: 'glucose',
+          value: requireFiniteNumber(record, 'value_mgdl'),
+          unit: 'mg/dL',
+          tags: baseTags,
+        },
+      ]
     case 'blood_pressure':
       return [
         {
@@ -113,59 +115,71 @@ function mapRecordToEvents(record: RawRecord, patientId: string): EventInsert[] 
         },
       ]
     case 'weight':
-      return [{
-        ...base,
-        kind: 'observation',
-        metric: 'weight',
-        value: requireFiniteNumber(record, 'weight_kg'),
-        unit: 'kg',
-        tags: baseTags,
-      }]
-    case 'heart_rate':
-      return [{
-        ...base,
-        kind: 'observation',
-        metric: 'heart_rate',
-        value: requireFiniteNumber(record, 'bpm'),
-        unit: 'bpm',
-        tags: baseTags,
-      }]
-    case 'temperature':
-      return [{
-        ...base,
-        kind: 'observation',
-        metric: 'temperature',
-        value: requireFiniteNumber(record, 'celsius'),
-        unit: '°C',
-        tags: baseTags,
-      }]
-    case 'spo2':
-      return [{
-        ...base,
-        kind: 'observation',
-        metric: 'spo2',
-        value: requireFiniteNumber(record, 'percentage'),
-        unit: '%',
-        tags: baseTags,
-      }]
-    case 'medication':
-      return [{
-        ...base,
-        kind: 'behavior',
-        metric: 'medication',
-        tags: {
-          ...baseTags,
-          drug: record.data.drug,
-          action: record.data.action,
+      return [
+        {
+          ...base,
+          kind: 'observation',
+          metric: 'weight',
+          value: requireFiniteNumber(record, 'weight_kg'),
+          unit: 'kg',
+          tags: baseTags,
         },
-      }]
+      ]
+    case 'heart_rate':
+      return [
+        {
+          ...base,
+          kind: 'observation',
+          metric: 'heart_rate',
+          value: requireFiniteNumber(record, 'bpm'),
+          unit: 'bpm',
+          tags: baseTags,
+        },
+      ]
+    case 'temperature':
+      return [
+        {
+          ...base,
+          kind: 'observation',
+          metric: 'temperature',
+          value: requireFiniteNumber(record, 'celsius'),
+          unit: '°C',
+          tags: baseTags,
+        },
+      ]
+    case 'spo2':
+      return [
+        {
+          ...base,
+          kind: 'observation',
+          metric: 'spo2',
+          value: requireFiniteNumber(record, 'percentage'),
+          unit: '%',
+          tags: baseTags,
+        },
+      ]
+    case 'medication':
+      return [
+        {
+          ...base,
+          kind: 'behavior',
+          metric: 'medication',
+          tags: {
+            ...baseTags,
+            drug: record.data.drug,
+            action: record.data.action,
+          },
+        },
+      ]
     case 'period':
-      return [{
-        ...base,
-        kind: 'behavior',
-        metric: 'period',
-        tags: { ...baseTags, ...(record.data as Record<string, unknown>) },
-      }]
+      return [
+        {
+          ...base,
+          kind: 'behavior',
+          metric: 'period',
+          tags: { ...baseTags, ...(record.data as Record<string, unknown>) },
+        },
+      ]
   }
 }
 
@@ -347,13 +361,7 @@ async function markChecklistDoneAndGrantCredits(
     .set({ status: 'done', completedAt: new Date(), recordId: eventId })
     .where(eq(dailyChecklists.id, checklist.id))
 
-  const creditResult = await processCredits(
-    db,
-    userId,
-    record,
-    checklist.id,
-    eventId,
-  )
+  const creditResult = await processCredits(db, userId, record, checklist.id, eventId)
   if (!creditResult) return null
 
   return {
@@ -364,60 +372,56 @@ async function markChecklistDoneAndGrantCredits(
 }
 
 export const healthRecordsRouter = router({
-  batchCreate: protectedProcedure
-    .input(batchCreateInput)
-    .mutation(async ({ ctx, input }) => {
-      const userId = ctx.userId!
-      const patientId = await resolvePatientIdForInput(ctx.db, userId, input.patientId)
+  batchCreate: protectedProcedure.input(batchCreateInput).mutation(async ({ ctx, input }) => {
+    const userId = ctx.userId!
+    const patientId = await resolvePatientIdForInput(ctx.db, userId, input.patientId)
 
-      if (input.records.length === 0) {
-        return { syncedIds: [], earnedCredits: [] }
-      }
+    if (input.records.length === 0) {
+      return { syncedIds: [], earnedCredits: [] }
+    }
 
-      const dedupedRecords = dedupeRecordsById(input.records)
-      const dedupedIds = dedupedRecords.map((r) => r.id)
+    const dedupedRecords = dedupeRecordsById(input.records)
+    const dedupedIds = dedupedRecords.map((r) => r.id)
 
-      const existingIds = await findAlreadySyncedRecordIds(ctx.db, patientId, dedupedIds)
-      const unsyncedRecords = dedupedRecords.filter((record) => !existingIds.has(record.id))
+    const existingIds = await findAlreadySyncedRecordIds(ctx.db, patientId, dedupedIds)
+    const unsyncedRecords = dedupedRecords.filter((record) => !existingIds.has(record.id))
 
-      if (unsyncedRecords.length === 0) {
-        return {
-          syncedIds: dedupedIds,
-          earnedCredits: [],
-        }
-      }
-
-      const allEvents = unsyncedRecords.flatMap((record) =>
-        mapRecordToEvents(record, patientId),
-      )
-
-      const insertedEvents = await ctx.db
-        .insert(events)
-        .values(allEvents)
-        .returning({ id: events.id, tags: events.tags })
-
-      const firstEventIdByRecordId = mapFirstEventIdByClientRecordId(insertedEvents)
-
-      const earnedCredits: EarnedCredit[] = []
-      const todayStr = new Date().toISOString().slice(0, 10)
-
-      for (const record of unsyncedRecords) {
-        const eventId = firstEventIdByRecordId.get(record.id)
-        if (!eventId) continue
-
-        const earnedCredit = await markChecklistDoneAndGrantCredits(
-          ctx.db,
-          userId,
-          record,
-          eventId,
-          todayStr,
-        )
-        if (earnedCredit) earnedCredits.push(earnedCredit)
-      }
-
+    if (unsyncedRecords.length === 0) {
       return {
         syncedIds: dedupedIds,
-        earnedCredits,
+        earnedCredits: [],
       }
-    }),
+    }
+
+    const allEvents = unsyncedRecords.flatMap((record) => mapRecordToEvents(record, patientId))
+
+    const insertedEvents = await ctx.db
+      .insert(events)
+      .values(allEvents)
+      .returning({ id: events.id, tags: events.tags })
+
+    const firstEventIdByRecordId = mapFirstEventIdByClientRecordId(insertedEvents)
+
+    const earnedCredits: EarnedCredit[] = []
+    const todayStr = new Date().toISOString().slice(0, 10)
+
+    for (const record of unsyncedRecords) {
+      const eventId = firstEventIdByRecordId.get(record.id)
+      if (!eventId) continue
+
+      const earnedCredit = await markChecklistDoneAndGrantCredits(
+        ctx.db,
+        userId,
+        record,
+        eventId,
+        todayStr,
+      )
+      if (earnedCredit) earnedCredits.push(earnedCredit)
+    }
+
+    return {
+      syncedIds: dedupedIds,
+      earnedCredits,
+    }
+  }),
 })

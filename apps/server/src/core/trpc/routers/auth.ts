@@ -1,5 +1,10 @@
 import { createHash } from 'node:crypto'
-import { loginSchema, registerSchema, tokenPairSchema, wechatLoginSchema } from '@iomtea/shared-types'
+import {
+  loginSchema,
+  registerSchema,
+  tokenPairSchema,
+  wechatLoginSchema,
+} from '@iomtea/shared-types'
 import { TRPCError } from '@trpc/server'
 import { eq } from 'drizzle-orm'
 import { z } from 'zod'
@@ -109,7 +114,11 @@ export const authRouter = router({
     let displayName: string
 
     if (existing.length > 0) {
-      const user = await ctx.db.select().from(users).where(eq(users.id, existing[0].userId)).limit(1)
+      const user = await ctx.db
+        .select()
+        .from(users)
+        .where(eq(users.id, existing[0].userId))
+        .limit(1)
       if (user.length === 0) {
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Orphan wechat account' })
       }
@@ -132,11 +141,14 @@ export const authRouter = router({
         unionId: unionid || null,
       })
 
-      await ctx.db.insert(patients).values({
-        userId: newUser.id,
-        name: `微信用户${openid.slice(-6)}`,
-        status: 'active',
-      }).catch(() => {})
+      await ctx.db
+        .insert(patients)
+        .values({
+          userId: newUser.id,
+          name: `微信用户${openid.slice(-6)}`,
+          status: 'active',
+        })
+        .catch(() => {})
 
       userId = newUser.id
       role = newUser.role
