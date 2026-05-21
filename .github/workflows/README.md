@@ -61,9 +61,9 @@ cat ~/.ssh/github-actions
 
 每次 push / PR 到主分支时自动运行：
 
-- **TypeCheck** — 对所有 5 个包并行运行 `tsc --noEmit`
+- **TypeCheck** — 对所有 4 个包并行运行 `tsc --noEmit`
 - **Lint & Format** — `biome check` + `biome format --check`
-- **Test** — 运行 `vitest`（shared-types, shared-mii, server）
+- **Test** — 运行 `vitest`（shared-types, server）
 
 ### `deploy-web.yml` — 前端部署
 

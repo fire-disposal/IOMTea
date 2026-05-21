@@ -1,4 +1,5 @@
 export * from './constants'
 export * from './schemas'
 export * from './ema'
+export * from './avatar-spec'
 export { MiiParamsSchema, DEFAULT_MII_PARAMS, type MiiParams, type RenderStrategy } from './mii-params'

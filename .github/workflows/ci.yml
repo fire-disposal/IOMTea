@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        package: [shared-types, shared-mii, web, server, miniapp]
+        package: [shared-types, web, server, miniapp]
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -48,7 +48,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        package: [shared-types, shared-mii, server]
+        package: [shared-types, server]
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4

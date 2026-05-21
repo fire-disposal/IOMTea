@@ -1,274 +1,325 @@
-import { useState, useCallback, useRef } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import {
-  Box, Button, Chip, Group, Paper, Select, Stack, Text, TextInput,
-  Title, Tooltip, ActionIcon, Divider, CopyButton,
+  ActionIcon,
+  Badge,
+  Box,
+  Button,
+  Group,
+  NumberInput,
+  Paper,
+  Select,
+  Slider,
+  Stack,
+  Text,
+  TextInput,
+  Title,
+  CopyButton,
+  SegmentedControl,
 } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
-import NiceAvatar, { genConfig } from 'react-nice-avatar'
-import type { AvatarFullConfig } from 'react-nice-avatar'
 import { toPng } from 'html-to-image'
-
-const SEX_OPTIONS = [
-  { value: 'man', label: '男' },
-  { value: 'woman', label: '女' },
-]
-const HAIR_STYLES_MAN = [
-  { value: 'normal', label: '短发' },
-  { value: 'thick', label: '浓密' },
-  { value: 'mohawk', label: '莫西干' },
-]
-const HAIR_STYLES_WOMAN = [
-  { value: 'normal', label: '中长发' },
-  { value: 'womanLong', label: '长发' },
-  { value: 'womanShort', label: '短发' },
-]
-const HAIR_COLORS = [
-  { value: '#000', label: '黑色' },
-  { value: '#77311D', label: '棕色' },
-  { value: '#FC909F', label: '粉色' },
-  { value: '#D2EFF3', label: '浅蓝' },
-  { value: '#506AF4', label: '蓝色' },
-  { value: '#F48150', label: '橙色' },
-  { value: '#fff', label: '白色' },
-]
-const EYE_STYLES = [
-  { value: 'circle', label: '圆眼' },
-  { value: 'oval', label: '椭圆' },
-  { value: 'smile', label: '笑眼' },
-]
-const NOSE_STYLES = [
-  { value: 'short', label: '短鼻' },
-  { value: 'long', label: '长鼻' },
-  { value: 'round', label: '圆鼻' },
-]
-const MOUTH_STYLES = [
-  { value: 'laugh', label: '大笑' },
-  { value: 'smile', label: '微笑' },
-  { value: 'peace', label: '平和' },
-]
-const GLASSES_STYLES = [
-  { value: 'none', label: '无' },
-  { value: 'round', label: '圆框' },
-  { value: 'square', label: '方框' },
-]
-const HAT_STYLES = [
-  { value: 'none', label: '无' },
-  { value: 'beanie', label: '毛线帽' },
-  { value: 'turban', label: '头巾' },
-]
-const SHIRT_STYLES = [
-  { value: 'hoody', label: '卫衣' },
-  { value: 'short', label: '短袖' },
-  { value: 'polo', label: 'POLO' },
-]
-const SHIRT_COLORS = [
-  { value: '#9287FF', label: '紫色' },
-  { value: '#6BD9E9', label: '青色' },
-  { value: '#FC909F', label: '粉色' },
-  { value: '#F4D150', label: '黄色' },
-  { value: '#77311D', label: '棕色' },
-]
-const BG_COLORS = [
-  { value: '#E0DDFF', label: '淡紫' },
-  { value: '#D2EFF3', label: '淡蓝' },
-  { value: '#FFEDEF', label: '淡粉' },
-  { value: '#FFEBA4', label: '淡黄' },
-  { value: '#9287FF', label: '紫色' },
-  { value: '#6BD9E9', label: '青色' },
-  { value: '#F48150', label: '橙色' },
-  { value: '#74D153', label: '绿色' },
-]
-const EAR_SIZES = [
-  { value: 'small', label: '小耳' },
-  { value: 'big', label: '大耳' },
-]
-const FACE_COLORS = [
-  { value: '#F9C9B6', label: '白皙' },
-  { value: '#AC6651', label: '小麦' },
-]
-
-export function getHairOptions(sex: string) {
-  return sex === 'man' ? HAIR_STYLES_MAN : HAIR_STYLES_WOMAN
-}
+import { IconArrowBackUp, IconArrowForwardUp } from '@tabler/icons-react'
+import {
+  AVATAR_EDITOR_FIELDS,
+  AvatarSpecSchema,
+  DEFAULT_AVATAR_SPEC,
+  migrateMiiParamsToAvatarSpec,
+  parseAvatarSpec,
+  type AvatarSpec,
+  type MiiParams,
+} from '@iomtea/shared-types'
+import { randomAvatarSpec, renderAvatarSvg } from '@iomtea/avatar-core'
 
 export interface MiiEditorProps {
-  initialConfig?: Partial<AvatarFullConfig>
+  initialSpec?: AvatarSpec | MiiParams
   size?: number
-  onChange?: (config: Required<AvatarFullConfig>) => void
+  onChange?: (spec: AvatarSpec) => void
 }
 
-export function MiiEditor({ initialConfig, size = 280, onChange }: MiiEditorProps) {
-  const [config, setConfig] = useState<Required<AvatarFullConfig>>(
-    () => genConfig(initialConfig ?? {}) as Required<AvatarFullConfig>,
-  )
-  const [seed, setSeed] = useState('')
+const PRESETS: Array<{ label: string; value: string; spec: AvatarSpec }> = [
+  { label: '默认', value: 'default', spec: DEFAULT_AVATAR_SPEC },
+  {
+    label: '学院风',
+    value: 'school',
+    spec: {
+      ...DEFAULT_AVATAR_SPEC,
+      face: { ...DEFAULT_AVATAR_SPEC.face, shape: 'round', skinTone: 1 },
+      hair: { style: 'short', color: 2 },
+      accessory: { glasses: 'round', hat: 'none' },
+      palette: { background: 2, clothing: 6 },
+      theme: 'soft',
+    },
+  },
+  {
+    label: '活力风',
+    value: 'active',
+    spec: {
+      ...DEFAULT_AVATAR_SPEC,
+      face: { ...DEFAULT_AVATAR_SPEC.face, shape: 'oval', skinTone: 3 },
+      eyes: { ...DEFAULT_AVATAR_SPEC.eyes, style: 'smile', size: 1.1 },
+      mouth: { ...DEFAULT_AVATAR_SPEC.mouth, style: 'laugh', openness: 0.7 },
+      hair: { style: 'curly', color: 5 },
+      palette: { background: 4, clothing: 1 },
+    },
+  },
+]
+
+const getValue = (input: AvatarSpec, path: string): unknown => {
+  return path.split('.').reduce<unknown>((acc, key) => {
+    if (acc == null || typeof acc !== 'object') return undefined
+    return (acc as Record<string, unknown>)[key]
+  }, input)
+}
+
+const setValue = (input: AvatarSpec, path: string, value: unknown): AvatarSpec => {
+  const keys = path.split('.')
+  const output: Record<string, unknown> = structuredClone(input) as Record<string, unknown>
+  let cursor: Record<string, unknown> = output
+
+  for (let i = 0; i < keys.length - 1; i += 1) {
+    const next = cursor[keys[i]]
+    if (!next || typeof next !== 'object') {
+      cursor[keys[i]] = {}
+    }
+    cursor = cursor[keys[i]] as Record<string, unknown>
+  }
+
+  cursor[keys[keys.length - 1]] = value
+  return output as AvatarSpec
+}
+
+const normalizeFieldValue = (raw: string | null): string | number | boolean => {
+  if (raw == null) return ''
+  if (raw === '1') return true
+  if (raw === '0') return false
+  const asNumber = Number(raw)
+  return Number.isNaN(asNumber) ? raw : asNumber
+}
+
+export function MiiEditor({ initialSpec, size = 280, onChange }: MiiEditorProps) {
+  const initial = useMemo(() => {
+    if (!initialSpec) return DEFAULT_AVATAR_SPEC
+    return parseAvatarSpec(initialSpec)
+  }, [initialSpec])
+
+  const [spec, setSpec] = useState<AvatarSpec>(initial)
+  const [history, setHistory] = useState<AvatarSpec[]>([])
+  const [future, setFuture] = useState<AvatarSpec[]>([])
+  const [seedInput, setSeedInput] = useState('')
+  const [preset, setPreset] = useState('default')
   const previewRef = useRef<HTMLDivElement>(null)
 
-  const update = useCallback((patch: Partial<AvatarFullConfig>) => {
-    setConfig(prev => {
-      const next = { ...prev, ...patch }
+  const validation = AvatarSpecSchema.safeParse(spec)
+
+  const applySpec = useCallback((next: AvatarSpec, trackHistory = true) => {
+    setSpec((prev) => {
+      if (trackHistory) {
+        setHistory((h) => [...h.slice(-29), prev])
+        setFuture([])
+      }
       onChange?.(next)
       return next
     })
   }, [onChange])
 
-  const handleRandomize = useCallback(() => {
-    const newConfig = genConfig() as Required<AvatarFullConfig>
-    setConfig(newConfig)
-    onChange?.(newConfig)
-    setSeed('')
-  }, [onChange])
+  const undo = useCallback(() => {
+    setHistory((h) => {
+      if (h.length === 0) return h
+      const prev = h[h.length - 1]
+      setFuture((f) => [spec, ...f.slice(0, 29)])
+      setSpec(prev)
+      onChange?.(prev)
+      return h.slice(0, -1)
+    })
+  }, [onChange, spec])
 
-  const handleSeed = useCallback((s: string) => {
-    setSeed(s)
-    if (s.trim()) {
-      const newConfig = genConfig(s.trim()) as Required<AvatarFullConfig>
-      setConfig(newConfig)
-      onChange?.(newConfig)
+  const redo = useCallback(() => {
+    setFuture((f) => {
+      if (f.length === 0) return f
+      const next = f[0]
+      setHistory((h) => [...h.slice(-29), spec])
+      setSpec(next)
+      onChange?.(next)
+      return f.slice(1)
+    })
+  }, [onChange, spec])
+
+  const updateField = useCallback((path: string, value: unknown) => {
+    const next = setValue(spec, path, value)
+    const parsed = AvatarSpecSchema.safeParse(next)
+    if (!parsed.success) {
+      notifications.show({ title: '参数无效', message: parsed.error.issues[0]?.message ?? '未知错误', color: 'red' })
+      return
     }
-  }, [onChange])
+    applySpec(parsed.data)
+  }, [applySpec, spec])
 
-  const handleExportPng = useCallback(async () => {
+  const svg = useMemo(() => renderAvatarSvg(spec, { size }), [size, spec])
+  const json = useMemo(() => JSON.stringify(spec, null, 2), [spec])
+
+  const exportSvg = useCallback(() => {
+    const blob = new Blob([renderAvatarSvg(spec, { includeXmlHeader: true })], { type: 'image/svg+xml' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `avatar-${Date.now()}.svg`
+    a.click()
+    URL.revokeObjectURL(url)
+  }, [spec])
+
+  const exportPng = useCallback(async () => {
     if (!previewRef.current) return
-    try {
-      const dataUrl = await toPng(previewRef.current, { pixelRatio: 2, quality: 0.95 })
-      const a = document.createElement('a')
-      a.href = dataUrl
-      a.download = `avatar-${Date.now()}.png`
-      a.click()
-      notifications.show({ title: '导出成功', message: 'PNG 已下载', color: 'green' })
-    } catch {
-      notifications.show({ title: '导出失败', message: '', color: 'red' })
-    }
+    const dataUrl = await toPng(previewRef.current, { pixelRatio: 2 })
+    const a = document.createElement('a')
+    a.href = dataUrl
+    a.download = `avatar-${Date.now()}.png`
+    a.click()
   }, [])
 
-  const configJson = JSON.stringify(config, null, 2)
+  const applySeed = useCallback(() => {
+    const next = randomAvatarSpec(seedInput.trim() || Date.now())
+    applySpec(next)
+  }, [applySpec, seedInput])
 
-  const chipGroup = (
-    label: string,
-    options: { value: string; label: string }[],
-    current: string,
-    onSelect: (v: string) => void,
-  ) => (
-    <Box mb="xs">
-      <Text size="xs" c="dimmed" mb={4}>{label}</Text>
-      <Chip.Group value={current} onChange={(v) => v && onSelect(v as string)}>
-        <Group gap={4}>
-          {options.map(opt => (
-            <Chip key={opt.value} value={opt.value} size="xs" variant="light">
-              {opt.label}
-            </Chip>
-          ))}
-        </Group>
-      </Chip.Group>
-    </Box>
-  )
+  const applyPreset = useCallback((value: string) => {
+    setPreset(value)
+    const found = PRESETS.find((item) => item.value === value)
+    if (found) applySpec(found.spec)
+  }, [applySpec])
 
-  const colorGroup = (
-    label: string,
-    options: { value: string; label: string }[],
-    current: string,
-    onSelect: (v: string) => void,
-  ) => (
-    <Box mb="xs">
-      <Text size="xs" c="dimmed" mb={4}>{label}</Text>
-      <Group gap={4}>
-        {options.map(opt => (
-          <Tooltip key={opt.value} label={opt.label}>
-            <Box
-              onClick={() => onSelect(opt.value)}
-              style={{
-                width: 26, height: 26, borderRadius: '50%',
-                background: opt.value,
-                border: current === opt.value ? '3px solid var(--mantine-color-blue-6)' : '2px solid var(--mantine-color-gray-4)',
-                cursor: 'pointer', boxShadow: current === opt.value ? '0 0 6px rgba(0,0,0,0.2)' : 'none',
-              }}
-            />
-          </Tooltip>
-        ))}
-      </Group>
-    </Box>
-  )
+  const resetFromV1 = useCallback(() => {
+    applySpec(migrateMiiParamsToAvatarSpec())
+  }, [applySpec])
+
+  const sections = useMemo(() => {
+    const map = new Map<string, typeof AVATAR_EDITOR_FIELDS>()
+    for (const field of AVATAR_EDITOR_FIELDS) {
+      const group = map.get(field.section) ?? []
+      group.push(field)
+      map.set(field.section, group)
+    }
+    return Array.from(map.entries())
+  }, [])
 
   return (
     <Paper p="xl" radius="md" withBorder>
-      <Title order={3} mb="lg">捏脸编辑器</Title>
+      <Title order={3}>Avatar Spec v2 编辑器</Title>
+      <Text size="sm" c="dimmed" mb="md">SVG-based 前脸渲染 + schema-driven 控件</Text>
 
-      <Group align="flex-start" gap="xl" wrap="wrap">
-        {/* Preview */}
-        <Stack align="center" gap="sm" style={{ minWidth: 280 }}>
-          <Box
-            ref={previewRef}
-            style={{ width: size, height: size, borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.12)' }}
-          >
-            <NiceAvatar style={{ width: size, height: size }} shape="circle" {...config} />
-          </Box>
+      <Group align="flex-start" wrap="wrap" gap="lg">
+        <Stack gap="sm" style={{ minWidth: 300, flex: '0 0 320px' }}>
+          <Paper withBorder p="xs" radius="md" ref={previewRef} style={{ width: size, height: size }}>
+            <Box dangerouslySetInnerHTML={{ __html: svg }} />
+          </Paper>
 
-          <Group gap={4} mt="xs">
-            <Button size="xs" variant="light" onClick={handleRandomize}>随机生成</Button>
-            <Button size="xs" variant="light" onClick={handleExportPng}>导出 PNG</Button>
-            <CopyButton value={configJson}>
-              {({ copied, copy }) => (
-                <Button size="xs" variant="light" color={copied ? 'teal' : 'gray'} onClick={copy}>
-                  {copied ? '已复制' : '复制 JSON'}
-                </Button>
-              )}
-            </CopyButton>
+          <Group gap={6}>
+            <Button size="xs" variant="light" onClick={() => applySpec(randomAvatarSpec())}>随机</Button>
+            <Button size="xs" variant="light" onClick={applySeed}>按种子</Button>
+            <Button size="xs" variant="light" onClick={exportSvg}>导出 SVG</Button>
+            <Button size="xs" variant="light" onClick={() => void exportPng()}>导出 PNG</Button>
+          </Group>
+
+          <Group gap={6}>
+            <ActionIcon onClick={undo} disabled={history.length === 0} variant="light" aria-label="undo">
+              <IconArrowBackUp size={16} />
+            </ActionIcon>
+            <ActionIcon onClick={redo} disabled={future.length === 0} variant="light" aria-label="redo">
+              <IconArrowForwardUp size={16} />
+            </ActionIcon>
+            <Button size="xs" variant="subtle" onClick={resetFromV1}>迁移 v1 默认值</Button>
           </Group>
 
           <TextInput
-            placeholder="输入种子字符串 (如用户邮箱)"
-            value={seed}
-            onChange={e => handleSeed(e.currentTarget.value)}
             size="xs"
-            w="100%"
-            styles={{ input: { textAlign: 'center' } }}
+            value={seedInput}
+            onChange={(event) => setSeedInput(event.currentTarget.value)}
+            placeholder="输入 seed 后点击“按种子”"
           />
+
+          <SegmentedControl
+            fullWidth
+            size="xs"
+            value={preset}
+            onChange={applyPreset}
+            data={PRESETS.map((item) => ({ label: item.label, value: item.value }))}
+          />
+
+          <CopyButton value={json}>
+            {({ copied, copy }) => (
+              <Button size="xs" variant="light" color={copied ? 'teal' : 'gray'} onClick={copy}>
+                {copied ? 'JSON 已复制' : '复制 JSON'}
+              </Button>
+            )}
+          </CopyButton>
+
+          <Paper withBorder p="xs" style={{ maxHeight: 230, overflow: 'auto', background: '#f8f9fa' }}>
+            <Text component="pre" size="xs" style={{ margin: 0 }}>{json}</Text>
+          </Paper>
         </Stack>
 
-        <Divider orientation="vertical" visibleFrom="sm" />
+        <Stack style={{ minWidth: 340, flex: 1 }} gap="md">
+          <Group justify="space-between">
+            <Badge color={validation.success ? 'green' : 'red'} variant="light">
+              {validation.success ? '参数合法' : '参数校验失败'}
+            </Badge>
+            {!validation.success && (
+              <Text c="red" size="xs">{validation.error.issues[0]?.message}</Text>
+            )}
+          </Group>
 
-        {/* Controls */}
-        <Stack gap="md" style={{ flex: 1, minWidth: 280 }}>
-          {/* Gender */}
-          {chipGroup('性别', SEX_OPTIONS, config.sex, v => update({ sex: v as 'man' | 'woman' }))}
+          {sections.map(([name, fields]) => (
+            <Paper key={name} withBorder p="sm" radius="md">
+              <Text fw={600} mb={8}>{name}</Text>
+              <Stack gap="xs">
+                {fields.map((field) => {
+                  const raw = getValue(spec, field.key)
 
-          {/* Face */}
-          <Text size="sm" fw={600}>面部</Text>
-          {chipGroup('脸型', EAR_SIZES, config.earSize ?? 'small', v => update({ earSize: v as 'small' | 'big' }))}
-          {colorGroup('肤色', FACE_COLORS, config.faceColor ?? '#F9C9B6', v => update({ faceColor: v }))}
-          {chipGroup('眼型', EYE_STYLES, config.eyeStyle ?? 'circle', v => update({ eyeStyle: v as 'circle' | 'oval' | 'smile' }))}
-          {chipGroup('鼻型', NOSE_STYLES, config.noseStyle ?? 'short', v => update({ noseStyle: v as 'short' | 'long' | 'round' }))}
-          {chipGroup('嘴型', MOUTH_STYLES, config.mouthStyle ?? 'smile', v => update({ mouthStyle: v as 'laugh' | 'smile' | 'peace' }))}
+                  if (field.control === 'slider') {
+                    return (
+                      <Box key={field.key}>
+                        <Group justify="space-between" mb={4}>
+                          <Text size="xs" c="dimmed">{field.label}</Text>
+                          <NumberInput
+                            size="xs"
+                            hideControls
+                            value={typeof raw === 'number' ? Number(raw.toFixed(2)) : 0}
+                            onChange={(value) => updateField(field.key, typeof value === 'number' ? value : 0)}
+                            w={72}
+                          />
+                        </Group>
+                        <Slider
+                          size="sm"
+                          value={typeof raw === 'number' ? raw : 0}
+                          onChange={(value) => updateField(field.key, value)}
+                          min={field.min ?? 0}
+                          max={field.max ?? 1}
+                          step={field.step ?? 0.01}
+                        />
+                      </Box>
+                    )
+                  }
 
-          {/* Hair */}
-          <Text size="sm" fw={600}>发型</Text>
-          {chipGroup('发型', getHairOptions(config.sex), config.hairStyle, v => update({ hairStyle: v as any }))}
-          {colorGroup('发色', HAIR_COLORS, config.hairColor ?? '#000', v => update({ hairColor: v }))}
+                  const data = (field.options ?? []).map((option) => ({
+                    value: String(option.value),
+                    label: option.label,
+                  }))
 
-          {/* Accessories */}
-          <Text size="sm" fw={600}>配饰</Text>
-          {chipGroup('眼镜', GLASSES_STYLES, config.glassesStyle ?? 'none', v => update({ glassesStyle: v as 'round' | 'square' | 'none' }))}
-          {chipGroup('帽子', HAT_STYLES, config.hatStyle ?? 'none', v => update({ hatStyle: v as 'beanie' | 'turban' | 'none' }))}
-
-          {/* Clothing */}
-          <Text size="sm" fw={600}>衣着</Text>
-          {chipGroup('款式', SHIRT_STYLES, config.shirtStyle ?? 'short', v => update({ shirtStyle: v as 'hoody' | 'short' | 'polo' }))}
-          {colorGroup('颜色', SHIRT_COLORS, config.shirtColor ?? '#9287FF', v => update({ shirtColor: v }))}
-
-          {/* Background */}
-          <Text size="sm" fw={600}>背景</Text>
-          {colorGroup('背景色', BG_COLORS, config.bgColor ?? '#D2EFF3', v => update({ bgColor: v, isGradient: false }))}
+                  return (
+                    <Select
+                      key={field.key}
+                      size="xs"
+                      label={field.label}
+                      value={String(raw)}
+                      data={data}
+                      onChange={(value) => updateField(field.key, normalizeFieldValue(value))}
+                    />
+                  )
+                })}
+              </Stack>
+            </Paper>
+          ))}
         </Stack>
       </Group>
-
-      {/* JSON Preview */}
-      <Paper withBorder p="sm" mt="xl" style={{ background: '#f8f9fa', maxHeight: 200, overflow: 'auto' }}>
-        <Text size="xs" c="dimmed" mb={4}>配置 JSON</Text>
-        <Text component="pre" size="xs" style={{ margin: 0, fontFamily: 'monospace' }}>
-          {configJson}
-        </Text>
-      </Paper>
     </Paper>
   )
 }
