@@ -5,7 +5,7 @@ import 'theme.dart';
 import 'pages/home_page.dart';
 import 'pages/wearable_page.dart';
 import 'pages/camera_view_page.dart';
-import 'pages/debug_simulator_page.dart';
+import 'pages/simulator_page.dart';
 import 'pages/settings_page.dart';
 
 final router = GoRouter(
@@ -40,10 +40,10 @@ final router = GoRouter(
       ),
     ),
     GoRoute(
-      path: '/debug',
+      path: '/simulator',
       pageBuilder: (context, state) => _buildPage(
         key: state.pageKey,
-        child: const DebugSimulatorPage(),
+        child: const SimulatorPage(),
       ),
     ),
   ],

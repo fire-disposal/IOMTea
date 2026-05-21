@@ -2,12 +2,14 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:http/http.dart' as http;
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/mqtt_service.dart';
 import '../services/pin_service.dart';
 import '../theme.dart';
+import 'pin_setup_page.dart';
 
 enum _HealthMode { cardiac, vital, activity, alert }
 
@@ -60,20 +62,20 @@ const _modeMetrics = <_HealthMode, List<_MetricDef>>{
 
 final _rng = math.Random();
 
-class DebugSimulatorPage extends StatefulWidget {
-  const DebugSimulatorPage({super.key});
+class SimulatorPage extends StatefulWidget {
+  const SimulatorPage({super.key});
   @override
-  State<DebugSimulatorPage> createState() => _DebugSimulatorPageState();
+  State<SimulatorPage> createState() => _SimulatorPageState();
 }
 
-class _DebugSimulatorPageState extends State<DebugSimulatorPage> {
+class _SimulatorPageState extends State<SimulatorPage> {
   final _log = <String>[];
   _HealthMode _mode = _HealthMode.cardiac;
   bool _pumping = false;
-  String _pin = '';
   String _roomId = '';
   Timer? _pumpTimer;
   int _batchCount = 0;
+  bool _pinBannerDismissed = false;
 
   @override
   void initState() {
@@ -83,7 +85,6 @@ class _DebugSimulatorPageState extends State<DebugSimulatorPage> {
 
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
-    _pin = PinService.instance.currentPin?.pin ?? '';
     _roomId = prefs.getString('bound_room_id') ?? '';
     if (mounted) setState(() {});
   }
@@ -100,8 +101,11 @@ class _DebugSimulatorPageState extends State<DebugSimulatorPage> {
   }
 
   Future<void> _sendMetric(String metric, double value, String unit) async {
+    final pin = PinService.instance.currentPin?.pin;
+    final deviceId = PinService.instance.deviceId;
     final payload = <String, dynamic>{
-      'pin': _pin,
+      'pin': pin,
+      'deviceId': deviceId,
       'event': metric == 'fall_detected' && value > 0.5 ? 'healthAlert' : 'healthObservation',
       'metric': metric,
       'value': value,
@@ -112,9 +116,10 @@ class _DebugSimulatorPageState extends State<DebugSimulatorPage> {
     if (payload['event'] == 'healthAlert') payload['severity'] = 'warning';
 
     if (MqttService.instance.currentStatus.name == 'connected') {
+      final topicId = payload['pin'] ?? payload['deviceId'] ?? 'unknown';
       try {
         MqttService.instance.publish(
-          topic: 'iomtea/device/$_pin/events',
+          topic: 'iomtea/device/$topicId/events',
           message: jsonEncode(payload),
         );
       } catch (_) {}
@@ -174,14 +179,22 @@ class _DebugSimulatorPageState extends State<DebugSimulatorPage> {
     _addLog('📤 单次发送 · ${_modeMeta[_mode]!.label} · ${defs.length}项');
   }
 
+  Future<void> _openPinSetup() async {
+    await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => const PinSetupPage()),
+    );
+    if (mounted) setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     final connected = MqttService.instance.currentStatus.name == 'connected';
+    final hasPin = PinService.instance.hasPin;
 
     return Scaffold(
       backgroundColor: creamBg,
       appBar: AnimatedGradientAppBar(
-        title: '健康事件构建器',
+        title: '事件模拟器',
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 12),
@@ -194,15 +207,58 @@ class _DebugSimulatorPageState extends State<DebugSimulatorPage> {
         ],
       ),
       body: Column(children: [
-        _buildModeSelector(),
+        if (!hasPin && !_pinBannerDismissed)
+          _buildPinBanner()
+              .animate()
+              .slideY(begin: -1, duration: 300.ms)
+              .fadeIn(duration: 200.ms),
+        _buildModeSelector()
+            .animate()
+            .fadeIn(delay: 50.ms, duration: 300.ms),
         Expanded(
           child: ListView(padding: const EdgeInsets.fromLTRB(16, 8, 16, 16), children: [
-            _buildMetricsCard(),
+            _buildMetricsCard()
+                .animate()
+                .fadeIn(delay: 100.ms, duration: 300.ms)
+                .slideY(begin: 0.05, duration: 300.ms),
             const SizedBox(height: 12),
-            _buildControls(),
+            _buildControls()
+                .animate()
+                .fadeIn(delay: 200.ms, duration: 300.ms)
+                .slideY(begin: 0.05, duration: 300.ms),
           ]),
         ),
         _buildLogPanel(),
+      ]),
+    );
+  }
+
+  Widget _buildPinBanner() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      color: warningOrange.withValues(alpha: 0.08),
+      child: Row(children: [
+        const Icon(Icons.info_outline, size: 14, color: warningOrange),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text('未设置PIN码，事件将匿名上报', style: TextStyle(fontSize: 12, color: textSecondary)),
+        ),
+        SizedBox(
+          height: 28,
+          child: TextButton(
+            onPressed: _openPinSetup,
+            style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8), minimumSize: Size.zero, tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+            child: const Text('去设置', style: TextStyle(fontSize: 12)),
+          ),
+        ),
+        GestureDetector(
+          onTap: () => setState(() => _pinBannerDismissed = true),
+          child: const Padding(
+            padding: EdgeInsets.all(4),
+            child: Icon(Icons.close, size: 14, color: textSecondary),
+          ),
+        ),
       ]),
     );
   }
@@ -260,7 +316,12 @@ class _DebugSimulatorPageState extends State<DebugSimulatorPage> {
           Text('${meta.label}指标', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: textPrimary)),
           if (_pumping) ...[
             const SizedBox(width: 8),
-            _PulseDot(color: meta.color),
+            Container(
+              width: 8, height: 8,
+              decoration: BoxDecoration(shape: BoxShape.circle, color: meta.color),
+            ).animate(onPlay: (c) => c.repeat(reverse: true))
+              .scale(end: const Offset(1.5, 1.5), duration: 450.ms)
+              .fade(end: 0.3, duration: 450.ms),
           ],
           const Spacer(),
           if (_pumping)
@@ -309,9 +370,9 @@ class _DebugSimulatorPageState extends State<DebugSimulatorPage> {
           Row(children: [
             const Icon(Icons.info_outline, size: 14, color: Colors.grey),
             const SizedBox(width: 6),
-            Expanded(child: Text('手动构建MQTT事件请使用 MQTT 控制台', style: TextStyle(fontSize: 11, color: textSecondary))),
+            Expanded(child: Text('MQTT连接配置请前往设置', style: TextStyle(fontSize: 11, color: textSecondary))),
             TextButton(
-              onPressed: () => context.push('/mqtt'),
+              onPressed: () => context.push('/settings'),
               style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8), minimumSize: Size.zero, tapTargetSize: MaterialTapTargetSize.shrinkWrap),
               child: const Text('打开', style: TextStyle(fontSize: 12)),
             ),
@@ -434,38 +495,6 @@ class _MetricRowState extends State<_MetricRow> {
           ),
         ),
       ]),
-    );
-  }
-}
-
-class _PulseDot extends StatefulWidget {
-  final Color color;
-  const _PulseDot({required this.color});
-  @override
-  State<_PulseDot> createState() => _PulseDotState();
-}
-
-class _PulseDotState extends State<_PulseDot> with SingleTickerProviderStateMixin {
-  late final AnimationController _ctrl;
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(duration: const Duration(milliseconds: 900), vsync: this)..repeat(reverse: true);
-  }
-  @override
-  void dispose() { _ctrl.dispose(); super.dispose(); }
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _ctrl,
-      builder: (_, __) => Container(
-        width: 8, height: 8,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: widget.color.withValues(alpha: 0.3 + _ctrl.value * 0.7),
-          boxShadow: [BoxShadow(color: widget.color.withValues(alpha: 0.4 * _ctrl.value), blurRadius: 6)],
-        ),
-      ),
     );
   }
 }

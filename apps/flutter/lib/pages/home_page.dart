@@ -114,12 +114,12 @@ class _HomePageState extends State<HomePage> {
                     .fadeIn(delay: 200.ms, duration: 400.ms)
                     .slideY(begin: 0.1, duration: 400.ms),
                 _ModeCard(
-                  icon: Icons.bug_report,
+                  icon: Icons.science_outlined,
                   label: '事件模拟',
                   sublabel: hasPin ? '健康数据生成\n批量事件上报' : '需先设置PIN码',
                   color: hasPin ? warningOrange : Colors.grey,
                   onTap: hasPin
-                      ? () => context.push('/debug')
+                      ? () => context.push('/simulator')
                       : () {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('请先设置设备PIN码'), duration: Duration(seconds: 2)),

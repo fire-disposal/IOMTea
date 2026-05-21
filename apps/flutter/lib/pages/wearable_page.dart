@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../services/imu_sensor_service.dart';
 import '../services/fall_detector.dart';
 import '../services/event_emitter.dart';
@@ -15,8 +15,7 @@ class WearablePage extends StatefulWidget {
   State<WearablePage> createState() => _WearablePageState();
 }
 
-class _WearablePageState extends State<WearablePage>
-    with SingleTickerProviderStateMixin {
+class _WearablePageState extends State<WearablePage> {
   final _sensor = ImuSensorService();
   final _detector = FallDetector();
   StreamSubscription<ImuData>? _sub;
@@ -26,6 +25,7 @@ class _WearablePageState extends State<WearablePage>
   final List<ImuData> _history = [];
   final List<String> _log = [];
   double _maxMag = 5.0;
+  bool _showFallOverlay = false;
 
   @override
   void initState() {
@@ -48,6 +48,10 @@ class _WearablePageState extends State<WearablePage>
           confidence: 0.9,
           metadata: {'accel_magnitude': mag},
         ));
+        setState(() => _showFallOverlay = true);
+        Future.delayed(const Duration(milliseconds: 1500), () {
+          if (mounted) setState(() => _showFallOverlay = false);
+        });
       }
 
       if (_sampleCount > 50 && net > 4.0 && _sampleCount % 30 == 0) {
@@ -69,7 +73,7 @@ class _WearablePageState extends State<WearablePage>
   void _addLog(String msg, {bool warning = false, bool error = false}) {
     final now = DateTime.now();
     final ts = '${now.hour.toString().padLeft(2, "0")}:${now.minute.toString().padLeft(2, "0")}:${now.second.toString().padLeft(2, "0")}';
-    final line = error ? '$ts $msg' : '$ts $msg';
+    final line = '$ts $msg';
     setState(() {
       _log.insert(0, line);
       if (_log.length > 100) _log.removeLast();
@@ -104,28 +108,51 @@ class _WearablePageState extends State<WearablePage>
         ],
       ),
       body: _latest == null
-        ? const Center(child: CircularProgressIndicator())
-        : Column(children: [
-            _buildUnifiedStatsCard(mag),
-            Expanded(
-              child: CustomScrollView(
-                slivers: [
-                  SliverToBoxAdapter(child: _buildWaveformCard()),
-                  const SliverToBoxAdapter(child: SizedBox(height: 8)),
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: TerminalLog(
-                        entries: _log,
-                        onClear: () => setState(() => _log.clear()),
-                        maxHeight: 200,
-                      ),
+        ? Center(
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              const SizedBox(width: 32, height: 32, child: CircularProgressIndicator(strokeWidth: 2.5)),
+              const SizedBox(height: 16),
+              Text('正在连接传感器...', style: TextStyle(color: textSecondary, fontSize: 14)),
+            ]),
+          )
+        : Stack(children: [
+            Column(children: [
+              _buildUnifiedStatsCard(mag)
+                  .animate()
+                  .fadeIn(delay: 50.ms, duration: 300.ms)
+                  .slideY(begin: 0.05, duration: 300.ms),
+              Expanded(
+                child: CustomScrollView(
+                  slivers: [
+                    SliverToBoxAdapter(
+                      child: _buildWaveformCard()
+                          .animate()
+                          .fadeIn(delay: 150.ms, duration: 300.ms),
                     ),
-                  ),
-                  const SliverToBoxAdapter(child: SizedBox(height: 32)),
-                ],
+                    const SliverToBoxAdapter(child: SizedBox(height: 8)),
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: TerminalLog(
+                          entries: _log,
+                          onClear: () => setState(() => _log.clear()),
+                          maxHeight: 200,
+                        ),
+                      ).animate().fadeIn(delay: 250.ms, duration: 300.ms).slideY(begin: 0.1, duration: 300.ms),
+                    ),
+                    const SliverToBoxAdapter(child: SizedBox(height: 32)),
+                  ],
+                ),
               ),
-            ),
+            ]),
+            if (_showFallOverlay)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: Container(color: errorRed.withValues(alpha: 0.15))
+                      .animate(onPlay: (c) => c.repeat(count: 3))
+                      .fadeOut(duration: 500.ms),
+                ),
+              ),
           ]),
     );
   }
@@ -239,4 +266,3 @@ class _GaugeStat extends StatelessWidget {
     );
   }
 }
-
