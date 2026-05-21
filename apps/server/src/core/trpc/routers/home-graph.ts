@@ -6,6 +6,9 @@ import { usersPin } from '../../db/schema/pin'
 import { publicProcedure, protectedProcedure, router } from '../index'
 import { twinState } from '../../../twin/twin-state'
 import { broadcastManager } from '../../realtime/broadcast'
+import { createChildLogger } from '../../lib/logger'
+
+const logger = createChildLogger('home-graph')
 
 const roomSchema = z.object({
   id: z.string(),
@@ -153,7 +156,7 @@ export const homeGraphRouter = router({
           source: 'iot',
           tags: { ...(input.metadata || {}), pin: input.pin },
           recordedAt: new Date(),
-        } as any).catch(() => {})
+        } as any).catch((err) => { logger.warn({ err }, 'fall_detected 事件写入失败') })
         result = { event: 'fallDetected', severity: 'critical' }
       } else if (input.event === 'actionDetected') {
         await ctx.db.insert(events).values({
@@ -161,7 +164,7 @@ export const homeGraphRouter = router({
           metric: 'action', value: null, source: 'iot',
           tags: { action: input.action, roomId: input.roomId, ...(input.metadata || {}), pin: input.pin },
           recordedAt: new Date(),
-        } as any).catch(() => {})
+        } as any).catch((err) => { logger.warn({ err }, 'action_detected 事件写入失败') })
         result = { event: 'actionDetected', action: input.action }
       } else if (input.event === 'healthObservation' && input.metric) {
         await ctx.db.insert(events).values({
@@ -170,7 +173,14 @@ export const homeGraphRouter = router({
           source: (input.source || 'simulator') as any,
           tags: { ...(input.metadata || {}), pin: input.pin },
           recordedAt: new Date(),
-        } as any).catch(() => {})
+        } as any).catch((err) => { logger.warn({ err }, 'health_observation 事件写入失败') })
+
+        broadcastManager.broadcastVitals(patient.id, [{
+          metric: input.metric,
+          value: input.value ?? null,
+          unit: input.unit ?? null,
+        }])
+
         result = { event: 'healthObservation', metric: input.metric, value: input.value }
       } else if (input.event === 'healthAlert' && input.metric) {
         await ctx.db.insert(events).values({
@@ -180,7 +190,14 @@ export const homeGraphRouter = router({
           source: (input.source || 'simulator') as any,
           tags: { ...(input.metadata || {}), pin: input.pin },
           recordedAt: new Date(),
-        } as any).catch(() => {})
+        } as any).catch((err) => { logger.warn({ err }, 'health_alert 事件写入失败') })
+
+        broadcastManager.broadcastVitals(patient.id, [{
+          metric: input.metric,
+          value: input.value ?? null,
+          unit: input.unit ?? null,
+        }])
+
         result = { event: 'healthAlert', metric: input.metric, severity: input.severity }
       }
 

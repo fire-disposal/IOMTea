@@ -6,6 +6,7 @@ const logger = createChildLogger('mqtt')
 
 const TOPIC = 'users/+/+/+'
 const ADMIN_TOPIC = 'users/+/admin/+'
+const DEVICE_EVENTS_TOPIC = 'iomtea/device/+/events'
 
 let client: mqtt.MqttClient | null = null
 
@@ -36,6 +37,14 @@ export function startMqttListener(brokerUrl: string, opts?: { username?: string;
         logger.error({ err }, '✗ MQTT 管理主题订阅失败')
       } else {
         logger.info(`√ 已订阅管理主题: ${ADMIN_TOPIC}`)
+      }
+    })
+
+    client!.subscribe(DEVICE_EVENTS_TOPIC, { qos: 1 }, (err) => {
+      if (err) {
+        logger.error({ err }, '✗ MQTT 设备事件主题订阅失败')
+      } else {
+        logger.info(`√ 已订阅设备事件主题: ${DEVICE_EVENTS_TOPIC}`)
       }
     })
   })
