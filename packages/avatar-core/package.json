@@ -1,0 +1,20 @@
+{
+  "name": "@iomtea/avatar-core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@iomtea/shared-types": "workspace:*"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.6"
+  }
+}
