@@ -318,10 +318,8 @@ export const healthRecordsRouter = router({
 
       const firstEventIdByRecordId = new Map<string, string>()
       for (const event of insertedEvents) {
-        const clientRecordId =
-          typeof (event.tags as Record<string, unknown>).clientRecordId === 'string'
-            ? (event.tags as Record<string, unknown>).clientRecordId as string
-            : null
+        const tags = event.tags as Record<string, unknown>
+        const clientRecordId = typeof tags.clientRecordId === 'string' ? tags.clientRecordId : null
         if (clientRecordId && !firstEventIdByRecordId.has(clientRecordId)) {
           firstEventIdByRecordId.set(clientRecordId, event.id)
         }
