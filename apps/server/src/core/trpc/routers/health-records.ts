@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server'
-import { eq, and, sql } from 'drizzle-orm'
+import { eq, and, sql, inArray } from 'drizzle-orm'
 import { z } from 'zod'
 import { events, patients, users } from '../../db/schema'
 import { dailyChecklists, streaks, creditTransactions } from '../../db/schema/plan'
@@ -43,8 +43,37 @@ interface EventInsert {
   source: 'manual'
 }
 
+function asFiniteNumber(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  if (typeof value === 'string' && value.trim() !== '') {
+    const parsed = Number(value)
+    if (Number.isFinite(parsed)) return parsed
+  }
+  return null
+}
+
+function parseRecordedAt(recordedAt: string): Date {
+  const parsed = new Date(recordedAt)
+  if (Number.isNaN(parsed.getTime())) {
+    throw new TRPCError({ code: 'BAD_REQUEST', message: 'Invalid recordedAt in health record' })
+  }
+  return parsed
+}
+
+function requireFiniteNumber(record: RawRecord, key: string): number {
+  const n = asFiniteNumber(record.data[key])
+  if (n === null) {
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message: `Invalid numeric field "${key}" for ${record.type}`,
+    })
+  }
+  return n
+}
+
 function mapRecordToEvents(record: RawRecord, patientId: string): EventInsert[] {
-  const recordedAt = new Date(record.recordedAt)
+  const recordedAt = parseRecordedAt(record.recordedAt)
+  const baseTags = { clientRecordId: record.id }
   const base: Omit<EventInsert, 'metric' | 'kind' | 'tags'> = {
     patientId,
     recordedAt,
@@ -57,9 +86,9 @@ function mapRecordToEvents(record: RawRecord, patientId: string): EventInsert[] 
         ...base,
         kind: 'observation',
         metric: 'glucose',
-        value: record.data.value_mgdl as number | null | undefined,
+        value: requireFiniteNumber(record, 'value_mgdl'),
         unit: 'mg/dL',
-        tags: {},
+        tags: baseTags,
       }]
     case 'blood_pressure':
       return [
@@ -67,17 +96,17 @@ function mapRecordToEvents(record: RawRecord, patientId: string): EventInsert[] 
           ...base,
           kind: 'observation',
           metric: 'systolic_bp',
-          value: record.data.systolic as number | null | undefined,
+          value: requireFiniteNumber(record, 'systolic'),
           unit: 'mmHg',
-          tags: {},
+          tags: baseTags,
         },
         {
           ...base,
           kind: 'observation',
           metric: 'diastolic_bp',
-          value: record.data.diastolic as number | null | undefined,
+          value: requireFiniteNumber(record, 'diastolic'),
           unit: 'mmHg',
-          tags: {},
+          tags: baseTags,
         },
       ]
     case 'weight':
@@ -85,36 +114,36 @@ function mapRecordToEvents(record: RawRecord, patientId: string): EventInsert[] 
         ...base,
         kind: 'observation',
         metric: 'weight',
-        value: record.data.weight_kg as number | null | undefined,
+        value: requireFiniteNumber(record, 'weight_kg'),
         unit: 'kg',
-        tags: {},
+        tags: baseTags,
       }]
     case 'heart_rate':
       return [{
         ...base,
         kind: 'observation',
         metric: 'heart_rate',
-        value: record.data.bpm as number | null | undefined,
+        value: requireFiniteNumber(record, 'bpm'),
         unit: 'bpm',
-        tags: {},
+        tags: baseTags,
       }]
     case 'temperature':
       return [{
         ...base,
         kind: 'observation',
         metric: 'temperature',
-        value: record.data.celsius as number | null | undefined,
+        value: requireFiniteNumber(record, 'celsius'),
         unit: '°C',
-        tags: {},
+        tags: baseTags,
       }]
     case 'spo2':
       return [{
         ...base,
         kind: 'observation',
         metric: 'spo2',
-        value: record.data.percentage as number | null | undefined,
+        value: requireFiniteNumber(record, 'percentage'),
         unit: '%',
-        tags: {},
+        tags: baseTags,
       }]
     case 'medication':
       return [{
@@ -122,6 +151,7 @@ function mapRecordToEvents(record: RawRecord, patientId: string): EventInsert[] 
         kind: 'behavior',
         metric: 'medication',
         tags: {
+          ...baseTags,
           drug: record.data.drug,
           action: record.data.action,
         },
@@ -131,7 +161,7 @@ function mapRecordToEvents(record: RawRecord, patientId: string): EventInsert[] 
         ...base,
         kind: 'behavior',
         metric: 'period',
-        tags: record.data as Record<string, unknown>,
+        tags: { ...baseTags, ...(record.data as Record<string, unknown>) },
       }]
   }
 }
@@ -141,7 +171,16 @@ async function processCredits(
   userId: string,
   record: RawRecord,
   checklistId: string,
+  eventId: string,
 ): Promise<{ amount: number; streakDay: number } | null> {
+  const [existingTransaction] = await db
+    .select({ id: creditTransactions.id })
+    .from(creditTransactions)
+    .where(eq(creditTransactions.checklistId, checklistId))
+    .limit(1)
+
+  if (existingTransaction) return null
+
   const today = new Date()
   const todayStr = today.toISOString().slice(0, 10)
 
@@ -190,6 +229,7 @@ async function processCredits(
     type: 'earn',
     source: 'record',
     checklistId,
+    eventId,
     note: `${record.type} streak day ${currentStreak}`,
   })
 
@@ -226,7 +266,7 @@ export const healthRecordsRouter = router({
         const [patient] = await ctx.db
           .select({ id: patients.id })
           .from(patients)
-          .where(eq(patients.id, patientId))
+          .where(and(eq(patients.id, patientId), eq(patients.userId, ctx.userId!)))
           .limit(1)
 
         if (!patient) {
@@ -238,19 +278,62 @@ export const healthRecordsRouter = router({
       }
 
       if (input.records.length === 0) {
-        return { syncedIds: [] }
+        return { syncedIds: [], earnedCredits: [] }
       }
 
-      const allEvents = input.records.flatMap((record) =>
+      const recordsById = new Map(input.records.map((record) => [record.id, record] as const))
+      const dedupedRecords = [...recordsById.values()]
+      const dedupedIds = dedupedRecords.map((r) => r.id)
+
+      const existingRows = await ctx.db
+        .select({
+          clientRecordId: sql<string>`tags->>'clientRecordId'`,
+        })
+        .from(events)
+        .where(
+          and(
+            eq(events.patientId, patientId),
+            eq(events.source, 'manual'),
+            inArray(sql`tags->>'clientRecordId'`, dedupedIds),
+          ),
+        )
+      const existingIds = new Set(existingRows.map((row) => row.clientRecordId))
+      const unsyncedRecords = dedupedRecords.filter((record) => !existingIds.has(record.id))
+
+      if (unsyncedRecords.length === 0) {
+        return {
+          syncedIds: dedupedIds,
+          earnedCredits: [],
+        }
+      }
+
+      const allEvents = unsyncedRecords.flatMap((record) =>
         mapRecordToEvents(record, patientId),
       )
 
-      await ctx.db.insert(events).values(allEvents)
+      const insertedEvents = await ctx.db
+        .insert(events)
+        .values(allEvents)
+        .returning({ id: events.id, tags: events.tags })
+
+      const firstEventIdByRecordId = new Map<string, string>()
+      for (const event of insertedEvents) {
+        const clientRecordId =
+          typeof (event.tags as Record<string, unknown>).clientRecordId === 'string'
+            ? (event.tags as Record<string, unknown>).clientRecordId as string
+            : null
+        if (clientRecordId && !firstEventIdByRecordId.has(clientRecordId)) {
+          firstEventIdByRecordId.set(clientRecordId, event.id)
+        }
+      }
 
       const earnedCredits: { moduleKey: string; amount: number; streakDay: number }[] = []
       const todayStr = new Date().toISOString().slice(0, 10)
 
-      for (const record of input.records) {
+      for (const record of unsyncedRecords) {
+        const eventId = firstEventIdByRecordId.get(record.id)
+        if (!eventId) continue
+
         const [checklist] = await ctx.db
           .select()
           .from(dailyChecklists)
@@ -263,10 +346,10 @@ export const healthRecordsRouter = router({
           )
           .limit(1)
 
-        if (checklist) {
+        if (checklist?.status === 'pending') {
           await ctx.db
             .update(dailyChecklists)
-            .set({ status: 'done', completedAt: new Date() })
+            .set({ status: 'done', completedAt: new Date(), recordId: eventId })
             .where(eq(dailyChecklists.id, checklist.id))
 
           const creditResult = await processCredits(
@@ -274,6 +357,7 @@ export const healthRecordsRouter = router({
             ctx.userId!,
             record,
             checklist.id,
+            eventId,
           )
           if (creditResult) {
             earnedCredits.push({
@@ -286,7 +370,7 @@ export const healthRecordsRouter = router({
       }
 
       return {
-        syncedIds: input.records.map((r) => r.id),
+        syncedIds: dedupedIds,
         earnedCredits,
       }
     }),
