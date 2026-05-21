@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -17,7 +18,15 @@ class PinService {
   PinInfo? get currentPin => _currentPin;
   bool get hasPin => _currentPin != null;
 
+  String _deviceId = '';
+  String get deviceId => _deviceId;
+
   String serverUrl = 'http://localhost:3000';
+
+  String _generateDeviceId() {
+    final r = Random();
+    return '${DateTime.now().millisecondsSinceEpoch}-${r.nextInt(999999).toString().padLeft(6, '0')}';
+  }
 
   Future<void> loadSavedPin() async {
     final prefs = await SharedPreferences.getInstance();
@@ -25,6 +34,11 @@ class PinService {
     final nickname = prefs.getString('pin_nickname') ?? '';
     final label = prefs.getString('pin_label') ?? '';
     serverUrl = prefs.getString('server_url') ?? 'http://localhost:3000';
+    _deviceId = prefs.getString('device_id') ?? '';
+    if (_deviceId.isEmpty) {
+      _deviceId = _generateDeviceId();
+      await prefs.setString('device_id', _deviceId);
+    }
     if (pin != null && pin.length >= 4) {
       _currentPin = PinInfo(pin: pin, nickname: nickname, label: label);
     }

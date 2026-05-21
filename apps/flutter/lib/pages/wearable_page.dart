@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import '../services/imu_sensor_service.dart';
 import '../services/fall_detector.dart';
 import '../services/event_emitter.dart';
-import '../services/pin_service.dart';
 import '../services/mqtt_service.dart';
 import '../widgets/imu_waveform.dart';
 import '../widgets/terminal_log.dart';
@@ -44,10 +43,8 @@ class _WearablePageState extends State<WearablePage>
       if (_detector.feed(mag)) {
         _fallCount++;
         _addLog('🆘 跌倒 | ${net.toStringAsFixed(1)} m/s²', error: true);
-        final pin = PinService.instance.currentPin?.pin ?? '';
         EventEmitter.emit(DeviceEvent(
           type: DeviceEventType.fallDetected,
-          pinCode: pin,
           confidence: 0.9,
           metadata: {'accel_magnitude': mag},
         ));
