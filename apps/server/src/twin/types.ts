@@ -66,5 +66,3 @@ export interface SimulatedEvent {
   tags: Record<string, unknown>
   recordedAt: Date
 }
-
-

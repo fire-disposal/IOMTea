@@ -22,5 +22,3 @@ export function processNextInstruction(actor: ActorState): Instruction | null {
 
   return null
 }
-
-

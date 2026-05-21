@@ -1,5 +1,5 @@
 interface GridCell {
-  terrain: 0 | 1 | 2  // 0=void, 1=floor, 2=door
+  terrain: 0 | 1 | 2 // 0=void, 1=floor, 2=door
 }
 
 interface Point {
@@ -27,13 +27,15 @@ function key(x: number, y: number): string {
 function isPassable(grid: GridCell[][], x: number, y: number): boolean {
   if (y < 0 || y >= grid.length || x < 0 || x >= (grid[0]?.length ?? 0)) return false
   const cell = grid[y][x]
-  return cell.terrain === 1 || cell.terrain === 2  // floor and door are passable
+  return cell.terrain === 1 || cell.terrain === 2 // floor and door are passable
 }
 
 function getNeighbors(grid: GridCell[][], node: PathNode): Point[] {
   const dirs = [
-    { dx: 0, dy: -1 }, { dx: 0, dy: 1 },
-    { dx: -1, dy: 0 }, { dx: 1, dy: 0 },
+    { dx: 0, dy: -1 },
+    { dx: 0, dy: 1 },
+    { dx: -1, dy: 0 },
+    { dx: 1, dy: 0 },
   ]
   const results: Point[] = []
   for (const { dx, dy } of dirs) {
@@ -59,7 +61,9 @@ export function findPath(
   opts?: { maxIterations?: number },
 ): PathResult | null {
   const maxIter = opts?.maxIterations ?? 10000
-  const open: PathNode[] = [{ x: from.x, y: from.y, g: 0, h: heuristic(from, to), f: heuristic(from, to), parent: null }]
+  const open: PathNode[] = [
+    { x: from.x, y: from.y, g: 0, h: heuristic(from, to), f: heuristic(from, to), parent: null },
+  ]
   const closed = new Set<string>()
   let explored = 0
 
@@ -99,5 +103,3 @@ export function findPath(
 
   return null
 }
-
-

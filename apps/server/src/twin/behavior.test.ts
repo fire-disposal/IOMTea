@@ -16,20 +16,24 @@ describe('createActorState', () => {
   })
 })
 
-
-
 describe('tickActorMovement', () => {
   function makeActor(overrides: Partial<ActorState> = {}): ActorState {
     return {
       entityId: 'a1',
-      tileX: 0, tileY: 0,
+      tileX: 0,
+      tileY: 0,
       posture: 'standing',
       behaviorState: 'moving',
       currentRoomId: null,
       activeInstruction: null,
       instructionQueue: [],
-      targetTileX: 2, targetTileY: 0,
-      path: [{ x: 0, y: 0 }, { x: 1, y: 0 }, { x: 2, y: 0 }],
+      targetTileX: 2,
+      targetTileY: 0,
+      path: [
+        { x: 0, y: 0 },
+        { x: 1, y: 0 },
+        { x: 2, y: 0 },
+      ],
       pathProgress: 0,
       ...overrides,
     }

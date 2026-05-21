@@ -20,9 +20,7 @@ describe('generateNavGraph', () => {
   })
 
   it('creates edges through door tiles', () => {
-    const grid = [
-      [1, 2, 1],
-    ]
+    const grid = [[1, 2, 1]]
     const rooms = [
       { id: 'left', name: 'Left', x: 0, y: 0, w: 1, h: 1 },
       { id: 'right', name: 'Right', x: 2, y: 0, w: 1, h: 1 },
@@ -35,8 +33,25 @@ describe('generateNavGraph', () => {
 describe('findRoomForTile', () => {
   const nav: NavGraph = {
     rooms: [
-      { roomId: 'r1', name: 'Room 1', centroid: { x: 1, y: 0 }, walkableTiles: [{ x: 0, y: 0 }, { x: 1, y: 0 }, { x: 2, y: 0 }] },
-      { roomId: 'r2', name: 'Room 2', centroid: { x: 4, y: 0 }, walkableTiles: [{ x: 3, y: 0 }, { x: 4, y: 0 }] },
+      {
+        roomId: 'r1',
+        name: 'Room 1',
+        centroid: { x: 1, y: 0 },
+        walkableTiles: [
+          { x: 0, y: 0 },
+          { x: 1, y: 0 },
+          { x: 2, y: 0 },
+        ],
+      },
+      {
+        roomId: 'r2',
+        name: 'Room 2',
+        centroid: { x: 4, y: 0 },
+        walkableTiles: [
+          { x: 3, y: 0 },
+          { x: 4, y: 0 },
+        ],
+      },
     ],
     edges: [],
     passabilityGrid: [],
@@ -50,5 +65,3 @@ describe('findRoomForTile', () => {
     expect(findRoomForTile(nav, 99, 99)).toBeNull()
   })
 })
-
-

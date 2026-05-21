@@ -19,6 +19,17 @@ import { seedDemoData } from './core/services/demo-seed'
 import { logger } from './core/lib/logger'
 import { printBanner } from './core/lib/banner'
 
+function resolveCorsOrigins(rawCorsOrigin: string | undefined): string[] {
+  if (!rawCorsOrigin) return ['http://localhost:5173']
+  return rawCorsOrigin.split(',').map((origin) => origin.trim())
+}
+
+function hasRooms(value: unknown): value is { rooms: unknown[] } {
+  if (!value || typeof value !== 'object') return false
+  const rooms = (value as { rooms?: unknown }).rooms
+  return Array.isArray(rooms) && rooms.length > 0
+}
+
 // ============================================================
 // 横幅
 // ============================================================
@@ -39,9 +50,7 @@ const app = new Hono()
 app.use(
   '/trpc/*',
   cors({
-    origin: env.CORS_ORIGIN
-      ? env.CORS_ORIGIN.split(',').map((s) => s.trim())
-      : ['http://localhost:5173'],
+    origin: resolveCorsOrigins(env.CORS_ORIGIN),
     credentials: true,
   }),
 )
@@ -52,7 +61,7 @@ app.get('/health', (c) => c.json({ status: 'ok' }))
 // HTTP 请求日志
 app.use(
   '*',
-  honoLogger((str: string, ...rest: string[]) => {
+  honoLogger((str: string) => {
     logger.info(str.replace(/\s+/g, ' ').trim())
   }),
 )
@@ -120,8 +129,7 @@ async function bootstrap() {
 
     for (const patient of allPatients) {
       const tags = (patient.tags as Record<string, unknown>) || {}
-      const homeGraph = tags.homeGraph as any
-      if (!homeGraph?.rooms?.length) continue
+      if (!hasRooms(tags.homeGraph)) continue
       if (getEngine(patient.id)) continue
 
       const engine = await reconstructEngine(db, {
@@ -192,7 +200,10 @@ bootstrap().then(() => {
 
     verifyToken(token)
       .then((payload: JwtPayload) => {
-        logger.info({ userId: payload.sub, role: payload.role, wardId, mapId }, 'WebSocket 客户端已认证')
+        logger.info(
+          { userId: payload.sub, role: payload.role, wardId, mapId },
+          'WebSocket 客户端已认证',
+        )
 
         if (wardId) {
           broadcastManager.subscribe(wardId, ws)

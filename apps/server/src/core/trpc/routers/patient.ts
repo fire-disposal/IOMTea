@@ -12,26 +12,29 @@ import { requirePermission } from '../middleware/rbac'
 import { protectedProcedure, router } from '../index'
 
 export const patientRouter = router({
-  list: protectedProcedure.use(requirePermission('patient:read')).input(patientListInputSchema).query(async ({ ctx, input }) => {
-    const offset = (input.page - 1) * input.pageSize
-    let query = ctx.db.select().from(patients).$dynamic()
-    if (input.status) {
-      query = query.where(eq(patients.status, input.status))
-    }
-    const rows = await query.limit(input.pageSize).offset(offset).orderBy(patients.createdAt)
+  list: protectedProcedure
+    .use(requirePermission('patient:read'))
+    .input(patientListInputSchema)
+    .query(async ({ ctx, input }) => {
+      const offset = (input.page - 1) * input.pageSize
+      let query = ctx.db.select().from(patients).$dynamic()
+      if (input.status) {
+        query = query.where(eq(patients.status, input.status))
+      }
+      const rows = await query.limit(input.pageSize).offset(offset).orderBy(patients.createdAt)
 
-    return rows.map((p) =>
-      patientSchema.parse({
-        id: p.id,
-        name: p.name,
-        birthDate: p.birthDate,
-        gender: p.gender,
-        status: p.status,
-        tags: p.tags,
-        createdAt: p.createdAt.getTime(),
-      }),
-    )
-  }),
+      return rows.map((p) =>
+        patientSchema.parse({
+          id: p.id,
+          name: p.name,
+          birthDate: p.birthDate,
+          gender: p.gender,
+          status: p.status,
+          tags: p.tags,
+          createdAt: p.createdAt.getTime(),
+        }),
+      )
+    }),
 
   byId: protectedProcedure
     .use(requirePermission('patient:read'))
@@ -54,17 +57,20 @@ export const patientRouter = router({
       })
     }),
 
-  create: protectedProcedure.use(requirePermission('patient:write')).input(patientCreateSchema).mutation(async ({ ctx, input }) => {
-    const [created] = await ctx.db.insert(patients).values(input).returning()
-    return patientSchema.parse({
-      id: created.id,
-      name: created.name,
-      birthDate: created.birthDate,
-      gender: created.gender,
-      status: created.status,
-      createdAt: created.createdAt.getTime(),
-    })
-  }),
+  create: protectedProcedure
+    .use(requirePermission('patient:write'))
+    .input(patientCreateSchema)
+    .mutation(async ({ ctx, input }) => {
+      const [created] = await ctx.db.insert(patients).values(input).returning()
+      return patientSchema.parse({
+        id: created.id,
+        name: created.name,
+        birthDate: created.birthDate,
+        gender: created.gender,
+        status: created.status,
+        createdAt: created.createdAt.getTime(),
+      })
+    }),
 
   update: protectedProcedure
     .use(requirePermission('patient:write'))

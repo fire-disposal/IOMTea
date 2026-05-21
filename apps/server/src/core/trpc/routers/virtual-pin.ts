@@ -34,30 +34,50 @@ function startVirtualPin(pin: string, config: z.infer<typeof generatorConfigSche
 
   const interval = setInterval(async () => {
     try {
-      const [pinRecord] = await import('../../db').then((m) => m.db.select().from(usersPin).where(eq(usersPin.pin, pin)).limit(1))
-      if (!pinRecord) { stopVirtualPin(pin); return }
+      const [pinRecord] = await import('../../db').then((m) =>
+        m.db.select().from(usersPin).where(eq(usersPin.pin, pin)).limit(1),
+      )
+      if (!pinRecord) {
+        stopVirtualPin(pin)
+        return
+      }
 
-      const patientRows = await import('../../db').then((m) => m.db.select({ id: patients.id }).from(patients).where(eq(patients.userId, pinRecord.userId)).limit(1))
+      const patientRows = await import('../../db').then((m) =>
+        m.db
+          .select({ id: patients.id })
+          .from(patients)
+          .where(eq(patients.userId, pinRecord.userId))
+          .limit(1),
+      )
       const patientId = patientRows[0]?.id
 
       const db = (await import('../../db')).db
       for (const m of config.metrics) {
         const value = generateValue(m.min, m.max, m.variance)
-        await db.insert(events).values({
-          patientId: patientId || pinRecord.userId,
-          pinCode: pin,
-          kind: 'observation',
-          metric: m.metric,
-          value,
-          unit: m.unit || undefined,
-          source: 'simulator',
-          tags: { virtual: true, pin },
-          recordedAt: new Date(),
-        } as any).catch(() => {})
+        await db
+          .insert(events)
+          .values({
+            patientId: patientId || pinRecord.userId,
+            pinCode: pin,
+            kind: 'observation',
+            metric: m.metric,
+            value,
+            unit: m.unit || undefined,
+            source: 'simulator',
+            tags: { virtual: true, pin },
+            recordedAt: new Date(),
+          } as any)
+          .catch(() => {})
       }
 
-      await db.update(usersPin).set({ lastSeenAt: new Date() }).where(eq(usersPin.pin, pin)).catch(() => {})
-    } catch { /* generator tick error */ }
+      await db
+        .update(usersPin)
+        .set({ lastSeenAt: new Date() })
+        .where(eq(usersPin.pin, pin))
+        .catch(() => {})
+    } catch {
+      /* generator tick error */
+    }
   }, config.intervalMs)
 
   activeGenerators.set(pin, interval)
@@ -65,7 +85,10 @@ function startVirtualPin(pin: string, config: z.infer<typeof generatorConfigSche
 
 function stopVirtualPin(pin: string) {
   const interval = activeGenerators.get(pin)
-  if (interval) { clearInterval(interval); activeGenerators.delete(pin) }
+  if (interval) {
+    clearInterval(interval)
+    activeGenerators.delete(pin)
+  }
 }
 
 export async function startAllVirtualPins() {
@@ -85,13 +108,15 @@ export const virtualPinRouter = router({
   }),
 
   save: protectedProcedure
-    .input(z.object({
-      pin: z.string().min(4).max(6).optional(),
-      userId: z.string().uuid(),
-      label: z.string().max(64).default(''),
-      nickname: z.string().max(32).default(''),
-      generatorConfig: generatorConfigSchema.default({}),
-    }))
+    .input(
+      z.object({
+        pin: z.string().min(4).max(6).optional(),
+        userId: z.string().uuid(),
+        label: z.string().max(64).default(''),
+        nickname: z.string().max(32).default(''),
+        generatorConfig: generatorConfigSchema.default({}),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const pin = input.pin || String(randomInt(100000, 1000000))
 
@@ -101,14 +126,23 @@ export const virtualPinRouter = router({
       }
 
       if (existing.length > 0 && input.pin) {
-        await ctx.db.update(usersPin).set({
-          label: input.label, nickname: input.nickname,
-          generatorConfig: input.generatorConfig as any, isVirtual: true,
-        }).where(eq(usersPin.pin, pin))
+        await ctx.db
+          .update(usersPin)
+          .set({
+            label: input.label,
+            nickname: input.nickname,
+            generatorConfig: input.generatorConfig as any,
+            isVirtual: true,
+          })
+          .where(eq(usersPin.pin, pin))
       } else {
         await ctx.db.insert(usersPin).values({
-          pin, userId: input.userId, label: input.label, nickname: input.nickname,
-          generatorConfig: input.generatorConfig as any, isVirtual: true,
+          pin,
+          userId: input.userId,
+          label: input.label,
+          nickname: input.nickname,
+          generatorConfig: input.generatorConfig as any,
+          isVirtual: true,
         })
       }
 

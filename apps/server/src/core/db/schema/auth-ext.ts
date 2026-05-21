@@ -4,7 +4,10 @@ import { users } from '../schema'
 
 export const wechatAccounts = pgTable('wechat_accounts', {
   id: uuid('id').defaultRandom().primaryKey(),
-  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).unique().notNull(),
+  userId: uuid('user_id')
+    .references(() => users.id, { onDelete: 'cascade' })
+    .unique()
+    .notNull(),
   openId: text('open_id').unique().notNull(),
   unionId: text('union_id'),
   nickname: text('nickname'),
@@ -26,7 +29,9 @@ export const rolePermissions = pgTable(
   {
     id: uuid('id').defaultRandom().primaryKey(),
     role: roleEnum('role').notNull(),
-    permissionCode: text('permission_code').references(() => permissions.code, { onDelete: 'cascade' }).notNull(),
+    permissionCode: text('permission_code')
+      .references(() => permissions.code, { onDelete: 'cascade' })
+      .notNull(),
   },
   (t) => ({
     unq: uniqueIndex('role_permissions_unique').on(t.role, t.permissionCode),

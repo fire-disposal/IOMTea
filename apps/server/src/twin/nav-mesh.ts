@@ -15,7 +15,7 @@ interface NavEdge {
 export interface NavGraph {
   rooms: NavRoomNode[]
   edges: NavEdge[]
-  passabilityGrid: number[][]  // 0=void, 1=floor, 2=door
+  passabilityGrid: number[][] // 0=void, 1=floor, 2=door
 }
 
 interface RoomBounds {
@@ -27,10 +27,7 @@ interface RoomBounds {
   h: number
 }
 
-export function generateNavGraph(
-  grid: number[][],
-  rooms: RoomBounds[],
-): NavGraph {
+export function generateNavGraph(grid: number[][], rooms: RoomBounds[]): NavGraph {
   const height = grid.length
   const width = grid[0]?.length ?? 0
 
@@ -92,9 +89,5 @@ export function generateNavGraph(
 }
 
 export function findRoomForTile(navGraph: NavGraph, x: number, y: number): NavRoomNode | null {
-  return navGraph.rooms.find((r) =>
-    r.walkableTiles.some((t) => t.x === x && t.y === y),
-  ) ?? null
+  return navGraph.rooms.find((r) => r.walkableTiles.some((t) => t.x === x && t.y === y)) ?? null
 }
-
-

@@ -5,7 +5,13 @@ import { events, patients, devices } from '../core/db/schema'
 import { broadcastManager } from '../core/realtime/broadcast'
 import type { PatientProfile, Posture, SimulatedEvent } from './types'
 import { getProfile } from './profiles'
-import { generateHeartRate, generateRespiratoryRate, generateTemperature, generateSpO2, generateBedStatus } from './physiology/vitals'
+import {
+  generateHeartRate,
+  generateRespiratoryRate,
+  generateTemperature,
+  generateSpO2,
+  generateBedStatus,
+} from './physiology/vitals'
 import { generateBloodPressure } from './physiology/blood-pressure'
 import { generateGlucose } from './physiology/glucose'
 import { generateMotionIndex } from './physiology/motion'
@@ -18,7 +24,6 @@ import { enqueueInstruction, processNextInstruction } from './instruction'
 import { tickScheduler, formatHourMinute } from './scheduler'
 import { findPath } from './pathfinding'
 import { createChildLogger } from '../core/lib/logger'
-
 
 const logger = createChildLogger('twin')
 
@@ -57,7 +62,12 @@ export function listEngines(): PatientEngine[] {
 
 // ── Activity level from time-of-day ──
 
-function getActivityLevel(simTime: Date, sleepStart: number, sleepEnd: number, mealTimes: number[]): 'resting' | 'light' | 'moderate' {
+function getActivityLevel(
+  simTime: Date,
+  sleepStart: number,
+  sleepEnd: number,
+  mealTimes: number[],
+): 'resting' | 'light' | 'moderate' {
   const hour = simTime.getHours()
   if (hour >= sleepStart || hour < sleepEnd) return 'resting'
   if (mealTimes.some((m) => Math.abs(hour - m) <= 1)) return 'moderate'
@@ -72,20 +82,26 @@ export async function createEngine(
 ): Promise<PatientEngine> {
   const profile = getProfile(config.profileId)
 
-  const [patient] = await db.insert(patients).values({
-    name: config.name,
-    status: 'active',
-    tags: { profileId: profile.id, conditions: profile.conditions, simulated: true },
-  }).returning()
+  const [patient] = await db
+    .insert(patients)
+    .values({
+      name: config.name,
+      status: 'active',
+      tags: { profileId: profile.id, conditions: profile.conditions, simulated: true },
+    })
+    .returning()
 
   const deviceType = profile.devices[0] || 'simulator'
   const serial = `eng-${config.name.replace(/\s/g, '-').toLowerCase()}-${Date.now()}`
-  const [device] = await db.insert(devices).values({
-    serialNumber: serial,
-    deviceType: deviceType as 'mattress' | 'vision' | 'imu' | 'generic' | 'simulator' | 'custom',
-    patientId: patient.id,
-    tags: { simulated: true, profileId: profile.id },
-  }).returning()
+  const [device] = await db
+    .insert(devices)
+    .values({
+      serialNumber: serial,
+      deviceType: deviceType as 'mattress' | 'vision' | 'imu' | 'generic' | 'simulator' | 'custom',
+      patientId: patient.id,
+      tags: { simulated: true, profileId: profile.id },
+    })
+    .returning()
 
   const actorState = createActorState(`actor-${patient.id}`, 1, 1, null)
   const actors = new Map<string, ActorState>()
@@ -127,16 +143,29 @@ export async function reconstructEngine(
   const profileId = (tags.profileId as string) || 'elderly-cardiac'
   const profile = getProfile(profileId)
 
-  let [device] = await db.select().from(devices).where(eq(devices.patientId, opts.patientId)).limit(1)
+  let [device] = await db
+    .select()
+    .from(devices)
+    .where(eq(devices.patientId, opts.patientId))
+    .limit(1)
   if (!device) {
     const deviceType = profile.devices[0] || 'simulator'
     const serial = `eng-${opts.name.replace(/\s/g, '-').toLowerCase()}-${Date.now()}`
-    const [newDevice] = await db.insert(devices).values({
-      serialNumber: serial,
-      deviceType: deviceType as 'mattress' | 'vision' | 'imu' | 'generic' | 'simulator' | 'custom',
-      patientId: opts.patientId,
-      tags: { simulated: true, profileId: profile.id },
-    }).returning()
+    const [newDevice] = await db
+      .insert(devices)
+      .values({
+        serialNumber: serial,
+        deviceType: deviceType as
+          | 'mattress'
+          | 'vision'
+          | 'imu'
+          | 'generic'
+          | 'simulator'
+          | 'custom',
+        patientId: opts.patientId,
+        tags: { simulated: true, profileId: profile.id },
+      })
+      .returning()
     device = newDevice
   }
 
@@ -178,52 +207,198 @@ async function tickPhysiology(engine: PatientEngine): Promise<SimulatedEvent[]> 
   const hour = engine.simTime.getHours()
   const [sleepStartH] = engine.profile.schedule.sleep.start.split(':').map(Number)
   const [sleepEndH] = engine.profile.schedule.sleep.end.split(':').map(Number)
-  const mealTimes = engine.profile.schedule.meals.map((m) => { const [h] = m.time.split(':').map(Number); return h })
+  const mealTimes = engine.profile.schedule.meals.map((m) => {
+    const [h] = m.time.split(':').map(Number)
+    return h
+  })
   const activity = getActivityLevel(engine.simTime, sleepStartH, sleepEndH, mealTimes)
   const allEvents: SimulatedEvent[] = []
   const now = new Date(engine.simTime)
 
-  const hr = generateHeartRate(b.heartRate.resting, b.heartRate.variability, b.heartRate.circadianFactor, hour, activity, engine.tickCount)
-  allEvents.push({ patientId: patientDbId, deviceId, kind: 'observation', metric: 'heart_rate', value: Math.round(hr), unit: 'bpm', tags: { simulated: true }, recordedAt: now })
+  const hr = generateHeartRate(
+    b.heartRate.resting,
+    b.heartRate.variability,
+    b.heartRate.circadianFactor,
+    hour,
+    activity,
+    engine.tickCount,
+  )
+  allEvents.push({
+    patientId: patientDbId,
+    deviceId,
+    kind: 'observation',
+    metric: 'heart_rate',
+    value: Math.round(hr),
+    unit: 'bpm',
+    tags: { simulated: true },
+    recordedAt: now,
+  })
 
-  const rr = generateRespiratoryRate(b.respiratoryRate.resting, b.respiratoryRate.variability, activity, hr)
-  allEvents.push({ patientId: patientDbId, deviceId, kind: 'observation', metric: 'resp_rate', value: Math.round(rr), unit: 'rpm', tags: { simulated: true }, recordedAt: now })
+  const rr = generateRespiratoryRate(
+    b.respiratoryRate.resting,
+    b.respiratoryRate.variability,
+    activity,
+    hr,
+  )
+  allEvents.push({
+    patientId: patientDbId,
+    deviceId,
+    kind: 'observation',
+    metric: 'resp_rate',
+    value: Math.round(rr),
+    unit: 'rpm',
+    tags: { simulated: true },
+    recordedAt: now,
+  })
 
   const temp = generateTemperature(b.temperature.resting, b.temperature.variability, hour)
-  allEvents.push({ patientId: patientDbId, deviceId, kind: 'observation', metric: 'temperature', value: Math.round(temp * 10) / 10, unit: '°C', tags: { simulated: true }, recordedAt: now })
+  allEvents.push({
+    patientId: patientDbId,
+    deviceId,
+    kind: 'observation',
+    metric: 'temperature',
+    value: Math.round(temp * 10) / 10,
+    unit: '°C',
+    tags: { simulated: true },
+    recordedAt: now,
+  })
 
   const spo2 = generateSpO2(b.spO2.resting, b.spO2.variability)
-  allEvents.push({ patientId: patientDbId, deviceId, kind: 'observation', metric: 'spo2', value: Math.round(spo2), unit: '%', tags: { simulated: true }, recordedAt: now })
+  allEvents.push({
+    patientId: patientDbId,
+    deviceId,
+    kind: 'observation',
+    metric: 'spo2',
+    value: Math.round(spo2),
+    unit: '%',
+    tags: { simulated: true },
+    recordedAt: now,
+  })
 
-  const bp = generateBloodPressure(b.bloodPressure.systolic, b.bloodPressure.diastolic, b.bloodPressure.variability, hour, activity, hr)
-  allEvents.push({ patientId: patientDbId, deviceId, kind: 'observation', metric: 'systolic_bp', value: bp.systolic, unit: 'mmHg', tags: { simulated: true }, recordedAt: now })
-  allEvents.push({ patientId: patientDbId, deviceId, kind: 'observation', metric: 'diastolic_bp', value: bp.diastolic, unit: 'mmHg', tags: { simulated: true }, recordedAt: now })
+  const bp = generateBloodPressure(
+    b.bloodPressure.systolic,
+    b.bloodPressure.diastolic,
+    b.bloodPressure.variability,
+    hour,
+    activity,
+    hr,
+  )
+  allEvents.push({
+    patientId: patientDbId,
+    deviceId,
+    kind: 'observation',
+    metric: 'systolic_bp',
+    value: bp.systolic,
+    unit: 'mmHg',
+    tags: { simulated: true },
+    recordedAt: now,
+  })
+  allEvents.push({
+    patientId: patientDbId,
+    deviceId,
+    kind: 'observation',
+    metric: 'diastolic_bp',
+    value: bp.diastolic,
+    unit: 'mmHg',
+    tags: { simulated: true },
+    recordedAt: now,
+  })
 
   const simMinutes = engine.simTime.getHours() * 60 + engine.simTime.getMinutes()
-  const glucose = generateGlucose(b.bloodGlucose.fasting, b.bloodGlucose.variability, b.bloodGlucose.postprandialSpike, hour, engine.profile.schedule.meals, simMinutes)
-  allEvents.push({ patientId: patientDbId, deviceId, kind: 'observation', metric: 'glucose', value: glucose, unit: 'mmol/L', tags: { simulated: true }, recordedAt: now })
+  const glucose = generateGlucose(
+    b.bloodGlucose.fasting,
+    b.bloodGlucose.variability,
+    b.bloodGlucose.postprandialSpike,
+    hour,
+    engine.profile.schedule.meals,
+    simMinutes,
+  )
+  allEvents.push({
+    patientId: patientDbId,
+    deviceId,
+    kind: 'observation',
+    metric: 'glucose',
+    value: glucose,
+    unit: 'mmol/L',
+    tags: { simulated: true },
+    recordedAt: now,
+  })
 
   const motion = generateMotionIndex(activity)
-  allEvents.push({ patientId: patientDbId, deviceId, kind: 'observation', metric: 'motion_index', value: motion, unit: 'g', tags: { simulated: true }, recordedAt: now })
+  allEvents.push({
+    patientId: patientDbId,
+    deviceId,
+    kind: 'observation',
+    metric: 'motion_index',
+    value: motion,
+    unit: 'g',
+    tags: { simulated: true },
+    recordedAt: now,
+  })
 
   const bed = generateBedStatus(activity, hour, engine.profile.schedule.events)
-  allEvents.push({ patientId: patientDbId, deviceId, kind: 'observation', metric: 'bed_status', value: bed, unit: null, tags: { simulated: true, status: bed === 1 ? 'in_bed' : 'empty' }, recordedAt: now })
+  allEvents.push({
+    patientId: patientDbId,
+    deviceId,
+    kind: 'observation',
+    metric: 'bed_status',
+    value: bed,
+    unit: null,
+    tags: { simulated: true, status: bed === 1 ? 'in_bed' : 'empty' },
+    recordedAt: now,
+  })
 
   const actor = engine.actors.values().next().value as ActorState | undefined
   const previousPosture: Posture = actor?.posture ?? 'lying'
   const posture = generatePosture(activity, hour, bed, previousPosture)
-  allEvents.push({ patientId: patientDbId, deviceId, kind: 'observation', metric: 'posture', value: null, unit: null, tags: { simulated: true, posture }, recordedAt: now })
+  allEvents.push({
+    patientId: patientDbId,
+    deviceId,
+    kind: 'observation',
+    metric: 'posture',
+    value: null,
+    unit: null,
+    tags: { simulated: true, posture },
+    recordedAt: now,
+  })
 
   const ecgSamples = generateECGSamples(Math.round(hr))
-  allEvents.push({ patientId: patientDbId, deviceId, kind: 'observation', metric: 'ecg_waveform', value: null, unit: null, tags: { simulated: true, waveform: ecgSamples }, recordedAt: now })
+  allEvents.push({
+    patientId: patientDbId,
+    deviceId,
+    kind: 'observation',
+    metric: 'ecg_waveform',
+    value: null,
+    unit: null,
+    tags: { simulated: true, waveform: ecgSamples },
+    recordedAt: now,
+  })
 
   const respWave = generateRespiratoryWaveform(Math.round(rr))
-  allEvents.push({ patientId: patientDbId, deviceId, kind: 'observation', metric: 'resp_waveform', value: null, unit: null, tags: { simulated: true, waveform: respWave }, recordedAt: now })
+  allEvents.push({
+    patientId: patientDbId,
+    deviceId,
+    kind: 'observation',
+    metric: 'resp_waveform',
+    value: null,
+    unit: null,
+    tags: { simulated: true, waveform: respWave },
+    recordedAt: now,
+  })
 
   const [wMin, wMax] = engine.profile.demographics.weightRange
   const weight = wMin + Math.random() * (wMax - wMin)
   const pressureGrid = generatePressureDistribution(posture, weight)
-  allEvents.push({ patientId: patientDbId, deviceId, kind: 'observation', metric: 'pressure_grid', value: null, unit: null, tags: { simulated: true, grid: pressureGrid, posture }, recordedAt: now })
+  allEvents.push({
+    patientId: patientDbId,
+    deviceId,
+    kind: 'observation',
+    metric: 'pressure_grid',
+    value: null,
+    unit: null,
+    tags: { simulated: true, grid: pressureGrid, posture },
+    recordedAt: now,
+  })
 
   return allEvents
 }
@@ -233,7 +408,10 @@ function tickBehavior(engine: PatientEngine): void {
 
   const scheduled = tickScheduler(
     engine.behaviorRules,
-    Array.from(engine.actors.values()).map((a) => ({ entityId: a.entityId, patientId: engine.patientId })),
+    Array.from(engine.actors.values()).map((a) => ({
+      entityId: a.entityId,
+      patientId: engine.patientId,
+    })),
     formatHourMinute(engine.simTime),
   )
 
@@ -322,7 +500,12 @@ export async function startEngine(db: DbClient, patientId: string): Promise<void
           tags: e.tags,
           recordedAt: e.recordedAt,
         }))
-        await db.insert(events).values(rows).catch((err) => { logger.warn({ err }, 'failed to insert simulated events') })
+        await db
+          .insert(events)
+          .values(rows)
+          .catch((err) => {
+            logger.warn({ err }, 'failed to insert simulated events')
+          })
       }
 
       broadcastManager.broadcastTwin(
@@ -385,42 +568,109 @@ export async function injectScenario(
   const engine = engines.get(patientId)
   if (!engine) return false
 
-  const SCENARIOS: Record<string, { observation?: Partial<SimulatedEvent>; alert?: Partial<SimulatedEvent> }> = {
+  const SCENARIOS: Record<
+    string,
+    { observation?: Partial<SimulatedEvent>; alert?: Partial<SimulatedEvent> }
+  > = {
     tachycardia: {
       observation: { metric: 'heart_rate', value: 155, unit: 'bpm' },
-      alert: { metric: 'heart_rate', value: 155, unit: 'bpm', kind: 'alert', severity: 'critical', status: 'active' as const },
+      alert: {
+        metric: 'heart_rate',
+        value: 155,
+        unit: 'bpm',
+        kind: 'alert',
+        severity: 'critical',
+        status: 'active' as const,
+      },
     },
     low_spo2: {
       observation: { metric: 'spo2', value: 88, unit: '%' },
-      alert: { metric: 'spo2', value: 88, unit: '%', kind: 'alert', severity: 'critical', status: 'active' as const },
+      alert: {
+        metric: 'spo2',
+        value: 88,
+        unit: '%',
+        kind: 'alert',
+        severity: 'critical',
+        status: 'active' as const,
+      },
     },
     hypotension: {
       observation: { metric: 'systolic_bp', value: 85, unit: 'mmHg' },
-      alert: { metric: 'systolic_bp', value: 85, unit: 'mmHg', kind: 'alert', severity: 'warning', status: 'active' as const },
+      alert: {
+        metric: 'systolic_bp',
+        value: 85,
+        unit: 'mmHg',
+        kind: 'alert',
+        severity: 'warning',
+        status: 'active' as const,
+      },
     },
     fall: {
       observation: { metric: 'posture', value: null, unit: null },
-      alert: { metric: 'fall_detected', value: null, unit: null, kind: 'alert', severity: 'critical', status: 'active' as const, tags: { scenario: 'fall' } },
+      alert: {
+        metric: 'fall_detected',
+        value: null,
+        unit: null,
+        kind: 'alert',
+        severity: 'critical',
+        status: 'active' as const,
+        tags: { scenario: 'fall' },
+      },
     },
     bed_exit: {
       observation: { metric: 'bed_status', value: 0, unit: null },
-      alert: { metric: 'bed_exit', value: null, unit: null, kind: 'alert', severity: 'warning', status: 'active' as const },
+      alert: {
+        metric: 'bed_exit',
+        value: null,
+        unit: null,
+        kind: 'alert',
+        severity: 'warning',
+        status: 'active' as const,
+      },
     },
     hyperglycemia: {
       observation: { metric: 'glucose', value: 13.5, unit: 'mmol/L' },
-      alert: { metric: 'glucose', value: 13.5, unit: 'mmol/L', kind: 'alert', severity: 'critical', status: 'active' as const },
+      alert: {
+        metric: 'glucose',
+        value: 13.5,
+        unit: 'mmol/L',
+        kind: 'alert',
+        severity: 'critical',
+        status: 'active' as const,
+      },
     },
     hypoglycemia: {
       observation: { metric: 'glucose', value: 2.8, unit: 'mmol/L' },
-      alert: { metric: 'glucose', value: 2.8, unit: 'mmol/L', kind: 'alert', severity: 'critical', status: 'active' as const },
+      alert: {
+        metric: 'glucose',
+        value: 2.8,
+        unit: 'mmol/L',
+        kind: 'alert',
+        severity: 'critical',
+        status: 'active' as const,
+      },
     },
     arrhythmia: {
       observation: { metric: 'heart_rate', value: 180, unit: 'bpm' },
-      alert: { metric: 'arrhythmia', value: null, unit: null, kind: 'alert', severity: 'critical', status: 'active' as const },
+      alert: {
+        metric: 'arrhythmia',
+        value: null,
+        unit: null,
+        kind: 'alert',
+        severity: 'critical',
+        status: 'active' as const,
+      },
     },
     respiratory_distress: {
       observation: { metric: 'resp_rate', value: 35, unit: 'rpm' },
-      alert: { metric: 'resp_rate', value: 35, unit: 'rpm', kind: 'alert', severity: 'critical', status: 'active' as const },
+      alert: {
+        metric: 'resp_rate',
+        value: 35,
+        unit: 'rpm',
+        kind: 'alert',
+        severity: 'critical',
+        status: 'active' as const,
+      },
     },
   }
 
@@ -430,33 +680,43 @@ export async function injectScenario(
   const now = new Date()
 
   if (scenario.observation) {
-    await db.insert(events).values({
-      patientId: engine.patientDbId,
-      deviceId: engine.deviceDbId,
-      kind: 'observation',
-      metric: scenario.observation.metric || 'unknown',
-      value: scenario.observation.value ?? null,
-      unit: scenario.observation.unit || null,
-      source: 'manual' as const,
-      tags: { scenario: scenarioType, injected: true },
-      recordedAt: now,
-    }).catch((err) => { logger.warn({ err }, 'failed to insert scenario observation') })
+    await db
+      .insert(events)
+      .values({
+        patientId: engine.patientDbId,
+        deviceId: engine.deviceDbId,
+        kind: 'observation',
+        metric: scenario.observation.metric || 'unknown',
+        value: scenario.observation.value ?? null,
+        unit: scenario.observation.unit || null,
+        source: 'manual' as const,
+        tags: { scenario: scenarioType, injected: true },
+        recordedAt: now,
+      })
+      .catch((err) => {
+        logger.warn({ err }, 'failed to insert scenario observation')
+      })
   }
 
   if (scenario.alert) {
-    await db.insert(events).values({
-      patientId: engine.patientDbId,
-      deviceId: engine.deviceDbId,
-      kind: 'alert',
-      metric: scenario.alert.metric || 'unknown',
-      value: scenario.alert.value ?? null,
-      unit: scenario.alert.unit || null,
-      severity: scenario.alert.severity || 'warning',
-      status: scenario.alert.status || 'active',
-      source: 'manual' as const,
-      tags: { scenario: scenarioType, injected: true },
-      recordedAt: now,
-    }).catch((err) => { logger.warn({ err }, 'failed to insert scenario alert') })
+    await db
+      .insert(events)
+      .values({
+        patientId: engine.patientDbId,
+        deviceId: engine.deviceDbId,
+        kind: 'alert',
+        metric: scenario.alert.metric || 'unknown',
+        value: scenario.alert.value ?? null,
+        unit: scenario.alert.unit || null,
+        severity: scenario.alert.severity || 'warning',
+        status: scenario.alert.status || 'active',
+        source: 'manual' as const,
+        tags: { scenario: scenarioType, injected: true },
+        recordedAt: now,
+      })
+      .catch((err) => {
+        logger.warn({ err }, 'failed to insert scenario alert')
+      })
   }
 
   return true
