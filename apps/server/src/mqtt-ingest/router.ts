@@ -4,6 +4,10 @@ import { events, patients } from '../core/db/schema'
 import { eq } from 'drizzle-orm'
 import mqtt from 'mqtt'
 
+const USERS_TOPIC_PREFIX = 'users'
+const PIN_PATTERN = /^\d{4,6}$/
+const METRIC_PATTERN = /^[a-z][a-z0-9_]{1,63}$/
+
 const METRIC_ALIASES: Record<string, string> = {
   hr: 'heart_rate',
   pulse: 'heart_rate',
@@ -45,7 +49,7 @@ export function normalizeMetric(rawMetric: unknown): string | null {
   const normalized = rawMetric.trim().toLowerCase().replace(/[\s-]+/g, '_')
   if (!normalized) return null
   const metric = METRIC_ALIASES[normalized] ?? normalized
-  if (!/^[a-z][a-z0-9_]{1,63}$/.test(metric)) return null
+  if (!METRIC_PATTERN.test(metric)) return null
   return metric
 }
 
@@ -93,6 +97,30 @@ export function parseHealthPayload(body: Record<string, unknown>) {
   }
 }
 
+function parsePayloadObject(payload: Buffer): Record<string, unknown> | null {
+  try {
+    const parsed = JSON.parse(payload.toString())
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null
+    return parsed as Record<string, unknown>
+  } catch {
+    return null
+  }
+}
+
+function parseTopic(topic: string): { pin: string; topicSource: string; routeType: string } | null {
+  const parts = topic.split('/')
+  if (parts.length < 4 || parts[0] !== USERS_TOPIC_PREFIX) return null
+
+  const pin = parts[1]
+  if (!PIN_PATTERN.test(pin)) return null
+
+  const topicSource = parts[2]
+  const routeType = parts[3] ?? ''
+  if (!routeType) return null
+
+  return { pin, topicSource, routeType }
+}
+
 async function resolvePatientId(userId: string): Promise<string | null> {
   const [patient] = await db
     .select({ id: patients.id })
@@ -101,6 +129,22 @@ async function resolvePatientId(userId: string): Promise<string | null> {
     .orderBy(patients.createdAt)
     .limit(1)
   return patient?.id ?? null
+}
+
+function buildEventTags(
+  topicSource: string,
+  routeType: string,
+  payloadSource: string | undefined,
+  thingId: string | null | undefined,
+): Record<string, unknown> {
+  const tags: Record<string, unknown> = {
+    topicSource,
+    routeType,
+    payloadSource: payloadSource ?? null,
+  }
+
+  if (thingId) tags.thingId = thingId
+  return tags
 }
 
 async function handleHealthEvent(pin: string, topicSource: string, routeType: string, body: Record<string, unknown>): Promise<void> {
@@ -113,12 +157,12 @@ async function handleHealthEvent(pin: string, topicSource: string, routeType: st
   const patientId = await resolvePatientId(pinRecord.userId)
   if (!patientId) return
 
-  const tags: Record<string, unknown> = {
+  const tags = buildEventTags(
     topicSource,
     routeType,
-    payloadSource: normalized.payloadSource ?? null,
-  }
-  if (pinRecord.thingId) tags.thingId = pinRecord.thingId
+    normalized.payloadSource,
+    pinRecord.thingId,
+  )
 
   await db.insert(events).values({
     patientId,
@@ -166,24 +210,12 @@ export async function routeMessage(
   payload: Buffer,
   client?: mqtt.MqttClient,
 ): Promise<void> {
-  const parts = topic.split('/')
-  if (parts.length < 4 || parts[0] !== 'users') return
+  const parsedTopic = parseTopic(topic)
+  if (!parsedTopic) return
+  const { pin, topicSource, routeType } = parsedTopic
 
-  const pin = parts[1]
-  if (!/^\d{4,6}$/.test(pin)) return
-
-  const topicSource = parts[2]
-  const routeType = parts[3] ?? ''
-  if (!routeType) return
-
-  let body: Record<string, unknown>
-  try {
-    const parsed = JSON.parse(payload.toString())
-    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return
-    body = parsed as Record<string, unknown>
-  } catch {
-    return
-  }
+  const body = parsePayloadObject(payload)
+  if (!body) return
 
   if (topicSource === 'admin' && client) {
     await handleAdminMessage(client, pin, routeType, body)

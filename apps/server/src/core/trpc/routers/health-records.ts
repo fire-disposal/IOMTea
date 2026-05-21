@@ -31,6 +31,8 @@ const batchCreateInput = z.object({
 })
 
 type RawRecord = z.infer<typeof healthRecordSchema>
+type DbClient = any
+type EarnedCredit = { moduleKey: string; amount: number; streakDay: number }
 
 interface EventInsert {
   patientId: string
@@ -167,7 +169,7 @@ function mapRecordToEvents(record: RawRecord, patientId: string): EventInsert[] 
 }
 
 async function processCredits(
-  db: any,
+  db: DbClient,
   userId: string,
   record: RawRecord,
   checklistId: string,
@@ -241,63 +243,140 @@ async function processCredits(
   return { amount, streakDay: currentStreak }
 }
 
+async function resolvePatientIdForInput(
+  db: DbClient,
+  userId: string,
+  patientIdFromInput?: string,
+): Promise<string> {
+  if (!patientIdFromInput) {
+    const [patient] = await db
+      .select({ id: patients.id })
+      .from(patients)
+      .where(eq(patients.userId, userId))
+      .orderBy(patients.createdAt)
+      .limit(1)
+
+    if (!patient) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'No patient found for the authenticated user',
+      })
+    }
+    return patient.id
+  }
+
+  const [patient] = await db
+    .select({ id: patients.id })
+    .from(patients)
+    .where(and(eq(patients.id, patientIdFromInput), eq(patients.userId, userId)))
+    .limit(1)
+
+  if (!patient) {
+    throw new TRPCError({
+      code: 'NOT_FOUND',
+      message: 'Patient not found',
+    })
+  }
+
+  return patient.id
+}
+
+function dedupeRecordsById(records: RawRecord[]): RawRecord[] {
+  return [...new Map(records.map((record) => [record.id, record] as const)).values()]
+}
+
+async function findAlreadySyncedRecordIds(
+  db: DbClient,
+  patientId: string,
+  recordIds: string[],
+): Promise<Set<string>> {
+  const existingRows = await db
+    .select({
+      clientRecordId: sql<string>`tags->>'clientRecordId'`,
+    })
+    .from(events)
+    .where(
+      and(
+        eq(events.patientId, patientId),
+        eq(events.source, 'manual'),
+        inArray(sql`tags->>'clientRecordId'`, recordIds),
+      ),
+    )
+
+  return new Set(existingRows.map((row: { clientRecordId: string }) => row.clientRecordId))
+}
+
+function mapFirstEventIdByClientRecordId(
+  insertedEvents: Array<{ id: string; tags: unknown }>,
+): Map<string, string> {
+  const eventIdByRecordId = new Map<string, string>()
+  for (const event of insertedEvents) {
+    const tags = event.tags as Record<string, unknown>
+    const clientRecordId = typeof tags.clientRecordId === 'string' ? tags.clientRecordId : null
+    if (clientRecordId && !eventIdByRecordId.has(clientRecordId)) {
+      eventIdByRecordId.set(clientRecordId, event.id)
+    }
+  }
+  return eventIdByRecordId
+}
+
+async function markChecklistDoneAndGrantCredits(
+  db: DbClient,
+  userId: string,
+  record: RawRecord,
+  eventId: string,
+  today: string,
+): Promise<EarnedCredit | null> {
+  const [checklist] = await db
+    .select()
+    .from(dailyChecklists)
+    .where(
+      and(
+        eq(dailyChecklists.userId, userId),
+        eq(dailyChecklists.date, today),
+        eq(dailyChecklists.moduleKey, record.type),
+      ),
+    )
+    .limit(1)
+
+  if (checklist?.status !== 'pending') return null
+
+  await db
+    .update(dailyChecklists)
+    .set({ status: 'done', completedAt: new Date(), recordId: eventId })
+    .where(eq(dailyChecklists.id, checklist.id))
+
+  const creditResult = await processCredits(
+    db,
+    userId,
+    record,
+    checklist.id,
+    eventId,
+  )
+  if (!creditResult) return null
+
+  return {
+    moduleKey: record.type,
+    amount: creditResult.amount,
+    streakDay: creditResult.streakDay,
+  }
+}
+
 export const healthRecordsRouter = router({
   batchCreate: protectedProcedure
     .input(batchCreateInput)
     .mutation(async ({ ctx, input }) => {
-      let patientId = input.patientId
-
-      if (!patientId) {
-        const [patient] = await ctx.db
-          .select({ id: patients.id })
-          .from(patients)
-          .where(eq(patients.userId, ctx.userId!))
-          .orderBy(patients.createdAt)
-          .limit(1)
-
-        if (!patient) {
-          throw new TRPCError({
-            code: 'NOT_FOUND',
-            message: 'No patient found for the authenticated user',
-          })
-        }
-        patientId = patient.id
-      } else {
-        const [patient] = await ctx.db
-          .select({ id: patients.id })
-          .from(patients)
-          .where(and(eq(patients.id, patientId), eq(patients.userId, ctx.userId!)))
-          .limit(1)
-
-        if (!patient) {
-          throw new TRPCError({
-            code: 'NOT_FOUND',
-            message: 'Patient not found',
-          })
-        }
-      }
+      const userId = ctx.userId!
+      const patientId = await resolvePatientIdForInput(ctx.db, userId, input.patientId)
 
       if (input.records.length === 0) {
         return { syncedIds: [], earnedCredits: [] }
       }
 
-      const recordsById = new Map(input.records.map((record) => [record.id, record] as const))
-      const dedupedRecords = [...recordsById.values()]
+      const dedupedRecords = dedupeRecordsById(input.records)
       const dedupedIds = dedupedRecords.map((r) => r.id)
 
-      const existingRows = await ctx.db
-        .select({
-          clientRecordId: sql<string>`tags->>'clientRecordId'`,
-        })
-        .from(events)
-        .where(
-          and(
-            eq(events.patientId, patientId),
-            eq(events.source, 'manual'),
-            inArray(sql`tags->>'clientRecordId'`, dedupedIds),
-          ),
-        )
-      const existingIds = new Set(existingRows.map((row) => row.clientRecordId))
+      const existingIds = await findAlreadySyncedRecordIds(ctx.db, patientId, dedupedIds)
       const unsyncedRecords = dedupedRecords.filter((record) => !existingIds.has(record.id))
 
       if (unsyncedRecords.length === 0) {
@@ -316,55 +395,23 @@ export const healthRecordsRouter = router({
         .values(allEvents)
         .returning({ id: events.id, tags: events.tags })
 
-      const firstEventIdByRecordId = new Map<string, string>()
-      for (const event of insertedEvents) {
-        const tags = event.tags as Record<string, unknown>
-        const clientRecordId = typeof tags.clientRecordId === 'string' ? tags.clientRecordId : null
-        if (clientRecordId && !firstEventIdByRecordId.has(clientRecordId)) {
-          firstEventIdByRecordId.set(clientRecordId, event.id)
-        }
-      }
+      const firstEventIdByRecordId = mapFirstEventIdByClientRecordId(insertedEvents)
 
-      const earnedCredits: { moduleKey: string; amount: number; streakDay: number }[] = []
+      const earnedCredits: EarnedCredit[] = []
       const todayStr = new Date().toISOString().slice(0, 10)
 
       for (const record of unsyncedRecords) {
         const eventId = firstEventIdByRecordId.get(record.id)
         if (!eventId) continue
 
-        const [checklist] = await ctx.db
-          .select()
-          .from(dailyChecklists)
-          .where(
-            and(
-              eq(dailyChecklists.userId, ctx.userId!),
-              eq(dailyChecklists.date, todayStr),
-              eq(dailyChecklists.moduleKey, record.type),
-            ),
-          )
-          .limit(1)
-
-        if (checklist?.status === 'pending') {
-          await ctx.db
-            .update(dailyChecklists)
-            .set({ status: 'done', completedAt: new Date(), recordId: eventId })
-            .where(eq(dailyChecklists.id, checklist.id))
-
-          const creditResult = await processCredits(
-            ctx.db,
-            ctx.userId!,
-            record,
-            checklist.id,
-            eventId,
-          )
-          if (creditResult) {
-            earnedCredits.push({
-              moduleKey: record.type,
-              amount: creditResult.amount,
-              streakDay: creditResult.streakDay,
-            })
-          }
-        }
+        const earnedCredit = await markChecklistDoneAndGrantCredits(
+          ctx.db,
+          userId,
+          record,
+          eventId,
+          todayStr,
+        )
+        if (earnedCredit) earnedCredits.push(earnedCredit)
       }
 
       return {
