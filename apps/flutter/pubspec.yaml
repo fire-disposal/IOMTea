@@ -26,11 +26,11 @@ dependencies:
   # 存储
   shared_preferences: ^2.3.0
 
+  # 动画
+  flutter_animate: ^4.5.2
+
   # YOLO
   ultralytics_yolo: ^0.3.4
-
-  # 相机
-  camera: ^0.12.0+1
 
 dev_dependencies:
   flutter_test:
@@ -39,3 +39,5 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/models/
