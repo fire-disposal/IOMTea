@@ -10,12 +10,7 @@ export const checklistRouter = router({
     const existing = await ctx.db
       .select()
       .from(dailyChecklists)
-      .where(
-        and(
-          eq(dailyChecklists.userId, ctx.userId!),
-          eq(dailyChecklists.date, today),
-        ),
-      )
+      .where(and(eq(dailyChecklists.userId, ctx.userId!), eq(dailyChecklists.date, today)))
 
     if (existing.length > 0) return existing
 
@@ -30,9 +25,7 @@ export const checklistRouter = router({
     const items = await ctx.db
       .select()
       .from(planItems)
-      .where(
-        and(eq(planItems.planId, activePlan.id), eq(planItems.enabled, true)),
-      )
+      .where(and(eq(planItems.planId, activePlan.id), eq(planItems.enabled, true)))
 
     if (items.length === 0) return []
 
@@ -49,12 +42,7 @@ export const checklistRouter = router({
     const created = await ctx.db
       .select()
       .from(dailyChecklists)
-      .where(
-        and(
-          eq(dailyChecklists.userId, ctx.userId!),
-          eq(dailyChecklists.date, today),
-        ),
-      )
+      .where(and(eq(dailyChecklists.userId, ctx.userId!), eq(dailyChecklists.date, today)))
 
     return created
   }),
@@ -66,10 +54,7 @@ export const checklistRouter = router({
         .update(dailyChecklists)
         .set({ status: 'skipped' })
         .where(
-          and(
-            eq(dailyChecklists.id, input.checklistId),
-            eq(dailyChecklists.userId, ctx.userId!),
-          ),
+          and(eq(dailyChecklists.id, input.checklistId), eq(dailyChecklists.userId, ctx.userId!)),
         )
       return { success: true }
     }),

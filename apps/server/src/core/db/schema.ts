@@ -45,7 +45,9 @@ export const refreshTokens = pgTable(
   'refresh_tokens',
   {
     id: uuid('id').defaultRandom().primaryKey(),
-    userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
     tokenHash: text('token_hash').notNull().unique(),
     expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
@@ -97,7 +99,9 @@ export const events = pgTable(
   'events',
   {
     id: uuid('id').defaultRandom().primaryKey(),
-    patientId: uuid('patient_id').notNull().references(() => patients.id, { onDelete: 'cascade' }),
+    patientId: uuid('patient_id')
+      .notNull()
+      .references(() => patients.id, { onDelete: 'cascade' }),
     deviceId: uuid('device_id').references(() => devices.id, { onDelete: 'set null' }),
     pinCode: varchar('pin_code', { length: 6 }),
     kind: kindEnum('kind').notNull(),
@@ -113,11 +117,17 @@ export const events = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => ({
-    patientMetricIdx: index('events_patient_metric_time_idx').on(t.patientId, t.metric, t.recordedAt.desc()),
-    patientKindIdx: index('events_patient_kind_time_idx').on(t.patientId, t.kind, t.recordedAt.desc()),
+    patientMetricIdx: index('events_patient_metric_time_idx').on(
+      t.patientId,
+      t.metric,
+      t.recordedAt.desc(),
+    ),
+    patientKindIdx: index('events_patient_kind_time_idx').on(
+      t.patientId,
+      t.kind,
+      t.recordedAt.desc(),
+    ),
     deviceTimeIdx: index('events_device_time_idx').on(t.deviceId, t.recordedAt.desc()),
     patientSourceIdx: index('events_patient_source_idx').on(t.patientId, t.source),
   }),
 )
-
-

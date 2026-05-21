@@ -10,8 +10,26 @@ const DEVICE_EVENTS_TOPIC = 'iomtea/device/+/events'
 
 let client: mqtt.MqttClient | null = null
 
-export function startMqttListener(brokerUrl: string, opts?: { username?: string; password?: string }): mqtt.MqttClient {
-  client = mqtt.connect(brokerUrl, {
+function subscribeTopic(
+  mqttClient: mqtt.MqttClient,
+  topic: string,
+  successMessage: string,
+  failureMessage: string,
+): void {
+  mqttClient.subscribe(topic, { qos: 1 }, (err) => {
+    if (err) {
+      logger.error({ err }, failureMessage)
+      return
+    }
+    logger.info(successMessage)
+  })
+}
+
+export function startMqttListener(
+  brokerUrl: string,
+  opts?: { username?: string; password?: string },
+): mqtt.MqttClient {
+  const mqttClient = mqtt.connect(brokerUrl, {
     username: opts?.username,
     password: opts?.password,
     clientId: `iomtea-pin-${Date.now()}`,
@@ -20,60 +38,50 @@ export function startMqttListener(brokerUrl: string, opts?: { username?: string;
     keepalive: 60,
     clean: true,
   })
+  client = mqttClient
 
-  client.on('connect', () => {
+  mqttClient.on('connect', () => {
     logger.info('✓ MQTT Broker 已连接')
-
-    client!.subscribe(TOPIC, { qos: 1 }, (err) => {
-      if (err) {
-        logger.error({ err }, '✗ MQTT 主题订阅失败')
-      } else {
-        logger.info(`√ 已订阅 PIN 数据主题: ${TOPIC}`)
-      }
-    })
-
-    client!.subscribe(ADMIN_TOPIC, { qos: 1 }, (err) => {
-      if (err) {
-        logger.error({ err }, '✗ MQTT 管理主题订阅失败')
-      } else {
-        logger.info(`√ 已订阅管理主题: ${ADMIN_TOPIC}`)
-      }
-    })
-
-    client!.subscribe(DEVICE_EVENTS_TOPIC, { qos: 1 }, (err) => {
-      if (err) {
-        logger.error({ err }, '✗ MQTT 设备事件主题订阅失败')
-      } else {
-        logger.info(`√ 已订阅设备事件主题: ${DEVICE_EVENTS_TOPIC}`)
-      }
-    })
+    subscribeTopic(mqttClient, TOPIC, `√ 已订阅 PIN 数据主题: ${TOPIC}`, '✗ MQTT 主题订阅失败')
+    subscribeTopic(
+      mqttClient,
+      ADMIN_TOPIC,
+      `√ 已订阅管理主题: ${ADMIN_TOPIC}`,
+      '✗ MQTT 管理主题订阅失败',
+    )
+    subscribeTopic(
+      mqttClient,
+      DEVICE_EVENTS_TOPIC,
+      `√ 已订阅设备事件主题: ${DEVICE_EVENTS_TOPIC}`,
+      '✗ MQTT 设备事件主题订阅失败',
+    )
   })
 
-  client.on('message', async (topic, payload) => {
+  mqttClient.on('message', async (topic, payload) => {
     try {
-      await routeMessage(topic, payload, client ?? undefined)
+      await routeMessage(topic, payload, mqttClient)
     } catch (err) {
       logger.error({ err, topic }, 'MQTT 消息路由失败')
     }
   })
 
-  client.on('error', (err) => {
+  mqttClient.on('error', (err) => {
     logger.error({ err }, 'MQTT 连接错误')
   })
 
-  client.on('close', () => {
+  mqttClient.on('close', () => {
     logger.warn('MQTT Broker 连接已断开，将自动重连')
   })
 
-  client.on('reconnect', () => {
+  mqttClient.on('reconnect', () => {
     logger.info('MQTT 正在重连 ...')
   })
 
-  client.on('offline', () => {
+  mqttClient.on('offline', () => {
     logger.warn('MQTT 客户端离线')
   })
 
-  return client
+  return mqttClient
 }
 
 export function stopMqttListener(): void {

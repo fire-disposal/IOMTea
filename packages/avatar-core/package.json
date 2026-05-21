@@ -1,5 +1,5 @@
 {
-  "name": "@iomtea/shared-mii",
+  "name": "@iomtea/avatar-core",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -9,13 +9,10 @@
     "test": "vitest run"
   },
   "exports": {
-    ".": "./src/index.ts",
-    "./procedural": "./src/procedural/index.ts",
-    "./svg": "./src/svg/index.ts"
+    ".": "./src/index.ts"
   },
   "dependencies": {
-    "@iomtea/shared-types": "workspace:*",
-    "zod": "^3.24.0"
+    "@iomtea/shared-types": "workspace:*"
   },
   "devDependencies": {
     "vitest": "^4.1.6"

@@ -1,0 +1,5 @@
+export { renderAvatarSvg, renderAvatarSvgAst } from './render'
+export { randomAvatarSpec } from './random'
+export { AVATAR_PART_MANIFEST } from './parts'
+export * from './tokens'
+export type { SvgNode, AvatarRenderOptions, AvatarPartDefinition } from './types'

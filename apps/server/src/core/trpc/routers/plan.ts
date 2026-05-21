@@ -36,73 +36,68 @@ export const planRouter = router({
     return { ...plan, items }
   }),
 
-  upsert: protectedProcedure
-    .input(upsertInput)
-    .mutation(async ({ ctx, input }) => {
-      let [plan] = await ctx.db
-        .select()
-        .from(plans)
-        .where(and(eq(plans.userId, ctx.userId!), eq(plans.isActive, true)))
-        .limit(1)
+  upsert: protectedProcedure.input(upsertInput).mutation(async ({ ctx, input }) => {
+    let [plan] = await ctx.db
+      .select()
+      .from(plans)
+      .where(and(eq(plans.userId, ctx.userId!), eq(plans.isActive, true)))
+      .limit(1)
 
-      if (!plan) {
-        const [created] = await ctx.db
-          .insert(plans)
-          .values({
-            userId: ctx.userId!,
-            name: input.name || '我的健康计划',
-          })
-          .returning()
-        plan = created
-      } else if (input.name) {
+    if (!plan) {
+      const [created] = await ctx.db
+        .insert(plans)
+        .values({
+          userId: ctx.userId!,
+          name: input.name || '我的健康计划',
+        })
+        .returning()
+      plan = created
+    } else if (input.name) {
+      await ctx.db
+        .update(plans)
+        .set({ name: input.name, updatedAt: new Date() })
+        .where(eq(plans.id, plan.id))
+    }
+
+    const existing = await ctx.db.select().from(planItems).where(eq(planItems.planId, plan.id))
+
+    const existingMap = new Map(existing.map((e) => [e.moduleKey, e]))
+
+    for (const item of input.items) {
+      const current = existingMap.get(item.moduleKey)
+      if (current) {
         await ctx.db
-          .update(plans)
-          .set({ name: input.name, updatedAt: new Date() })
-          .where(eq(plans.id, plan.id))
-      }
-
-      const existing = await ctx.db
-        .select()
-        .from(planItems)
-        .where(eq(planItems.planId, plan.id))
-
-      const existingMap = new Map(existing.map((e) => [e.moduleKey, e]))
-
-      for (const item of input.items) {
-        const current = existingMap.get(item.moduleKey)
-        if (current) {
-          await ctx.db
-            .update(planItems)
-            .set({
-              enabled: item.enabled,
-              reminderEnabled: item.reminderEnabled,
-              reminderTimes: item.reminderTimes,
-              frequency: item.frequency,
-              sortOrder: item.sortOrder,
-              updatedAt: new Date(),
-            })
-            .where(eq(planItems.id, current.id))
-        } else {
-          await ctx.db.insert(planItems).values({
-            planId: plan.id,
-            moduleKey: item.moduleKey,
+          .update(planItems)
+          .set({
             enabled: item.enabled,
             reminderEnabled: item.reminderEnabled,
             reminderTimes: item.reminderTimes,
             frequency: item.frequency,
             sortOrder: item.sortOrder,
+            updatedAt: new Date(),
           })
-        }
+          .where(eq(planItems.id, current.id))
+      } else {
+        await ctx.db.insert(planItems).values({
+          planId: plan.id,
+          moduleKey: item.moduleKey,
+          enabled: item.enabled,
+          reminderEnabled: item.reminderEnabled,
+          reminderTimes: item.reminderTimes,
+          frequency: item.frequency,
+          sortOrder: item.sortOrder,
+        })
       }
+    }
 
-      const items = await ctx.db
-        .select()
-        .from(planItems)
-        .where(eq(planItems.planId, plan.id))
-        .orderBy(planItems.sortOrder)
+    const items = await ctx.db
+      .select()
+      .from(planItems)
+      .where(eq(planItems.planId, plan.id))
+      .orderBy(planItems.sortOrder)
 
-      return { ...plan, items }
-    }),
+    return { ...plan, items }
+  }),
 
   detail: protectedProcedure
     .input(z.object({ planId: z.string().uuid() }))

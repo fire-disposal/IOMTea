@@ -4,7 +4,7 @@ import { findPath, type PathResult } from './pathfinding'
 type GridCell = { terrain: 0 | 1 | 2 }
 
 function g(grid: number[][]): GridCell[][] {
-  return grid.map(row => row.map(c => ({ terrain: c as 0 | 1 | 2 })))
+  return grid.map((row) => row.map((c) => ({ terrain: c as 0 | 1 | 2 })))
 }
 
 describe('findPath', () => {
@@ -72,5 +72,3 @@ describe('findPath', () => {
     expect(result).not.toBeNull()
   })
 })
-
-

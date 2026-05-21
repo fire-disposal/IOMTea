@@ -2,19 +2,22 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { twinState } from './twin-state'
 
 beforeEach(() => {
-  twinState.initRooms([
-    { id: 'living-room', name: 'Living Room' },
-    { id: 'bedroom', name: 'Bedroom' },
-    { id: 'bathroom', name: 'Bathroom' },
-    { id: 'kitchen', name: 'Kitchen' },
-    { id: 'hallway', name: 'Hallway' },
-  ], [
-    { id: 'living-room', connections: ['kitchen', 'hallway'], hasCamera: false },
-    { id: 'bedroom', connections: ['bathroom', 'hallway'], hasCamera: true },
-    { id: 'bathroom', connections: ['bedroom'], hasCamera: false },
-    { id: 'kitchen', connections: ['living-room', 'hallway'], hasCamera: true },
-    { id: 'hallway', connections: ['living-room', 'bedroom', 'kitchen'], hasCamera: false },
-  ])
+  twinState.initRooms(
+    [
+      { id: 'living-room', name: 'Living Room' },
+      { id: 'bedroom', name: 'Bedroom' },
+      { id: 'bathroom', name: 'Bathroom' },
+      { id: 'kitchen', name: 'Kitchen' },
+      { id: 'hallway', name: 'Hallway' },
+    ],
+    [
+      { id: 'living-room', connections: ['kitchen', 'hallway'], hasCamera: false },
+      { id: 'bedroom', connections: ['bathroom', 'hallway'], hasCamera: true },
+      { id: 'bathroom', connections: ['bedroom'], hasCamera: false },
+      { id: 'kitchen', connections: ['living-room', 'hallway'], hasCamera: true },
+      { id: 'hallway', connections: ['living-room', 'bedroom', 'kitchen'], hasCamera: false },
+    ],
+  )
 })
 
 describe('initRooms', () => {

@@ -19,10 +19,10 @@ export async function code2session(code: string): Promise<WechatSession> {
   const data = (await res.json()) as WechatSession
 
   if (data.errcode) {
-    throw new Error(`WeChat login failed: ${data.errmsg || 'unknown error'} (code: ${data.errcode})`)
+    throw new Error(
+      `WeChat login failed: ${data.errmsg || 'unknown error'} (code: ${data.errcode})`,
+    )
   }
 
   return data
 }
-
-
