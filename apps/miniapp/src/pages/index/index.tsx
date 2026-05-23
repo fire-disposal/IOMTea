@@ -7,26 +7,13 @@ import { TabBar } from '../../components/TabBar'
 import { STORAGE_KEYS } from '../../constants/storage-keys'
 import { HEALTH_MODULE_META, type HealthModuleKey } from '../../constants/modules'
 import { trpc } from '../../utils/trpc'
+import { getRecordPage } from '../../constants/modules'
 import './index.scss'
 
 interface ChecklistItem {
   id: string
   moduleKey: string
   status: 'pending' | 'done' | 'skipped'
-}
-
-function getRecordPage(key: string): string {
-  const pages: Record<string, string> = {
-    blood_glucose: '/pages/record/glucose/index',
-    blood_pressure: '/pages/record/pressure/index',
-    weight: '/pages/record/weight/index',
-    heart_rate: '/pages/record/heart-rate/index',
-    temperature: '/pages/record/temperature/index',
-    spo2: '/pages/record/spo2/index',
-    medication: '/pages/record/medication/index',
-    period: '/pages/record/period/index',
-  }
-  return pages[key] || ''
 }
 
 export default function Index() {

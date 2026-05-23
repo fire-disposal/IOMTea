@@ -1,5 +1,5 @@
 import { Badge, Paper, Text } from '@mantine/core'
-import { IconCamera, IconEyeOff, IconDeviceMobile } from '@tabler/icons-react'
+import { IconCamera, IconEyeOff } from '@tabler/icons-react'
 import { useMemo } from 'react'
 
 interface RoomNode {
