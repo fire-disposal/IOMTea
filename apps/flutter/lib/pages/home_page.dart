@@ -78,7 +78,7 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       body: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(kPagePadding),
         child: Column(children: [
           if (_showBanner)
             _buildPinBanner()
@@ -89,9 +89,9 @@ class _HomePageState extends State<HomePage> {
           Expanded(
             child: GridView.count(
               crossAxisCount: 2,
-              mainAxisSpacing: 16,
-              crossAxisSpacing: 16,
-              childAspectRatio: 0.85,
+              mainAxisSpacing: 14,
+              crossAxisSpacing: 14,
+              childAspectRatio: 0.82,
               children: [
                 _ModeCard(
                   icon: Icons.watch,

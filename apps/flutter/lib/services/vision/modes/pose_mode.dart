@@ -1,10 +1,20 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ultralytics_yolo/ultralytics_yolo.dart';
 import '../vision_mode.dart';
 import '../painters/pose_painter.dart';
+
+Rect _lerpRect(Rect a, Rect b, double t) {
+  return Rect.fromLTRB(
+    ui.lerpDouble(a.left, b.left, t) ?? b.left,
+    ui.lerpDouble(a.top, b.top, t) ?? b.top,
+    ui.lerpDouble(a.right, b.right, t) ?? b.right,
+    ui.lerpDouble(a.bottom, b.bottom, t) ?? b.bottom,
+  );
+}
 
 class _Person {
   final int id;
@@ -12,18 +22,38 @@ class _Person {
   String state;
   int fallenFrames;
   int leftFrames;
+  Rect _smoothedBox;
+  List<Point>? _smoothedKeypoints;
 
   _Person({
     required this.id,
     required this.lastResult,
-    this.state = 'unknown',
-    this.fallenFrames = 0,
-    this.leftFrames = 0,
-  });
+    required this.state,
+    required this.fallenFrames,
+    required this.leftFrames,
+  }) : _smoothedBox = lastResult.boundingBox,
+       _smoothedKeypoints = lastResult.keypoints;
+
+  void updateSmooth(YOLOResult result, {double alpha = 0.35}) {
+    _smoothedBox = _lerpRect(_smoothedBox, result.boundingBox, alpha);
+    final rawKp = result.keypoints;
+    if (rawKp != null && _smoothedKeypoints != null && rawKp.length == _smoothedKeypoints!.length) {
+      final smoothed = <Point>[];
+      for (int i = 0; i < rawKp.length; i++) {
+        final nsx = ui.lerpDouble(_smoothedKeypoints![i].x, rawKp[i].x, alpha) ?? rawKp[i].x;
+        final nsy = ui.lerpDouble(_smoothedKeypoints![i].y, rawKp[i].y, alpha) ?? rawKp[i].y;
+        smoothed.add(Point(nsx, nsy));
+      }
+      _smoothedKeypoints = smoothed;
+    } else {
+      _smoothedKeypoints = rawKp;
+    }
+  }
 
   PosePaintData toPaintData() => PosePaintData(
-    keypoints: lastResult.keypoints ?? [],
-    bbox: lastResult.bbox,
+    keypoints: _smoothedKeypoints ?? [],
+    keypointConfidences: lastResult.keypointConfidences ?? [],
+    bbox: _smoothedBox,
     confidence: lastResult.confidence,
     state: state,
     isFallen: state == 'fallen',
@@ -103,8 +133,9 @@ class PoseMode extends VisionMode {
     if (best != null) {
       best.lastResult = result;
       best.leftFrames = 0;
+      best.updateSmooth(result);
     } else {
-      final person = _Person(id: _nextId++, lastResult: result);
+      final person = _Person(id: _nextId++, lastResult: result, state: 'unknown', fallenFrames: 0, leftFrames: 0);
       _tracked.add(person);
       _logController.add(VisionLogEntry(
         time: DateTime.now(),
@@ -172,15 +203,15 @@ class PoseMode extends VisionMode {
 
   String _classifyPose(YOLOResult result) {
     final kp = result.keypoints;
-    if (kp == null || kp.length < 13) return 'unknown';
+    final kc = result.keypointConfidences;
+    if (kp == null || kc == null || kp.length < 13 || kc.length < 13) return 'unknown';
 
     final lShoulder = kp[5];
     final rShoulder = kp[6];
     final lHip = kp[11];
     final rHip = kp[12];
 
-    if (lShoulder.confidence < 0.3 || rShoulder.confidence < 0.3 ||
-        lHip.confidence < 0.3 || rHip.confidence < 0.3) {
+    if (kc[5] < 0.3 || kc[6] < 0.3 || kc[11] < 0.3 || kc[12] < 0.3) {
       return 'unknown';
     }
 
@@ -201,16 +232,16 @@ class PoseMode extends VisionMode {
   }
 
   bool _isPersonVisible(YOLOResult result) {
-    final kp = result.keypoints;
-    if (kp == null) return false;
-    return kp.where((k) => k.confidence > 0.3).length >= 4;
+    final kc = result.keypointConfidences;
+    if (kc == null) return false;
+    return kc.where((c) => c > 0.3).length >= 4;
   }
 
   double _computeIoU(YOLOResult a, YOLOResult b) {
-    final ax1 = a.bbox.left, ay1 = a.bbox.top;
-    final ax2 = a.bbox.right, ay2 = a.bbox.bottom;
-    final bx1 = b.bbox.left, by1 = b.bbox.top;
-    final bx2 = b.bbox.right, by2 = b.bbox.bottom;
+    final ax1 = a.boundingBox.left, ay1 = a.boundingBox.top;
+    final ax2 = a.boundingBox.right, ay2 = a.boundingBox.bottom;
+    final bx1 = b.boundingBox.left, by1 = b.boundingBox.top;
+    final bx2 = b.boundingBox.right, by2 = b.boundingBox.bottom;
 
     final ix1 = math.max(ax1, bx1), iy1 = math.max(ay1, by1);
     final ix2 = math.min(ax2, bx2), iy2 = math.min(ay2, by2);
@@ -228,6 +259,5 @@ class PoseMode extends VisionMode {
     _tracked.clear();
     _nextId = 1;
     _painter.clear();
-    await _logController.close();
   }
 }

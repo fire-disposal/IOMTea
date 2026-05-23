@@ -12,6 +12,25 @@ const Color warningOrange = Color(0xFFED6C02);
 const Color successGreen = Color(0xFF4A8C3F);
 const Color infoBlue = Color(0xFF1976D2);
 
+const double kPagePadding = 20;
+const double kCardMarginH = 16;
+const double kCardMarginV = 6;
+const double kCardRadius = 14;
+const double kChipRadius = 8;
+const double kBtnRadius = 10;
+const double kItemGap = 12;
+const double kSectionGap = 24;
+
+class AppText {
+  static const TextStyle _base = TextStyle(fontFamily: 'system', letterSpacing: -0.2);
+  static TextStyle headlineLarge({Color? color}) => _base.copyWith(fontSize: 20, fontWeight: FontWeight.w700, color: color ?? textPrimary, height: 1.2);
+  static TextStyle headlineMedium({Color? color}) => _base.copyWith(fontSize: 16, fontWeight: FontWeight.w600, color: color ?? textPrimary);
+  static TextStyle body({Color? color}) => _base.copyWith(fontSize: 13, fontWeight: FontWeight.w400, color: color ?? textPrimary);
+  static TextStyle caption({Color? color}) => _base.copyWith(fontSize: 11, fontWeight: FontWeight.w400, color: color ?? textSecondary);
+  static TextStyle label({Color? color}) => _base.copyWith(fontSize: 12, fontWeight: FontWeight.w500, color: color ?? textPrimary);
+  static TextStyle mono({Color? color, double? fontSize}) => _base.copyWith(fontSize: fontSize ?? 12, fontWeight: FontWeight.w600, fontFamily: 'monospace', color: color ?? textPrimary);
+}
+
 class AnimatedGradientAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final List<Widget>? actions;
@@ -75,12 +94,14 @@ class AnimatedGradientAppBar extends StatelessWidget implements PreferredSizeWid
 
 class AppSectionCard extends StatelessWidget {
   final Widget child;
+  final String? header;
   final EdgeInsetsGeometry? padding;
   final EdgeInsetsGeometry? margin;
 
   const AppSectionCard({
     super.key,
     required this.child,
+    this.header,
     this.padding,
     this.margin,
   });
@@ -91,11 +112,25 @@ class AppSectionCard extends StatelessWidget {
       color: Colors.white,
       elevation: 0.5,
       shadowColor: Colors.black12,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      margin: margin ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(kCardRadius)),
+      margin: margin ?? const EdgeInsets.symmetric(horizontal: kCardMarginH, vertical: kCardMarginV),
       child: Padding(
-        padding: padding ?? const EdgeInsets.all(16),
-        child: child,
+        padding: padding ?? EdgeInsets.only(
+          left: 16, right: 16,
+          top: header != null ? 14 : 16,
+          bottom: 16,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (header != null) ...[
+              Text(header!, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: textSecondary, letterSpacing: 0.5)),
+              const SizedBox(height: 10),
+            ],
+            child,
+          ],
+        ),
       ),
     );
   }
@@ -119,24 +154,24 @@ final ThemeData matchaTheme = ThemeData(
       backgroundColor: matchaPrimary,
       foregroundColor: Colors.white,
       elevation: 1,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(kBtnRadius)),
     ),
   ),
   filledButtonTheme: FilledButtonThemeData(
     style: FilledButton.styleFrom(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(kBtnRadius)),
     ),
   ),
   outlinedButtonTheme: OutlinedButtonThemeData(
     style: OutlinedButton.styleFrom(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(kBtnRadius)),
     ),
   ),
   cardTheme: CardThemeData(
     color: Colors.white,
     elevation: 0.5,
     shadowColor: Colors.black12,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(kCardRadius)),
+    margin: const EdgeInsets.symmetric(horizontal: kCardMarginH, vertical: kCardMarginV),
   ),
 );

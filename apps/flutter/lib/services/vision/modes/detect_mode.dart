@@ -1,25 +1,40 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:ultralytics_yolo/ultralytics_yolo.dart';
 import '../vision_mode.dart';
 import '../painters/detect_painter.dart';
+
+Rect _lerpRect(Rect a, Rect b, double t) {
+  return Rect.fromLTRB(
+    ui.lerpDouble(a.left, b.left, t) ?? b.left,
+    ui.lerpDouble(a.top, b.top, t) ?? b.top,
+    ui.lerpDouble(a.right, b.right, t) ?? b.right,
+    ui.lerpDouble(a.bottom, b.bottom, t) ?? b.bottom,
+  );
+}
 
 class _Obj {
   final int id;
   final String className;
   YOLOResult lastResult;
   int leftFrames;
+  Rect _smoothedBox;
 
   _Obj({
     required this.id,
     required this.className,
     required this.lastResult,
-    this.leftFrames = 0,
-  });
+    required this.leftFrames,
+  }) : _smoothedBox = lastResult.boundingBox;
+
+  void updateSmooth(Rect newBox, {double alpha = 0.35}) {
+    _smoothedBox = _lerpRect(_smoothedBox, newBox, alpha);
+  }
 
   DetectPaintData toPaintData() => DetectPaintData(
-    bbox: lastResult.bbox,
+    bbox: _smoothedBox,
     className: className,
     confidence: lastResult.confidence,
   );
@@ -85,8 +100,9 @@ class DetectMode extends VisionMode {
     if (best != null) {
       best.lastResult = result;
       best.leftFrames = 0;
+      best.updateSmooth(result.boundingBox);
     } else {
-      final obj = _Obj(id: _nextId++, className: result.className, lastResult: result);
+      final obj = _Obj(id: _nextId++, className: result.className, lastResult: result, leftFrames: 0);
       _objects.add(obj);
       _logController.add(VisionLogEntry(
         time: DateTime.now(),
@@ -114,10 +130,10 @@ class DetectMode extends VisionMode {
   }
 
   double _computeIoU(YOLOResult a, YOLOResult b) {
-    final ax1 = a.bbox.left, ay1 = a.bbox.top;
-    final ax2 = a.bbox.right, ay2 = a.bbox.bottom;
-    final bx1 = b.bbox.left, by1 = b.bbox.top;
-    final bx2 = b.bbox.right, by2 = b.bbox.bottom;
+    final ax1 = a.boundingBox.left, ay1 = a.boundingBox.top;
+    final ax2 = a.boundingBox.right, ay2 = a.boundingBox.bottom;
+    final bx1 = b.boundingBox.left, by1 = b.boundingBox.top;
+    final bx2 = b.boundingBox.right, by2 = b.boundingBox.bottom;
 
     final ix1 = math.max(ax1, bx1), iy1 = math.max(ay1, by1);
     final ix2 = math.min(ax2, bx2), iy2 = math.min(ay2, by2);
@@ -135,7 +151,7 @@ class DetectMode extends VisionMode {
     _objects.clear();
     _nextId = 1;
     _painter.clear();
-    await _logController.close();
+    _frameDirty = false;
   }
 
   @override

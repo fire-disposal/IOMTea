@@ -5,12 +5,14 @@ class VisionLogPanel extends StatelessWidget {
   final List<VisionLogEntry> entries;
   final String statusText;
   final VoidCallback onClear;
+  final VoidCallback? onClose;
 
   const VisionLogPanel({
     super.key,
     required this.entries,
     required this.statusText,
     required this.onClear,
+    this.onClose,
   });
 
   @override
@@ -30,11 +32,21 @@ class VisionLogPanel extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            const SizedBox(width: 8),
             GestureDetector(
               onTap: onClear,
-              child: Text('clear', style: TextStyle(fontSize: 10, color: Colors.white.withValues(alpha: 0.25))),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                child: Text('clear', style: TextStyle(fontSize: 10, color: Colors.white.withValues(alpha: 0.25))),
+              ),
             ),
+            if (onClose != null)
+              GestureDetector(
+                onTap: onClose,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Icon(Icons.keyboard_arrow_down, size: 14, color: Colors.white.withValues(alpha: 0.3)),
+                ),
+              ),
           ]),
         ),
         Expanded(

@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:ultralytics_yolo/ultralytics_yolo.dart';
 
 class PosePaintData {
-  final List<YOLOKeypoint> keypoints;
+  final List<Point> keypoints;
+  final List<double> keypointConfidences;
   final Rect bbox;
   final double confidence;
   final String state;
@@ -11,6 +12,7 @@ class PosePaintData {
 
   const PosePaintData({
     required this.keypoints,
+    required this.keypointConfidences,
     required this.bbox,
     required this.confidence,
     required this.state,
@@ -20,7 +22,6 @@ class PosePaintData {
 
 class PosePainter extends CustomPainter {
   List<PosePaintData> _persons = [];
-  double _scaleX = 1, _scaleY = 1, _offsetX = 0, _offsetY = 0;
 
   static const _bones = [
     [5, 7], [7, 9], [6, 8], [8, 10], [5, 6],
@@ -28,32 +29,22 @@ class PosePainter extends CustomPainter {
   ];
 
   static const _boneColors = [
-    Colors.cyan, Colors.blue, Colors.cyan, Colors.blue,
-    Colors.green, Colors.yellow, Colors.yellow, Colors.green,
-    Colors.yellow, Colors.orange, Colors.yellow, Colors.orange,
+    Color(0xFF00BCD4), Color(0xFF2196F3), Color(0xFF00BCD4), Color(0xFF2196F3),
+    Color(0xFF4CAF50), Color(0xFFFFEB3B), Color(0xFFFFEB3B), Color(0xFF4CAF50),
+    Color(0xFFFFEB3B), Color(0xFFFF9800), Color(0xFFFFEB3B), Color(0xFFFF9800),
   ];
 
   void update(List<PosePaintData> persons) {
     _persons = persons;
   }
 
-  void setTransform(double scaleX, double scaleY, double offsetX, double offsetY) {
-    _scaleX = scaleX;
-    _scaleY = scaleY;
-    _offsetX = offsetX;
-    _offsetY = offsetY;
-  }
-
   void clear() {
     _persons = [];
   }
 
-  Offset _toScreen(double x, double y) {
-    return Offset(x * _scaleX + _offsetX, y * _scaleY + _offsetY);
-  }
-
   @override
   void paint(Canvas canvas, Size size) {
+    if (size.isEmpty) return;
     for (final person in _persons) {
       final kp = person.keypoints;
       if (kp.isEmpty) continue;
@@ -63,9 +54,8 @@ class PosePainter extends CustomPainter {
       int vc = 0;
 
       for (int i = 0; i < kp.length && i < 17; i++) {
-        if (kp[i].confidence < 0.3) continue;
-        final dx = kp[i].x, dy = kp[i].y;
-        final pt = _toScreen(dx, dy);
+        if (i >= person.keypointConfidences.length || person.keypointConfidences[i] < 0.3) continue;
+        final pt = Offset(kp[i].x, kp[i].y);
         pts[i] = pt;
         if (pt.dx < x1) x1 = pt.dx;
         if (pt.dy < y1) y1 = pt.dy;
@@ -77,10 +67,10 @@ class PosePainter extends CustomPainter {
       _drawSkeleton(canvas, pts);
 
       final dp = Paint()..style = PaintingStyle.fill..color = const Color(0xFF00E676);
-      final db = Paint()..style = PaintingStyle.stroke..strokeWidth = 1..color = Colors.white70;
+      final db = Paint()..style = PaintingStyle.stroke..strokeWidth = 1.5..color = Colors.white.withValues(alpha: 0.85);
       for (final p in pts.values) {
-        canvas.drawCircle(p, 3.5, db);
-        canvas.drawCircle(p, 2.5, dp);
+        canvas.drawCircle(p, 4.5, db);
+        canvas.drawCircle(p, 3.5, dp);
       }
 
       if (vc >= 4) {
@@ -94,8 +84,8 @@ class PosePainter extends CustomPainter {
       final a = pts[_bones[i][0]], b = pts[_bones[i][1]];
       if (a == null || b == null) continue;
       final color = _boneColors[i];
-      final glow = Paint()..style = PaintingStyle.stroke..strokeWidth = 5..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3)..color = color.withValues(alpha: 0.3);
-      final line = Paint()..style = PaintingStyle.stroke..strokeWidth = 2..color = color.withValues(alpha: 0.8);
+      final glow = Paint()..style = PaintingStyle.stroke..strokeWidth = 6..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4)..color = color.withValues(alpha: 0.35);
+      final line = Paint()..style = PaintingStyle.stroke..strokeWidth = 2.5..color = color.withValues(alpha: 0.85);
       canvas.drawLine(a, b, glow);
       canvas.drawLine(a, b, line);
     }
@@ -111,38 +101,36 @@ class PosePainter extends CustomPainter {
     final arm = math.min(math.min((x2 - x1) * 0.35, (y2 - y1) * 0.35), 50.0);
 
     final color = fallen ? Colors.red : const Color(0xFF00E676);
+    final a = fallen ? 0.6 : 0.5;
 
-    final gl = Paint()..color = color.withValues(alpha: 0.5)..strokeWidth = fallen ? 4 : 3..style = PaintingStyle.stroke..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
+    final gl = Paint()..color = color.withValues(alpha: a)..strokeWidth = fallen ? 4 : 3..style = PaintingStyle.stroke..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
     final ln = Paint()..color = color..strokeWidth = fallen ? 3 : 2..style = PaintingStyle.stroke;
 
-    canvas.drawLine(Offset(x1, y1), Offset(x1 + arm, y1), gl);
-    canvas.drawLine(Offset(x1, y1), Offset(x1 + arm, y1), ln);
-    canvas.drawLine(Offset(x1, y1), Offset(x1, y1 + arm), gl);
-    canvas.drawLine(Offset(x1, y1), Offset(x1, y1 + arm), ln);
-    // top-right corner
-    canvas.drawLine(Offset(x2 - arm, y1), Offset(x2, y1), gl);
-    canvas.drawLine(Offset(x2 - arm, y1), Offset(x2, y1), ln);
-    canvas.drawLine(Offset(x2, y1), Offset(x2, y1 + arm), gl);
-    canvas.drawLine(Offset(x2, y1), Offset(x2, y1 + arm), ln);
-    // bottom-left corner
-    canvas.drawLine(Offset(x1, y2 - arm), Offset(x1, y2), gl);
-    canvas.drawLine(Offset(x1, y2 - arm), Offset(x1, y2), ln);
-    canvas.drawLine(Offset(x1, y2), Offset(x1 + arm, y2), gl);
-    canvas.drawLine(Offset(x1, y2), Offset(x1 + arm, y2), ln);
-    // bottom-right corner
-    canvas.drawLine(Offset(x2 - arm, y2), Offset(x2, y2), gl);
-    canvas.drawLine(Offset(x2 - arm, y2), Offset(x2, y2), ln);
-    canvas.drawLine(Offset(x2, y2 - arm), Offset(x2, y2), gl);
-    canvas.drawLine(Offset(x2, y2 - arm), Offset(x2, y2), ln);
+    void corner(double x, double y, double dx, double dy) {
+      canvas.drawLine(Offset(x, y), Offset(x + dx, y + dy), gl);
+      canvas.drawLine(Offset(x, y), Offset(x + dx, y + dy), ln);
+    }
+
+    corner(x1, y1, arm, 0);
+    corner(x1, y1, 0, arm);
+    corner(x2, y1, -arm, 0);
+    corner(x2, y1, 0, arm);
+    corner(x1, y2, 0, -arm);
+    corner(x1, y2, arm, 0);
+    corner(x2, y2, -arm, 0);
+    corner(x2, y2, 0, -arm);
 
     final label = fallen ? 'FALLEN!' : 'Person';
     final tp = TextPainter(
-      text: TextSpan(text: label, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w700)),
+      text: TextSpan(text: label, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w800)),
       textDirection: TextDirection.ltr,
     )..layout();
-    final bg = Paint()..color = Colors.black54;
-    canvas.drawRect(Rect.fromLTWH(x1 + arm + 2, y1, tp.width + 6, tp.height + 2), bg);
-    tp.paint(canvas, Offset(x1 + arm + 4, y1));
+    final bg = Paint()..color = Colors.black.withValues(alpha: 0.6);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(Rect.fromLTWH(x1 + arm + 2, y1, tp.width + 8, tp.height + 4), const Radius.circular(4)),
+      bg,
+    );
+    tp.paint(canvas, Offset(x1 + arm + 5, y1 + 1));
   }
 
   @override

@@ -109,10 +109,10 @@ class _WearablePageState extends State<WearablePage> {
       ),
       body: _latest == null
         ? Center(
-            child: Column(mainAxisSize: MainAxisSize.min, children: [
-              const SizedBox(width: 32, height: 32, child: CircularProgressIndicator(strokeWidth: 2.5)),
+            child: Column(mainAxisAlignment: MainAxisAlignment.center, mainAxisSize: MainAxisSize.min, children: [
+              const SizedBox(width: 32, height: 32, child: CircularProgressIndicator(strokeWidth: 2.5, color: matchaPrimary)),
               const SizedBox(height: 16),
-              Text('正在连接传感器...', style: TextStyle(color: textSecondary, fontSize: 14)),
+              Text('正在连接传感器...', style: AppText.caption()),
             ]),
           )
         : Stack(children: [
@@ -204,18 +204,11 @@ class _WearablePageState extends State<WearablePage> {
   }
 
   Widget _buildWaveformCard() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-          height: 140,
-          color: Colors.white,
-          child: Padding(
-            padding: const EdgeInsets.all(8),
-            child: ImuWaveform(data: _history),
-          ),
-        ),
+    return AppSectionCard(
+      padding: const EdgeInsets.all(12),
+      child: SizedBox(
+        height: 140,
+        child: ImuWaveform(data: _history),
       ),
     );
   }

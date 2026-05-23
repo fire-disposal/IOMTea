@@ -395,7 +395,10 @@ class _SimulatorPageState extends State<SimulatorPage> {
     if (_log.isEmpty) return const SizedBox.shrink();
     return Container(
       constraints: const BoxConstraints(maxHeight: 180),
-      color: const Color(0xFF0F0F23),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0F0F23),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(kChipRadius + 4)),
+      ),
       child: Column(mainAxisSize: MainAxisSize.min, children: [
         Container(
           width: double.infinity,
