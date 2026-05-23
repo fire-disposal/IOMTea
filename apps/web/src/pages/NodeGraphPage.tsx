@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ReactFlow, Controls, Background, MiniMap, useNodesState, useEdgesState,
   addEdge, Connection, Edge, Node as FlowNode, BackgroundVariant, MarkerType,
+  type NodeTypes,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { Box, Button, Group, Modal, Select, Stack, TextInput, LoadingOverlay } from '@mantine/core'
@@ -12,7 +13,7 @@ import { NodePanel } from '../components/graph/NodePanel'
 import { GraphToolbar } from '../components/graph/GraphToolbar'
 import { ContextMenu } from '../components/graph/ContextMenu'
 
-const nodeTypes = { roomNode: RoomNode }
+const nodeTypes: NodeTypes = { roomNode: RoomNode }
 
 const roomTypeOptions = [
   { value: 'bedroom', label: '卧室' },
