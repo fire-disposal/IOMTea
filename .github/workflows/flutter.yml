@@ -5,6 +5,9 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  contents: read
+
 concurrency:
   group: flutter-${{ github.ref }}
   cancel-in-progress: true
