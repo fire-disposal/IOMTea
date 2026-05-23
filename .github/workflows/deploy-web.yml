@@ -6,14 +6,10 @@ on:
       - 'v*'
       - 'web@*'
   workflow_dispatch:
-    inputs:
-      environment:
-        description: '部署环境'
-        type: choice
-        default: 'production'
-        options:
-          - production
-          - staging
+
+permissions:
+  contents: read
+  packages: write
 
 env:
   REGISTRY: ghcr.io
