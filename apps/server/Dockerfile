@@ -1,14 +1,12 @@
 FROM node:24-alpine AS base
-ENV PNPM_HOME="/pnpm"
-ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable pnpm
+RUN npm install -g pnpm@9.15.9
 WORKDIR /app
 
 FROM base AS builder
 COPY pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 COPY packages/shared-types/package.json packages/shared-types/tsconfig.json packages/shared-types/
 COPY apps/server/package.json apps/server/tsconfig.json apps/server/drizzle.config.ts apps/server/
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --no-frozen-lockfile
+RUN pnpm install --no-frozen-lockfile
 COPY tsconfig.base.json ./
 COPY packages/shared-types/src packages/shared-types/src/
 COPY apps/server/src apps/server/src/

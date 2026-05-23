@@ -1,13 +1,11 @@
 FROM node:24-alpine AS builder
-ENV PNPM_HOME="/pnpm"
-ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable pnpm
+RUN npm install -g pnpm@9.15.9
 WORKDIR /app
 COPY pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 COPY packages/shared-types/package.json packages/shared-types/tsconfig.json packages/shared-types/
 COPY packages/avatar-core/package.json packages/avatar-core/
 COPY apps/web/package.json apps/web/tsconfig.json apps/web/vite.config.ts apps/web/postcss.config.cjs apps/web/
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --no-frozen-lockfile
+RUN pnpm install --no-frozen-lockfile
 COPY tsconfig.base.json ./
 COPY packages/shared-types/src packages/shared-types/src/
 COPY apps/web/index.html apps/web/
