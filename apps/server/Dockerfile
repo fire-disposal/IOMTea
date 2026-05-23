@@ -11,7 +11,7 @@ COPY tsconfig.base.json ./
 COPY packages/shared-types/src packages/shared-types/src/
 COPY apps/server/src apps/server/src/
 COPY apps/server/drizzle apps/server/drizzle/
-RUN pnpm --filter @iomtea/server build
+RUN pnpm --filter @iomtea/shared-types build && pnpm --filter @iomtea/server build
 
 FROM base AS runner
 COPY --from=builder /app/node_modules/.pnpm /app/node_modules/.pnpm
