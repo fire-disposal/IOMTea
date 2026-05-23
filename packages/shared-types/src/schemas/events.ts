@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { ALERT_SEVERITIES, ALERT_STATUSES } from '../constants'
 
-export const kindEnum = z.enum(['observation', 'alert', 'behavior', 'location'])
+export const eventKindSchema = z.enum(['observation', 'alert', 'behavior', 'location'])
 
 export const eventTagsSchema = z.record(z.string(), z.unknown()).default({})
 
@@ -46,7 +46,7 @@ export const observationIngestSchema = z.object({
 export const eventListInputSchema = z.object({
   page: z.number().int().min(1).default(1),
   pageSize: z.number().int().min(1).max(500).default(100),
-  kind: kindEnum.optional(),
+  kind: eventKindSchema.optional(),
   metric: z.string().optional(),
   patientId: z.string().uuid().optional(),
   deviceId: z.string().uuid().optional(),
@@ -63,7 +63,7 @@ export const eventTimeSeriesInputSchema = z.object({
   to: z.number().optional(),
 })
 
-export type Kind = z.infer<typeof kindEnum>
+export type Kind = z.infer<typeof eventKindSchema>
 export type Observation = z.infer<typeof observationSchema>
 export type Alert = z.infer<typeof alertSchema>
 export type ObservationIngestInput = z.infer<typeof observationIngestSchema>

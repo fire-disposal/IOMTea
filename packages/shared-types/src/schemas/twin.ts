@@ -10,13 +10,13 @@ export const mapCreateSchema = z.object({
   name: z.string().min(1),
   width: z.number().int().positive(),
   height: z.number().int().positive(),
-  grid: z.array(z.array(z.any())),
+  grid: z.array(z.array(z.unknown())),
 })
 
 export const mapUpdateSchema = z.object({
   id: z.string().uuid(),
   name: z.string().min(1).optional(),
-  grid: z.array(z.array(z.any())).optional(),
+  grid: z.array(z.array(z.unknown())).optional(),
   isActive: z.boolean().optional(),
 })
 

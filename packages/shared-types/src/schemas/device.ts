@@ -1,6 +1,8 @@
 import { z } from 'zod'
-const DEVICE_TYPES = ['mattress', 'vision', 'imu', 'generic', 'simulator', 'custom'] as const
-const DEVICE_STATUSES = ['active', 'inactive', 'maintenance', 'error'] as const
+export const DEVICE_TYPES = ['mattress', 'vision', 'imu', 'generic', 'simulator', 'custom'] as const
+export const DEVICE_STATUSES = ['active', 'inactive', 'maintenance', 'error'] as const
+export type DeviceType = (typeof DEVICE_TYPES)[number]
+export type DeviceStatus = (typeof DEVICE_STATUSES)[number]
 
 export const deviceSchema = z.object({
   id: z.string().uuid(),

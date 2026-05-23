@@ -20,7 +20,7 @@ export const FormDefinitionSchema = z.object({
 export type FormDefinition = z.infer<typeof FormDefinitionSchema>
 export type FormField = z.infer<typeof FormFieldSchema>
 
-export function buildResponseSchema(fields: FormField[]) {
+export function buildResponseSchema(fields: FormField[]): z.ZodObject<Record<string, z.ZodTypeAny>> {
   const shape: Record<string, z.ZodTypeAny> = {}
   for (const f of fields) {
     let field: z.ZodTypeAny
