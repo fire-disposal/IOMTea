@@ -3,6 +3,13 @@ import { Handle, Position, NodeProps } from '@xyflow/react'
 import { Badge, Group, Paper, Text, ThemeIcon } from '@mantine/core'
 import { IconBuildingStore, IconBed, IconSofa, IconToolsKitchen2, IconBath, IconBooks, IconArrowGuide, IconDoor, IconTrees, IconBox, IconFridge } from '@tabler/icons-react'
 
+interface SubNode {
+  id: string
+  label?: string
+  deviceType?: string
+  status?: string
+}
+
 const roomIcons: Record<string, React.ReactNode> = {
   bedroom: <IconBed size={16} />,
   livingroom: <IconSofa size={16} />,
@@ -103,15 +110,15 @@ export const RoomNode = memo<NodeProps>(({ id, data, selected }) => {
           {patientName && <Badge size="xs" variant="dot" color="matchaGreen">{patientName}</Badge>}
         </Group>
         <div style={{ marginTop: 6 }}>
-          {(data.subNodes as any[])?.length > 0 && (
+          {(data.subNodes as SubNode[])?.length > 0 && (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-              {(data.subNodes as any[]).slice(0, 4).map((sn: any) => (
+              {(data.subNodes as SubNode[]).slice(0, 4).map((sn) => (
                 <Badge key={sn.id} size="xs" variant="light" color={sn.status === 'active' ? 'green' : 'gray'}>
                   {sn.label ?? sn.id?.slice(0, 8)}
                 </Badge>
               ))}
-              {(data.subNodes as any[])?.length > 4 && (
-                <Badge size="xs" variant="subtle" color="gray">+{(data.subNodes as any[]).length - 4}</Badge>
+              {(data.subNodes as SubNode[])?.length > 4 && (
+                <Badge size="xs" variant="subtle" color="gray">+{(data.subNodes as SubNode[]).length - 4}</Badge>
               )}
             </div>
           )}

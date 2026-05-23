@@ -2,8 +2,8 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ReactFlow, Controls, Background, MiniMap, useNodesState, useEdgesState,
   addEdge, Connection, Edge, Node as FlowNode, BackgroundVariant, MarkerType,
+  type ReactFlowInstance,
 } from '@xyflow/react'
-import type { NodeTypes } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { Box, Button, Group, Modal, Select, Stack, TextInput, LoadingOverlay } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
@@ -13,7 +13,14 @@ import { NodePanel } from '../components/graph/NodePanel'
 import { GraphToolbar } from '../components/graph/GraphToolbar'
 import { ContextMenu } from '../components/graph/ContextMenu'
 
-const nodeTypes = useMemo(() => ({ roomNode: RoomNode }), []) as NodeTypes
+interface SubNode {
+  id: string
+  label: string
+  deviceType?: string
+  status?: string
+}
+
+const nodeTypes: Record<string, React.ComponentType<any>> = useMemo(() => ({ roomNode: RoomNode }), []);
 
 const roomTypeOptions = [
   { value: 'bedroom', label: '卧室' },
@@ -42,19 +49,19 @@ export function NodeGraphPage() {
   })
   const assignDevice = trpc.nodeGraph.assignDevice.useMutation()
   const deleteRoom = trpc.nodeGraph.deleteRoom.useMutation({
-    onSuccess: () => (notifications as any).show({ title: '已删除', color: 'orange' }),
+    onSuccess: () => notifications.show({ title: '已删除', color: 'orange' }),
   })
 
   const [nodes, setNodes, onNodesChange] = useNodesState<FlowNode>([])
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; nodeId: string } | null>(null)
   const [creatingRoom, setCreatingRoom] = useState(false)
-  const [editingRoom, setEditingRoom] = useState<any>(null)
+  const [editingRoom, setEditingRoom] = useState<{ id: string; name: string; roomType: string } | null>(null)
   const [connectingRoom, setConnectingRoom] = useState<string | null>(null)
   const [newRoomName, setNewRoomName] = useState('')
   const [newRoomType, setNewRoomType] = useState<string>('bedroom')
   const [searchText, setSearchText] = useState('')
-  const reactFlowRef = useRef<any>(null)
+  const reactFlowRef = useRef<ReactFlowInstance | null>(null)
   const [undoStack, setUndoStack] = useState<{ nodes: FlowNode[]; edges: Edge[] }[]>([])
   const [redoStack, setRedoStack] = useState<{ nodes: FlowNode[]; edges: Edge[] }[]>([])
 
@@ -73,9 +80,9 @@ export function NodeGraphPage() {
       setNodes((nds) =>
         nds.map((n) => {
           if (n.id === roomId) {
-            const subNodes = [...(n.data.subNodes as any[] || [])]
+            const subNodes: SubNode[] = [...(n.data.subNodes as SubNode[] || [])]
             if (!subNodes.find((sn) => sn.id === itemId)) {
-              const item: any = (graphData?.unassignedDevices || []).find((d: any) => d.id === itemId)
+              const item = (graphData?.unassignedDevices || []).find((d) => (d as SubNode).id === itemId) as SubNode | undefined
               subNodes.push({
                 id: itemId, label: item?.label ?? item?.serialNumber ?? itemId,
                 deviceType: item?.deviceType, status: item?.status,
@@ -109,11 +116,11 @@ export function NodeGraphPage() {
       data: {
         label: room.name ?? room.id.slice(0, 8),
         roomType: room.type ?? 'bedroom',
-        patientName: (room as any).patientName,
-        patientId: (room as any).patientId,
+        patientName: (room as { patientName?: string }).patientName,
+        patientId: (room as { patientId?: string }).patientId,
         deviceCount: room.devices?.length ?? 0,
-        subNodes: (room.devices || []).map((d: any) => ({
-          id: d.id ?? d.pin,
+        subNodes: (room.devices || []).map((d: SubNode) => ({
+          id: d.id ?? '',
           label: d.label ?? d.serialNumber ?? d.pin ?? 'unknown',
           deviceType: d.deviceType,
           status: d.status,
