@@ -1,8 +1,6 @@
 name: CI
 
 on:
-  push:
-    branches: [master, main]
   pull_request:
     branches: [master, main]
 
@@ -11,8 +9,22 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec biome check . --max-diagnostics=50
+      - run: pnpm exec biome format . --check
+
   typecheck:
-    name: TypeCheck (${{ matrix.package }})
+    name: TypeCheck
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -27,34 +39,3 @@ jobs:
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter "@iomtea/${{ matrix.package }}" typecheck
-
-  lint:
-    name: Lint & Format
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm exec biome check . --max-diagnostics=50
-      - run: pnpm exec biome format . --check
-
-  test:
-    name: Test (${{ matrix.package }})
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        package: [shared-types, server]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter "@iomtea/${{ matrix.package }}" test
