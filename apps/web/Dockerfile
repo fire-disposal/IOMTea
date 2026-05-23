@@ -8,6 +8,8 @@ COPY apps/web/package.json apps/web/tsconfig.json apps/web/vite.config.ts apps/w
 RUN pnpm install --no-frozen-lockfile
 COPY tsconfig.base.json ./
 COPY packages/shared-types/src packages/shared-types/src/
+COPY packages/avatar-core/src packages/avatar-core/src/
+COPY packages/avatar-core/tsconfig.json packages/avatar-core/
 COPY apps/web/index.html apps/web/
 COPY apps/web/src apps/web/src/
 COPY apps/server/src/core/trpc/routers/_app.ts apps/server/src/core/trpc/routers/_app.ts
