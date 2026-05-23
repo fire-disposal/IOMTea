@@ -42,7 +42,7 @@ const roomLabels: Record<string, string> = {
   dining: '餐厅',
 }
 
-export const RoomNode: React.FC<NodeProps> = memo(({ id, data, selected }) => {
+export const RoomNode = memo<NodeProps>(({ id, data, selected }) => {
   const roomType = (data.roomType as string) ?? 'bedroom'
   const icon = roomIcons[roomType] ?? <IconBuildingStore size={16} />
   const color = roomColors[roomType] ?? 'gray'
