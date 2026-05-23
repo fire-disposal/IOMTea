@@ -26,7 +26,6 @@ dependencies:
   # 存储
   shared_preferences: ^2.3.0
   sqflite: ^2.4.2
-  path: ^1.9.1
 
   # 后台服务
   flutter_background_service: ^5.1.0

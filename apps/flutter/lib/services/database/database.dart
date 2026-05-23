@@ -1,5 +1,4 @@
 import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
 
 class AppDatabase {
   static AppDatabase? _instance;
@@ -17,10 +16,10 @@ class AppDatabase {
 
   Future<Database> _init() async {
     final dbPath = await getDatabasesPath();
-    final path = join(dbPath, 'iomtea.db');
+    final dbFile = '$dbPath/iomtea.db';
 
     return openDatabase(
-      path,
+      dbFile,
       version: 1,
       onCreate: _onCreate,
     );
