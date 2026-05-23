@@ -1,13 +1,23 @@
 import React, { memo, useCallback, useState } from 'react'
-import { Handle, Position, NodeProps } from '@xyflow/react'
 import { Badge, Group, Paper, Text, ThemeIcon } from '@mantine/core'
 import { IconBuildingStore, IconBed, IconSofa, IconToolsKitchen2, IconBath, IconBooks, IconArrowGuide, IconDoor, IconTrees, IconBox, IconFridge } from '@tabler/icons-react'
 
-interface SubNode {
+export interface RoomData {
+  label: string
+  roomType: string
+  patientName?: string
+  patientId?: string
+  deviceCount: number
+  subNodes: { id: string; label?: string; deviceType?: string; status?: string }[]
+  onNodeDrop?: (itemId: string, itemType: string, roomId: string) => void
+  selected?: boolean
+}
+
+interface RoomNodeProps {
   id: string
-  label?: string
-  deviceType?: string
-  status?: string
+  data: RoomData
+  onClick?: (id: string) => void
+  onContextMenu?: (e: React.MouseEvent, id: string) => void
 }
 
 const roomIcons: Record<string, React.ReactNode> = {
@@ -24,107 +34,69 @@ const roomIcons: Record<string, React.ReactNode> = {
 }
 
 const roomColors: Record<string, string> = {
-  bedroom: 'matchaGreen',
-  livingroom: 'blue',
-  kitchen: 'orange',
-  bathroom: 'cyan',
-  study: 'violet',
-  corridor: 'gray',
-  entry: 'teal',
-  balcony: 'lime',
-  storage: 'gray',
-  dining: 'pink',
+  bedroom: 'matchaGreen', livingroom: 'blue', kitchen: 'orange',
+  bathroom: 'cyan', study: 'violet', corridor: 'gray',
+  entry: 'teal', balcony: 'lime', storage: 'gray', dining: 'pink',
 }
 
-const roomLabels: Record<string, string> = {
-  bedroom: '卧室',
-  livingroom: '客厅',
-  kitchen: '厨房',
-  bathroom: '卫生间',
-  study: '书房',
-  corridor: '走廊',
-  entry: '玄关',
-  balcony: '阳台',
-  storage: '储物间',
-  dining: '餐厅',
-}
-
-export const RoomNode = memo<NodeProps>(({ id, data, selected }) => {
-  const roomType = (data.roomType as string) ?? 'bedroom'
+export const RoomNode = memo<RoomNodeProps>(({ id, data, onClick, onContextMenu }) => {
+  const roomType = data.roomType ?? 'bedroom'
   const icon = roomIcons[roomType] ?? <IconBuildingStore size={16} />
   const color = roomColors[roomType] ?? 'gray'
-  const label = roomLabels[roomType] ?? roomType
-  const deviceCount = (data.deviceCount as number) ?? 0
-  const patientName = data.patientName as string | undefined
   const [dragOver, setDragOver] = useState(false)
-
-  const onDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setDragOver(true)
-  }, [])
-
-  const onDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setDragOver(false)
-  }, [])
 
   const onDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
     setDragOver(false)
-    const rawData = e.dataTransfer.getData('application/node-panel')
-    if (!rawData) return
-    const { id: itemId, type } = JSON.parse(rawData)
-    const handler = data.onNodeDrop as ((itemId: string, itemType: string, roomId: string) => void) | undefined
-    if (handler) handler(itemId, type, id)
+    const raw = e.dataTransfer.getData('application/node-panel')
+    if (!raw) return
+    const { id: itemId, type } = JSON.parse(raw)
+    data.onNodeDrop?.(itemId, type, id)
   }, [data, id])
 
   return (
-    <>
-      <Handle type="target" position={Position.Top} style={{ background: 'var(--mantine-color-matchaGreen-5)', border: 'none', width: 10, height: 10 }} />
-      <Paper
-        p="sm"
-        radius="md"
-        withBorder
-        shadow={selected ? 'md' : 'sm'}
-        style={{
-          borderColor: dragOver ? 'var(--mantine-color-matchaGreen-5)' : selected ? `var(--mantine-color-${color}-5)` : undefined,
-          borderWidth: dragOver ? 2 : (selected ? 2 : 1),
-          minWidth: 160,
-          cursor: 'pointer',
-          transition: 'box-shadow 0.15s ease, border-color 0.15s ease',
-          opacity: dragOver ? 0.95 : 1,
-        }}
-        onDragOver={onDragOver}
-        onDragLeave={onDragLeave}
-        onDrop={onDrop}
-      >
-        <Group gap="xs" mb={4}>
-          <ThemeIcon size="sm" color={color} variant="light" radius="md">{icon}</ThemeIcon>
-          <Text size="sm" fw={600}>{(data.label as string) ?? label}</Text>
-        </Group>
-        <Group gap={4}>
-          {deviceCount > 0 && <Badge size="xs" variant="light" color={color}>{deviceCount} 设备</Badge>}
-          {patientName && <Badge size="xs" variant="dot" color="matchaGreen">{patientName}</Badge>}
-        </Group>
-        <div style={{ marginTop: 6 }}>
-          {(data.subNodes as SubNode[])?.length > 0 && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-              {(data.subNodes as SubNode[]).slice(0, 4).map((sn) => (
-                <Badge key={sn.id} size="xs" variant="light" color={sn.status === 'active' ? 'green' : 'gray'}>
-                  {sn.label ?? sn.id?.slice(0, 8)}
-                </Badge>
-              ))}
-              {(data.subNodes as SubNode[])?.length > 4 && (
-                <Badge size="xs" variant="subtle" color="gray">+{(data.subNodes as SubNode[]).length - 4}</Badge>
-              )}
-            </div>
+    <Paper
+      p="sm"
+      radius="md"
+      withBorder
+      shadow={data.selected ? 'md' : 'sm'}
+      style={{
+        borderColor: dragOver ? 'var(--mantine-color-matchaGreen-5)'
+          : data.selected ? `var(--mantine-color-${color}-5)` : undefined,
+        borderWidth: dragOver || data.selected ? 2 : 1,
+        cursor: 'pointer',
+        transition: 'box-shadow 0.15s, border-color 0.15s',
+        opacity: dragOver ? 0.95 : 1,
+      }}
+      onClick={() => onClick?.(id)}
+      onContextMenu={(e) => onContextMenu?.(e, id)}
+      onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
+      onDragLeave={() => setDragOver(false)}
+      onDrop={onDrop}
+    >
+      <Group gap="xs" mb={4}>
+        <ThemeIcon size="sm" color={color} variant="light" radius="md">{icon}</ThemeIcon>
+        <Text size="sm" fw={600}>{data.label}</Text>
+      </Group>
+      <Group gap={4}>
+        {data.deviceCount > 0 && <Badge size="xs" variant="light" color={color}>{data.deviceCount} 设备</Badge>}
+        {data.patientName && <Badge size="xs" variant="dot" color="matchaGreen">{data.patientName}</Badge>}
+      </Group>
+      {data.subNodes.length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 6 }}>
+          {data.subNodes.slice(0, 4).map((sn) => (
+            <Badge key={sn.id} size="xs" variant="light" color={sn.status === 'active' ? 'green' : 'gray'}>
+              {sn.label ?? sn.id?.slice(0, 8)}
+            </Badge>
+          ))}
+          {data.subNodes.length > 4 && (
+            <Badge size="xs" variant="subtle" color="gray">+{data.subNodes.length - 4}</Badge>
           )}
         </div>
-      </Paper>
-      <Handle type="source" position={Position.Bottom} style={{ background: 'var(--mantine-color-matchaGreen-5)', border: 'none', width: 10, height: 10 }} />
-    </>
+      )}
+    </Paper>
   )
 })
+
+RoomNode.displayName = 'RoomNode'
