@@ -8,7 +8,7 @@ FROM base AS builder
 COPY pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 COPY packages/shared-types/package.json packages/shared-types/tsconfig.json packages/shared-types/
 COPY apps/server/package.json apps/server/tsconfig.json apps/server/drizzle.config.ts apps/server/
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --no-frozen-lockfile
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 COPY tsconfig.base.json ./
 COPY packages/shared-types/src packages/shared-types/src/
 COPY apps/server/src apps/server/src/

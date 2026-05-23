@@ -7,7 +7,7 @@ COPY pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 COPY packages/shared-types/package.json packages/shared-types/tsconfig.json packages/shared-types/
 COPY packages/avatar-core/package.json packages/avatar-core/
 COPY apps/web/package.json apps/web/tsconfig.json apps/web/vite.config.ts apps/web/postcss.config.cjs apps/web/
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --no-frozen-lockfile
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 COPY tsconfig.base.json ./
 COPY packages/shared-types/src packages/shared-types/src/
 COPY apps/web/index.html apps/web/
