@@ -23,4 +23,4 @@ ENV NODE_ENV=production
 ENV PORT=3000
 EXPOSE 3000
 EXPOSE 5858
-CMD ["node", "--experimental-specifier-resolution=node", "dist/src/index.js"]
+CMD ["pnpm", "exec", "tsx", "dist/src/index.js"]
