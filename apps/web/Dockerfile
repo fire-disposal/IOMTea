@@ -1,5 +1,5 @@
 FROM node:24-alpine AS builder
-RUN npm install -g pnpm@9.15.9 turbo@2.9.12
+RUN npm install -g pnpm@9.15.9
 WORKDIR /app
 
 COPY pnpm-lock.yaml pnpm-workspace.yaml .npmrc package.json turbo.json tsconfig.base.json ./
@@ -15,7 +15,7 @@ COPY apps/web/index.html apps/web/
 COPY apps/web/src apps/web/src/
 COPY apps/server/src/core/trpc/routers/_app.ts apps/server/src/core/trpc/routers/_app.ts
 
-RUN turbo build --filter=@iomtea/web
+RUN npx turbo build --filter=@iomtea/web
 
 FROM nginx:alpine
 COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf

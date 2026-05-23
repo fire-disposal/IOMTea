@@ -1,5 +1,5 @@
 FROM node:24-alpine AS base
-RUN npm install -g pnpm@9.15.9 turbo@2.9.12
+RUN npm install -g pnpm@9.15.9
 WORKDIR /app
 
 FROM base AS builder
@@ -13,7 +13,7 @@ COPY packages/shared-types/src packages/shared-types/src/
 COPY apps/server/src apps/server/src/
 COPY apps/server/drizzle apps/server/drizzle/
 
-RUN turbo build --filter=@iomtea/server
+RUN npx turbo build --filter=@iomtea/server
 
 FROM base AS runner
 COPY --from=builder /app/node_modules/.pnpm /app/node_modules/.pnpm
