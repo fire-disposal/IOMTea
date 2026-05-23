@@ -20,7 +20,6 @@ const monitorItems = [
 ]
 
 const manageItems = [
-  { label: '异常处置', icon: IconBell, path: '/alerts' },
   { label: '用药监督', icon: IconPill, path: '/medications' },
   { label: '节点拓扑', icon: IconTopologyStar, path: '/node-graph' },
   { label: '捏脸工坊', icon: IconMoodSmile, path: '/avatar-editor' },
