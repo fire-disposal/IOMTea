@@ -1,19 +1,21 @@
 FROM node:24-alpine AS builder
-RUN npm install -g pnpm@9.15.9
+RUN npm install -g pnpm@9.15.9 turbo@2.9.12
 WORKDIR /app
-COPY pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
+
+COPY pnpm-lock.yaml pnpm-workspace.yaml .npmrc package.json turbo.json tsconfig.base.json ./
 COPY packages/shared-types/package.json packages/shared-types/tsconfig.json packages/shared-types/
-COPY packages/avatar-core/package.json packages/avatar-core/
+COPY packages/avatar-core/package.json packages/avatar-core/tsconfig.json packages/avatar-core/
 COPY apps/web/package.json apps/web/tsconfig.json apps/web/vite.config.ts apps/web/postcss.config.cjs apps/web/
+
 RUN pnpm install --no-frozen-lockfile
-COPY tsconfig.base.json ./
+
 COPY packages/shared-types/src packages/shared-types/src/
 COPY packages/avatar-core/src packages/avatar-core/src/
-COPY packages/avatar-core/tsconfig.json packages/avatar-core/
 COPY apps/web/index.html apps/web/
 COPY apps/web/src apps/web/src/
 COPY apps/server/src/core/trpc/routers/_app.ts apps/server/src/core/trpc/routers/_app.ts
-RUN pnpm --filter @iomtea/web build
+
+RUN turbo build --filter=@iomtea/web
 
 FROM nginx:alpine
 COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf

@@ -1,17 +1,19 @@
 FROM node:24-alpine AS base
-RUN npm install -g pnpm@9.15.9
+RUN npm install -g pnpm@9.15.9 turbo@2.9.12
 WORKDIR /app
 
 FROM base AS builder
-COPY pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
+COPY pnpm-lock.yaml pnpm-workspace.yaml .npmrc package.json turbo.json tsconfig.base.json ./
 COPY packages/shared-types/package.json packages/shared-types/tsconfig.json packages/shared-types/
 COPY apps/server/package.json apps/server/tsconfig.json apps/server/drizzle.config.ts apps/server/
+
 RUN pnpm install --no-frozen-lockfile
-COPY tsconfig.base.json ./
+
 COPY packages/shared-types/src packages/shared-types/src/
 COPY apps/server/src apps/server/src/
 COPY apps/server/drizzle apps/server/drizzle/
-RUN pnpm --filter @iomtea/shared-types build && pnpm --filter @iomtea/server build
+
+RUN turbo build --filter=@iomtea/server
 
 FROM base AS runner
 COPY --from=builder /app/node_modules/.pnpm /app/node_modules/.pnpm
