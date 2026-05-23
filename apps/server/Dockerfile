@@ -16,7 +16,7 @@ COPY apps/server/drizzle apps/server/drizzle/
 RUN npx turbo build --filter=@iomtea/server
 
 FROM base AS runner
-COPY --from=builder /app/node_modules/.pnpm /app/node_modules/.pnpm
+COPY --from=builder /app/node_modules /app/node_modules
 COPY --from=builder /app/packages/shared-types/package.json /app/packages/shared-types/
 COPY --from=builder /app/packages/shared-types/dist /app/packages/shared-types/dist
 COPY --from=builder /app/apps/server/package.json /app/apps/server/
@@ -26,4 +26,4 @@ ENV NODE_ENV=production
 ENV PORT=3000
 EXPOSE 3000
 EXPOSE 5858
-CMD ["node", "apps/server/dist/src/index.js"]
+CMD ["pnpm", "--filter", "@iomtea/server", "exec", "node", "dist/src/index.js"]
