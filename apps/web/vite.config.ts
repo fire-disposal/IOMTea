@@ -11,6 +11,20 @@ export default defineConfig({
       '@server': path.resolve(__dirname, '../server/src'),
     },
   },
+  build: {
+    sourcemap: false,
+    target: 'es2022',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          react: ['react', 'react-dom'],
+          mantine: ['@mantine/core', '@mantine/hooks', '@mantine/notifications', '@mantine/modals'],
+          router: ['@tanstack/react-router', '@tanstack/react-query', '@tanstack/react-form'],
+          vendor: ['zod', 'zustand', 'recharts'],
+        },
+      },
+    },
+  },
   server: {
     port: 5173,
     proxy: {
