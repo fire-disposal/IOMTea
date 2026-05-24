@@ -144,7 +144,7 @@ export const Route = (createFileRoute as any)('/_auth')({
 
     const adminRoutes = ['/patients', '/medications', '/data-export', '/simulation', '/settings', '/iot/pins']
     const superAdminRoutes = ['/settings/users']
-    const pathname = location.href ? new URL(location.href).pathname : ''
+    const pathname = location.href || ''
 
     if (superAdminRoutes.some((r) => pathname.startsWith(r)) && state.role !== 'super_admin') {
       throw redirect({ to: '/' })
