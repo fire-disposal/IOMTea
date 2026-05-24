@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "predev": "echo db sync skipped (run db:push manually for schema changes)",
-    "dev": "tsx watch src/index.ts",
+    "dev": "tsx --env-file=.env watch src/index.ts",
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "check": "pnpm typecheck && pnpm check:imports",
