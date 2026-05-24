@@ -227,18 +227,17 @@ export const authRouter = router({
 
       const user = userRows[0]
 
-      // Delete old refresh token (rotation)
-      await ctx.db.delete(refreshTokens).where(eq(refreshTokens.id, stored.id))
-
       const jwtPayload = { sub: user.id, role: user.role }
       const accessToken = await signAccessToken(jwtPayload)
       const newRefreshToken = await signRefreshToken(user.id)
 
+      // Insert new first, then delete old — avoids gap during rotation
       await ctx.db.insert(refreshTokens).values({
         userId: user.id,
         tokenHash: hashToken(newRefreshToken.token),
         expiresAt: newRefreshToken.expiresAt,
       })
+      await ctx.db.delete(refreshTokens).where(eq(refreshTokens.id, stored.id))
 
       return tokenPairSchema.parse({
         accessToken,
