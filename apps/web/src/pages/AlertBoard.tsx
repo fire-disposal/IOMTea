@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Container, Title, Group, Paper, Badge, Text, Button, Select, Textarea, Modal, Stack, Card, SimpleGrid } from '@mantine/core'
+import { Container, Title, Group, Paper, Badge, Text, Button, Textarea, Modal, Stack, SimpleGrid } from '@mantine/core'
 import { AccentPaper } from '../components/shared/AccentPaper'
 import { useDisclosure } from '@mantine/hooks'
 import { trpc } from '../trpc'
@@ -18,9 +18,8 @@ interface AlertItem {
 }
 
 const STATUS_LABELS: Record<string, string> = {
-  new: '新建',
+  new: '待处理',
   active: '活跃',
-  assigned: '已指派',
   acknowledged: '已确认',
   handled: '已处理',
   closed: '已关闭',
@@ -29,31 +28,17 @@ const STATUS_LABELS: Record<string, string> = {
 
 export function AlertBoard() {
   const { data: alerts, refetch, isLoading, isError } = trpc.alert.list.useQuery({ pageSize: 100 })
-  const { data: users } = trpc.user.list.useQuery({ page: 1, pageSize: 100 })
-  const assignMutation = trpc.alert.assign.useMutation()
   const handleMutation = trpc.alert.handle.useMutation()
   const closeMutation = trpc.alert.close.useMutation()
 
   const [selected, setSelected] = useState<AlertItem | null>(null)
-  const [assigneeId, setAssigneeId] = useState('')
   const [note, setNote] = useState('')
   const [resolution, setResolution] = useState('')
   const [opened, { open, close }] = useDisclosure(false)
 
-  const assigneeOptions = (users ?? []).map((u) => ({
-    value: u.id,
-    label: u.displayName || u.username || u.id.slice(0, 8),
-  }))
-
   const newAlerts = alerts?.filter(a => a.status === 'new' || a.status === 'active') ?? []
-  const inProgress = alerts?.filter(a => a.status === 'assigned' || a.status === 'handled' || a.status === 'acknowledged') ?? []
+  const handled = alerts?.filter(a => a.status === 'handled' || a.status === 'acknowledged') ?? []
   const completed = alerts?.filter(a => a.status === 'closed' || a.status === 'resolved') ?? []
-
-  const handleAssign = async () => {
-    if (!selected || !assigneeId) return
-    await assignMutation.mutateAsync({ alertId: selected.id, assigneeId })
-    setAssigneeId(''); close(); refetch()
-  }
 
   const handleMarkHandled = async () => {
     if (!selected) return
@@ -69,7 +54,6 @@ export function AlertBoard() {
 
   const openDetail = (a: AlertItem) => {
     setSelected(a)
-    setAssigneeId('')
     setNote('')
     setResolution('')
     open()
@@ -77,50 +61,50 @@ export function AlertBoard() {
 
   if (isLoading) return (
     <Container size="xl" py="md">
-      <Title order={2} mb="lg">异常处置</Title>
+      <Title order={2} mb="lg">告警管理</Title>
       <StateSkeleton count={1} variant="chart" />
     </Container>
   )
   if (isError) return (
     <Container size="xl" py="md">
-      <Title order={2} mb="lg">异常处置</Title>
+      <Title order={2} mb="lg">告警管理</Title>
       <StateError message="加载告警失败" onRetry={refetch} />
     </Container>
   )
 
   return (
     <Container size="xl" py="md">
-      <Title order={2} mb="lg">异常处置</Title>
+      <Title order={2} mb="lg">告警管理</Title>
       <SimpleGrid cols={{ base: 1, md: 3 }} spacing="md">
         <Paper shadow="xs" p="md" withBorder style={{ minHeight: 400, borderTop: '3px solid var(--mantine-color-red-5)' }}>
           <Group mb="sm">
             <Badge color="red" size="lg">{newAlerts.length}</Badge>
             <Text fw={600}>待处理</Text>
           </Group>
-          {newAlerts.length === 0 && <Text size="sm" c="dimmed">暂无</Text>}
+          {newAlerts.length === 0 && <Text size="sm" c="dimmed">暂无告警</Text>}
           {newAlerts.map(a => (
-              <AccentPaper key={a.id} component="div" shadow="xs" p="sm" mb="xs" withBorder className="alert-card"
-                style={{ cursor: 'pointer' }}
-                color={a.severity === 'critical' ? 'red' : a.severity === 'warning' ? 'yellow' : 'blue'}
-                onClick={() => openDetail(a)}>
+            <AccentPaper key={a.id} component="div" shadow="xs" p="sm" mb="xs" withBorder className="alert-card"
+              style={{ cursor: 'pointer' }}
+              color={a.severity === 'critical' ? 'red' : a.severity === 'warning' ? 'yellow' : 'blue'}
+              onClick={() => openDetail(a)}>
               <Text size="sm" fw={500}>{a.metric}</Text>
-              <Text size="xs" c="dimmed">{a.patientId?.slice(0, 8)}</Text>
+              <Text size="xs" c="dimmed">{a.value}{a.unit ? ` ${a.unit}` : ''}</Text>
             </AccentPaper>
           ))}
         </Paper>
 
         <Paper shadow="xs" p="md" withBorder style={{ minHeight: 400, borderTop: '3px solid var(--mantine-color-yellow-5)' }}>
           <Group mb="sm">
-            <Badge color="yellow" size="lg">{inProgress.length}</Badge>
-            <Text fw={600}>处理中</Text>
+            <Badge color="yellow" size="lg">{handled.length}</Badge>
+            <Text fw={600}>已处理</Text>
           </Group>
-          {inProgress.length === 0 && <Text size="sm" c="dimmed">暂无</Text>}
-          {inProgress.map(a => (
-              <AccentPaper key={a.id} component="div" shadow="xs" p="sm" mb="xs" withBorder className="alert-card"
-                style={{ cursor: 'pointer' }}
-                color={a.severity === 'critical' ? 'red' : a.severity === 'warning' ? 'yellow' : 'blue'}
-                onClick={() => openDetail(a)}>
-              <Text size="sm">{a.metric}</Text>
+          {handled.length === 0 && <Text size="sm" c="dimmed">暂无</Text>}
+          {handled.map(a => (
+            <AccentPaper key={a.id} component="div" shadow="xs" p="sm" mb="xs" withBorder className="alert-card"
+              style={{ cursor: 'pointer' }}
+              color={a.severity === 'critical' ? 'red' : a.severity === 'warning' ? 'yellow' : 'blue'}
+              onClick={() => openDetail(a)}>
+              <Text size="sm" fw={500}>{a.metric}</Text>
               <Text size="xs" c="dimmed">{STATUS_LABELS[a.status as string] || a.status}</Text>
             </AccentPaper>
           ))}
@@ -134,8 +118,8 @@ export function AlertBoard() {
           {completed.length === 0 && <Text size="sm" c="dimmed">暂无</Text>}
           {completed.map(a => (
             <AccentPaper key={a.id} component="div" shadow="xs" p="sm" mb="xs" withBorder className="alert-card"
-                color="green">
-              <Text size="sm">{a.metric}</Text>
+              color="green">
+              <Text size="sm" fw={500}>{a.metric}</Text>
               <Text size="xs" c="dimmed">{new Date(a.recordedAt).toLocaleDateString()}</Text>
             </AccentPaper>
           ))}
@@ -145,26 +129,28 @@ export function AlertBoard() {
       <Modal opened={opened} onClose={close} title="告警详情" size="lg">
         {selected && (
           <Stack>
-            <Text fw={500}>指标: {selected.metric}</Text>
-            <Text>值: {selected.value}{selected.unit ? ` ${selected.unit}` : ''}</Text>
-            <Text size="sm" c="dimmed">{new Date(selected.recordedAt).toLocaleString()}</Text>
+            <Paper p="sm" withBorder>
+              <Text fw={500}>指标: {selected.metric}</Text>
+              <Text>值: {selected.value}{selected.unit ? ` ${selected.unit}` : ''}</Text>
+              <Text size="sm" c="dimmed">{new Date(selected.recordedAt).toLocaleString()}</Text>
+              <Badge mt="xs" color={selected.severity === 'critical' ? 'red' : selected.severity === 'warning' ? 'yellow' : 'blue'}>
+                {STATUS_LABELS[selected.status as string] || selected.status}
+              </Badge>
+            </Paper>
             {(selected.status === 'new' || selected.status === 'active') && (
               <>
-                <Select label="指派给" placeholder="选择处理人" data={assigneeOptions} searchable onChange={v => setAssigneeId(v || '')} />
-                <Button onClick={handleAssign}>指派</Button>
-              </>
-            )}
-            {(selected.status === 'assigned') && (
-              <>
-                <Textarea label="处理记录" onChange={e => setNote(e.target.value)} />
-                <Button onClick={handleMarkHandled}>标记已处理</Button>
+                <Textarea label="处理备注（可选）" placeholder="记录处理信息" onChange={e => setNote(e.target.value)} />
+                <Button onClick={handleMarkHandled} loading={handleMutation.isPending} color="yellow">标记已处理</Button>
               </>
             )}
             {(selected.status === 'handled') && (
               <>
-                <Textarea label="结案说明" onChange={e => setResolution(e.target.value)} />
-                <Button onClick={handleClose}>结案</Button>
+                <Textarea label="结案说明（可选）" placeholder="结案备注" onChange={e => setResolution(e.target.value)} />
+                <Button onClick={handleClose} loading={closeMutation.isPending} color="green">结案</Button>
               </>
+            )}
+            {(selected.status === 'closed' || selected.status === 'resolved') && (
+              <Text c="dimmed">此告警已完结</Text>
             )}
           </Stack>
         )}
