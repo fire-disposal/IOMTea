@@ -37,6 +37,7 @@ export function startSim(
   patientIds: string[],
   patientNames: Map<string, string>,
   profileName: string,
+  overrides?: Record<string, { intervalMin: number; intervalMax: number; jitter: number }>,
 ) {
   const profile = profiles[profileName]
   if (!profile) return
@@ -45,17 +46,26 @@ export function startSim(
     if (instances.has(pid)) continue
     const scheduler = new MetricScheduler()
     scheduler.setSpeed(globalSpeed)
+
+    const customMetrics = profile.metrics.map((m) => {
+      const ov = overrides?.[m.metric]
+      if (ov) {
+        return { ...m, interval: { min: ov.intervalMin, max: ov.intervalMax }, jitter: ov.jitter }
+      }
+      return m
+    })
+
     const instance: SimInstance = {
       patientId: pid,
       patientName: patientNames.get(pid) ?? pid,
-      profile,
+      profile: { ...profile, metrics: customMetrics },
       scheduler,
       lastValues: {},
       tickCount: 0,
     }
     instances.set(pid, instance)
 
-    for (const metricCfg of profile.metrics) {
+    for (const metricCfg of customMetrics) {
       const generator = generatorMap[metricCfg.generator]
       if (!generator) continue
       scheduler.schedule(pid, metricCfg, async (_metric) => {
