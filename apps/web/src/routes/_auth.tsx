@@ -5,31 +5,60 @@ import {
 import { useDisclosure } from '@mantine/hooks'
 import {
   IconDashboard, IconSettings, IconLogout, IconUsers,
-  IconChartLine, IconBell, IconPill, IconDevices, IconScreenShare, IconRobot,
-  IconTopologyStar, IconMoodSmile,
+  IconPill, IconDevices, IconScreenShare,
+  IconAlertTriangle, IconFileExport, IconFlask, IconKey, IconUsersGroup,
 } from '@tabler/icons-react'
 import { Outlet, createFileRoute, redirect, useNavigate, useRouterState } from '@tanstack/react-router'
 import { useAuthStore } from '../store/auth'
 import { StoreProvider } from '../StoreProvider'
 
-const monitorItems = [
-  { label: '数据大屏', icon: IconScreenShare, path: '/data-dashboard' },
-  { label: '工作台', icon: IconDashboard, path: '/' },
-  { label: '居民管理', icon: IconUsers, path: '/patients' },
-  { label: '健康趋势', icon: IconChartLine, path: '/trends' },
-]
+interface NavItem {
+  label: string
+  icon: React.ElementType
+  path: string
+}
 
-const manageItems = [
-  { label: '用药监督', icon: IconPill, path: '/medications' },
-  { label: '节点拓扑', icon: IconTopologyStar, path: '/node-graph' },
-  { label: '捏脸工坊', icon: IconMoodSmile, path: '/avatar-editor' },
-]
+interface NavGroup {
+  label: string
+  items: NavItem[]
+  roles: string[]
+}
 
-const adminItems = [
-  { label: '虚拟PIN', icon: IconRobot, path: '/settings/virtual-pins' },
-  { label: 'IoT 配置', icon: IconSettings, path: '/iot/pins' },
-  { label: '系统设置', icon: IconDevices, path: '/settings' },
-  { label: '用户管理', icon: IconSettings, path: '/settings/users' },
+const navGroups: NavGroup[] = [
+  {
+    label: '监控',
+    items: [
+      { label: '数据大屏', icon: IconScreenShare, path: '/data-dashboard' },
+      { label: '工作台',   icon: IconDashboard,  path: '/' },
+      { label: '告警看板', icon: IconAlertTriangle, path: '/alerts' },
+    ],
+    roles: ['super_admin', 'admin', 'user'],
+  },
+  {
+    label: '管理',
+    items: [
+      { label: '患者管理', icon: IconUsers,      path: '/patients' },
+      { label: '用药监督', icon: IconPill,       path: '/medications' },
+      { label: '数据导出', icon: IconFileExport,  path: '/data-export' },
+      { label: '模拟工厂', icon: IconFlask,      path: '/simulation' },
+    ],
+    roles: ['super_admin', 'admin'],
+  },
+  {
+    label: '设备与接入',
+    items: [
+      { label: '设备列表', icon: IconDevices, path: '/settings' },
+      { label: 'PIN 管理', icon: IconKey,     path: '/iot/pins' },
+    ],
+    roles: ['super_admin', 'admin'],
+  },
+  {
+    label: '系统',
+    items: [
+      { label: '用户管理', icon: IconUsersGroup, path: '/settings/users' },
+    ],
+    roles: ['super_admin'],
+  },
 ]
 
 const pageStyles = [
@@ -50,11 +79,11 @@ function DashboardLayout() {
   const navigate = useNavigate()
   const pathname = useRouterState({ select: (s) => s.location.pathname })
   const logout = useAuthStore((s) => s.logout)
-  const role = useAuthStore((s) => s.role)
-  const isAdmin = role === 'admin'
+  const role = useAuthStore((s) => s.role) ?? 'user'
 
-  const allItems = [...monitorItems, ...manageItems, ...adminItems]
-  const currentPage = allItems.find((item) => item.path === '/' ? pathname === '/' : pathname.startsWith(item.path))
+  const visibleGroups = navGroups.filter(g => g.roles.includes(role))
+  const allVisibleItems = visibleGroups.flatMap(g => g.items)
+  const currentPage = allVisibleItems.find((item) => item.path === '/' ? pathname === '/' : pathname.startsWith(item.path))
 
   const isActive = (path: string) => path === '/' ? pathname === '/' : pathname.startsWith(path)
 
@@ -76,36 +105,19 @@ function DashboardLayout() {
         </Group>
       </AppShell.Header>
       <AppShell.Navbar p="xs">
-        <Text size="xs" c="dimmed" fw={500} px="sm" pt="xs" pb={4}>监控</Text>
-        {monitorItems.map((item) => (
-          <NavLink key={item.label} label={item.label}
-            leftSection={<item.icon size={20} stroke={1.5} />}
-            active={isActive(item.path)}
-            onClick={() => navigate({ to: item.path })} variant="light" mb={2}
-          />
-        ))}
-        <Divider my="xs" />
-        <Text size="xs" c="dimmed" fw={500} px="sm" pt="xs" pb={4}>管理</Text>
-        {manageItems.map((item) => (
-          <NavLink key={item.label} label={item.label}
-            leftSection={<item.icon size={20} stroke={1.5} />}
-            active={isActive(item.path)}
-            onClick={() => navigate({ to: item.path })} variant="light" mb={2}
-          />
-        ))}
-        {isAdmin && (
-          <>
-            <Divider my="xs" />
-            <Text size="xs" c="dimmed" fw={500} px="sm" pt="xs" pb={4}>系统</Text>
-            {adminItems.map((item) => (
+        {visibleGroups.map((group, gi) => (
+          <div key={group.label}>
+            {gi > 0 && <Divider my="xs" />}
+            <Text size="xs" c="dimmed" fw={500} px="sm" pt="xs" pb={4}>{group.label}</Text>
+            {group.items.map((item) => (
               <NavLink key={item.label} label={item.label}
                 leftSection={<item.icon size={20} stroke={1.5} />}
                 active={isActive(item.path)}
                 onClick={() => navigate({ to: item.path })} variant="light" mb={2}
               />
             ))}
-          </>
-        )}
+          </div>
+        ))}
       </AppShell.Navbar>
       <AppShell.Main>
         <style>{pageStyles}</style>

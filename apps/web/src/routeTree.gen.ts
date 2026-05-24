@@ -12,14 +12,13 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as AuthIndexRouteImport } from './routes/_auth.index'
-import { Route as AuthTrendsRouteImport } from './routes/_auth.trends'
+import { Route as AuthSimulationRouteImport } from './routes/_auth.simulation'
 import { Route as AuthSettingsRouteImport } from './routes/_auth.settings'
 import { Route as AuthPatientsRouteImport } from './routes/_auth.patients'
-import { Route as AuthNodeGraphRouteImport } from './routes/_auth.node-graph'
 import { Route as AuthMedicationsRouteImport } from './routes/_auth.medications'
+import { Route as AuthDataExportRouteImport } from './routes/_auth.data-export'
 import { Route as AuthDataDashboardRouteImport } from './routes/_auth.data-dashboard'
-import { Route as AuthAvatarEditorRouteImport } from './routes/_auth.avatar-editor'
-import { Route as AuthSettingsVirtualPinsRouteImport } from './routes/_auth.settings.virtual-pins'
+import { Route as AuthAlertsRouteImport } from './routes/_auth.alerts'
 import { Route as AuthSettingsUsersRouteImport } from './routes/_auth.settings.users'
 import { Route as AuthPatientsIdRouteImport } from './routes/_auth.patients.$id'
 import { Route as AuthIotPinsRouteImport } from './routes/_auth.iot.pins'
@@ -45,9 +44,9 @@ const AuthIndexRoute = AuthIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthRoute,
 } as any)
-const AuthTrendsRoute = AuthTrendsRouteImport.update({
-  id: '/trends',
-  path: '/trends',
+const AuthSimulationRoute = AuthSimulationRouteImport.update({
+  id: '/simulation',
+  path: '/simulation',
   getParentRoute: () => AuthRoute,
 } as any)
 const AuthSettingsRoute = AuthSettingsRouteImport.update({
@@ -60,14 +59,14 @@ const AuthPatientsRoute = AuthPatientsRouteImport.update({
   path: '/patients',
   getParentRoute: () => AuthRoute,
 } as any)
-const AuthNodeGraphRoute = AuthNodeGraphRouteImport.update({
-  id: '/node-graph',
-  path: '/node-graph',
-  getParentRoute: () => AuthRoute,
-} as any)
 const AuthMedicationsRoute = AuthMedicationsRouteImport.update({
   id: '/medications',
   path: '/medications',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthDataExportRoute = AuthDataExportRouteImport.update({
+  id: '/data-export',
+  path: '/data-export',
   getParentRoute: () => AuthRoute,
 } as any)
 const AuthDataDashboardRoute = AuthDataDashboardRouteImport.update({
@@ -75,15 +74,10 @@ const AuthDataDashboardRoute = AuthDataDashboardRouteImport.update({
   path: '/data-dashboard',
   getParentRoute: () => AuthRoute,
 } as any)
-const AuthAvatarEditorRoute = AuthAvatarEditorRouteImport.update({
-  id: '/avatar-editor',
-  path: '/avatar-editor',
+const AuthAlertsRoute = AuthAlertsRouteImport.update({
+  id: '/alerts',
+  path: '/alerts',
   getParentRoute: () => AuthRoute,
-} as any)
-const AuthSettingsVirtualPinsRoute = AuthSettingsVirtualPinsRouteImport.update({
-  id: '/virtual-pins',
-  path: '/virtual-pins',
-  getParentRoute: () => AuthSettingsRoute,
 } as any)
 const AuthSettingsUsersRoute = AuthSettingsUsersRouteImport.update({
   id: '/users',
@@ -142,17 +136,16 @@ const AuthPatientsIdAlertRulesRoute =
 export interface FileRoutesByFullPath {
   '/': typeof AuthIndexRoute
   '/login': typeof LoginRoute
-  '/avatar-editor': typeof AuthAvatarEditorRoute
+  '/alerts': typeof AuthAlertsRoute
   '/data-dashboard': typeof AuthDataDashboardRoute
+  '/data-export': typeof AuthDataExportRoute
   '/medications': typeof AuthMedicationsRoute
-  '/node-graph': typeof AuthNodeGraphRoute
   '/patients': typeof AuthPatientsRouteWithChildren
   '/settings': typeof AuthSettingsRouteWithChildren
-  '/trends': typeof AuthTrendsRoute
+  '/simulation': typeof AuthSimulationRoute
   '/iot/pins': typeof AuthIotPinsRoute
   '/patients/$id': typeof AuthPatientsIdRouteWithChildren
   '/settings/users': typeof AuthSettingsUsersRoute
-  '/settings/virtual-pins': typeof AuthSettingsVirtualPinsRoute
   '/patients/$id/alert-rules': typeof AuthPatientsIdAlertRulesRoute
   '/patients/$id/alerts': typeof AuthPatientsIdAlertsRoute
   '/patients/$id/health-timeline': typeof AuthPatientsIdHealthTimelineRoute
@@ -163,17 +156,16 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
-  '/avatar-editor': typeof AuthAvatarEditorRoute
+  '/alerts': typeof AuthAlertsRoute
   '/data-dashboard': typeof AuthDataDashboardRoute
+  '/data-export': typeof AuthDataExportRoute
   '/medications': typeof AuthMedicationsRoute
-  '/node-graph': typeof AuthNodeGraphRoute
   '/patients': typeof AuthPatientsRouteWithChildren
   '/settings': typeof AuthSettingsRouteWithChildren
-  '/trends': typeof AuthTrendsRoute
+  '/simulation': typeof AuthSimulationRoute
   '/': typeof AuthIndexRoute
   '/iot/pins': typeof AuthIotPinsRoute
   '/settings/users': typeof AuthSettingsUsersRoute
-  '/settings/virtual-pins': typeof AuthSettingsVirtualPinsRoute
   '/patients/$id/alert-rules': typeof AuthPatientsIdAlertRulesRoute
   '/patients/$id/alerts': typeof AuthPatientsIdAlertsRoute
   '/patients/$id/health-timeline': typeof AuthPatientsIdHealthTimelineRoute
@@ -186,18 +178,17 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_auth': typeof AuthRouteWithChildren
   '/login': typeof LoginRoute
-  '/_auth/avatar-editor': typeof AuthAvatarEditorRoute
+  '/_auth/alerts': typeof AuthAlertsRoute
   '/_auth/data-dashboard': typeof AuthDataDashboardRoute
+  '/_auth/data-export': typeof AuthDataExportRoute
   '/_auth/medications': typeof AuthMedicationsRoute
-  '/_auth/node-graph': typeof AuthNodeGraphRoute
   '/_auth/patients': typeof AuthPatientsRouteWithChildren
   '/_auth/settings': typeof AuthSettingsRouteWithChildren
-  '/_auth/trends': typeof AuthTrendsRoute
+  '/_auth/simulation': typeof AuthSimulationRoute
   '/_auth/': typeof AuthIndexRoute
   '/_auth/iot/pins': typeof AuthIotPinsRoute
   '/_auth/patients/$id': typeof AuthPatientsIdRouteWithChildren
   '/_auth/settings/users': typeof AuthSettingsUsersRoute
-  '/_auth/settings/virtual-pins': typeof AuthSettingsVirtualPinsRoute
   '/_auth/patients/$id/alert-rules': typeof AuthPatientsIdAlertRulesRoute
   '/_auth/patients/$id/alerts': typeof AuthPatientsIdAlertsRoute
   '/_auth/patients/$id/health-timeline': typeof AuthPatientsIdHealthTimelineRoute
@@ -211,17 +202,16 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
-    | '/avatar-editor'
+    | '/alerts'
     | '/data-dashboard'
+    | '/data-export'
     | '/medications'
-    | '/node-graph'
     | '/patients'
     | '/settings'
-    | '/trends'
+    | '/simulation'
     | '/iot/pins'
     | '/patients/$id'
     | '/settings/users'
-    | '/settings/virtual-pins'
     | '/patients/$id/alert-rules'
     | '/patients/$id/alerts'
     | '/patients/$id/health-timeline'
@@ -232,17 +222,16 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
-    | '/avatar-editor'
+    | '/alerts'
     | '/data-dashboard'
+    | '/data-export'
     | '/medications'
-    | '/node-graph'
     | '/patients'
     | '/settings'
-    | '/trends'
+    | '/simulation'
     | '/'
     | '/iot/pins'
     | '/settings/users'
-    | '/settings/virtual-pins'
     | '/patients/$id/alert-rules'
     | '/patients/$id/alerts'
     | '/patients/$id/health-timeline'
@@ -254,18 +243,17 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_auth'
     | '/login'
-    | '/_auth/avatar-editor'
+    | '/_auth/alerts'
     | '/_auth/data-dashboard'
+    | '/_auth/data-export'
     | '/_auth/medications'
-    | '/_auth/node-graph'
     | '/_auth/patients'
     | '/_auth/settings'
-    | '/_auth/trends'
+    | '/_auth/simulation'
     | '/_auth/'
     | '/_auth/iot/pins'
     | '/_auth/patients/$id'
     | '/_auth/settings/users'
-    | '/_auth/settings/virtual-pins'
     | '/_auth/patients/$id/alert-rules'
     | '/_auth/patients/$id/alerts'
     | '/_auth/patients/$id/health-timeline'
@@ -303,11 +291,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthIndexRouteImport
       parentRoute: typeof AuthRoute
     }
-    '/_auth/trends': {
-      id: '/_auth/trends'
-      path: '/trends'
-      fullPath: '/trends'
-      preLoaderRoute: typeof AuthTrendsRouteImport
+    '/_auth/simulation': {
+      id: '/_auth/simulation'
+      path: '/simulation'
+      fullPath: '/simulation'
+      preLoaderRoute: typeof AuthSimulationRouteImport
       parentRoute: typeof AuthRoute
     }
     '/_auth/settings': {
@@ -324,18 +312,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthPatientsRouteImport
       parentRoute: typeof AuthRoute
     }
-    '/_auth/node-graph': {
-      id: '/_auth/node-graph'
-      path: '/node-graph'
-      fullPath: '/node-graph'
-      preLoaderRoute: typeof AuthNodeGraphRouteImport
-      parentRoute: typeof AuthRoute
-    }
     '/_auth/medications': {
       id: '/_auth/medications'
       path: '/medications'
       fullPath: '/medications'
       preLoaderRoute: typeof AuthMedicationsRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/data-export': {
+      id: '/_auth/data-export'
+      path: '/data-export'
+      fullPath: '/data-export'
+      preLoaderRoute: typeof AuthDataExportRouteImport
       parentRoute: typeof AuthRoute
     }
     '/_auth/data-dashboard': {
@@ -345,19 +333,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthDataDashboardRouteImport
       parentRoute: typeof AuthRoute
     }
-    '/_auth/avatar-editor': {
-      id: '/_auth/avatar-editor'
-      path: '/avatar-editor'
-      fullPath: '/avatar-editor'
-      preLoaderRoute: typeof AuthAvatarEditorRouteImport
+    '/_auth/alerts': {
+      id: '/_auth/alerts'
+      path: '/alerts'
+      fullPath: '/alerts'
+      preLoaderRoute: typeof AuthAlertsRouteImport
       parentRoute: typeof AuthRoute
-    }
-    '/_auth/settings/virtual-pins': {
-      id: '/_auth/settings/virtual-pins'
-      path: '/virtual-pins'
-      fullPath: '/settings/virtual-pins'
-      preLoaderRoute: typeof AuthSettingsVirtualPinsRouteImport
-      parentRoute: typeof AuthSettingsRoute
     }
     '/_auth/settings/users': {
       id: '/_auth/settings/users'
@@ -470,12 +451,10 @@ const AuthPatientsRouteWithChildren = AuthPatientsRoute._addFileChildren(
 
 interface AuthSettingsRouteChildren {
   AuthSettingsUsersRoute: typeof AuthSettingsUsersRoute
-  AuthSettingsVirtualPinsRoute: typeof AuthSettingsVirtualPinsRoute
 }
 
 const AuthSettingsRouteChildren: AuthSettingsRouteChildren = {
   AuthSettingsUsersRoute: AuthSettingsUsersRoute,
-  AuthSettingsVirtualPinsRoute: AuthSettingsVirtualPinsRoute,
 }
 
 const AuthSettingsRouteWithChildren = AuthSettingsRoute._addFileChildren(
@@ -483,25 +462,25 @@ const AuthSettingsRouteWithChildren = AuthSettingsRoute._addFileChildren(
 )
 
 interface AuthRouteChildren {
-  AuthAvatarEditorRoute: typeof AuthAvatarEditorRoute
+  AuthAlertsRoute: typeof AuthAlertsRoute
   AuthDataDashboardRoute: typeof AuthDataDashboardRoute
+  AuthDataExportRoute: typeof AuthDataExportRoute
   AuthMedicationsRoute: typeof AuthMedicationsRoute
-  AuthNodeGraphRoute: typeof AuthNodeGraphRoute
   AuthPatientsRoute: typeof AuthPatientsRouteWithChildren
   AuthSettingsRoute: typeof AuthSettingsRouteWithChildren
-  AuthTrendsRoute: typeof AuthTrendsRoute
+  AuthSimulationRoute: typeof AuthSimulationRoute
   AuthIndexRoute: typeof AuthIndexRoute
   AuthIotPinsRoute: typeof AuthIotPinsRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
-  AuthAvatarEditorRoute: AuthAvatarEditorRoute,
+  AuthAlertsRoute: AuthAlertsRoute,
   AuthDataDashboardRoute: AuthDataDashboardRoute,
+  AuthDataExportRoute: AuthDataExportRoute,
   AuthMedicationsRoute: AuthMedicationsRoute,
-  AuthNodeGraphRoute: AuthNodeGraphRoute,
   AuthPatientsRoute: AuthPatientsRouteWithChildren,
   AuthSettingsRoute: AuthSettingsRouteWithChildren,
-  AuthTrendsRoute: AuthTrendsRoute,
+  AuthSimulationRoute: AuthSimulationRoute,
   AuthIndexRoute: AuthIndexRoute,
   AuthIotPinsRoute: AuthIotPinsRoute,
 }
