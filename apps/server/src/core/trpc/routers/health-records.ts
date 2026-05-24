@@ -3,6 +3,7 @@ import { eq, and, sql, inArray } from 'drizzle-orm'
 import { z } from 'zod'
 import type { DbClient } from '../../db'
 import { events, patients, users } from '../../db/schema.js'
+import { usersPin } from '../../db/schema/pin'
 import { userPatientLinks } from '../../db/schema/user-patient'
 import { dailyChecklists, streaks, creditTransactions } from '../../db/schema/plan'
 import { calculateCredit, calcNewStreak } from '../../../services/credit-calculator'
@@ -45,6 +46,7 @@ interface EventInsert {
   tags: Record<string, unknown>
   recordedAt: Date
   source: 'manual'
+  pinCode?: string
 }
 
 function toFiniteNumber(value: unknown): number | null {
@@ -75,13 +77,14 @@ function requireFiniteNumber(record: RawRecord, key: string): number {
   return n
 }
 
-function mapRecordToEvents(record: RawRecord, patientId: string): EventInsert[] {
+function mapRecordToEvents(record: RawRecord, patientId: string, pinCode?: string): EventInsert[] {
   const recordedAt = parseRecordedAt(record.recordedAt)
   const baseTags = { clientRecordId: record.id }
   const base: Omit<EventInsert, 'metric' | 'kind' | 'tags'> = {
     patientId,
     recordedAt,
     source: 'manual',
+    pinCode,
   }
 
   switch (record.type) {
@@ -379,6 +382,9 @@ export const healthRecordsRouter = router({
     const userId = ctx.userId!
     const patientId = await resolvePatientIdForInput(ctx.db, userId, input.patientId)
 
+    const [userPin] = await ctx.db.select({ pin: usersPin.pin }).from(usersPin).where(eq(usersPin.userId, userId)).limit(1)
+    const pinCode = userPin?.pin
+
     if (input.records.length === 0) {
       return { syncedIds: [], earnedCredits: [] }
     }
@@ -396,7 +402,7 @@ export const healthRecordsRouter = router({
       }
     }
 
-    const allEvents = unsyncedRecords.flatMap((record) => mapRecordToEvents(record, patientId))
+    const allEvents = unsyncedRecords.flatMap((record) => mapRecordToEvents(record, patientId, pinCode))
 
     const insertedEvents = await ctx.db
       .insert(events)

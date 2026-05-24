@@ -6,6 +6,7 @@ import { eq, inArray } from 'drizzle-orm'
 import mqtt from 'mqtt'
 import { broadcastManager } from '../core/realtime/broadcast'
 import { createChildLogger } from '../core/lib/logger'
+import { normalizeMetric as sharedNormalize, getMetricUnit } from '../core/lib/metrics'
 
 const logger = createChildLogger('mqtt-router')
 
@@ -34,6 +35,8 @@ async function handleDeviceEvent(topicId: string, body: Record<string, unknown>)
 
   if (event === 'healthObservation' || event === 'healthAlert') {
     if (!metric) return
+    const normalizedMetric = sharedNormalize(metric)
+    if (!normalizedMetric) return
     const numValue = value !== null ? value : NaN
     if (isNaN(numValue)) return
 
@@ -42,10 +45,10 @@ async function handleDeviceEvent(topicId: string, body: Record<string, unknown>)
       patientId: patient.id,
       pinCode: pin,
       kind,
-      metric,
+      metric: normalizedMetric,
       value: numValue,
-      unit: body.unit as string | undefined,
-      source: (body.source as any) || 'simulator',
+      unit: (body.unit as string) || getMetricUnit(normalizedMetric),
+      source: 'iot',
       severity: event === 'healthAlert' ? ((body.severity as any) || 'warning') : undefined,
       status: event === 'healthAlert' ? 'active' : undefined,
       tags: { deviceId: body.deviceId, ...(body.metadata as any || {}) },
@@ -81,7 +84,7 @@ const METRIC_PATTERN = /^[a-z][a-z0-9_]{1,63}$/
 
 const CANONICAL_METRICS = [
   'heart_rate',
-  'blood_glucose',
+  'glucose',
   'spo2',
   'temperature',
   'weight',
@@ -91,39 +94,24 @@ const CANONICAL_METRICS = [
 type CanonicalMetric = (typeof CANONICAL_METRICS)[number]
 
 const METRIC_ALIASES: Record<string, CanonicalMetric> = {
-  hr: 'heart_rate',
-  pulse: 'heart_rate',
-  heartrate: 'heart_rate',
-  heartbeat: 'heart_rate',
-  glucose: 'blood_glucose',
-  blood_glucose: 'blood_glucose',
-  spo2: 'spo2',
-  blood_oxygen: 'spo2',
-  temp: 'temperature',
-  body_temperature: 'temperature',
-  weight: 'weight',
-  systolic_bp: 'systolic_bp',
-  diastolic_bp: 'diastolic_bp',
+  hr: 'heart_rate', pulse: 'heart_rate', heartrate: 'heart_rate', heartbeat: 'heart_rate',
+  glucose: 'glucose', blood_glucose: 'glucose', blood_sugar: 'glucose', bg: 'glucose',
+  spo2: 'spo2', blood_oxygen: 'spo2',
+  temp: 'temperature', body_temperature: 'temperature', body_temp: 'temperature',
+  weight: 'weight', body_weight: 'weight',
+  systolic_bp: 'systolic_bp', sbp: 'systolic_bp',
+  diastolic_bp: 'diastolic_bp', dbp: 'diastolic_bp',
 }
 
 const DEFAULT_UNITS: Record<CanonicalMetric, string> = {
-  heart_rate: 'bpm',
-  blood_glucose: 'mg/dL',
-  spo2: '%',
-  temperature: '°C',
-  weight: 'kg',
-  systolic_bp: 'mmHg',
-  diastolic_bp: 'mmHg',
+  heart_rate: 'bpm', glucose: 'mmol/L', spo2: '%',
+  temperature: '°C', weight: 'kg', systolic_bp: 'mmHg', diastolic_bp: 'mmHg',
 }
 
 const METRIC_RANGES: Partial<Record<CanonicalMetric, { min: number; max: number }>> = {
-  heart_rate: { min: 20, max: 260 },
-  blood_glucose: { min: 20, max: 800 },
-  spo2: { min: 40, max: 100 },
-  temperature: { min: 30, max: 45 },
-  weight: { min: 1, max: 400 },
-  systolic_bp: { min: 50, max: 280 },
-  diastolic_bp: { min: 30, max: 180 },
+  heart_rate: { min: 20, max: 260 }, glucose: { min: 0.5, max: 35 },
+  spo2: { min: 40, max: 100 }, temperature: { min: 30, max: 45 },
+  weight: { min: 1, max: 500 }, systolic_bp: { min: 40, max: 280 }, diastolic_bp: { min: 20, max: 180 },
 }
 
 function isCanonicalMetric(metric: string): metric is CanonicalMetric {

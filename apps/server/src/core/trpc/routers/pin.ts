@@ -105,8 +105,12 @@ export const pinRouter = router({
         .values({
           pin: newPin,
           userId: existing.userId,
+          type: existing.type,
           label: existing.label,
           nickname: existing.nickname,
+          roomId: existing.roomId,
+          isVirtual: existing.isVirtual,
+          generatorConfig: existing.generatorConfig,
         })
         .returning()
       return record

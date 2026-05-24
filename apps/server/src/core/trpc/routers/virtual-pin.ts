@@ -6,6 +6,10 @@ import { events, patients } from '../../db/schema.js'
 import { userPatientLinks } from '../../db/schema/user-patient'
 import { usersPin } from '../../db/schema/pin'
 import { protectedProcedure, router } from '../index'
+import { normalizeMetric as sharedNormalize } from '../../lib/metrics'
+import { createChildLogger } from '../../lib/logger'
+
+const logger = createChildLogger('virtual-pin')
 
 const metricConfigSchema = z.object({
   metric: z.string(),
@@ -53,23 +57,26 @@ function startVirtualPin(pin: string, config: z.infer<typeof generatorConfigSche
       )
       const patientId = patientRows[0]?.id
 
+      if (!patientId) return // no patient associated, skip tick
+
       const db = (await import('../../db')).db
       for (const m of config.metrics) {
+        const normalizedMetric = sharedNormalize(m.metric)
         const value = generateValue(m.min, m.max, m.variance)
         await db
           .insert(events)
           .values({
-            patientId: patientId || pinRecord.userId,
+            patientId,
             pinCode: pin,
             kind: 'observation',
-            metric: m.metric,
+            metric: normalizedMetric,
             value,
             unit: m.unit || undefined,
             source: 'simulator',
             tags: { virtual: true, pin },
             recordedAt: new Date(),
           } as any)
-          .catch(() => {})
+          .catch((err) => { logger.warn({ err, pin }, '虚拟PIN事件写入失败') })
       }
 
       await db
