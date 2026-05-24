@@ -1,20 +1,19 @@
 import { z } from 'zod'
 import { router, protectedProcedure } from '../index'
 import { requirePermission } from '../middleware/rbac'
-import { patients, events, devices } from '../../db/schema'
+import { patients, events } from '../../db/schema'
 import { medications } from '../../db/schema/medication'
 
-const entityEnum = z.enum(['patients', 'events', 'medications', 'devices'])
+const entityEnum = z.enum(['patients', 'events', 'medications'])
 const formatEnum = z.enum(['csv', 'xlsx'])
 
 const entityFields: Record<string, string[]> = {
   patients: ['id', 'name', 'gender', 'birth_date', 'phone', 'height_cm', 'weight_kg', 'blood_type', 'address', 'status', 'created_at'],
-  events: ['id', 'patient_id', 'kind', 'metric', 'value', 'unit', 'source', 'severity', 'status', 'recorded_at', 'created_at'],
+  events: ['id', 'patient_id', 'kind', 'metric', 'value', 'unit', 'source', 'severity', 'status', 'pin_code', 'recorded_at', 'created_at'],
   medications: ['id', 'patient_id', 'drug_name', 'dosage', 'dosage_unit', 'frequency', 'route', 'start_date', 'end_date', 'status', 'created_at'],
-  devices: ['id', 'serial_number', 'device_type', 'model', 'manufacturer', 'status', 'room_id', 'last_seen', 'created_at'],
 }
 
-const tableMap = { patients, events, medications, devices } as const
+const tableMap = { patients, events, medications } as const
 
 export const exportRouter = router({
   preview: protectedProcedure

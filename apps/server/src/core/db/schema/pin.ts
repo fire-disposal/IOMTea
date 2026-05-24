@@ -1,4 +1,4 @@
-import { boolean, jsonb, pgTable, timestamp, uuid, varchar } from 'drizzle-orm/pg-core'
+import { boolean, jsonb, pgTable, timestamp, uuid, varchar, text } from 'drizzle-orm/pg-core'
 import { users } from '../schema.js'
 import { pinTypeEnum } from './enums'
 
@@ -10,7 +10,7 @@ export const usersPin = pgTable('users_pin', {
   type: pinTypeEnum('type').notNull().default('device'),
   label: varchar('label', { length: 64 }).default(''),
   nickname: varchar('nickname', { length: 32 }).default(''),
-  thingId: uuid('thing_id'),
+  description: text('description').default(''),
   roomId: varchar('room_id', { length: 64 }),
   isVirtual: boolean('is_virtual').default(false),
   generatorConfig: jsonb('generator_config').default('{}'),

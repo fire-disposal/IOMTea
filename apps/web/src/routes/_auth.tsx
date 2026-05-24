@@ -47,7 +47,6 @@ const navGroups: NavGroup[] = [
   {
     label: '设备与接入',
     items: [
-      { label: '设备列表', icon: IconDevices, path: '/settings' },
       { label: 'PIN 管理', icon: IconKey,     path: '/iot/pins' },
     ],
     roles: ['super_admin', 'admin'],

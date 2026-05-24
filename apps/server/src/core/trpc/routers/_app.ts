@@ -5,7 +5,6 @@ import { authRouter } from './auth'
 import { checklistRouter } from './checklist'
 import { creditRouter } from './credit'
 import { dataRouter } from './data'
-import { deviceRouter } from './device'
 import { exportRouter } from './export'
 import { healthRecordsRouter } from './health-records'
 import { homeGraphRouter } from './home-graph'
@@ -29,7 +28,6 @@ export const appRouter = router({
   checklist: checklistRouter,
   credit: creditRouter,
   data: dataRouter,
-  device: deviceRouter,
   export: exportRouter,
   healthRecords: healthRecordsRouter,
   homeGraph: homeGraphRouter,

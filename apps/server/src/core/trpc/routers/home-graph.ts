@@ -1,7 +1,7 @@
 import { TRPCError } from '@trpc/server'
 import { eq } from 'drizzle-orm'
 import { z } from 'zod'
-import { events, patients, devices } from '../../db/schema.js'
+import { events, patients } from '../../db/schema.js'
 import { usersPin } from '../../db/schema/pin'
 import { publicProcedure, protectedProcedure, router } from '../index'
 import { twinState } from '../../../twin/twin-state'
@@ -62,18 +62,6 @@ export const homeGraphRouter = router({
       const graph = ((tags.homeGraph as any) || null) as any
 
       if (graph?.rooms) {
-        const allDevices = await ctx.db
-          .select({
-            id: devices.id,
-            serialNumber: devices.serialNumber,
-            deviceType: devices.deviceType,
-            status: devices.status,
-            roomId: devices.roomId,
-            tags: devices.tags,
-          })
-          .from(devices)
-          .where(eq(devices.patientId, input.patientId))
-
         const pinDevicesForGraph = await ctx.db
           .select({
             pin: usersPin.pin,
@@ -86,15 +74,6 @@ export const homeGraphRouter = router({
           .where(eq(patients.id, input.patientId))
 
         for (const room of graph.rooms) {
-          const roomDevices = allDevices
-            .filter((d: any) => d.roomId === room.id)
-            .map((d: any) => ({
-              id: d.id,
-              serialNumber: d.serialNumber,
-              deviceType: d.deviceType,
-              status: d.status,
-            }))
-
           const pinDevices = pinDevicesForGraph
             .filter((p: any) => p.roomId === room.id)
             .map((p: any) => ({
@@ -106,7 +85,7 @@ export const homeGraphRouter = router({
               nickname: p.nickname,
             }))
 
-          room.devices = [...roomDevices, ...pinDevices]
+          room.devices = [...pinDevices]
         }
 
         twinState.initRooms(

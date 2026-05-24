@@ -56,7 +56,6 @@ export type PressureGrid = number[][]
 
 export interface SimulatedEvent {
   patientId: string
-  deviceId: string
   kind: 'observation' | 'alert'
   metric: string
   value: number | null

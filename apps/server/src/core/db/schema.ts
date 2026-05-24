@@ -78,22 +78,7 @@ export const patients = pgTable('patients', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 })
 
-export const devices = pgTable('devices', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  serialNumber: varchar('serial_number', { length: 100 }).notNull().unique(),
-  deviceType: deviceTypeEnum('device_type').notNull(),
-  model: varchar('model', { length: 100 }),
-  manufacturer: varchar('manufacturer', { length: 100 }),
-  firmwareVersion: varchar('firmware_version', { length: 50 }),
-  status: deviceStatusEnum('status').notNull().default('inactive'),
-  patientId: uuid('patient_id').references(() => patients.id, { onDelete: 'set null' }),
-  roomId: varchar('room_id', { length: 64 }),
-  config: jsonb('config').default({}).notNull(),
-  lastSeenAt: timestamp('last_seen', { withTimezone: true }),
-  tags: jsonb('tags').default({}).notNull(),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-})
+
 
 export const events = pgTable(
   'events',
@@ -102,7 +87,6 @@ export const events = pgTable(
     patientId: uuid('patient_id')
       .notNull()
       .references(() => patients.id, { onDelete: 'cascade' }),
-    deviceId: uuid('device_id').references(() => devices.id, { onDelete: 'set null' }),
     pinCode: varchar('pin_code', { length: 6 }),
     kind: kindEnum('kind').notNull(),
     metric: varchar('metric', { length: 100 }).notNull(),
@@ -127,7 +111,6 @@ export const events = pgTable(
       t.kind,
       t.recordedAt.desc(),
     ),
-    deviceTimeIdx: index('events_device_time_idx').on(t.deviceId, t.recordedAt.desc()),
     patientSourceIdx: index('events_patient_source_idx').on(t.patientId, t.source),
   }),
 )

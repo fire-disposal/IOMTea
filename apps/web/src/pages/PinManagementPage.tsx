@@ -1,163 +1,99 @@
 import { useState } from 'react'
-import { Container, Title, Group, Table, Badge, Button, Modal, TextInput, ActionIcon, Tooltip, Text, Stack, ScrollArea } from '@mantine/core'
+import { Container, Title, Group, Table, Badge, Button, Modal, TextInput, ActionIcon, Text, SegmentedControl, Stack, Select } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { IconEdit, IconRefresh, IconTrash } from '@tabler/icons-react'
+import { IconEye, IconRefresh } from '@tabler/icons-react'
 import { trpc } from '../trpc'
 import { StateSkeleton, StateEmpty, StateError } from '../components/shared/StateComponents'
+import { SimTimeline } from '../components/sim/SimTimeline'
+
+const TYPE_LABELS: Record<string, string> = { device: '设备', virtual: '虚拟', user: '用户', simulator: '模拟器' }
+const TYPE_COLORS: Record<string, string> = { device: 'blue', virtual: 'violet', user: 'green', simulator: 'orange' }
 
 export function PinManagementPage() {
   const { data: pins, refetch, isLoading, isError } = trpc.pin.list.useQuery()
-  const createMutation = trpc.pin.create.useMutation()
-  const updateMutation = trpc.pin.update.useMutation()
-  const resetMutation = trpc.pin.reset.useMutation()
-  const deleteMutation = trpc.pin.delete.useMutation()
-  const { data: users } = trpc.user.list.useQuery({ page: 1, pageSize: 100 })
+  const [typeFilter, setTypeFilter] = useState<string>('all')
+  const [detailPin, setDetailPin] = useState<any>(null)
+  const [timelineMinutes, setTimelineMinutes] = useState(30)
+  const { data: pinEvents } = trpc.sim.events.useQuery(
+    { patientId: detailPin?.userId ?? '', minutes: timelineMinutes },
+    { enabled: !!detailPin }
+  )
 
-  const [createOpened, { open: openCreate, close: closeCreate }] = useDisclosure(false)
-  const [editOpened, { open: openEdit, close: closeEdit }] = useDisclosure(false)
-  const [newPin, setNewPin] = useState({ userId: '', label: '', nickname: '' })
-  const [editingPin, setEditingPin] = useState<any>(null)
+  const filtered = (pins ?? []).filter((p: any) => typeFilter === 'all' || p.type === typeFilter)
 
-  const handleCreate = async () => {
-    if (!newPin.userId) return
-    await createMutation.mutateAsync({
-      userId: newPin.userId,
-      label: newPin.label || undefined,
-      nickname: newPin.nickname || undefined,
-    })
-    setNewPin({ userId: '', label: '', nickname: '' })
-    closeCreate()
-    refetch()
-  }
-
-  const handleUpdate = async () => {
-    if (!editingPin) return
-    await updateMutation.mutateAsync({
-      pin: editingPin.pin,
-      label: editingPin.label,
-      nickname: editingPin.nickname,
-    })
-    setEditingPin(null)
-    closeEdit()
-    refetch()
-  }
-
-  const handleReset = async (oldPin: string) => {
-    await resetMutation.mutateAsync({ oldPin })
-    refetch()
-  }
-
-  const handleDelete = async (pin: string) => {
-    await deleteMutation.mutateAsync({ pin })
-    refetch()
-  }
+  if (isLoading) return <Container size="xl" py="md"><Title order={2} mb="lg">PIN 管理</Title><StateSkeleton variant="table" count={5} /></Container>
+  if (isError) return <Container size="xl" py="md"><Title order={2} mb="lg">PIN 管理</Title><StateError message="加载失败" onRetry={refetch} /></Container>
 
   return (
     <Container size="xl" py="md">
-      <Group justify="space-between" mb="lg">
+      <Group justify="space-between" mb="md">
         <Title order={2}>PIN 管理</Title>
-        <Button onClick={openCreate}>生成新 PIN</Button>
+        <ActionIcon variant="subtle" onClick={() => refetch()}><IconRefresh size={16} /></ActionIcon>
       </Group>
 
-      {isLoading && <StateSkeleton variant="table" count={5} />}
-      {isError && <StateError message="加载 PIN 列表失败" onRetry={refetch} />}
-      {!isLoading && !isError && (!pins || pins.length === 0) && <StateEmpty message="暂无 PIN" action={openCreate} actionLabel="生成新 PIN" />}
-      {!isLoading && !isError && pins && pins.length > 0 && (
-      <ScrollArea>
+      <SegmentedControl
+        mb="md"
+        data={[
+          { value: 'all', label: '全部' },
+          { value: 'device', label: '设备' },
+          { value: 'virtual', label: '虚拟' },
+          { value: 'user', label: '用户' },
+          { value: 'simulator', label: '模拟器' },
+        ]}
+        value={typeFilter}
+        onChange={setTypeFilter}
+      />
+
+      {filtered.length === 0 ? (
+        <StateEmpty message="暂无匹配的 PIN" />
+      ) : (
         <Table striped highlightOnHover>
-        <Table.Thead>
-          <Table.Tr>
-            <Table.Th>PIN</Table.Th>
-            <Table.Th>用户</Table.Th>
-            <Table.Th>标签</Table.Th>
-            <Table.Th>昵称</Table.Th>
-            <Table.Th>关联物体</Table.Th>
-            <Table.Th>最后在线</Table.Th>
-            <Table.Th>操作</Table.Th>
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>
-          {pins?.map(p => (
-            <Table.Tr key={p.pin}>
-              <Table.Td><Badge variant="light">{p.pin}</Badge></Table.Td>
-              <Table.Td>{users?.find(u => u.id === p.userId)?.displayName || p.userId.slice(0, 8)}</Table.Td>
-              <Table.Td>{p.label || '-'}</Table.Td>
-              <Table.Td>{p.nickname || '-'}</Table.Td>
-              <Table.Td>{p.thingId ? p.thingId.slice(0, 8) : '-'}</Table.Td>
-              <Table.Td>
-                {p.lastSeenAt ? (
-                  <Badge variant="light" color={Date.now() - new Date(p.lastSeenAt).getTime() < 86400000 ? 'green' : 'gray'}>
-                    {new Date(p.lastSeenAt).toLocaleString()}
-                  </Badge>
-                ) : (
-                  <Badge variant="light" color="gray">从未</Badge>
-                )}
-              </Table.Td>
-              <Table.Td>
-                <Group gap="xs">
-                  <Tooltip label="编辑">
-                    <ActionIcon variant="light" onClick={() => { setEditingPin(p); openEdit() }}>
-                      <IconEdit size={16} />
-                    </ActionIcon>
-                  </Tooltip>
-                  <Tooltip label="重置">
-                    <ActionIcon variant="light" color="orange" onClick={() => handleReset(p.pin)}>
-                      <IconRefresh size={16} />
-                    </ActionIcon>
-                  </Tooltip>
-                  <Tooltip label="删除">
-                    <ActionIcon variant="light" color="red" onClick={() => handleDelete(p.pin)}>
-                      <IconTrash size={16} />
-                    </ActionIcon>
-                  </Tooltip>
-                </Group>
-              </Table.Td>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>PIN</Table.Th>
+              <Table.Th>类型</Table.Th>
+              <Table.Th>标签</Table.Th>
+              <Table.Th>描述</Table.Th>
+              <Table.Th>最后活跃</Table.Th>
+              <Table.Th>操作</Table.Th>
             </Table.Tr>
-          ))}
-        </Table.Tbody>
+          </Table.Thead>
+          <Table.Tbody>
+            {filtered.map((p: any) => (
+              <Table.Tr key={p.pin}>
+                <Table.Td><Text fw={600} ff="monospace">{p.pin}</Text></Table.Td>
+                <Table.Td><Badge color={TYPE_COLORS[p.type] ?? 'gray'} variant="light">{TYPE_LABELS[p.type] ?? p.type}</Badge></Table.Td>
+                <Table.Td>{p.label || '-'}</Table.Td>
+                <Table.Td><Text size="xs" c="dimmed" lineClamp={1}>{p.description || '-'}</Text></Table.Td>
+                <Table.Td><Text size="xs">{p.lastSeenAt ? new Date(p.lastSeenAt).toLocaleString() : '从未活跃'}</Text></Table.Td>
+                <Table.Td>
+                  <ActionIcon variant="light" color="blue" onClick={() => { setDetailPin(p); setTimelineMinutes(30) }}>
+                    <IconEye size={16} />
+                  </ActionIcon>
+                </Table.Td>
+              </Table.Tr>
+            ))}
+          </Table.Tbody>
         </Table>
-      </ScrollArea>
       )}
 
-      <Modal opened={createOpened} onClose={closeCreate} title="生成新 PIN">
-        <Stack>
-          <TextInput
-            label="选择用户"
-            placeholder="用户ID"
-            value={newPin.userId}
-            onChange={e => setNewPin(p => ({ ...p, userId: e.target.value }))}
-          />
-          <TextInput
-            label="标签（管理用）"
-            placeholder="如：张-主卧-床垫"
-            value={newPin.label}
-            onChange={e => setNewPin(p => ({ ...p, label: e.target.value }))}
-          />
-          <TextInput
-            label="昵称（用户端显示）"
-            placeholder="如：我的床垫"
-            value={newPin.nickname}
-            onChange={e => setNewPin(p => ({ ...p, nickname: e.target.value }))}
-          />
-          <Button onClick={handleCreate} loading={createMutation.isPending}>生成</Button>
-        </Stack>
-      </Modal>
-
-      <Modal opened={editOpened} onClose={closeEdit} title="编辑 PIN">
-        <Stack>
-          <Text size="sm">PIN: {editingPin?.pin}</Text>
-          <TextInput
-            label="标签"
-            value={editingPin?.label || ''}
-            onChange={e => setEditingPin((p: any) => ({ ...p, label: e.target.value }))}
-          />
-          <TextInput
-            label="昵称"
-            value={editingPin?.nickname || ''}
-            onChange={e => setEditingPin((p: any) => ({ ...p, nickname: e.target.value }))}
-          />
-          <Button onClick={handleUpdate} loading={updateMutation.isPending}>保存</Button>
-        </Stack>
+      <Modal opened={!!detailPin} onClose={() => setDetailPin(null)}
+        title={detailPin ? `PIN ${detailPin.pin} — 数据溯源` : ''} size="xl">
+        {detailPin && (
+          <Stack>
+            <Group>
+              <Badge color={TYPE_COLORS[detailPin.type]} variant="filled">{TYPE_LABELS[detailPin.type]}</Badge>
+              <Text size="sm">{detailPin.label || detailPin.pin}</Text>
+              {detailPin.description && <Text size="xs" c="dimmed">{detailPin.description}</Text>}
+            </Group>
+            <Text size="xs" c="dimmed">此 PIN 关联的所有数据提交记录：</Text>
+            <SimTimeline
+              patientId={detailPin.userId}
+              minutes={timelineMinutes}
+              onMinutesChange={setTimelineMinutes}
+            />
+          </Stack>
+        )}
       </Modal>
     </Container>
   )

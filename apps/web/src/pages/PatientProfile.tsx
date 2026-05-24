@@ -28,7 +28,7 @@ export function PatientProfile() {
   const utils = trpc.useUtils()
 
   const patient = trpc.patient.byId.useQuery({ id: id! }, { enabled: !!id })
-  const devices = trpc.device.list.useQuery({ patientId: id! }, { enabled: !!id })
+  const pins = trpc.pin.list.useQuery(undefined, { enabled: !!id })
 
   const updateMutation = trpc.patient.update.useMutation({
     onSuccess: () => {
@@ -108,14 +108,14 @@ export function PatientProfile() {
 
       <Paper p="lg" radius="md" withBorder>
         <Title order={4} mb="md">关联设备</Title>
-        {devices.isLoading ? (
+        {pins.isLoading ? (
           <Skeleton height={100} />
         ) : (
           <Table striped highlightOnHover>
-            <Table.Thead><Table.Tr><Table.Th>序列号</Table.Th><Table.Th>类型</Table.Th><Table.Th>状态</Table.Th><Table.Th>最后在线</Table.Th></Table.Tr></Table.Thead>
+            <Table.Thead><Table.Tr><Table.Th>PIN</Table.Th><Table.Th>类型</Table.Th><Table.Th>标签</Table.Th><Table.Th>最后活跃</Table.Th></Table.Tr></Table.Thead>
             <Table.Tbody>
-              {devices.data?.map((d: any) => (
-                <Table.Tr key={d.id}><Table.Td>{d.serialNumber}</Table.Td><Table.Td><Badge variant="light">{d.deviceType}</Badge></Table.Td><Table.Td><Badge color={d.status === 'active' ? 'green' : 'gray'}>{d.status}</Badge></Table.Td><Table.Td>{d.lastSeen ? new Date(d.lastSeen).toLocaleString() : '—'}</Table.Td></Table.Tr>
+              {pins.data?.map((d: any) => (
+                <Table.Tr key={d.pin}><Table.Td><Text ff="monospace" size="sm">{d.pin}</Text></Table.Td><Table.Td><Badge variant="light">{d.type}</Badge></Table.Td><Table.Td>{d.label || '-'}</Table.Td><Table.Td>{d.lastSeenAt ? new Date(d.lastSeenAt).toLocaleString() : '—'}</Table.Td></Table.Tr>
               ))}
             </Table.Tbody>
           </Table>

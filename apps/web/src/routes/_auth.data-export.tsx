@@ -5,13 +5,12 @@ import { trpc } from '../trpc'
 
 const FIELD_OPTIONS: Record<string, string[]> = {
   patients: ['id', 'name', 'gender', 'birth_date', 'phone', 'height_cm', 'weight_kg', 'blood_type', 'address', 'status', 'created_at'],
-  events: ['id', 'patient_id', 'kind', 'metric', 'value', 'unit', 'source', 'severity', 'status', 'recorded_at', 'created_at'],
+  events: ['id', 'patient_id', 'kind', 'metric', 'value', 'unit', 'source', 'severity', 'status', 'pin_code', 'recorded_at', 'created_at'],
   medications: ['id', 'patient_id', 'drug_name', 'dosage', 'dosage_unit', 'frequency', 'route', 'start_date', 'end_date', 'status', 'created_at'],
-  devices: ['id', 'serial_number', 'device_type', 'model', 'manufacturer', 'status', 'room_id', 'last_seen', 'created_at'],
 }
 
 const ENTITY_LABELS: Record<string, string> = {
-  patients: '患者', events: '事件', medications: '用药', devices: '设备',
+  patients: '患者', events: '事件', medications: '用药',
 }
 
 function DataExportPage() {

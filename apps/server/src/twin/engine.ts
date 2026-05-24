@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm'
 import { v4 as uuid } from 'uuid'
 import type { DbClient } from '../core/db'
-import { events, patients, devices } from '../core/db/schema.js'
+import { events, patients } from '../core/db/schema.js'
 import { broadcastManager } from '../core/realtime/broadcast'
 import type { PatientProfile, Posture, SimulatedEvent } from './types'
 import { getProfile } from './profiles'
@@ -33,7 +33,6 @@ export interface PatientEngine {
   id: string
   patientId: string
   patientDbId: string
-  deviceDbId: string
   name: string
   profile: PatientProfile
   mapId: string | null
@@ -92,16 +91,6 @@ export async function createEngine(
     .returning()
 
   const deviceType = profile.devices[0] || 'simulator'
-  const serial = `eng-${config.name.replace(/\s/g, '-').toLowerCase()}-${Date.now()}`
-  const [device] = await db
-    .insert(devices)
-    .values({
-      serialNumber: serial,
-      deviceType: deviceType as 'mattress' | 'vision' | 'imu' | 'generic' | 'simulator' | 'custom',
-      patientId: patient.id,
-      tags: { simulated: true, profileId: profile.id },
-    })
-    .returning()
 
   const actorState = createActorState(`actor-${patient.id}`, 1, 1, null)
   const actors = new Map<string, ActorState>()
@@ -115,7 +104,6 @@ export async function createEngine(
     id: uuid(),
     patientId: config.patientId || patient.id,
     patientDbId: patient.id,
-    deviceDbId: device.id,
     name: config.name,
     profile,
     mapId: config.mapId || null,
@@ -143,32 +131,6 @@ export async function reconstructEngine(
   const profileId = (tags.profileId as string) || 'elderly-cardiac'
   const profile = getProfile(profileId)
 
-  let [device] = await db
-    .select()
-    .from(devices)
-    .where(eq(devices.patientId, opts.patientId))
-    .limit(1)
-  if (!device) {
-    const deviceType = profile.devices[0] || 'simulator'
-    const serial = `eng-${opts.name.replace(/\s/g, '-').toLowerCase()}-${Date.now()}`
-    const [newDevice] = await db
-      .insert(devices)
-      .values({
-        serialNumber: serial,
-        deviceType: deviceType as
-          | 'mattress'
-          | 'vision'
-          | 'imu'
-          | 'generic'
-          | 'simulator'
-          | 'custom',
-        patientId: opts.patientId,
-        tags: { simulated: true, profileId: profile.id },
-      })
-      .returning()
-    device = newDevice
-  }
-
   const homeGraph = (tags.homeGraph as any) || {}
   const firstRoomId = homeGraph.rooms?.[0]?.id || null
 
@@ -180,7 +142,6 @@ export async function reconstructEngine(
     id: uuid(),
     patientId: opts.patientId,
     patientDbId: opts.patientId,
-    deviceDbId: device.id,
     name: opts.name,
     profile,
     mapId: null,
@@ -202,7 +163,6 @@ export async function reconstructEngine(
 
 async function tickPhysiology(engine: PatientEngine): Promise<SimulatedEvent[]> {
   const b = engine.profile.baseline
-  const deviceId = engine.deviceDbId
   const patientDbId = engine.patientDbId
   const hour = engine.simTime.getHours()
   const [sleepStartH] = engine.profile.schedule.sleep.start.split(':').map(Number)
@@ -225,7 +185,6 @@ async function tickPhysiology(engine: PatientEngine): Promise<SimulatedEvent[]> 
   )
   allEvents.push({
     patientId: patientDbId,
-    deviceId,
     kind: 'observation',
     metric: 'heart_rate',
     value: Math.round(hr),
@@ -242,7 +201,6 @@ async function tickPhysiology(engine: PatientEngine): Promise<SimulatedEvent[]> 
   )
   allEvents.push({
     patientId: patientDbId,
-    deviceId,
     kind: 'observation',
     metric: 'resp_rate',
     value: Math.round(rr),
@@ -254,7 +212,6 @@ async function tickPhysiology(engine: PatientEngine): Promise<SimulatedEvent[]> 
   const temp = generateTemperature(b.temperature.resting, b.temperature.variability, hour)
   allEvents.push({
     patientId: patientDbId,
-    deviceId,
     kind: 'observation',
     metric: 'temperature',
     value: Math.round(temp * 10) / 10,
@@ -266,7 +223,6 @@ async function tickPhysiology(engine: PatientEngine): Promise<SimulatedEvent[]> 
   const spo2 = generateSpO2(b.spO2.resting, b.spO2.variability)
   allEvents.push({
     patientId: patientDbId,
-    deviceId,
     kind: 'observation',
     metric: 'spo2',
     value: Math.round(spo2),
@@ -285,7 +241,6 @@ async function tickPhysiology(engine: PatientEngine): Promise<SimulatedEvent[]> 
   )
   allEvents.push({
     patientId: patientDbId,
-    deviceId,
     kind: 'observation',
     metric: 'systolic_bp',
     value: bp.systolic,
@@ -295,7 +250,6 @@ async function tickPhysiology(engine: PatientEngine): Promise<SimulatedEvent[]> 
   })
   allEvents.push({
     patientId: patientDbId,
-    deviceId,
     kind: 'observation',
     metric: 'diastolic_bp',
     value: bp.diastolic,
@@ -315,7 +269,6 @@ async function tickPhysiology(engine: PatientEngine): Promise<SimulatedEvent[]> 
   )
   allEvents.push({
     patientId: patientDbId,
-    deviceId,
     kind: 'observation',
     metric: 'glucose',
     value: glucose,
@@ -327,7 +280,6 @@ async function tickPhysiology(engine: PatientEngine): Promise<SimulatedEvent[]> 
   const motion = generateMotionIndex(activity)
   allEvents.push({
     patientId: patientDbId,
-    deviceId,
     kind: 'observation',
     metric: 'motion_index',
     value: motion,
@@ -339,7 +291,6 @@ async function tickPhysiology(engine: PatientEngine): Promise<SimulatedEvent[]> 
   const bed = generateBedStatus(activity, hour, engine.profile.schedule.events)
   allEvents.push({
     patientId: patientDbId,
-    deviceId,
     kind: 'observation',
     metric: 'bed_status',
     value: bed,
@@ -353,7 +304,6 @@ async function tickPhysiology(engine: PatientEngine): Promise<SimulatedEvent[]> 
   const posture = generatePosture(activity, hour, bed, previousPosture)
   allEvents.push({
     patientId: patientDbId,
-    deviceId,
     kind: 'observation',
     metric: 'posture',
     value: null,
@@ -365,7 +315,6 @@ async function tickPhysiology(engine: PatientEngine): Promise<SimulatedEvent[]> 
   const ecgSamples = generateECGSamples(Math.round(hr))
   allEvents.push({
     patientId: patientDbId,
-    deviceId,
     kind: 'observation',
     metric: 'ecg_waveform',
     value: null,
@@ -377,7 +326,6 @@ async function tickPhysiology(engine: PatientEngine): Promise<SimulatedEvent[]> 
   const respWave = generateRespiratoryWaveform(Math.round(rr))
   allEvents.push({
     patientId: patientDbId,
-    deviceId,
     kind: 'observation',
     metric: 'resp_waveform',
     value: null,
@@ -391,7 +339,6 @@ async function tickPhysiology(engine: PatientEngine): Promise<SimulatedEvent[]> 
   const pressureGrid = generatePressureDistribution(posture, weight)
   allEvents.push({
     patientId: patientDbId,
-    deviceId,
     kind: 'observation',
     metric: 'pressure_grid',
     value: null,
@@ -491,7 +438,6 @@ export async function startEngine(db: DbClient, patientId: string): Promise<void
       if (physEvents.length > 0) {
         const rows = physEvents.map((e) => ({
           patientId: e.patientId,
-          deviceId: e.deviceId,
           kind: e.kind,
           metric: e.metric,
           value: e.value,
@@ -684,7 +630,6 @@ export async function injectScenario(
       .insert(events)
       .values({
         patientId: engine.patientDbId,
-        deviceId: engine.deviceDbId,
         kind: 'observation',
         metric: scenario.observation.metric || 'unknown',
         value: scenario.observation.value ?? null,
@@ -703,7 +648,6 @@ export async function injectScenario(
       .insert(events)
       .values({
         patientId: engine.patientDbId,
-        deviceId: engine.deviceDbId,
         kind: 'alert',
         metric: scenario.alert.metric || 'unknown',
         value: scenario.alert.value ?? null,

@@ -39,7 +39,6 @@ export const alertRouter = router({
         rows.map((a) => ({
           id: a.id,
           patientId: a.patientId,
-          deviceId: a.deviceId,
           kind: 'alert' as const,
           metric: a.metric,
           value: a.value,

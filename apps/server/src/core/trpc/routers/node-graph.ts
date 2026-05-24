@@ -1,7 +1,7 @@
 import { TRPCError } from '@trpc/server'
 import { desc, eq } from 'drizzle-orm'
 import { z } from 'zod'
-import { events, patients, devices } from '../../db/schema.js'
+import { events, patients } from '../../db/schema.js'
 import { usersPin } from '../../db/schema/pin'
 import { protectedProcedure, router } from '../index'
 
@@ -42,19 +42,6 @@ export const nodeGraphRouter = router({
       .from(patients)
       .where(eq(patients.userId, userId))
 
-    const allDevices = await ctx.db
-      .select({
-        id: devices.id,
-        serialNumber: devices.serialNumber,
-        deviceType: devices.deviceType,
-        status: devices.status,
-        roomId: devices.roomId,
-        patientId: devices.patientId,
-        lastSeenAt: devices.lastSeenAt,
-        tags: devices.tags,
-      })
-      .from(devices)
-
     const allPins = await ctx.db
       .select({
         pin: usersPin.pin,
@@ -80,16 +67,6 @@ export const nodeGraphRouter = router({
           if (seenRoomIds.has(r.id)) continue
           seenRoomIds.add(r.id)
 
-          const roomDevices = allDevices
-            .filter((d: any) => d.roomId === r.id)
-            .map((d: any) => ({
-              id: d.id,
-              serialNumber: d.serialNumber,
-              deviceType: d.deviceType,
-              status: d.status,
-              lastSeenAt: d.lastSeenAt,
-            }))
-
           const roomPins = allPins
             .filter((p: any) => p.roomId === r.id)
             .map((p: any) => ({
@@ -105,24 +82,13 @@ export const nodeGraphRouter = router({
             ...r,
             patientId: r.patientId || patient.id,
             patientName: patient.name,
-            devices: [...roomDevices, ...roomPins],
+            devices: [...roomPins],
           })
         }
       }
     }
 
-    const allAssignedDeviceIds = new Set(rooms.flatMap((r: any) => r.devices.map((d: any) => d.id)))
     const unassignedDevices = [
-      ...allDevices
-        .filter((d: any) => !d.roomId)
-        .map((d: any) => ({
-          id: d.id,
-          serialNumber: d.serialNumber,
-          deviceType: d.deviceType,
-          status: d.status,
-          lastSeenAt: d.lastSeenAt,
-          patientId: d.patientId,
-        })),
       ...allPins
         .filter((p: any) => !p.roomId)
         .map((p: any) => ({
@@ -244,27 +210,10 @@ export const nodeGraphRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-        input.deviceId,
-      )
-
-      if (isUuid) {
-        const [dev] = await ctx.db
-          .select({ id: devices.id })
-          .from(devices)
-          .where(eq(devices.id, input.deviceId))
-          .limit(1)
-        if (!dev) throw new TRPCError({ code: 'NOT_FOUND', message: '设备不存在' })
-        await ctx.db
-          .update(devices)
-          .set({ roomId: input.roomId })
-          .where(eq(devices.id, input.deviceId))
-      } else {
-        await ctx.db
-          .update(usersPin)
-          .set({ roomId: input.roomId })
-          .where(eq(usersPin.pin, input.deviceId))
-      }
+      await ctx.db
+        .update(usersPin)
+        .set({ roomId: input.roomId })
+        .where(eq(usersPin.pin, input.deviceId))
 
       return { success: true }
     }),
@@ -303,10 +252,6 @@ export const nodeGraphRouter = router({
         }
       }
 
-      await ctx.db
-        .update(devices)
-        .set({ roomId: null as any })
-        .where(eq(devices.roomId, input.roomId))
       await ctx.db
         .update(usersPin)
         .set({ roomId: null as any })

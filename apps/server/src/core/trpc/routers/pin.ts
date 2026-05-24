@@ -52,7 +52,7 @@ export const pinRouter = router({
         pin: z.string().length(6),
         label: z.string().max(64).optional(),
         nickname: z.string().max(32).optional(),
-        thingId: z.string().uuid().nullable().optional(),
+
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -107,7 +107,6 @@ export const pinRouter = router({
           userId: existing.userId,
           label: existing.label,
           nickname: existing.nickname,
-          thingId: existing.thingId,
         })
         .returning()
       return record

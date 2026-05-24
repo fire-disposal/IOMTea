@@ -223,7 +223,6 @@ function buildEventTags(
   topicSource: string,
   routeType: string,
   payloadSource: string | undefined,
-  thingId: string | null | undefined,
 ): Record<string, unknown> {
   const tags: Record<string, unknown> = {
     topicSource,
@@ -231,7 +230,6 @@ function buildEventTags(
     payloadSource: payloadSource ?? null,
   }
 
-  if (thingId) tags.thingId = thingId
   return tags
 }
 
@@ -250,7 +248,7 @@ async function handleHealthEvent(
   const patientId = await resolvePatientId(pinRecord.userId)
   if (!patientId) return
 
-  const tags = buildEventTags(topicSource, routeType, normalized.payloadSource, pinRecord.thingId)
+  const tags = buildEventTags(topicSource, routeType, normalized.payloadSource)
 
   await db.insert(events).values({
     patientId,
