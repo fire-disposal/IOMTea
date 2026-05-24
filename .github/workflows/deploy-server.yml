@@ -115,7 +115,7 @@ jobs:
   db-migrate:
     needs: build-and-deploy
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') }}
+    if: ${{ always() && !cancelled() }}
     steps:
       - name: Run migration
         uses: appleboy/ssh-action@v1
@@ -127,4 +127,4 @@ jobs:
             export COMPOSE_FILE=/srv/iomtea/docker-compose.yml
             export COMPOSE_PROJECT_DIR=/srv/iomtea
             export IMAGE_TAG=$(echo "${{ github.sha }}" | cut -c1-7)
-            docker compose run --rm server pnpm db:push
+            docker compose run --rm server pnpm db:migrate
