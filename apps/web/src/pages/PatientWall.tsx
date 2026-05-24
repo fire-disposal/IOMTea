@@ -18,7 +18,6 @@ import {
 import { notifications } from '@mantine/notifications'
 import {
   IconAlertTriangle,
-  IconDevices,
   IconPlus,
   IconSearch,
   IconUpload,

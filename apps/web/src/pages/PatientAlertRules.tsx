@@ -1,4 +1,4 @@
-import { Button, Group, NumberInput, Paper, Switch, Text, Title, Alert } from '@mantine/core'
+import { Button, Group, NumberInput, Paper, Switch, Text, Title } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
 import { useForm } from '@tanstack/react-form'
 import { trpc } from '../trpc'

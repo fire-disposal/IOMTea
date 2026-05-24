@@ -4,8 +4,8 @@ import {
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import {
-  IconDashboard, IconSettings, IconLogout, IconUsers,
-  IconPill, IconDevices, IconScreenShare,
+  IconDashboard, IconLogout, IconUsers,
+  IconScreenShare,
   IconAlertTriangle, IconFileExport, IconFlask, IconKey, IconUsersGroup,
 } from '@tabler/icons-react'
 import { Outlet, createFileRoute, redirect, useNavigate, useRouterState } from '@tanstack/react-router'

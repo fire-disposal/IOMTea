@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Container, Title, Group, Paper, Badge, Text, Button, Textarea, Modal, Stack, SimpleGrid } from '@mantine/core'
 import { AccentPaper } from '../components/shared/AccentPaper'
 import { useDisclosure } from '@mantine/hooks'
+import { notifications } from '@mantine/notifications'
 import { trpc } from '../trpc'
 import { StateSkeleton, StateError } from '../components/shared/StateComponents'
 
@@ -28,8 +29,12 @@ const STATUS_LABELS: Record<string, string> = {
 
 export function AlertBoard() {
   const { data: alerts, refetch, isLoading, isError } = trpc.alert.list.useQuery({ pageSize: 100 })
-  const handleMutation = trpc.alert.handle.useMutation()
-  const closeMutation = trpc.alert.close.useMutation()
+  const handleMutation = trpc.alert.handle.useMutation({
+    onError: (err) => notifications.show({ title: '操作失败', message: err.message, color: 'red' }),
+  })
+  const closeMutation = trpc.alert.close.useMutation({
+    onError: (err) => notifications.show({ title: '操作失败', message: err.message, color: 'red' }),
+  })
 
   const [selected, setSelected] = useState<AlertItem | null>(null)
   const [note, setNote] = useState('')

@@ -53,12 +53,12 @@ export function LoginPage() {
 
   const login = trpc.auth.login.useMutation({
     onSuccess: handleAuthSuccess,
-    onError: (err) => form.setFieldMeta('password', (prev) => ({ ...prev, errorMap: { onServer: err.message } })),
+    onError: (err) => form.setFieldMeta('username', (prev) => ({ ...prev, errorMap: { onServer: err.message } })),
   })
 
   const register = trpc.auth.register.useMutation({
     onSuccess: handleAuthSuccess,
-    onError: (err) => form.setFieldMeta('password', (prev) => ({ ...prev, errorMap: { onServer: err.message } })),
+    onError: (err) => form.setFieldMeta('username', (prev) => ({ ...prev, errorMap: { onServer: err.message } })),
   })
 
   return (

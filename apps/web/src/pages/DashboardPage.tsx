@@ -1,22 +1,15 @@
 import {
   Badge,
-  Button,
   Container,
   Group,
   Paper,
-  SimpleGrid,
   Stack,
   Text,
-  ThemeIcon,
   Title,
 } from '@mantine/core'
 import { AccentPaper } from '../components/shared/AccentPaper'
 import {
   IconAlertTriangle,
-  IconCalendar,
-  IconChartLine,
-  IconChevronRight,
-  IconSettings,
   IconUsers,
 } from '@tabler/icons-react'
 import { useNavigate } from '@tanstack/react-router'

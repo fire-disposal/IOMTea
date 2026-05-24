@@ -4,7 +4,7 @@ import { IconAlertTriangle, IconBell, IconCheck, IconInfoCircle } from '@tabler/
 import { useState } from 'react'
 import { useParams } from '@tanstack/react-router'
 import { trpc } from '../trpc'
-import { StateEmpty } from '../components/shared/StateComponents'
+import { StateEmpty, StateError } from '../components/shared/StateComponents'
 
 const severityColor: Record<string, string> = { critical: 'red', warning: 'orange', info: 'blue' }
 const severityLabel: Record<string, string> = { critical: '严重', warning: '警告', info: '信息' }
@@ -62,6 +62,14 @@ export function PatientAlerts() {
         <Skeleton height={28} width={200} mb="md" />
         <Skeleton height={32} mb="md" />
         <Skeleton height={200} />
+      </Paper>
+    )
+  }
+
+  if (alerts.isError) {
+    return (
+      <Paper p="lg" radius="md" withBorder>
+        <StateError message="加载告警数据失败" />
       </Paper>
     )
   }

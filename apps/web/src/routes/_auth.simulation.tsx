@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import {
   Container, Title, Paper, Group, Button, Select, Badge, Text,
   Grid, Stack, Table, NumberInput, ActionIcon, SegmentedControl, Divider,
-  Box, Modal, Switch, TextInput,
+  Modal, Switch, TextInput,
 } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
 import { useState, useEffect, useRef } from 'react'

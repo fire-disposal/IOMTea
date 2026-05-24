@@ -74,7 +74,7 @@ export function UserManagementPage() {
       <Modal opened={!!editUser} onClose={() => setEditUser(null)} title="编辑用户" size="sm">
         {editUser && (
           <>
-            <Text mb="md">用户名: {editUser.displayName}</Text>
+            <Text mb="md">显示名: {editUser.displayName}</Text>
             <Select
               label="角色"
               data={ROLE_OPTIONS}

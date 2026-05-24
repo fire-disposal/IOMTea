@@ -1,4 +1,4 @@
-import { ActionIcon, Alert, Badge, Box, Button, Center, Divider, Group, Skeleton, Stack, Tabs, Text } from '@mantine/core'
+import { ActionIcon, Alert, Box, Button, Center, Divider, Group, Skeleton, Stack, Tabs, Text } from '@mantine/core'
 import { IconArrowLeft, IconHeart, IconLungs, IconHeartbeat, IconTemperatureCelsius } from '@tabler/icons-react'
 import { useNavigate, useParams, useRouterState } from '@tanstack/react-router'
 import type { ReactNode } from 'react'

@@ -1,12 +1,10 @@
-import { Badge, Box, Group, Paper, SimpleGrid, Skeleton, Text, ThemeIcon, Title } from '@mantine/core'
+import { Badge, Box, Group, Paper, SimpleGrid, Text, ThemeIcon, Title } from '@mantine/core'
 import { AccentPaper } from '../components/shared/AccentPaper'
-import { IconAlertTriangle, IconHeart, IconLungs, IconUsers } from '@tabler/icons-react'
-import { useMemo } from 'react'
-
+import { IconAlertTriangle, IconUsers } from '@tabler/icons-react'
 import { trpc } from '../trpc'
-import { useRealtime } from '../hooks/useRealtime'
+import { StateSkeleton, StateError } from '../components/shared/StateComponents'
 
-function StatCard({ label, value, unit, color, icon }: { label: string; value: string | number; unit?: string; color: string; icon: React.ReactNode }) {
+function StatCard({ label, value, color, icon }: { label: string; value: string | number; color: string; icon: React.ReactNode }) {
   return (
     <AccentPaper p="md" withBorder color={color}>
       <Group gap="xs" mb={4}>
@@ -14,40 +12,35 @@ function StatCard({ label, value, unit, color, icon }: { label: string; value: s
         <Text size="xs" c="dimmed">{label}</Text>
       </Group>
       <Text fw={700} fz={28}>{value}</Text>
-      {unit && <Text size="xs" c="dimmed">{unit}</Text>}
     </AccentPaper>
   )
 }
 
-
 export function DataDashboard() {
   const patients = trpc.patient.list.useQuery({ pageSize: 100, status: 'active' })
-  const alerts = trpc.alert.list.useQuery({ pageSize: 50, status: 'active' }, { refetchInterval: 10000 })
-  const patientIds = useMemo(() => (patients.data ?? []).slice(0, 8).map((p: any) => p.id), [patients.data])
-  const latestVitals = trpc.useQueries((t) => patientIds.map((pid: string) => t.data.latest({ patientId: pid })))
-  useRealtime(undefined, undefined, patientIds[0])
+  const alerts = trpc.alert.list.useQuery({ pageSize: 50 }, { refetchInterval: 10000 })
 
-  const activeAlerts = (alerts.data ?? []).filter((a: any) => a.status === 'active' || a.status === 'new')
+  const isLoading = patients.isLoading || alerts.isLoading
+  const isError = patients.isError || alerts.isError
+
+  if (isLoading) return <Box py="md" px="xl"><StateSkeleton variant="chart" /></Box>
+  if (isError) return <Box py="md" px="xl"><StateError message="加载数据失败" onRetry={() => { patients.refetch(); alerts.refetch() }} /></Box>
+
+  const activeAlerts = (alerts.data ?? []).filter((a: any) => a.status !== 'closed' && a.status !== 'resolved')
   const patientCount = patients.data?.length ?? 0
+  const criticalCount = activeAlerts.filter((a: any) => a.severity === 'critical').length
 
   return (
     <Box bg="matchaGreen.0" mih="calc(100vh - 56px)" py="md" px="xl">
       <Group justify="space-between" mb="md">
-        <Title order={3}>数据监控大屏</Title>
+        <Title order={2}>数据监控大屏</Title>
         <Text size="xs" c="dimmed">{patientCount} 位患者 · {activeAlerts.length} 条活跃告警</Text>
       </Group>
 
-      <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} mb="md">
+      <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} mb="md">
         <StatCard label="在管患者" value={patientCount} color="matchaGreen" icon={<IconUsers size={14} />} />
         <StatCard label="活跃告警" value={activeAlerts.length} color="red" icon={<IconAlertTriangle size={14} />} />
-        {latestVitals.map((v) => {
-          const hr = (v.data as any[])?.find((m: any) => m.metric === 'heart_rate')?.value
-          return hr != null ? <StatCard key="hr" label="平均心率" value={hr.toFixed(0)} unit="bpm" color="red" icon={<IconHeart size={14} />} /> : null
-        }).find(Boolean)}
-        {latestVitals.map((v) => {
-          const spo2 = (v.data as any[])?.find((m: any) => m.metric === 'spo2')?.value
-          return spo2 != null ? <StatCard key="spo2" label="平均血氧" value={spo2.toFixed(0)} unit="%" color="blue" icon={<IconLungs size={14} />} /> : null
-        }).find(Boolean)}
+        <StatCard label="严重告警" value={criticalCount} color="red" icon={<IconAlertTriangle size={14} />} />
       </SimpleGrid>
 
       <SimpleGrid cols={{ base: 1, lg: 2 }} mb="md">
@@ -67,18 +60,14 @@ export function DataDashboard() {
         <Paper p="md" withBorder>
           <Text size="xs" c="dimmed" mb="sm">患者概览</Text>
           <SimpleGrid cols={2} spacing="xs">
-            {(patients.data ?? []).slice(0, 10).map((p: any) => {
-              const vitals = latestVitals.find((v) => v.data?.some((m: any) => m.metric === 'heart_rate'))
-              const hr = (vitals?.data as any[])?.find((m: any) => m.metric === 'heart_rate')
-              return (
-                <Paper key={p.id} p="xs" withBorder>
-                  <Group gap={4}>
-                    <Text size="xs" fw={500}>{p.name}</Text>
-                    {hr?.value != null && <Badge size="xs" color="matchaGreen" variant="light">{hr.value} bpm</Badge>}
-                  </Group>
-                </Paper>
-              )
-            })}
+            {(patients.data ?? []).slice(0, 10).map((p: any) => (
+              <Paper key={p.id} p="xs" withBorder>
+                <Group gap={4}>
+                  <Text size="xs" fw={500}>{p.name}</Text>
+                  <Badge size="xs" color={p.status === 'active' ? 'matchaGreen' : 'gray'} variant="light">{p.status}</Badge>
+                </Group>
+              </Paper>
+            ))}
           </SimpleGrid>
         </Paper>
       </SimpleGrid>

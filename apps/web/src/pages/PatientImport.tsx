@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react'
-import { Button, Modal, Table, Text, Group, Paper, PasswordInput, MultiSelect, Stepper, FileInput } from '@mantine/core'
+import { Button, Modal, Table, Text, Group, PasswordInput, MultiSelect, Stepper, FileInput } from '@mantine/core'
+import { notifications } from '@mantine/notifications'
 import { IconUpload } from '@tabler/icons-react'
 import { trpc } from '../trpc'
 
@@ -42,6 +43,7 @@ export function PatientImport({ opened, onClose, onImported }: PatientImportProp
 
   const bulkCreate = trpc.patient.bulkCreate.useMutation({
     onSuccess: (res) => { setResult(res); setStep(2); onImported() },
+    onError: (err) => notifications.show({ title: '导入失败', message: err.message, color: 'red' }),
   })
 
   const handleFile = useCallback((file: File | null) => {

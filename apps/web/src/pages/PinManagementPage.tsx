@@ -1,6 +1,5 @@
 import { useState } from 'react'
-import { Container, Title, Group, Table, Badge, Button, Modal, TextInput, ActionIcon, Text, SegmentedControl, Stack, Select } from '@mantine/core'
-import { useDisclosure } from '@mantine/hooks'
+import { Container, Title, Group, Table, Badge, Modal, ActionIcon, Text, SegmentedControl, Stack } from '@mantine/core'
 import { IconEye, IconRefresh } from '@tabler/icons-react'
 import { trpc } from '../trpc'
 import { StateSkeleton, StateEmpty, StateError } from '../components/shared/StateComponents'
@@ -14,10 +13,6 @@ export function PinManagementPage() {
   const [typeFilter, setTypeFilter] = useState<string>('all')
   const [detailPin, setDetailPin] = useState<any>(null)
   const [timelineMinutes, setTimelineMinutes] = useState(30)
-  const { data: pinEvents } = trpc.sim.events.useQuery(
-    { patientId: detailPin?.userId ?? '', minutes: timelineMinutes },
-    { enabled: !!detailPin }
-  )
 
   const filtered = (pins ?? []).filter((p: any) => typeFilter === 'all' || p.type === typeFilter)
 

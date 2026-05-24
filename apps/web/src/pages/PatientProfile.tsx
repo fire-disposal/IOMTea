@@ -36,6 +36,7 @@ export function PatientProfile() {
       setEditing(false)
       notifications.show({ title: '保存成功', message: '', color: 'green' })
     },
+    onError: (err) => notifications.show({ title: '保存失败', message: err.message, color: 'red' }),
   })
 
   const deleteMutation = trpc.patient.delete.useMutation({
@@ -58,8 +59,18 @@ export function PatientProfile() {
     )
   }
 
-  if (patient.isError) return <Text c="red">加载患者信息失败</Text>
-  if (!patient.data) return <Text c="dimmed">患者不存在</Text>
+  if (patient.isError) return (
+    <Stack align="center" py="xl">
+      <Text c="red">加载患者信息失败</Text>
+      <Button variant="light" onClick={() => navigate({ to: '/patients' })}>返回列表</Button>
+    </Stack>
+  )
+  if (!patient.data) return (
+    <Stack align="center" py="xl">
+      <Text c="dimmed">患者不存在</Text>
+      <Button variant="light" onClick={() => navigate({ to: '/patients' })}>返回列表</Button>
+    </Stack>
+  )
 
   const p = patient.data as any
 
@@ -86,7 +97,6 @@ export function PatientProfile() {
           <div><Text size="xs" c="dimmed">体重</Text><Text>{p.weightKg ? `${p.weightKg} kg` : '未设置'}</Text></div>
           <div><Text size="xs" c="dimmed">血型</Text><Text>{p.bloodType || '未设置'}</Text></div>
         </Group>
-        <Text size="xs" c="dimmed" mt="xs">主治医生ID: {p.primaryDoctorId || '未设置'}</Text>
       </Paper>
 
       <Paper p="lg" radius="md" withBorder>
@@ -115,9 +125,13 @@ export function PatientProfile() {
           <Table striped highlightOnHover>
             <Table.Thead><Table.Tr><Table.Th>PIN</Table.Th><Table.Th>类型</Table.Th><Table.Th>标签</Table.Th><Table.Th>最后活跃</Table.Th></Table.Tr></Table.Thead>
             <Table.Tbody>
-              {pins.data?.map((d: any) => (
-                <Table.Tr key={d.pin}><Table.Td><Text ff="monospace" size="sm">{d.pin}</Text></Table.Td><Table.Td><Badge variant="light">{d.type}</Badge></Table.Td><Table.Td>{d.label || '-'}</Table.Td><Table.Td>{d.lastSeenAt ? new Date(d.lastSeenAt).toLocaleString() : '—'}</Table.Td></Table.Tr>
-              ))}
+              {pins.data?.length === 0 ? (
+                <Table.Tr><Table.Td colSpan={4}><Text c="dimmed" ta="center" py="sm">暂无关联设备</Text></Table.Td></Table.Tr>
+              ) : (
+                pins.data?.map((d: any) => (
+                  <Table.Tr key={d.pin}><Table.Td><Text ff="monospace" size="sm">{d.pin}</Text></Table.Td><Table.Td><Badge variant="light">{d.type}</Badge></Table.Td><Table.Td>{d.label || '-'}</Table.Td><Table.Td>{d.lastSeenAt ? new Date(d.lastSeenAt).toLocaleString() : '—'}</Table.Td></Table.Tr>
+                ))
+              )}
             </Table.Tbody>
           </Table>
         )}
