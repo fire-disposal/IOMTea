@@ -1,20 +1,48 @@
 import { create } from 'zustand'
 
-function decodeJwtPayload(token: string): { sub: string; role: string } | null {
+interface JwtDecoded {
+  sub: string
+  role: string
+  exp: number
+  iat?: number
+}
+
+function decodeJwtPayload(token: string): JwtDecoded | null {
   try {
     const payload = token.split('.')[1]
     if (!payload) return null
-    const decoded = JSON.parse(atob(payload))
-    return { sub: decoded.sub, role: decoded.role }
+    return JSON.parse(atob(payload))
   } catch {
     return null
   }
 }
 
-function getInitialRole(): string | null {
+function isTokenExpired(token: string): boolean {
+  const decoded = decodeJwtPayload(token)
+  if (!decoded?.exp) return true // no exp claim = treat as expired
+  return Date.now() > decoded.exp * 1000
+}
+
+function getInitialAuth() {
   const token = localStorage.getItem('token')
-  if (!token) return null
-  return decodeJwtPayload(token)?.role || null
+  const refreshToken = localStorage.getItem('refreshToken')
+  const expiresAt = Number(localStorage.getItem('expiresAt')) || null
+
+  if (!token) return { token: null, refreshToken: null, expiresAt: null, role: null }
+
+  if (isTokenExpired(token)) {
+    // Token expired — try to clear; refresh will be attempted by trpc.ts
+    // Don't clear tokens here — let the refresh logic in trpc.js handle it
+    // Just return the expired state, the store knows the token
+  }
+
+  const decoded = decodeJwtPayload(token)
+  return {
+    token,
+    refreshToken,
+    expiresAt,
+    role: decoded?.role || null,
+  }
 }
 
 interface AuthState {
@@ -26,11 +54,13 @@ interface AuthState {
   logout: () => void
 }
 
+const initial = getInitialAuth()
+
 export const useAuthStore = create<AuthState>((set) => ({
-  token: localStorage.getItem('token'),
-  refreshToken: localStorage.getItem('refreshToken'),
-  expiresAt: Number(localStorage.getItem('expiresAt')) || null,
-  role: getInitialRole(),
+  token: initial.token,
+  refreshToken: initial.refreshToken,
+  expiresAt: initial.expiresAt,
+  role: initial.role,
   setTokens: (token, refreshToken, expiresAt) => {
     localStorage.setItem('token', token)
     localStorage.setItem('refreshToken', refreshToken)

@@ -6,6 +6,7 @@ import { useAuthStore } from './store/auth'
 export const trpc: CreateTRPCReact<AppRouter, unknown> = createTRPCReact<AppRouter>()
 
 let refreshPromise: Promise<string | null> | null = null
+let refreshTimer: ReturnType<typeof setTimeout> | null = null
 
 async function refreshAccessToken(): Promise<string | null> {
   if (refreshPromise) return refreshPromise
@@ -27,6 +28,7 @@ async function refreshAccessToken(): Promise<string | null> {
         localStorage.setItem('refreshToken', result.refreshToken)
         localStorage.setItem('expiresAt', String(result.expiresAt))
         useAuthStore.getState().setTokens(result.accessToken, result.refreshToken, result.expiresAt)
+        scheduleProactiveRefresh(result.expiresAt)
         return result.accessToken
       }
       return null
@@ -38,6 +40,29 @@ async function refreshAccessToken(): Promise<string | null> {
   })()
 
   return refreshPromise
+}
+
+function scheduleProactiveRefresh(expiresAt: number) {
+  if (refreshTimer) clearTimeout(refreshTimer)
+  const msUntilExpiry = expiresAt - Date.now()
+  const refreshIn = Math.max(msUntilExpiry - 5 * 60 * 1000, 0) // 5 minutes before expiry
+  if (refreshIn > 0) {
+    refreshTimer = setTimeout(() => refreshAccessToken(), refreshIn)
+  }
+}
+
+// Schedule on initial load
+const storedExpiresAt = Number(localStorage.getItem('expiresAt'))
+if (storedExpiresAt && storedExpiresAt > Date.now()) {
+  scheduleProactiveRefresh(storedExpiresAt)
+}
+
+function clearAuth() {
+  localStorage.removeItem('token')
+  localStorage.removeItem('refreshToken')
+  localStorage.removeItem('expiresAt')
+  if (refreshTimer) clearTimeout(refreshTimer)
+  useAuthStore.getState().logout()
 }
 
 export function getTrpcClient() {
@@ -57,10 +82,8 @@ export function getTrpcClient() {
               headers.set('Authorization', `Bearer ${newToken}`)
               return fetch(input, { ...init, headers })
             }
-            localStorage.removeItem('token')
-            localStorage.removeItem('refreshToken')
-            localStorage.removeItem('expiresAt')
-            window.location.href = '/login'
+            clearAuth()
+            window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`
           }
           return response
         },
