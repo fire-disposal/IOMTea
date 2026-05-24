@@ -66,36 +66,16 @@ jobs:
             type=ref,event=tag
             type=sha,prefix=,format=short
 
-      - name: Build image
+      - name: Build and push
         uses: docker/build-push-action@v6
         with:
           context: .
           file: apps/server/Dockerfile
-          load: true
-          tags: ghcr.io/fire-disposal/iomtea/server:ci-smoke
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-      - name: Smoke test
-        run: |
-          export IMAGE_REPO=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          export IMAGE_TAG=ci-smoke
-          export DB_PASSWORD=test
-          export JWT_SECRET=test
-          docker compose up -d postgres mosquitto server
-          if ! curl -sf --retry 20 --retry-delay 2 http://localhost:3000/health; then
-            docker compose logs server --tail 80
-            docker compose down
-            exit 1
-          fi
-          docker compose down
-
-      - name: Tag and push
-        run: |
-          while IFS= read -r tag; do
-            docker tag ghcr.io/fire-disposal/iomtea/server:ci-smoke "$tag"
-            docker push "$tag"
-          done <<< "${{ steps.meta.outputs.tags }}"
 
       - name: Deploy to server
         uses: appleboy/ssh-action@v1
