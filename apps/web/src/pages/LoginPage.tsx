@@ -5,6 +5,7 @@ import { useForm } from '@tanstack/react-form'
 import { z } from 'zod'
 import { useAuthStore } from '../store/auth'
 import { trpc } from '../trpc'
+import { useNavigate } from '@tanstack/react-router'
 import classes from './LoginPage.module.css'
 
 const loginSchema = z.object({
@@ -32,6 +33,15 @@ const particles = Array.from({ length: 32 }, (_, i) => ({
 export function LoginPage() {
   const [isRegister, setIsRegister] = useState(false)
   const setTokens = useAuthStore((s) => s.setTokens)
+  const navigate = useNavigate()
+
+  const handleAuthSuccess = (data: { accessToken: string; refreshToken: string; expiresAt: number }) => {
+    setTokens(data.accessToken, data.refreshToken, data.expiresAt)
+    notifications.show({ title: '登录成功', message: '欢迎使用 IOMTea', color: 'green' })
+    const params = new URLSearchParams(window.location.search)
+    const redirect = params.get('redirect') || '/'
+    navigate({ to: redirect })
+  }
 
   const form = useForm({
     defaultValues: { username: '', password: '' },
@@ -42,12 +52,12 @@ export function LoginPage() {
   })
 
   const login = trpc.auth.login.useMutation({
-    onSuccess: (data) => { setTokens(data.accessToken, data.refreshToken, data.expiresAt); notifications.show({ title: '登录成功', message: '欢迎使用 IOMTea', color: 'green' }) },
+    onSuccess: handleAuthSuccess,
     onError: (err) => form.setFieldMeta('password', (prev) => ({ ...prev, errorMap: { onServer: err.message } })),
   })
 
   const register = trpc.auth.register.useMutation({
-    onSuccess: (data) => { setTokens(data.accessToken, data.refreshToken, data.expiresAt); notifications.show({ title: '注册成功', message: '已自动登录', color: 'green' }) },
+    onSuccess: handleAuthSuccess,
     onError: (err) => form.setFieldMeta('password', (prev) => ({ ...prev, errorMap: { onServer: err.message } })),
   })
 
