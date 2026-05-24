@@ -139,8 +139,21 @@ function DashboardLayout() {
 
 export const Route = (createFileRoute as any)('/_auth')({
   beforeLoad: ({ location }: { location: { href: string } }) => {
-    const token = useAuthStore.getState().token
-    if (!token) throw redirect({ to: '/login', search: { redirect: location.href } })
+    const state = useAuthStore.getState()
+    if (!state.token) throw redirect({ to: '/login', search: { redirect: location.href } })
+
+    const adminRoutes = ['/patients', '/medications', '/data-export', '/simulation', '/settings', '/iot/pins']
+    const superAdminRoutes = ['/settings/users']
+    const pathname = location.href ? new URL(location.href).pathname : ''
+
+    if (superAdminRoutes.some((r) => pathname.startsWith(r)) && state.role !== 'super_admin') {
+      throw redirect({ to: '/' })
+    }
+    if (adminRoutes.some((r) => pathname.startsWith(r))) {
+      if (state.role !== 'admin' && state.role !== 'super_admin') {
+        throw redirect({ to: '/' })
+      }
+    }
   },
   component: DashboardLayout,
 })

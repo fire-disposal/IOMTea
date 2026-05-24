@@ -1,4 +1,4 @@
-import { ActionIcon, Alert, Badge, Box, Center, Divider, Group, Skeleton, Stack, Tabs, Text } from '@mantine/core'
+import { ActionIcon, Alert, Badge, Box, Button, Center, Divider, Group, Skeleton, Stack, Tabs, Text } from '@mantine/core'
 import { IconArrowLeft, IconHeart, IconLungs, IconHeartbeat, IconTemperatureCelsius } from '@tabler/icons-react'
 import { useNavigate, useParams, useRouterState } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
@@ -43,10 +43,19 @@ export function PatientDetailShell({ children }: { children: ReactNode }) {
       </Stack>
     )
   }
+  if (patient.isError) {
+    return (
+      <Stack h="calc(100vh - 56px)" align="center" justify="center">
+        <Alert color="red" title="加载失败">无法获取患者信息，请检查网络后重试。</Alert>
+        <Button mt="md" variant="light" onClick={() => navigate({ to: '/patients' })}>返回列表</Button>
+      </Stack>
+    )
+  }
   if (!patient.data) {
     return (
       <Stack h="calc(100vh - 56px)" align="center" justify="center">
-        <Alert color="red" title="患者不存在">无法加载该患者信息，请返回列表重试。</Alert>
+        <Alert color="red" title="患者不存在">该患者可能已被删除，请返回列表。</Alert>
+        <Button mt="md" variant="light" onClick={() => navigate({ to: '/patients' })}>返回列表</Button>
       </Stack>
     )
   }

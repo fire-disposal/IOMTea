@@ -32,8 +32,8 @@ export function DashboardPage() {
   const activeAlerts = (alerts.data ?? []).filter((a: any) => a.status === 'active').length
 
   const statsItems: StatsBarItem[] = [
-    { label: '患者总数', value: patients.data?.length ?? 0, icon: <IconUsers size={20} />, color: 'matchaGreen' },
-    { label: '活跃告警', value: activeAlerts, icon: <IconAlertTriangle size={20} />, color: 'red' },
+    { label: '患者总数', value: patients.isError ? '加载失败' : patients.data?.length ?? 0, icon: <IconUsers size={20} />, color: 'matchaGreen' },
+    { label: '活跃告警', value: alerts.isError ? '加载失败' : activeAlerts, icon: <IconAlertTriangle size={20} />, color: 'red' },
   ]
 
   return (
@@ -42,7 +42,7 @@ export function DashboardPage() {
         工作台
       </Title>
 
-      <StatsBar items={statsItems} cols={2} />
+      <StatsBar items={statsItems} cols={2} loading={patients.isLoading || alerts.isLoading} />
 
       <Paper p="md" radius="md" withBorder className="card-hover">
         <Group justify="space-between" mb="sm">
