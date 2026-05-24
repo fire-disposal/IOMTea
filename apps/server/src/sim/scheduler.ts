@@ -6,18 +6,29 @@ export class MetricScheduler {
 
   setSpeed(speed: number) { this.speed = speed }
 
-  schedule(patientId: string, metric: MetricConfig, callback: (metric: string) => Promise<void>) {
-    const key = `${patientId}:${metric.metric}`
+  schedule(patientId: string, metric: any, callback: (metric: string) => Promise<void>) {
+    const key = `${patientId}:${metric.metric ?? metric.name}`
+    const mName = metric.metric ?? metric.name
     const run = () => {
       const baseInterval = metric.interval.min + Math.random() * (metric.interval.max - metric.interval.min)
       const jitteredInterval = baseInterval * (1 + (Math.random() - 0.5) * 2 * metric.jitter)
       const interval = Math.max(100, jitteredInterval / this.speed)
       this.timers.set(key, setTimeout(async () => {
-        await callback(metric.metric)
+        await callback(mName)
         if (this.timers.has(key)) run()
       }, interval))
     }
     run()
+  }
+
+  cancel(patientId: string, metricName?: string) {
+    const prefix = `${patientId}:${metricName ?? ''}`
+    for (const [key, timer] of this.timers) {
+      if (key.startsWith(prefix)) {
+        clearTimeout(timer)
+        this.timers.delete(key)
+      }
+    }
   }
 
   destroy() {

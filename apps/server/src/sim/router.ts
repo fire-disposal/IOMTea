@@ -4,7 +4,11 @@ import { router, protectedProcedure } from '../core/trpc/index'
 import { requirePermission } from '../core/trpc/middleware/rbac'
 import { db } from '../core/db'
 import { patients, events } from '../core/db/schema'
-import { startSim, stopSim, setGlobalSpeed, getStatus, getProfileConfig } from './factory'
+import {
+  createSim, updateSim, toggleSim, toggleSimMetric, deleteSim,
+  addPatientsToSim, removePatientsFromSim,
+  setGlobalSpeed, getStatus, getSimulations, getProfileConfig,
+} from './factory'
 
 const overrideSchema = z.object({
   intervalMin: z.number().min(100).max(600000),
@@ -13,37 +17,54 @@ const overrideSchema = z.object({
 })
 
 export const simRouter = router({
-  start: protectedProcedure
+  create: protectedProcedure
     .use(requirePermission('patient:write'))
-    .input(z.object({
-      patientIds: z.array(z.string().uuid()),
-      profile: z.string(),
-      overrides: z.record(z.string(), overrideSchema).optional(),
-    }))
+    .input(z.object({ profile: z.string(), overrides: z.record(z.string(), overrideSchema).optional() }))
+    .mutation(({ input }) => createSim(input.profile, input.overrides)),
+
+  update: protectedProcedure
+    .use(requirePermission('patient:write'))
+    .input(z.object({ id: z.string(), overrides: z.record(z.string(), overrideSchema) }))
+    .mutation(({ input }) => updateSim(input.id, input.overrides)),
+
+  toggle: protectedProcedure
+    .use(requirePermission('patient:write'))
+    .input(z.object({ id: z.string(), running: z.boolean() }))
+    .mutation(({ input }) => toggleSim(input.id, input.running)),
+
+  toggleMetric: protectedProcedure
+    .use(requirePermission('patient:write'))
+    .input(z.object({ id: z.string(), metric: z.string(), enabled: z.boolean() }))
+    .mutation(({ input }) => toggleSimMetric(input.id, input.metric, input.enabled)),
+
+  delete: protectedProcedure
+    .use(requirePermission('patient:write'))
+    .input(z.object({ id: z.string() }))
+    .mutation(({ input }) => deleteSim(input.id)),
+
+  addPatients: protectedProcedure
+    .use(requirePermission('patient:write'))
+    .input(z.object({ id: z.string(), patientIds: z.array(z.string().uuid()) }))
     .mutation(async ({ input }) => {
       const rows = await db.select({ id: patients.id, name: patients.name })
         .from(patients)
         .where(inArray(patients.id, input.patientIds))
-      const nameMap = new Map(rows.map((r) => [r.id, r.name]))
-      startSim(db, input.patientIds, nameMap, input.profile, input.overrides)
-      return { ok: true, count: input.patientIds.length }
+      return addPatientsToSim(db, input.id, rows)
     }),
 
-  stop: protectedProcedure
+  removePatients: protectedProcedure
     .use(requirePermission('patient:write'))
-    .input(z.object({ patientIds: z.array(z.string().uuid()) }))
-    .mutation(({ input }) => {
-      stopSim(input.patientIds)
-      return { ok: true, count: input.patientIds.length }
-    }),
+    .input(z.object({ id: z.string(), patientIds: z.array(z.string().uuid()) }))
+    .mutation(({ input }) => removePatientsFromSim(input.id, input.patientIds)),
 
   setSpeed: protectedProcedure
     .use(requirePermission('patient:write'))
     .input(z.object({ speed: z.number().min(0.1).max(10) }))
-    .mutation(({ input }) => {
-      setGlobalSpeed(input.speed)
-      return { ok: true }
-    }),
+    .mutation(({ input }) => { setGlobalSpeed(input.speed); return { ok: true } }),
+
+  simulations: protectedProcedure
+    .use(requirePermission('patient:read'))
+    .query(() => getSimulations()),
 
   status: protectedProcedure
     .use(requirePermission('patient:read'))
@@ -62,18 +83,9 @@ export const simRouter = router({
       const rows = await db
         .select({ metric: events.metric, value: events.value, unit: events.unit, recordedAt: events.recordedAt })
         .from(events)
-        .where(and(
-          eq(events.patientId, input.patientId),
-          eq(events.source, 'simulator'),
-          gte(events.recordedAt, since),
-        ))
+        .where(and(eq(events.patientId, input.patientId), eq(events.source, 'simulator'), gte(events.recordedAt, since)))
         .orderBy(desc(events.recordedAt))
         .limit(500)
-      return rows.map((r) => ({
-        metric: r.metric,
-        value: r.value,
-        unit: r.unit,
-        recordedAt: r.recordedAt.getTime(),
-      }))
+      return rows.map((r) => ({ metric: r.metric, value: r.value, unit: r.unit, recordedAt: r.recordedAt.getTime() }))
     }),
 })

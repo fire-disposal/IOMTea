@@ -17,6 +17,7 @@ export interface Profile {
 export interface SimStatus {
   patientId: string
   patientName: string
+  simId: string
   profile: string
   running: boolean
   lastValues: Record<string, number>

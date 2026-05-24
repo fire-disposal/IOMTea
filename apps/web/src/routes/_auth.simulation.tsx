@@ -1,12 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router'
 import {
-  Container, Title, Paper, Group, Button, Select, MultiSelect,
-  Badge, Text, Grid, Stack, Table, NumberInput, ActionIcon,
-  SegmentedControl, Divider, Box, Modal,
+  Container, Title, Paper, Group, Button, Select, MultiSelect, Badge, Text,
+  Grid, Stack, Table, NumberInput, ActionIcon, SegmentedControl, Divider,
+  Box, Modal, Switch, Tooltip,
 } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
 import { useState, useEffect, useRef } from 'react'
-import { IconPlayerPlay, IconPlayerStop, IconRefresh, IconChartBar } from '@tabler/icons-react'
+import { IconPlayerPlay, IconPlayerStop, IconRefresh, IconChartBar, IconPlus, IconTrash } from '@tabler/icons-react'
 import { trpc } from '../trpc'
 import { SimTimeline } from '../components/sim/SimTimeline'
 
@@ -25,197 +25,137 @@ const METRIC_LABELS: Record<string, string> = {
 }
 
 function SimulationPage() {
-  const [selectedPatients, setSelectedPatients] = useState<string[]>([])
-  const [profile, setProfile] = useState<string>('elderly-cardiac')
-  const [overrides, setOverrides] = useState<Record<string, { intervalMin: number; intervalMax: number; jitter: number }>>({})
-  const [detailPatient, setDetailPatient] = useState<any>(null)
-  const [timelineMinutes, setTimelineMinutes] = useState(10)
+  const { data: patientList } = trpc.patient.list.useQuery({ page: 1, pageSize: 200 })
+  const { data: simulations, refetch: refreshSims } = trpc.sim.simulations.useQuery()
+  const { data: simStatus, refetch: refreshStatus } = trpc.sim.status.useQuery()
+  const { data: profileConfig } = trpc.sim.profileConfig.useQuery('elderly-cardiac')
   const pollRef = useRef<ReturnType<typeof setInterval>>(undefined)
 
-  const { data: patientList } = trpc.patient.list.useQuery({ page: 1, pageSize: 200 })
-  const { data: simStatus, refetch: refreshStatus } = trpc.sim.status.useQuery()
-  const { data: profileConfig } = trpc.sim.profileConfig.useQuery(profile)
+  const [detailPatient, setDetailPatient] = useState<any>(null)
+  const [timelineMinutes, setTimelineMinutes] = useState(10)
 
-  const start = trpc.sim.start.useMutation({
-    onSuccess: (d) => { refreshStatus(); notifications.show({ title: '已启动', message: `${d.count} 位患者`, color: 'green' }) },
-  })
-  const stop = trpc.sim.stop.useMutation({
-    onSuccess: () => { refreshStatus(); notifications.show({ title: '已停止', message: '', color: 'orange' }) },
-  })
+  const createSim = trpc.sim.create.useMutation({ onSuccess: () => { refreshSims(); notifications.show({ title: '模拟已创建', message: '', color: 'green' }) } })
+  const toggleSim = trpc.sim.toggle.useMutation({ onSuccess: () => refreshSims() })
+  const deleteSim = trpc.sim.delete.useMutation({ onSuccess: () => refreshSims() })
+  const toggleMetric = trpc.sim.toggleMetric.useMutation({ onSuccess: () => refreshSims() })
+  const addPatients = trpc.sim.addPatients.useMutation({ onSuccess: () => { refreshSims(); refreshStatus() } })
+  const removePatients = trpc.sim.removePatients.useMutation({ onSuccess: () => { refreshSims(); refreshStatus() } })
   const setSpeed = trpc.sim.setSpeed.useMutation()
 
-  useEffect(() => {
-    pollRef.current = setInterval(() => refreshStatus(), 2000)
-    return () => clearInterval(pollRef.current)
-  }, [refreshStatus])
+  useEffect(() => { pollRef.current = setInterval(() => { refreshSims(); refreshStatus() }, 2000); return () => clearInterval(pollRef.current) }, [refreshSims, refreshStatus])
 
-  useEffect(() => {
-    if (profileConfig) {
-      const init: Record<string, any> = {}
-      for (const m of profileConfig) {
-        init[m.metric] = { intervalMin: m.interval.min, intervalMax: m.interval.max, jitter: m.jitter }
-      }
-      setOverrides(init)
-    }
-  }, [profile, profileConfig])
+  const [creating, setCreating] = useState(false)
+  const [newProfile, setNewProfile] = useState('elderly-cardiac')
+  const [addPatientSimId, setAddPatientSimId] = useState<string | null>(null)
+  const [addPatientIds, setAddPatientIds] = useState<string[]>([])
 
-  const updateMetric = (metric: string, field: string, value: number) => {
-    setOverrides((prev) => ({
-      ...prev,
-      [metric]: { ...prev[metric], [field]: value },
-    }))
+  const handleCreate = () => {
+    if (!creating) { setCreating(true); return }
+    createSim.mutate({ profile: newProfile })
+    setCreating(false)
   }
-
-  const resetToDefault = () => {
-    if (!profileConfig) return
-    const init: Record<string, any> = {}
-    for (const m of profileConfig) init[m.metric] = { intervalMin: m.interval.min, intervalMax: m.interval.max, jitter: m.jitter }
-    setOverrides(init)
-  }
-
-  const hasCustomOverrides = profileConfig?.some((m: any) => {
-    const ov = overrides[m.metric]
-    return ov && (ov.intervalMin !== m.interval.min || ov.intervalMax !== m.interval.max || ov.jitter !== m.jitter)
-  })
-
-  const running = (simStatus ?? []).filter((s: any) => s.running)
 
   const patientOptions = (patientList ?? []).map((p: any) => {
-    const isRunning = running.some((s: any) => s.patientId === p.id)
+    const isRunning = simStatus?.some((s: any) => s.patientId === p.id)
     return { value: p.id, label: isRunning ? `● ${p.name}` : p.name }
   })
-
-  const handleStart = () => {
-    if (selectedPatients.length === 0) return
-    start.mutate({
-      patientIds: selectedPatients,
-      profile,
-      overrides: hasCustomOverrides ? overrides : undefined,
-    })
-  }
 
   return (
     <Container size="xl" py="md">
       <Title order={2} mb="md">模拟数据工厂</Title>
 
       <Grid>
-        <Grid.Col span={{ base: 12, lg: 5 }}>
-          <Paper p="md" withBorder>
-            <Text fw={600} mb="md">配置与启动</Text>
-
-            <MultiSelect
-              label="选择患者"
-              data={patientOptions}
-              value={selectedPatients}
-              onChange={setSelectedPatients}
-              placeholder="搜索患者..."
-              searchable mb="sm"
-            />
-
-            <Select
-              label="患者画像"
-              data={PROFILES}
-              value={profile}
-              onChange={(v) => { setProfile(v!); setOverrides({}) }}
-              mb="sm"
-            />
-
-            <Button
-              fullWidth
-              leftSection={<IconPlayerPlay size={18} />}
-              color="green"
-              onClick={handleStart}
-              loading={start.isPending}
-              disabled={selectedPatients.length === 0}
-              mb="md"
-            >
-              启动 {selectedPatients.length || ''} 位患者
-            </Button>
-
-            <Divider mb="md" />
-
-            <Group justify="space-between" mb="xs">
-              <Text fw={600}>指标编排</Text>
-              <Button size="compact-sm" variant="subtle" onClick={resetToDefault}>重置默认</Button>
-            </Group>
-
-            {profileConfig && profileConfig.length > 0 && (
-              <Table>
-                <Table.Thead>
-                  <Table.Tr>
-                    <Table.Th>指标</Table.Th>
-                    <Table.Th>最小间隔</Table.Th>
-                    <Table.Th>最大间隔</Table.Th>
-                    <Table.Th>抖动</Table.Th>
-                  </Table.Tr>
-                </Table.Thead>
-                <Table.Tbody>
-                  {profileConfig.map((m: any) => (
-                    <Table.Tr key={m.metric}>
-                      <Table.Td>{METRIC_LABELS[m.metric] ?? m.metric}</Table.Td>
-                      <Table.Td>
-                        <NumberInput size="xs" min={100} max={600000}
-                          step={m.interval.min < 10000 ? 1000 : 10000}
-                          value={overrides[m.metric]?.intervalMin ?? m.interval.min}
-                          onChange={(v) => updateMetric(m.metric, 'intervalMin', Number(v))}
-                          hideControls w={80} />
-                      </Table.Td>
-                      <Table.Td>
-                        <NumberInput size="xs" min={100} max={600000}
-                          step={m.interval.max < 10000 ? 1000 : 10000}
-                          value={overrides[m.metric]?.intervalMax ?? m.interval.max}
-                          onChange={(v) => updateMetric(m.metric, 'intervalMax', Number(v))}
-                          hideControls w={80} />
-                      </Table.Td>
-                      <Table.Td>
-                        <NumberInput size="xs" min={0} max={1} step={0.1} decimalScale={2}
-                          value={overrides[m.metric]?.jitter ?? m.jitter}
-                          onChange={(v) => updateMetric(m.metric, 'jitter', Number(v))}
-                          hideControls w={60} />
-                      </Table.Td>
-                    </Table.Tr>
-                  ))}
-                </Table.Tbody>
-              </Table>
-            )}
-          </Paper>
-        </Grid.Col>
-
-        <Grid.Col span={{ base: 12, lg: 7 }}>
+        <Grid.Col span={{ base: 12, lg: 4 }}>
           <Paper p="md" withBorder mb="md">
             <Group justify="space-between" mb="sm">
-              <Text fw={600}>运行中的模拟</Text>
+              <Text fw={600}>模拟配置</Text>
+              <Button size="compact-sm" variant="light" onClick={handleCreate}
+                loading={createSim.isPending} color={creating ? 'green' : undefined}
+                leftSection={<IconPlus size={14} />}>
+                {creating ? '确认创建' : '新建模拟'}
+              </Button>
+            </Group>
+            {creating && (
+              <Select mb="sm" label="患者画像" data={PROFILES} value={newProfile} onChange={(v) => setNewProfile(v!)} />
+            )}
+            {!creating && (!simulations || simulations.length === 0) && (
+              <Text c="dimmed" size="sm" ta="center" py="md">点击"新建模拟"创建第一个配置</Text>
+            )}
+          </Paper>
+
+          {(simulations ?? []).map((sim: any) => (
+            <Paper key={sim.id} p="sm" withBorder mb="sm">
+              <Group justify="space-between" mb="xs">
+                <Group gap="xs">
+                  <Switch size="sm" checked={sim.running}
+                    onChange={(e) => toggleSim.mutate({ id: sim.id, running: e.currentTarget.checked })} />
+                  <Badge variant="light" size="sm">{PROFILES.find((p) => p.value === sim.profileName)?.label}</Badge>
+                  <Text size="xs" c="dimmed">{sim.patientCount} 位患者</Text>
+                </Group>
+                <ActionIcon variant="subtle" color="red" size="sm" onClick={() => deleteSim.mutate({ id: sim.id })}>
+                  <IconTrash size={14} />
+                </ActionIcon>
+              </Group>
+
+              <Text size="xs" fw={500} mb={4}>指标开关</Text>
+              <Group gap={4} mb="xs">
+                {sim.metrics.map((m: any) => (
+                  <Tooltip key={m.name} label={METRIC_LABELS[m.name] ?? m.name}>
+                    <Badge size="xs" variant={m.enabled ? 'filled' : 'outline'}
+                      color={m.enabled ? 'teal' : 'gray'}
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => toggleMetric.mutate({ id: sim.id, metric: m.name, enabled: !m.enabled })}>
+                      {METRIC_LABELS[m.name] ?? m.name}
+                    </Badge>
+                  </Tooltip>
+                ))}
+              </Group>
+
+              <Group mt="xs">
+                {!addPatientSimId || addPatientSimId !== sim.id ? (
+                  <Button size="compact-xs" variant="light" color="blue"
+                    onClick={() => { setAddPatientSimId(sim.id); setAddPatientIds([]) }}>
+                    管理患者
+                  </Button>
+                ) : (
+                  <Group>
+                    <MultiSelect size="xs" data={patientOptions} value={addPatientIds}
+                      onChange={setAddPatientIds} placeholder="搜索患者"
+                      searchable w={200} />
+                    <Button size="compact-xs" onClick={() => { addPatients.mutate({ id: sim.id, patientIds: addPatientIds }); setAddPatientSimId(null) }}
+                      disabled={addPatientIds.length === 0}>添加</Button>
+                    <Button size="compact-xs" variant="subtle" onClick={() => setAddPatientSimId(null)}>取消</Button>
+                  </Group>
+                )}
+              </Group>
+            </Paper>
+          ))}
+        </Grid.Col>
+
+        <Grid.Col span={{ base: 12, lg: 8 }}>
+          <Paper p="md" withBorder mb="md">
+            <Group justify="space-between" mb="sm">
+              <Text fw={600}>运行中的患者</Text>
               <Group gap="xs">
-                <Badge size="lg" variant="light" color={running.length > 0 ? 'green' : 'gray'}>
-                  {running.length}
+                <Badge size="lg" variant="light" color={(simStatus?.length ?? 0) > 0 ? 'green' : 'gray'}>
+                  {simStatus?.length ?? 0}
                 </Badge>
-                <ActionIcon variant="subtle" onClick={() => refreshStatus()}><IconRefresh size={16} /></ActionIcon>
+                <ActionIcon variant="subtle" onClick={() => { refreshSims(); refreshStatus() }}><IconRefresh size={16} /></ActionIcon>
               </Group>
             </Group>
+            {(simStatus ?? []).length === 0 && <Text c="dimmed" ta="center" py="xl">暂无运行中的患者数据</Text>}
 
-            {running.length === 0 && (
-              <Text c="dimmed" ta="center" py="xl">暂无运行中的模拟，在左侧配置并启动</Text>
-            )}
-
-            {running.map((s: any) => (
-              <Paper key={s.patientId} p="sm" withBorder mb="sm"
-                style={{ cursor: 'pointer' }}
+            {(simStatus ?? []).map((s: any) => (
+              <Paper key={s.patientId} p="sm" withBorder mb="sm" style={{ cursor: 'pointer' }}
                 onClick={() => { setDetailPatient(s); setTimelineMinutes(10) }}>
                 <Group justify="space-between" mb="xs">
                   <Group gap="sm">
                     <Text fw={600}>{s.patientName}</Text>
-                    <Badge size="sm" variant="light">{PROFILES.find((p) => p.value === s.profile)?.label ?? s.profile}</Badge>
+                    <Badge size="sm" variant="light">{PROFILES.find((p) => p.value === s.profile)?.label}</Badge>
                   </Group>
-                  <Group gap="xs">
-                    <ActionIcon variant="light" color="blue" size="sm"
-                      onClick={(e) => { e.stopPropagation(); setDetailPatient(s); setTimelineMinutes(10) }}>
-                      <IconChartBar size={14} />
-                    </ActionIcon>
-                    <Button size="compact-sm" color="red" variant="light"
-                      leftSection={<IconPlayerStop size={14} />}
-                      onClick={(e) => { e.stopPropagation(); stop.mutate({ patientIds: [s.patientId] }) }}
-                      loading={stop.isPending}>停止</Button>
-                  </Group>
+                  <ActionIcon variant="light" color="blue" size="sm">
+                    <IconChartBar size={14} />
+                  </ActionIcon>
                 </Group>
                 <Grid>
                   {(Object.entries(s.lastValues ?? {}) as [string, number][]).slice(0, 8).map(([k, v]) => (
@@ -234,11 +174,8 @@ function SimulationPage() {
             <Text fw={600} mb="sm">全局速度</Text>
             <SegmentedControl
               data={[
-                { value: '0.5', label: '0.5x' },
-                { value: '1', label: '1x' },
-                { value: '2', label: '2x' },
-                { value: '5', label: '5x' },
-                { value: '10', label: '10x' },
+                { value: '0.5', label: '0.5x' }, { value: '1', label: '1x' },
+                { value: '2', label: '2x' }, { value: '5', label: '5x' }, { value: '10', label: '10x' },
               ]}
               onChange={(v) => setSpeed.mutate({ speed: Number(v) })}
             />
@@ -246,23 +183,15 @@ function SimulationPage() {
         </Grid.Col>
       </Grid>
 
-      <Modal
-        opened={!!detailPatient}
-        onClose={() => setDetailPatient(null)}
-        title={detailPatient?.patientName ? `${detailPatient.patientName} — 数据时间线` : '数据时间线'}
-        size="xl"
-      >
+      <Modal opened={!!detailPatient} onClose={() => setDetailPatient(null)}
+        title={detailPatient?.patientName ? `${detailPatient.patientName} — 数据时间线` : '数据时间线'} size="xl">
         {detailPatient && (
           <Stack>
             <Group>
               <Badge variant="light">{PROFILES.find((p) => p.value === detailPatient.profile)?.label}</Badge>
               <Text size="xs" c="dimmed">tick: {detailPatient.tickCount}</Text>
             </Group>
-            <SimTimeline
-              patientId={detailPatient.patientId}
-              minutes={timelineMinutes}
-              onMinutesChange={setTimelineMinutes}
-            />
+            <SimTimeline patientId={detailPatient.patientId} minutes={timelineMinutes} onMinutesChange={setTimelineMinutes} />
           </Stack>
         )}
       </Modal>
@@ -270,6 +199,4 @@ function SimulationPage() {
   )
 }
 
-export const Route = createFileRoute('/_auth/simulation')({
-  component: SimulationPage,
-})
+export const Route = createFileRoute('/_auth/simulation')({ component: SimulationPage })
