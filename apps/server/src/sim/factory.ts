@@ -238,3 +238,18 @@ export function getSimulations() {
 export function getProfileConfig(profileName: string) {
   return profiles[profileName]?.metrics ?? []
 }
+
+export function updateSimMetric(
+  id: string,
+  metricName: string,
+  config: { intervalMin?: number; intervalMax?: number; jitter?: number },
+) {
+  const sim = simulations.get(id)
+  if (!sim) return false
+  const m = sim.metrics.find((x) => x.name === metricName)
+  if (!m) return false
+  if (config.intervalMin !== undefined) m.config.interval.min = config.intervalMin
+  if (config.intervalMax !== undefined) m.config.interval.max = config.intervalMax
+  if (config.jitter !== undefined) m.config.jitter = config.jitter
+  return true
+}

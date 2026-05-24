@@ -5,10 +5,11 @@ import { requirePermission } from '../core/trpc/middleware/rbac'
 import { db } from '../core/db'
 import { patients, events } from '../core/db/schema'
 import {
-  createSim, updateSim, toggleSim, toggleSimMetric, deleteSim,
+  createSim, updateSim, toggleSim, toggleSimMetric, deleteSim, updateSimMetric,
   addPatientsToSim, removePatientsFromSim,
   setGlobalSpeed, getStatus, getSimulations, getProfileConfig,
 } from './factory'
+import { profiles } from './profiles'
 
 const overrideSchema = z.object({
   intervalMin: z.number().min(100).max(600000),
@@ -74,6 +75,39 @@ export const simRouter = router({
     .use(requirePermission('patient:read'))
     .input(z.string())
     .query(({ input }) => getProfileConfig(input)),
+
+  profiles: protectedProcedure
+    .use(requirePermission('patient:read'))
+    .query(() => {
+      return Object.entries(profiles).map(([key, p]) => ({
+        name: p.name,
+        label: p.label,
+        baselines: p.baselines,
+        conditions: p.conditions,
+        metrics: p.metrics.map((m) => ({ metric: m.metric, unit: m.unit, interval: m.interval, jitter: m.jitter })),
+      }))
+    }),
+
+  getSimulation: protectedProcedure
+    .use(requirePermission('patient:read'))
+    .input(z.string())
+    .query(({ input }) => {
+      const sims = getSimulations()
+      return sims.find((s) => s.id === input) ?? null
+    }),
+
+  updateMetric: protectedProcedure
+    .use(requirePermission('patient:write'))
+    .input(z.object({
+      id: z.string(),
+      metric: z.string(),
+      config: z.object({
+        intervalMin: z.number().min(100).max(600000).optional(),
+        intervalMax: z.number().min(100).max(600000).optional(),
+        jitter: z.number().min(0).max(1).optional(),
+      }).optional(),
+    }))
+    .mutation(({ input }) => updateSimMetric(input.id, input.metric, input.config ?? {})),
 
   events: protectedProcedure
     .use(requirePermission('patient:read'))
