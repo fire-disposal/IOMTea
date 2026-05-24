@@ -8,7 +8,15 @@ import { theme } from '../theme'
 import '@mantine/core/styles.css'
 import '@mantine/notifications/styles.css'
 
-const queryClient = new QueryClient()
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30_000,
+      retry: 2,
+      refetchOnWindowFocus: false,
+    },
+  },
+})
 const trpcClient = getTrpcClient()
 
 export const Route = createRootRoute({
