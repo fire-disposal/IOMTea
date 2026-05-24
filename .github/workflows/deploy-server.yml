@@ -78,7 +78,11 @@ jobs:
 
       - name: Smoke test
         run: |
-          IMAGE_REPO=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]') IMAGE_TAG=ci-smoke DB_PASSWORD=test JWT_SECRET=test docker compose up -d postgres mosquitto server
+          export IMAGE_REPO=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          export IMAGE_TAG=ci-smoke
+          export DB_PASSWORD=test
+          export JWT_SECRET=test
+          docker compose up -d postgres mosquitto server
           if ! curl -sf --retry 20 --retry-delay 2 http://localhost:3000/health; then
             docker compose logs server --tail 80
             docker compose down
