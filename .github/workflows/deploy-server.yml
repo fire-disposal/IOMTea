@@ -91,12 +91,13 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            COMPOSE="docker compose -f /srv/iomtea/docker-compose.yml --project-directory /srv/iomtea"
+            export COMPOSE_FILE=/srv/iomtea/docker-compose.yml
+            export COMPOSE_PROJECT_DIR=/srv/iomtea
             export IMAGE_REPO=${{ steps.repo.outputs.image_repo }}
             export IMAGE_TAG=$(echo "${{ github.sha }}" | cut -c1-7)
             printf '%s' "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
-            $COMPOSE pull server
-            $COMPOSE up -d server
+            docker compose pull server
+            docker compose up -d server
             healthy=0
             for i in $(seq 1 30); do
               if curl -sf http://localhost:3000/health; then
@@ -106,7 +107,7 @@ jobs:
             done
             if [ "$healthy" -eq 0 ]; then
               echo "ERROR: Server failed to become healthy"
-              $COMPOSE logs server --tail 80
+              docker compose logs server --tail 80
               exit 1
             fi
             docker logout ghcr.io
@@ -123,6 +124,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            COMPOSE="docker compose -f /srv/iomtea/docker-compose.yml --project-directory /srv/iomtea"
+            export COMPOSE_FILE=/srv/iomtea/docker-compose.yml
+            export COMPOSE_PROJECT_DIR=/srv/iomtea
             export IMAGE_TAG=$(echo "${{ github.sha }}" | cut -c1-7)
-            $COMPOSE run --rm server pnpm db:push
+            docker compose run --rm server pnpm db:push

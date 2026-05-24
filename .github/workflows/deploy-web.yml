@@ -91,12 +91,13 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            COMPOSE="docker compose -f /srv/iomtea/docker-compose.yml --project-directory /srv/iomtea"
+            export COMPOSE_FILE=/srv/iomtea/docker-compose.yml
+            export COMPOSE_PROJECT_DIR=/srv/iomtea
             export IMAGE_REPO=${{ steps.repo.outputs.image_repo }}
             export IMAGE_TAG=$(echo "${{ github.sha }}" | cut -c1-7)
             printf '%s' "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
-            $COMPOSE pull web
-            $COMPOSE up -d web
+            docker compose pull web
+            docker compose up -d web
             for i in $(seq 1 30); do
               if curl -sf http://localhost:80; then
                 echo "Service healthy"
