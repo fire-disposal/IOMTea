@@ -84,6 +84,7 @@ jobs:
           mkdir -p ~/.ssh
           printf '%s' "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
           export DOCKER_SSH_KEY=~/.ssh/deploy_key
           export IMAGE_REPO=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
           export IMAGE_TAG=$(echo "${{ github.sha }}" | cut -c1-7)
@@ -116,6 +117,7 @@ jobs:
           mkdir -p ~/.ssh
           printf '%s' "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
           export DOCKER_SSH_KEY=~/.ssh/deploy_key
           export IMAGE_REPO=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
           export IMAGE_TAG=$(echo "${{ github.sha }}" | cut -c1-7)
