@@ -78,13 +78,31 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Deploy to server
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            cd "${{ secrets.DEPLOY_PATH }}" && export IMAGE_REPO=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]') && export IMAGE_TAG=$(echo "${{ github.sha }}" | cut -c1-7) && printf '%s' "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin && docker compose pull server && docker compose up -d server && healthy=0 && for i in $(seq 1 30); do if curl -sf http://localhost:3000/health; then echo "Service healthy" && healthy=1 && break; fi; echo "Waiting... ($i/30)"; sleep 2; done && if [ "$healthy" -eq 0 ]; then echo "ERROR: Server failed to become healthy" && docker compose logs server --tail 80 && exit 1; fi && docker logout ghcr.io
+        env:
+          DOCKER_HOST: ssh://${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s' "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          export DOCKER_SSH_KEY=~/.ssh/deploy_key
+          export IMAGE_REPO=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          export IMAGE_TAG=$(echo "${{ github.sha }}" | cut -c1-7)
+          printf '%s' "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          docker compose -f /srv/iomtea/docker-compose.yml pull server
+          docker compose -f /srv/iomtea/docker-compose.yml up -d server
+          healthy=0
+          for i in $(seq 1 30); do
+            if curl -sf http://${{ secrets.SSH_HOST }}:3000/health; then
+              echo "Service healthy" && healthy=1 && break
+            fi
+            echo "Waiting... ($i/30)" && sleep 2
+          done
+          if [ "$healthy" -eq 0 ]; then
+            echo "ERROR: Server failed to become healthy"
+            docker compose -f /srv/iomtea/docker-compose.yml logs server --tail 80
+            exit 1
+          fi
+          docker logout ghcr.io
 
   db-migrate:
     needs: build-and-deploy
@@ -92,10 +110,15 @@ jobs:
     if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') }}
     steps:
       - name: Run migration
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            cd "${{ secrets.DEPLOY_PATH }}" && export IMAGE_REPO=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]') && export IMAGE_TAG=$(echo "${{ github.sha }}" | cut -c1-7) && printf '%s' "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin && docker compose run --rm server pnpm db:push && docker logout ghcr.io
+        env:
+          DOCKER_HOST: ssh://${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s' "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          export DOCKER_SSH_KEY=~/.ssh/deploy_key
+          export IMAGE_REPO=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          export IMAGE_TAG=$(echo "${{ github.sha }}" | cut -c1-7)
+          printf '%s' "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          docker compose -f /srv/iomtea/docker-compose.yml run --rm server pnpm db:push
+          docker logout ghcr.io
