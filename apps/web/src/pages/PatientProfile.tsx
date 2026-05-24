@@ -58,6 +58,7 @@ export function PatientProfile() {
     )
   }
 
+  if (patient.isError) return <Text c="red">加载患者信息失败</Text>
   if (!patient.data) return <Text c="dimmed">患者不存在</Text>
 
   const p = patient.data as any

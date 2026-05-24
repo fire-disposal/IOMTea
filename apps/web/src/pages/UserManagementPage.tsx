@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { createColumnHelper } from '@tanstack/react-table'
 import { trpc } from '../trpc'
 import { DataTable } from '../components/shared/DataTable'
+import { StateSkeleton, StateError, StateEmpty } from '../components/shared/StateComponents'
 import type { UserRole } from '@iomtea/shared-types'
 
 const ROLE_OPTIONS: { value: UserRole; label: string }[] = [
@@ -62,8 +63,10 @@ export function UserManagementPage() {
       </Group>
 
       <Paper p="lg" radius="md" withBorder>
-        {users.isLoading && <Text c="dimmed" ta="center" py="xl">加载中...</Text>}
-        {!users.isLoading && (users.data ?? []).length > 0 && (
+        {users.isLoading && <StateSkeleton variant="table" count={5} />}
+        {users.isError && <StateError message="加载用户列表失败" onRetry={() => users.refetch()} />}
+        {!users.isLoading && !users.isError && (users.data ?? []).length === 0 && <StateEmpty message="暂无用户" />}
+        {!users.isLoading && !users.isError && (users.data ?? []).length > 0 && (
           <DataTable data={users.data ?? []} columns={columns} />
         )}
       </Paper>

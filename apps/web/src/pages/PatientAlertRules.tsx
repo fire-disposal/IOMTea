@@ -1,7 +1,8 @@
-import { Button, Group, NumberInput, Paper, Switch, Text, Title } from '@mantine/core'
+import { Button, Group, NumberInput, Paper, Switch, Text, Title, Alert } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
 import { useForm } from '@tanstack/react-form'
 import { trpc } from '../trpc'
+import { StateSkeleton, StateError } from '../components/shared/StateComponents'
 
 interface RuleItem {
   metric: string
@@ -38,7 +39,8 @@ export function PatientAlertRules({ patientId }: { patientId: string }) {
     },
   })
 
-  if (rules.isLoading) return <Text c="dimmed" ta="center" py="xl">加载中...</Text>
+  if (rules.isLoading) return <StateSkeleton variant="table" count={8} />
+  if (rules.isError) return <StateError message="加载告警规则失败" />
 
   const data = rules.data ?? []
 

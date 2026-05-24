@@ -75,9 +75,11 @@ export function PatientWall() {
 
   const nameRequired = ({ value }: { value: unknown }) => (!value ? '请输入姓名' : undefined)
 
-  const filtered = (patients.data || []).filter(
-    (p: any) => !search || p.name.toLowerCase().includes(search.toLowerCase()),
-  )
+  const filtered = (patients.data || []).filter((p: any) => {
+    if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false
+    if (filterTagIds.length > 0 && (!p.tagIds || !filterTagIds.some((tid: string) => p.tagIds.includes(tid)))) return false
+    return true
+  })
 
   const statsItems: StatsBarItem[] = [
     {
