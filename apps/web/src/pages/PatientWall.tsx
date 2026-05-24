@@ -19,12 +19,14 @@ import {
   IconDevices,
   IconPlus,
   IconSearch,
+  IconUpload,
   IconUsers,
   IconX,
 } from '@tabler/icons-react'
 import { useState } from 'react'
 import { useForm } from '@tanstack/react-form'
 import { PatientCard } from '../components/patients/PatientCard'
+import { PatientImport } from './PatientImport'
 import { StateEmpty, StateError, StateSkeleton } from '../components/shared/StateComponents'
 import { StatsBar, type StatsBarItem } from '../components/shared/StatsBar'
 import { trpc } from '../trpc'
@@ -33,6 +35,7 @@ export function PatientWall() {
   const [search, setSearch] = useState('')
   const [createOpen, setCreateOpen] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
+  const [importOpen, setImportOpen] = useState(false)
   const utils = trpc.useUtils()
 
   const patients = trpc.patient.list.useQuery({ pageSize: 100, status: 'active' })
@@ -91,9 +94,14 @@ export function PatientWall() {
     <Container size="xl" py="xl">
       <Group justify="space-between" mb="lg">
         <Title order={2}>患者监护</Title>
-        <Button leftSection={<IconPlus size={16} />} onClick={() => setCreateOpen(true)}>
-          添加患者
-        </Button>
+        <Group>
+          <Button leftSection={<IconUpload size={16} />} variant="light" onClick={() => setImportOpen(true)}>
+            批量导入
+          </Button>
+          <Button leftSection={<IconPlus size={16} />} onClick={() => setCreateOpen(true)}>
+            添加患者
+          </Button>
+        </Group>
       </Group>
 
       <StatsBar items={statsItems} loading={patients.isLoading} />
@@ -195,6 +203,7 @@ export function PatientWall() {
           </Stack>
         </form>
       </Modal>
+      <PatientImport opened={importOpen} onClose={() => setImportOpen(false)} onImported={() => utils.patient.list.invalidate()} />
       <Modal
         opened={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}

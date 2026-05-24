@@ -1,6 +1,7 @@
 import type { AppRouter } from '@server/core/trpc/routers/_app'
 import { httpBatchLink } from '@trpc/client'
 import { type CreateTRPCReact, createTRPCReact } from '@trpc/react-query'
+import { useAuthStore } from './store/auth'
 
 export const trpc: CreateTRPCReact<AppRouter, unknown> = createTRPCReact<AppRouter>()
 
@@ -33,6 +34,7 @@ export function getTrpcClient() {
                     localStorage.setItem('token', result.accessToken)
                     localStorage.setItem('refreshToken', result.refreshToken)
                     localStorage.setItem('expiresAt', String(result.expiresAt))
+                    useAuthStore.getState().setTokens(result.accessToken, result.refreshToken, result.expiresAt)
                     headers.set('Authorization', `Bearer ${result.accessToken}`)
                     return fetch(input, { ...init, headers })
                   }

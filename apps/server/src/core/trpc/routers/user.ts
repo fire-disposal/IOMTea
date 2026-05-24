@@ -24,6 +24,7 @@ export const userRouter = router({
         username: u.username,
         displayName: u.displayName,
         role: u.role,
+        lastLoginAt: u.lastLoginAt?.getTime() ?? null,
         createdAt: u.createdAt.getTime(),
       }),
     )
@@ -48,10 +49,10 @@ export const userRouter = router({
   update: protectedProcedure
     .input(z.object({ id: z.string().uuid(), data: userUpdateSchema }))
     .mutation(async ({ ctx, input }) => {
-      if (ctx.userId !== input.id && ctx.userRole !== 'admin') {
+      if (ctx.userId !== input.id && ctx.userRole !== 'admin' && ctx.userRole !== 'super_admin') {
         throw new TRPCError({ code: 'FORBIDDEN', message: 'Cannot modify another user' })
       }
-      if (input.data.role && ctx.userRole !== 'admin') {
+      if (input.data.role && ctx.userRole !== 'admin' && ctx.userRole !== 'super_admin') {
         throw new TRPCError({ code: 'FORBIDDEN', message: 'Only admins can change roles' })
       }
       const [updated] = await ctx.db

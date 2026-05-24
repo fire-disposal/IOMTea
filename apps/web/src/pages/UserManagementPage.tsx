@@ -4,17 +4,22 @@ import { useState } from 'react'
 import { createColumnHelper } from '@tanstack/react-table'
 import { trpc } from '../trpc'
 import { DataTable } from '../components/shared/DataTable'
+import type { UserRole } from '@iomtea/shared-types'
 
-const ROLE_OPTIONS = [
+const ROLE_OPTIONS: { value: UserRole; label: string }[] = [
+  { value: 'super_admin', label: '超级管理员' },
   { value: 'admin', label: '管理员' },
-  { value: 'doctor', label: '医生' },
-  { value: 'nurse', label: '护士' },
-  { value: 'caregiver', label: '护理员' },
-  { value: 'patient', label: '患者' },
-  { value: 'family', label: '家属' },
+  { value: 'user', label: '用户' },
 ]
 
 const ROLE_LABELS: Record<string, string> = Object.fromEntries(ROLE_OPTIONS.map((r) => [r.value, r.label]))
+
+function ActivationBadge({ lastLoginAt }: { lastLoginAt?: number | null }) {
+  if (lastLoginAt) {
+    return <Badge size="sm" color="teal" variant="dot">已激活 {new Date(lastLoginAt).toLocaleDateString('zh-CN')}</Badge>
+  }
+  return <Badge size="sm" color="gray" variant="dot">未激活</Badge>
+}
 
 export function UserManagementPage() {
   const utils = trpc.useUtils()
@@ -28,13 +33,17 @@ export function UserManagementPage() {
     onError: (err) => notifications.show({ title: '更新失败', message: err.message, color: 'red' }),
   })
 
-  const [editUser, setEditUser] = useState<{ id: string; displayName: string; role: string } | null>(null)
+  const [editUser, setEditUser] = useState<{ id: string; displayName: string; role: UserRole } | null>(null)
 
   const columnHelper = createColumnHelper<any>()
   const columns = [
     columnHelper.accessor('username', { header: '用户名', cell: (info) => <Text fw={500}>{info.getValue()}</Text> }),
     columnHelper.accessor('displayName', { header: '显示名', cell: (info) => info.getValue() }),
     columnHelper.accessor('role', { header: '角色', cell: (info) => <Badge variant="light">{ROLE_LABELS[info.getValue()] || info.getValue()}</Badge> }),
+    columnHelper.accessor('lastLoginAt', {
+      header: '激活状态',
+      cell: (info) => <ActivationBadge lastLoginAt={info.getValue() as number | null} />,
+    }),
     columnHelper.accessor('createdAt', { header: '创建时间', cell: (info) => <Text size="sm">{new Date(info.getValue() as number).toLocaleDateString('zh-CN')}</Text> }),
     columnHelper.display({ id: 'actions', header: '操作',
       cell: (info) => (
@@ -67,10 +76,10 @@ export function UserManagementPage() {
               label="角色"
               data={ROLE_OPTIONS}
               value={editUser.role}
-              onChange={(v) => v && setEditUser({ ...editUser, role: v })}
+              onChange={(v) => v && setEditUser({ ...editUser, role: v as UserRole })}
               mb="lg"
             />
-            <Button fullWidth onClick={() => updateMutation.mutate({ id: editUser.id, data: { role: editUser.role } as any })} loading={updateMutation.isPending}>
+            <Button fullWidth onClick={() => updateMutation.mutate({ id: editUser.id, data: { role: editUser.role } })} loading={updateMutation.isPending}>
               保存
             </Button>
           </>

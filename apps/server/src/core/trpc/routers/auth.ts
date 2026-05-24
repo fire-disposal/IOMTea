@@ -148,7 +148,9 @@ export const authRouter = router({
           name: `微信用户${openid.slice(-6)}`,
           status: 'active',
         })
-        .catch(() => {})
+        .catch((err) => {
+          console.error('WeChat login: failed to create patient record', err)
+        })
 
       userId = newUser.id
       role = newUser.role

@@ -6,6 +6,7 @@ export const userSchema = z.object({
   username: z.string(),
   displayName: z.string(),
   role: z.enum(USER_ROLES),
+  lastLoginAt: z.number().nullable().optional(),
   createdAt: z.number(),
 })
 
