@@ -6,6 +6,7 @@ import { checklistRouter } from './checklist'
 import { creditRouter } from './credit'
 import { dataRouter } from './data'
 import { deviceRouter } from './device'
+import { exportRouter } from './export'
 import { healthRecordsRouter } from './health-records'
 import { homeGraphRouter } from './home-graph'
 import { medicationRouter } from './medication'
@@ -19,6 +20,7 @@ import { userRouter } from './user'
 import { virtualPinRouter } from './virtual-pin'
 import { simulationRouter } from '../../../twin/trpc/simulation.router'
 import { twinRouter } from '../../../twin/trpc/twin.router'
+import { simRouter } from '../../../sim/router'
 
 export const appRouter = router({
   alert: alertRouter,
@@ -28,6 +30,7 @@ export const appRouter = router({
   credit: creditRouter,
   data: dataRouter,
   device: deviceRouter,
+  export: exportRouter,
   healthRecords: healthRecordsRouter,
   homeGraph: homeGraphRouter,
   medication: medicationRouter,
@@ -35,6 +38,7 @@ export const appRouter = router({
   patient: patientRouter,
   pin: pinRouter,
   plan: planRouter,
+  sim: simRouter,
   simulation: simulationRouter,
   streak: streakRouter,
   tag: tagRouter,
