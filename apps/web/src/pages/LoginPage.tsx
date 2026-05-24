@@ -90,7 +90,7 @@ export function LoginPage() {
               {(field) => (
                 <TextInput
                   label="用户名"
-                  placeholder="demo"
+                  placeholder="admin"
                   required
                   autoComplete="username"
                   value={field.state.value}
@@ -107,7 +107,7 @@ export function LoginPage() {
               {(field) => (
                 <PasswordInput
                   label="密码"
-                  placeholder="demo123"
+                  placeholder="admin123"
                   required
                   mt="md"
                   autoComplete={isRegister ? 'new-password' : 'current-password'}
