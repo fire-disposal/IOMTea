@@ -413,7 +413,7 @@ export async function seedDemoData(db: DbClient): Promise<void> {
         username: p.username,
         passwordHash: await hashPassword(p.password),
         displayName: p.name,
-        role: 'caregiver',
+        role: 'user',
       })
       .returning({ id: users.id })
     createdUsers.set(p.username, user.id)

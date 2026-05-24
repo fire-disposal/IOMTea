@@ -33,7 +33,7 @@ export const users = pgTable('users', {
   avatarUrl: text('avatar_url'),
   phone: varchar('phone', { length: 20 }).unique(),
   email: varchar('email', { length: 255 }).unique(),
-  role: roleEnum('role').notNull().default('caregiver'),
+  role: roleEnum('role').notNull().default('user'),
   status: userStatusEnum('status').notNull().default('active'),
   credit: integer('credit').default(0).notNull(),
   lastLoginAt: timestamp('last_login_at', { withTimezone: true }),

@@ -5,22 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1778345810556,
-      "tag": "0000_cloudy_master_chief",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1778430607639,
-      "tag": "0001_chilly_mordo",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1779600931938,
-      "tag": "0002_silent_the_initiative",
+      "when": 1779612425154,
+      "tag": "0000_windy_virginia_dare",
       "breakpoints": true
     }
   ]

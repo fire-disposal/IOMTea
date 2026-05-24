@@ -130,7 +130,7 @@ export const authRouter = router({
         .insert(users)
         .values({
           displayName: `微信用户${openid.slice(-6)}`,
-          role: 'patient',
+          role: 'user',
           status: 'active',
         })
         .returning()

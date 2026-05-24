@@ -7,8 +7,8 @@ import { protectedProcedure, router } from '../index'
 
 export const userRouter = router({
   list: protectedProcedure.input(userListInputSchema).query(async ({ ctx, input }) => {
-    if (ctx.userRole !== 'admin' && ctx.userRole !== 'doctor') {
-      throw new TRPCError({ code: 'FORBIDDEN', message: 'Only admin/doctor can list users' })
+    if (ctx.userRole !== 'super_admin' && ctx.userRole !== 'admin') {
+      throw new TRPCError({ code: 'FORBIDDEN', message: 'Only super_admin/admin can list users' })
     }
     const offset = (input.page - 1) * input.pageSize
     const rows = await ctx.db

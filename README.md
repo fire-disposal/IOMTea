@@ -177,7 +177,6 @@ cd apps/flutter && flutter run
 | `JWT_SECRET` | JWT 签名密钥 (≥16字符) | 必填 |
 | `JWT_EXPIRES_IN` | 访问令牌有效期 | `2h` |
 | `JWT_REFRESH_EXPIRES_IN` | 刷新令牌有效期 | `7d` |
-| `DEMO_MODE` | 启用演示账号和仿真病房 | `false` |
 | `MQTT_ENABLED` | 启用 MQTT 设备接入 | `false` |
 | `CORS_ORIGIN` | 允许的前端域名 | `http://localhost:5173` |
 | `PORT` | 服务端口 | `3000` |

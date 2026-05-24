@@ -1,24 +1,104 @@
 CREATE TYPE "public"."adherence_status" AS ENUM('taken', 'missed', 'skipped', 'delayed');--> statement-breakpoint
+CREATE TYPE "public"."alert_severity" AS ENUM('critical', 'warning', 'info');--> statement-breakpoint
+CREATE TYPE "public"."alert_status" AS ENUM('active', 'acknowledged', 'resolved', 'expired', 'new', 'assigned', 'handled', 'closed');--> statement-breakpoint
 CREATE TYPE "public"."blood_type" AS ENUM('A', 'B', 'AB', 'O');--> statement-breakpoint
 CREATE TYPE "public"."checklist_status" AS ENUM('pending', 'done', 'skipped');--> statement-breakpoint
 CREATE TYPE "public"."confirmation_method" AS ENUM('self', 'family', 'auto', 'unknown');--> statement-breakpoint
+CREATE TYPE "public"."device_status" AS ENUM('active', 'inactive', 'maintenance', 'error');--> statement-breakpoint
+CREATE TYPE "public"."device_type" AS ENUM('mattress', 'vision', 'imu', 'generic', 'simulator', 'custom');--> statement-breakpoint
 CREATE TYPE "public"."event_source" AS ENUM('iot', 'cv', 'simulator', 'manual');--> statement-breakpoint
 CREATE TYPE "public"."gender" AS ENUM('male', 'female', 'other');--> statement-breakpoint
+CREATE TYPE "public"."kind" AS ENUM('observation', 'alert', 'behavior', 'location');--> statement-breakpoint
 CREATE TYPE "public"."medication_route" AS ENUM('oral', 'injection', 'topical', 'inhalation', 'other');--> statement-breakpoint
 CREATE TYPE "public"."medication_status" AS ENUM('active', 'completed', 'paused', 'cancelled');--> statement-breakpoint
+CREATE TYPE "public"."patient_status" AS ENUM('active', 'discharged', 'archived');--> statement-breakpoint
+CREATE TYPE "public"."role" AS ENUM('admin', 'doctor', 'nurse', 'caregiver', 'patient', 'family');--> statement-breakpoint
 CREATE TYPE "public"."transaction_type" AS ENUM('earn', 'spend', 'adjust');--> statement-breakpoint
 CREATE TYPE "public"."user_status" AS ENUM('active', 'disabled', 'pending');--> statement-breakpoint
-ALTER TYPE "public"."alert_status" ADD VALUE 'expired';--> statement-breakpoint
-ALTER TYPE "public"."alert_status" ADD VALUE 'new';--> statement-breakpoint
-ALTER TYPE "public"."alert_status" ADD VALUE 'assigned';--> statement-breakpoint
-ALTER TYPE "public"."alert_status" ADD VALUE 'handled';--> statement-breakpoint
-ALTER TYPE "public"."alert_status" ADD VALUE 'closed';--> statement-breakpoint
-ALTER TYPE "public"."device_status" ADD VALUE 'error';--> statement-breakpoint
-ALTER TYPE "public"."kind" ADD VALUE 'behavior';--> statement-breakpoint
-ALTER TYPE "public"."kind" ADD VALUE 'location';--> statement-breakpoint
-ALTER TYPE "public"."patient_status" ADD VALUE 'archived';--> statement-breakpoint
-ALTER TYPE "public"."role" ADD VALUE 'patient';--> statement-breakpoint
-ALTER TYPE "public"."role" ADD VALUE 'family';--> statement-breakpoint
+CREATE TABLE "devices" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"serial_number" varchar(100) NOT NULL,
+	"device_type" "device_type" NOT NULL,
+	"model" varchar(100),
+	"manufacturer" varchar(100),
+	"firmware_version" varchar(50),
+	"status" "device_status" DEFAULT 'inactive' NOT NULL,
+	"patient_id" uuid,
+	"room_id" varchar(64),
+	"config" jsonb DEFAULT '{}'::jsonb NOT NULL,
+	"last_seen" timestamp with time zone,
+	"tags" jsonb DEFAULT '{}'::jsonb NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "devices_serial_number_unique" UNIQUE("serial_number")
+);
+--> statement-breakpoint
+CREATE TABLE "events" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"patient_id" uuid NOT NULL,
+	"device_id" uuid,
+	"pin_code" varchar(6),
+	"kind" "kind" NOT NULL,
+	"metric" varchar(100) NOT NULL,
+	"value" double precision,
+	"unit" varchar(50),
+	"confidence" real,
+	"source" "event_source" DEFAULT 'manual',
+	"severity" "alert_severity",
+	"status" "alert_status",
+	"tags" jsonb DEFAULT '{}'::jsonb NOT NULL,
+	"recorded_at" timestamp with time zone NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "patients" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"user_id" uuid,
+	"name" varchar(100) NOT NULL,
+	"birth_date" date,
+	"gender" "gender",
+	"height_cm" real,
+	"weight_kg" real,
+	"blood_type" "blood_type",
+	"phone" varchar(20),
+	"address" text,
+	"emergency_contact" varchar(100),
+	"emergency_phone" varchar(20),
+	"status" "patient_status" DEFAULT 'active' NOT NULL,
+	"primary_doctor_id" uuid,
+	"tags" jsonb DEFAULT '{}'::jsonb NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "refresh_tokens" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"user_id" uuid NOT NULL,
+	"token_hash" text NOT NULL,
+	"expires_at" timestamp with time zone NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "refresh_tokens_token_hash_unique" UNIQUE("token_hash")
+);
+--> statement-breakpoint
+CREATE TABLE "users" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"username" varchar(50),
+	"password_hash" text,
+	"display_name" varchar(100) NOT NULL,
+	"avatar_url" text,
+	"phone" varchar(20),
+	"email" varchar(255),
+	"role" "role" DEFAULT 'caregiver' NOT NULL,
+	"status" "user_status" DEFAULT 'active' NOT NULL,
+	"credit" integer DEFAULT 0 NOT NULL,
+	"last_login_at" timestamp with time zone,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "users_username_unique" UNIQUE("username"),
+	CONSTRAINT "users_phone_unique" UNIQUE("phone"),
+	CONSTRAINT "users_email_unique" UNIQUE("email")
+);
+--> statement-breakpoint
 CREATE TABLE "permissions" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"code" text NOT NULL,
@@ -156,45 +236,12 @@ CREATE TABLE "streaks" (
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-ALTER TABLE "audit_logs" DISABLE ROW LEVEL SECURITY;--> statement-breakpoint
-ALTER TABLE "ingest_raw_data" DISABLE ROW LEVEL SECURITY;--> statement-breakpoint
-DROP TABLE "audit_logs" CASCADE;--> statement-breakpoint
-DROP TABLE "ingest_raw_data" CASCADE;--> statement-breakpoint
-ALTER TABLE "events" DROP CONSTRAINT "events_device_id_devices_id_fk";
---> statement-breakpoint
-ALTER TABLE "devices" ALTER COLUMN "status" SET DEFAULT 'inactive';--> statement-breakpoint
-ALTER TABLE "events" ALTER COLUMN "device_id" DROP NOT NULL;--> statement-breakpoint
-ALTER TABLE "events" ALTER COLUMN "metric" SET DATA TYPE varchar(100);--> statement-breakpoint
-ALTER TABLE "events" ALTER COLUMN "unit" SET DATA TYPE varchar(50);--> statement-breakpoint
-ALTER TABLE "patients" ALTER COLUMN "gender" SET DATA TYPE gender;--> statement-breakpoint
-ALTER TABLE "users" ALTER COLUMN "username" DROP NOT NULL;--> statement-breakpoint
-ALTER TABLE "users" ALTER COLUMN "password_hash" DROP NOT NULL;--> statement-breakpoint
-ALTER TABLE "devices" ADD COLUMN "model" varchar(100);--> statement-breakpoint
-ALTER TABLE "devices" ADD COLUMN "manufacturer" varchar(100);--> statement-breakpoint
-ALTER TABLE "devices" ADD COLUMN "firmware_version" varchar(50);--> statement-breakpoint
-ALTER TABLE "devices" ADD COLUMN "room_id" varchar(64);--> statement-breakpoint
-ALTER TABLE "devices" ADD COLUMN "config" jsonb DEFAULT '{}'::jsonb NOT NULL;--> statement-breakpoint
-ALTER TABLE "devices" ADD COLUMN "updated_at" timestamp with time zone DEFAULT now() NOT NULL;--> statement-breakpoint
-ALTER TABLE "events" ADD COLUMN "pin_code" varchar(6);--> statement-breakpoint
-ALTER TABLE "events" ADD COLUMN "confidence" real;--> statement-breakpoint
-ALTER TABLE "events" ADD COLUMN "source" "event_source" DEFAULT 'manual';--> statement-breakpoint
-ALTER TABLE "patients" ADD COLUMN "user_id" uuid;--> statement-breakpoint
-ALTER TABLE "patients" ADD COLUMN "height_cm" real;--> statement-breakpoint
-ALTER TABLE "patients" ADD COLUMN "weight_kg" real;--> statement-breakpoint
-ALTER TABLE "patients" ADD COLUMN "blood_type" "blood_type";--> statement-breakpoint
-ALTER TABLE "patients" ADD COLUMN "phone" varchar(20);--> statement-breakpoint
-ALTER TABLE "patients" ADD COLUMN "address" text;--> statement-breakpoint
-ALTER TABLE "patients" ADD COLUMN "emergency_contact" varchar(100);--> statement-breakpoint
-ALTER TABLE "patients" ADD COLUMN "emergency_phone" varchar(20);--> statement-breakpoint
-ALTER TABLE "patients" ADD COLUMN "primary_doctor_id" uuid;--> statement-breakpoint
-ALTER TABLE "patients" ADD COLUMN "updated_at" timestamp with time zone DEFAULT now() NOT NULL;--> statement-breakpoint
-ALTER TABLE "users" ADD COLUMN "avatar_url" text;--> statement-breakpoint
-ALTER TABLE "users" ADD COLUMN "phone" varchar(20);--> statement-breakpoint
-ALTER TABLE "users" ADD COLUMN "email" varchar(255);--> statement-breakpoint
-ALTER TABLE "users" ADD COLUMN "status" "user_status" DEFAULT 'active' NOT NULL;--> statement-breakpoint
-ALTER TABLE "users" ADD COLUMN "credit" integer DEFAULT 0 NOT NULL;--> statement-breakpoint
-ALTER TABLE "users" ADD COLUMN "last_login_at" timestamp with time zone;--> statement-breakpoint
-ALTER TABLE "users" ADD COLUMN "updated_at" timestamp with time zone DEFAULT now() NOT NULL;--> statement-breakpoint
+ALTER TABLE "devices" ADD CONSTRAINT "devices_patient_id_patients_id_fk" FOREIGN KEY ("patient_id") REFERENCES "public"."patients"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "events" ADD CONSTRAINT "events_patient_id_patients_id_fk" FOREIGN KEY ("patient_id") REFERENCES "public"."patients"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "events" ADD CONSTRAINT "events_device_id_devices_id_fk" FOREIGN KEY ("device_id") REFERENCES "public"."devices"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "patients" ADD CONSTRAINT "patients_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "patients" ADD CONSTRAINT "patients_primary_doctor_id_users_id_fk" FOREIGN KEY ("primary_doctor_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "refresh_tokens" ADD CONSTRAINT "refresh_tokens_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "role_permissions" ADD CONSTRAINT "role_permissions_permission_code_permissions_code_fk" FOREIGN KEY ("permission_code") REFERENCES "public"."permissions"("code") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "wechat_accounts" ADD CONSTRAINT "wechat_accounts_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "medication_adherence" ADD CONSTRAINT "medication_adherence_schedule_id_medication_schedules_id_fk" FOREIGN KEY ("schedule_id") REFERENCES "public"."medication_schedules"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -211,17 +258,15 @@ ALTER TABLE "daily_checklists" ADD CONSTRAINT "daily_checklists_record_id_events
 ALTER TABLE "plan_items" ADD CONSTRAINT "plan_items_plan_id_plans_id_fk" FOREIGN KEY ("plan_id") REFERENCES "public"."plans"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "plans" ADD CONSTRAINT "plans_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "streaks" ADD CONSTRAINT "streaks_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+CREATE INDEX "events_patient_metric_time_idx" ON "events" USING btree ("patient_id","metric","recorded_at" DESC NULLS LAST);--> statement-breakpoint
+CREATE INDEX "events_patient_kind_time_idx" ON "events" USING btree ("patient_id","kind","recorded_at" DESC NULLS LAST);--> statement-breakpoint
+CREATE INDEX "events_device_time_idx" ON "events" USING btree ("device_id","recorded_at" DESC NULLS LAST);--> statement-breakpoint
+CREATE INDEX "events_patient_source_idx" ON "events" USING btree ("patient_id","source");--> statement-breakpoint
+CREATE INDEX "refresh_tokens_user_id_idx" ON "refresh_tokens" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "refresh_tokens_expires_idx" ON "refresh_tokens" USING btree ("expires_at");--> statement-breakpoint
 CREATE UNIQUE INDEX "role_permissions_unique" ON "role_permissions" USING btree ("role","permission_code");--> statement-breakpoint
 CREATE UNIQUE INDEX "adherence_unique" ON "medication_adherence" USING btree ("schedule_id","due_date","due_time");--> statement-breakpoint
 CREATE UNIQUE INDEX "daily_checklist_unique" ON "daily_checklists" USING btree ("user_id","date","module_key");--> statement-breakpoint
 CREATE UNIQUE INDEX "daily_checklist_user_date_idx" ON "daily_checklists" USING btree ("user_id","date");--> statement-breakpoint
 CREATE UNIQUE INDEX "plan_items_unique" ON "plan_items" USING btree ("plan_id","module_key");--> statement-breakpoint
-CREATE UNIQUE INDEX "streaks_unique" ON "streaks" USING btree ("user_id","module_key");--> statement-breakpoint
-ALTER TABLE "events" ADD CONSTRAINT "events_device_id_devices_id_fk" FOREIGN KEY ("device_id") REFERENCES "public"."devices"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "patients" ADD CONSTRAINT "patients_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "patients" ADD CONSTRAINT "patients_primary_doctor_id_users_id_fk" FOREIGN KEY ("primary_doctor_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
-CREATE INDEX "events_patient_source_idx" ON "events" USING btree ("patient_id","source");--> statement-breakpoint
-ALTER TABLE "patients" DROP COLUMN "room";--> statement-breakpoint
-ALTER TABLE "patients" DROP COLUMN "bed_number";--> statement-breakpoint
-ALTER TABLE "users" ADD CONSTRAINT "users_phone_unique" UNIQUE("phone");--> statement-breakpoint
-ALTER TABLE "users" ADD CONSTRAINT "users_email_unique" UNIQUE("email");
+CREATE UNIQUE INDEX "streaks_unique" ON "streaks" USING btree ("user_id","module_key");

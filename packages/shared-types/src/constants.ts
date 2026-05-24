@@ -1,4 +1,4 @@
-export const USER_ROLES = ['admin', 'doctor', 'nurse', 'caregiver', 'patient', 'family'] as const
+export const USER_ROLES = ['super_admin', 'admin', 'user'] as const
 export type UserRole = (typeof USER_ROLES)[number]
 
 export const ALERT_SEVERITIES = ['critical', 'warning', 'info'] as const

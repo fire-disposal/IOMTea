@@ -44,7 +44,8 @@ services:
       MQTT_BROKER: "mqtt://mosquitto:1883"
       TCP_INGEST_PORT: "5858"
       TCP_INGEST_TOKEN: "${TCP_INGEST_TOKEN:-}"
-      DEMO_MODE: "${DEMO_MODE:-false}"
+      SUPER_ADMIN_USERNAME: "${SUPER_ADMIN_USERNAME:-admin}"
+      SUPER_ADMIN_PASSWORD: "${SUPER_ADMIN_PASSWORD:-admin123}"
       CORS_ORIGIN: "${CORS_ORIGIN:-http://localhost:5173}"
     ports:
       - "${SERVER_PORT:-3000}:3000"
