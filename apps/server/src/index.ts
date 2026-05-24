@@ -86,16 +86,20 @@ async function bootstrap() {
     process.exit(1)
   }
 
-  // ---- 初始账号 ----
-  const existing = await db.select().from(users).where(eq(users.username, 'demo')).limit(1)
-  if (existing.length === 0) {
-    await db.insert(users).values({
-      username: 'demo',
-      passwordHash: await hashPassword('demo123'),
-      displayName: '演示用户',
-      role: 'admin',
-    })
-    logger.info('√ 初始账号已创建 (demo / demo123)')
+  // ---- 超级管理员初始化 ----
+  if (env.SUPER_ADMIN_USERNAME && env.SUPER_ADMIN_PASSWORD) {
+    const superAdmins = await db.select().from(users).where(eq(users.role, 'super_admin')).limit(1)
+    if (superAdmins.length === 0) {
+      await db.insert(users).values({
+        username: env.SUPER_ADMIN_USERNAME,
+        passwordHash: await hashPassword(env.SUPER_ADMIN_PASSWORD),
+        displayName: env.SUPER_ADMIN_DISPLAY_NAME || '超级管理员',
+        role: 'super_admin',
+      })
+      logger.info(`√ 超管账号已创建 (${env.SUPER_ADMIN_USERNAME})`)
+    }
+  } else {
+    logger.warn('未配置 SUPER_ADMIN_USERNAME/PASSWORD，跳过超管初始化')
   }
 
   // ---- 初始数据 ----
