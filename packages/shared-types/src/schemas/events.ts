@@ -8,7 +8,6 @@ export const eventTagsSchema = z.record(z.string(), z.unknown()).default({})
 export const observationSchema = z.object({
   id: z.string().uuid(),
   patientId: z.string().uuid(),
-  deviceId: z.string().uuid().nullable(),
   kind: z.literal('observation'),
   metric: z.string().max(50),
   value: z.number().nullable(),
@@ -21,7 +20,6 @@ export const observationSchema = z.object({
 export const alertSchema = z.object({
   id: z.string().uuid(),
   patientId: z.string().uuid(),
-  deviceId: z.string().uuid().nullable(),
   kind: z.literal('alert'),
   metric: z.string().max(50),
   value: z.number().nullable(),
@@ -35,12 +33,11 @@ export const alertSchema = z.object({
 
 export const observationIngestSchema = z.object({
   patientId: z.string().uuid(),
-  deviceId: z.string().uuid(),
   metric: z.string().max(50),
   value: z.number(),
   unit: z.string().max(20).optional(),
   tags: eventTagsSchema,
-  recordedAt: z.number().optional(), // 不传则用服务器时间
+  recordedAt: z.number().optional(),
 })
 
 export const eventListInputSchema = z.object({

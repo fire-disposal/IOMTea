@@ -35,7 +35,7 @@ export function StatsBar({ items, cols = 3, loading = false }: StatsBarProps) {
               <Text size="xs" c="dimmed">
                 {item.label}
               </Text>
-              <Text fw={700} size="xl">
+              <Text fw={700} size="xl" component="div">
                 {loading ? <Skeleton height={40} /> : item.value}
               </Text>
             </div>
