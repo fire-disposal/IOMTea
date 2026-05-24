@@ -84,28 +84,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd ${{ secrets.DEPLOY_PATH }}
-            export IMAGE_REPO=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-            export IMAGE_TAG=$(echo "${{ github.sha }}" | cut -c1-7)
-            printf '%s' "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
-            docker compose pull server
-            docker compose up -d server
-            healthy=0
-            for i in $(seq 1 30); do
-              if curl -sf http://localhost:3000/health; then
-                echo "Service healthy"
-                healthy=1
-                break
-              fi
-              echo "Waiting... ($i/30)"
-              sleep 2
-            done
-            if [ "$healthy" -eq 0 ]; then
-              echo "ERROR: Server failed to become healthy"
-              docker compose logs server --tail 80
-              exit 1
-            fi
-            docker logout ghcr.io
+            cd "${{ secrets.DEPLOY_PATH }}" && export IMAGE_REPO=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]') && export IMAGE_TAG=$(echo "${{ github.sha }}" | cut -c1-7) && printf '%s' "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin && docker compose pull server && docker compose up -d server && healthy=0 && for i in $(seq 1 30); do if curl -sf http://localhost:3000/health; then echo "Service healthy" && healthy=1 && break; fi; echo "Waiting... ($i/30)"; sleep 2; done && if [ "$healthy" -eq 0 ]; then echo "ERROR: Server failed to become healthy" && docker compose logs server --tail 80 && exit 1; fi && docker logout ghcr.io
 
   db-migrate:
     needs: build-and-deploy
@@ -119,9 +98,4 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd "${{ secrets.DEPLOY_PATH }}"
-            export IMAGE_REPO=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-            export IMAGE_TAG=$(echo "${{ github.sha }}" | cut -c1-7)
-            printf '%s' "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
-            docker compose run --rm server pnpm db:migrate
-            docker logout ghcr.io
+            cd "${{ secrets.DEPLOY_PATH }}" && export IMAGE_REPO=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]') && export IMAGE_TAG=$(echo "${{ github.sha }}" | cut -c1-7) && printf '%s' "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin && docker compose run --rm server pnpm db:push && docker logout ghcr.io
