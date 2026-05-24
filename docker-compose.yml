@@ -45,6 +45,7 @@ services:
       TCP_INGEST_PORT: "5858"
       TCP_INGEST_TOKEN: "${TCP_INGEST_TOKEN:-}"
       DEMO_MODE: "${DEMO_MODE:-false}"
+      CORS_ORIGIN: "${CORS_ORIGIN:-http://localhost:5173}"
     ports:
       - "${SERVER_PORT:-3000}:3000"
       - "${GATEWAY_PORT:-5858}:5858"
