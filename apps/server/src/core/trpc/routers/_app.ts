@@ -14,6 +14,7 @@ import { patientRouter } from './patient'
 import { pinRouter } from './pin'
 import { planRouter } from './plan'
 import { streakRouter } from './streak'
+import { tagRouter } from './tag'
 import { userRouter } from './user'
 import { virtualPinRouter } from './virtual-pin'
 import { simulationRouter } from '../../../twin/trpc/simulation.router'
@@ -36,6 +37,7 @@ export const appRouter = router({
   plan: planRouter,
   simulation: simulationRouter,
   streak: streakRouter,
+  tag: tagRouter,
   twin: twinRouter,
   user: userRouter,
   virtualPin: virtualPinRouter,

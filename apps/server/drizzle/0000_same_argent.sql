@@ -12,7 +12,7 @@ CREATE TYPE "public"."kind" AS ENUM('observation', 'alert', 'behavior', 'locatio
 CREATE TYPE "public"."medication_route" AS ENUM('oral', 'injection', 'topical', 'inhalation', 'other');--> statement-breakpoint
 CREATE TYPE "public"."medication_status" AS ENUM('active', 'completed', 'paused', 'cancelled');--> statement-breakpoint
 CREATE TYPE "public"."patient_status" AS ENUM('active', 'discharged', 'archived');--> statement-breakpoint
-CREATE TYPE "public"."role" AS ENUM('admin', 'doctor', 'nurse', 'caregiver', 'patient', 'family');--> statement-breakpoint
+CREATE TYPE "public"."role" AS ENUM('super_admin', 'admin', 'user');--> statement-breakpoint
 CREATE TYPE "public"."transaction_type" AS ENUM('earn', 'spend', 'adjust');--> statement-breakpoint
 CREATE TYPE "public"."user_status" AS ENUM('active', 'disabled', 'pending');--> statement-breakpoint
 CREATE TABLE "devices" (
@@ -88,7 +88,7 @@ CREATE TABLE "users" (
 	"avatar_url" text,
 	"phone" varchar(20),
 	"email" varchar(255),
-	"role" "role" DEFAULT 'caregiver' NOT NULL,
+	"role" "role" DEFAULT 'user' NOT NULL,
 	"status" "user_status" DEFAULT 'active' NOT NULL,
 	"credit" integer DEFAULT 0 NOT NULL,
 	"last_login_at" timestamp with time zone,
@@ -236,6 +236,20 @@ CREATE TABLE "streaks" (
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "patient_tag_links" (
+	"patient_id" uuid NOT NULL,
+	"tag_id" uuid NOT NULL,
+	CONSTRAINT "patient_tag_links_patient_id_tag_id_pk" PRIMARY KEY("patient_id","tag_id")
+);
+--> statement-breakpoint
+CREATE TABLE "patient_tags" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"name" varchar(50) NOT NULL,
+	"color" varchar(7) DEFAULT '#228be6',
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "patient_tags_name_unique" UNIQUE("name")
+);
+--> statement-breakpoint
 ALTER TABLE "devices" ADD CONSTRAINT "devices_patient_id_patients_id_fk" FOREIGN KEY ("patient_id") REFERENCES "public"."patients"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "events" ADD CONSTRAINT "events_patient_id_patients_id_fk" FOREIGN KEY ("patient_id") REFERENCES "public"."patients"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "events" ADD CONSTRAINT "events_device_id_devices_id_fk" FOREIGN KEY ("device_id") REFERENCES "public"."devices"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
@@ -258,6 +272,8 @@ ALTER TABLE "daily_checklists" ADD CONSTRAINT "daily_checklists_record_id_events
 ALTER TABLE "plan_items" ADD CONSTRAINT "plan_items_plan_id_plans_id_fk" FOREIGN KEY ("plan_id") REFERENCES "public"."plans"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "plans" ADD CONSTRAINT "plans_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "streaks" ADD CONSTRAINT "streaks_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "patient_tag_links" ADD CONSTRAINT "patient_tag_links_patient_id_patients_id_fk" FOREIGN KEY ("patient_id") REFERENCES "public"."patients"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "patient_tag_links" ADD CONSTRAINT "patient_tag_links_tag_id_patient_tags_id_fk" FOREIGN KEY ("tag_id") REFERENCES "public"."patient_tags"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX "events_patient_metric_time_idx" ON "events" USING btree ("patient_id","metric","recorded_at" DESC NULLS LAST);--> statement-breakpoint
 CREATE INDEX "events_patient_kind_time_idx" ON "events" USING btree ("patient_id","kind","recorded_at" DESC NULLS LAST);--> statement-breakpoint
 CREATE INDEX "events_device_time_idx" ON "events" USING btree ("device_id","recorded_at" DESC NULLS LAST);--> statement-breakpoint

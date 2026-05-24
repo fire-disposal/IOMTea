@@ -52,7 +52,7 @@ export function requirePermission(...codes: string[]) {
 
 export const adminProcedure = publicProcedure.use(authMiddleware).use(
   middleware(async ({ ctx, next }) => {
-    if (ctx.userRole !== 'admin') {
+    if (ctx.userRole !== 'admin' && ctx.userRole !== 'super_admin') {
       throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin role required' })
     }
     return next()

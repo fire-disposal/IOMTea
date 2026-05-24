@@ -1,5 +1,5 @@
 {
-  "id": "0ded5b76-74ee-4f7f-a47c-0dd0e35b06c9",
+  "id": "83e045ae-91c8-4b66-9adf-37fab92d7adb",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -667,7 +667,7 @@
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true,
-          "default": "'caregiver'"
+          "default": "'user'"
         },
         "status": {
           "name": "status",
@@ -1915,6 +1915,114 @@
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
+    },
+    "public.patient_tag_links": {
+      "name": "patient_tag_links",
+      "schema": "",
+      "columns": {
+        "patient_id": {
+          "name": "patient_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tag_id": {
+          "name": "tag_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "patient_tag_links_patient_id_patients_id_fk": {
+          "name": "patient_tag_links_patient_id_patients_id_fk",
+          "tableFrom": "patient_tag_links",
+          "tableTo": "patients",
+          "columnsFrom": [
+            "patient_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "patient_tag_links_tag_id_patient_tags_id_fk": {
+          "name": "patient_tag_links_tag_id_patient_tags_id_fk",
+          "tableFrom": "patient_tag_links",
+          "tableTo": "patient_tags",
+          "columnsFrom": [
+            "tag_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "patient_tag_links_patient_id_tag_id_pk": {
+          "name": "patient_tag_links_patient_id_tag_id_pk",
+          "columns": [
+            "patient_id",
+            "tag_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.patient_tags": {
+      "name": "patient_tags",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "color": {
+          "name": "color",
+          "type": "varchar(7)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'#228be6'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "patient_tags_name_unique": {
+          "name": "patient_tags_name_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "name"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     }
   },
   "enums": {
@@ -2065,12 +2173,9 @@
       "name": "role",
       "schema": "public",
       "values": [
+        "super_admin",
         "admin",
-        "doctor",
-        "nurse",
-        "caregiver",
-        "patient",
-        "family"
+        "user"
       ]
     },
     "public.transaction_type": {
