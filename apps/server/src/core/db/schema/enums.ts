@@ -64,6 +64,8 @@ export const checklistStatusEnum = pgEnum('checklist_status', ['pending', 'done'
 
 export const transactionTypeEnum = pgEnum('transaction_type', ['earn', 'spend', 'adjust'])
 
+export const pinTypeEnum = pgEnum('pin_type', ['device', 'virtual', 'user', 'simulator'])
+
 // ── Type exports: single source of truth for strict TypeScript usage ──
 export type Role = 'super_admin' | 'admin' | 'user'
 export type DeviceType = 'mattress' | 'vision' | 'imu' | 'generic' | 'simulator' | 'custom'

@@ -1,12 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router'
 import {
-  Container, Title, Paper, Group, Button, Select, MultiSelect, Badge, Text,
+  Container, Title, Paper, Group, Button, Select, Badge, Text,
   Grid, Stack, Table, NumberInput, ActionIcon, SegmentedControl, Divider,
-  Box, Modal, Switch,
+  Box, Modal, Switch, TextInput,
 } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
 import { useState, useEffect, useRef } from 'react'
-import { IconRefresh, IconChartBar, IconPlus, IconTrash, IconPlayerPlay, IconPlayerPause } from '@tabler/icons-react'
+import { IconRefresh, IconChartBar, IconPlus, IconTrash, IconPencil, IconCheck, IconX } from '@tabler/icons-react'
 import { trpc } from '../trpc'
 import { SimTimeline } from '../components/sim/SimTimeline'
 
@@ -34,15 +34,18 @@ function SimulationPage() {
   const [timelineMinutes, setTimelineMinutes] = useState(10)
   const [creating, setCreating] = useState(false)
   const [newProfile, setNewProfile] = useState('elderly-cardiac')
-  const [addPatientIds, setAddPatientIds] = useState<string[]>([])
+  const [addPatientId, setAddPatientId] = useState<string | null>(null)
+  const [editingName, setEditingName] = useState<string | null>(null)
+  const [editNameValue, setEditNameValue] = useState('')
   const pollRef = useRef<ReturnType<typeof setInterval>>(undefined)
 
   const createSim = trpc.sim.create.useMutation({ onSuccess: (d) => { refreshSims(); setSelectedSimId(d?.id ?? null); setCreating(false); notifications.show({ title: '已创建', message: '', color: 'green' }) } })
   const toggleSim = trpc.sim.toggle.useMutation({ onSuccess: () => refreshSims() })
   const deleteSim = trpc.sim.delete.useMutation({ onSuccess: () => { refreshSims(); setSelectedSimId(null) } })
+  const renameSim = trpc.sim.rename.useMutation({ onSuccess: () => { refreshSims(); setEditingName(null) } })
   const toggleMetric = trpc.sim.toggleMetric.useMutation({ onSuccess: () => refreshSims() })
   const updateMetric = trpc.sim.updateMetric.useMutation()
-  const addPatients = trpc.sim.addPatients.useMutation({ onSuccess: () => { refreshSims(); refreshStatus() } })
+  const addPatients = trpc.sim.addPatients.useMutation({ onSuccess: () => { refreshSims(); refreshStatus(); setAddPatientId(null) } })
   const removePatients = trpc.sim.removePatients.useMutation({ onSuccess: () => { refreshSims(); refreshStatus() } })
   const setSpeed = trpc.sim.setSpeed.useMutation()
 
@@ -50,11 +53,27 @@ function SimulationPage() {
 
   const selected = simulations?.find((s: any) => s.id === selectedSimId)
   const selectedPatients = (simStatus ?? []).filter((s: any) => s.simId === selectedSimId)
-  const unassignedOptions = (patientList ?? []).filter((p: any) => !simStatus?.some((s: any) => s.patientId === p.id))
+  const assignedPatientIds = new Set(selectedPatients.map((s: any) => s.patientId))
+  const unassignedOptions = (patientList ?? [])
+    .filter((p: any) => !assignedPatientIds.has(p.id))
+    .map((p: any) => ({ value: p.id, label: p.name }))
 
   const handleMetricChange = (metric: string, field: string, value: number) => {
     if (!selectedSimId) return
     updateMetric.mutate({ id: selectedSimId, metric, config: { [field]: value } })
+  }
+
+  const startRename = (id: string, name: string) => {
+    setEditingName(id)
+    setEditNameValue(name)
+  }
+
+  const confirmRename = () => {
+    if (editingName && editNameValue.trim()) {
+      renameSim.mutate({ id: editingName, name: editNameValue.trim() })
+    } else {
+      setEditingName(null)
+    }
   }
 
   return (
@@ -91,7 +110,21 @@ function SimulationPage() {
                   <Switch size="sm" checked={sim.running}
                     onChange={(e) => { e.stopPropagation(); toggleSim.mutate({ id: sim.id, running: e.currentTarget.checked }) }}
                     onPointerDown={(e) => e.stopPropagation()} />
-                  <Text size="sm" fw={600}>{PROFILES.find((p) => p.value === sim.profileName)?.label}</Text>
+                  {editingName === sim.id ? (
+                    <Group gap={4} onClick={(e) => e.stopPropagation()}>
+                      <TextInput size="xs" value={editNameValue} onChange={(e) => setEditNameValue(e.currentTarget.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') confirmRename() }} autoFocus />
+                      <ActionIcon size="xs" variant="subtle" color="green" onClick={confirmRename}><IconCheck size={12} /></ActionIcon>
+                      <ActionIcon size="xs" variant="subtle" color="gray" onClick={() => setEditingName(null)}><IconX size={12} /></ActionIcon>
+                    </Group>
+                  ) : (
+                    <Group gap={4}>
+                      <Text size="sm" fw={600}>{sim.name}</Text>
+                      <ActionIcon size="xs" variant="subtle" onClick={(e) => { e.stopPropagation(); startRename(sim.id, sim.name) }}>
+                        <IconPencil size={10} />
+                      </ActionIcon>
+                    </Group>
+                  )}
                 </Group>
                 <Group gap="xs">
                   <Badge size="xs" variant="light">{sim.patientCount}人</Badge>
@@ -117,13 +150,27 @@ function SimulationPage() {
             <Stack>
               <Paper p="md" withBorder>
                 <Group justify="space-between" mb="md">
-                  <Text fw={600}>{PROFILES.find((p) => p.value === selected.profileName)?.label} — 指标编排</Text>
                   <Group gap="xs">
-                    <ActionIcon variant="light" color="red" size="sm"
-                      onClick={() => deleteSim.mutate({ id: selectedSimId! })}>
-                      <IconTrash size={14} />
-                    </ActionIcon>
+                    {editingName === selected.id ? (
+                      <Group gap={4}>
+                        <TextInput size="xs" value={editNameValue} onChange={(e) => setEditNameValue(e.currentTarget.value)}
+                          onKeyDown={(e) => { if (e.key === 'Enter') confirmRename() }} autoFocus />
+                        <ActionIcon size="xs" variant="subtle" color="green" onClick={confirmRename}><IconCheck size={12} /></ActionIcon>
+                        <ActionIcon size="xs" variant="subtle" color="gray" onClick={() => setEditingName(null)}><IconX size={12} /></ActionIcon>
+                      </Group>
+                    ) : (
+                      <Group gap={4}>
+                        <Text fw={600}>{selected.name} — 指标编排</Text>
+                        <ActionIcon size="xs" variant="subtle" onClick={() => startRename(selected.id, selected.name)}>
+                          <IconPencil size={12} />
+                        </ActionIcon>
+                      </Group>
+                    )}
+                    <Badge size="xs" variant="outline">{PROFILES.find((p) => p.value === selected.profileName)?.label}</Badge>
                   </Group>
+                  <ActionIcon variant="light" color="red" size="sm" onClick={() => deleteSim.mutate({ id: selectedSimId! })}>
+                    <IconTrash size={14} />
+                  </ActionIcon>
                 </Group>
 
                 <Table>
@@ -134,7 +181,6 @@ function SimulationPage() {
                       <Table.Th>最小间隔(ms)</Table.Th>
                       <Table.Th>最大间隔(ms)</Table.Th>
                       <Table.Th>抖动</Table.Th>
-                      <Table.Th>生成器</Table.Th>
                     </Table.Tr>
                   </Table.Thead>
                   <Table.Tbody>
@@ -162,9 +208,6 @@ function SimulationPage() {
                             value={m.config.jitter} disabled={!m.enabled}
                             onChange={(v) => handleMetricChange(m.name, 'jitter', Number(v))} />
                         </Table.Td>
-                        <Table.Td>
-                          <Text size="xs" c="dimmed">{m.config.generator}</Text>
-                        </Table.Td>
                       </Table.Tr>
                     ))}
                   </Table.Tbody>
@@ -174,18 +217,19 @@ function SimulationPage() {
 
                 <Text fw={600} mb="sm">分配患者</Text>
                 <Group mb="sm">
-                  <MultiSelect
+                  <Select
                     size="sm"
-                    data={unassignedOptions.map((p: any) => ({ value: p.id, label: p.name }))}
-                    value={addPatientIds}
-                    onChange={setAddPatientIds}
-                    placeholder="搜索患者..."
+                    data={unassignedOptions}
+                    value={addPatientId}
+                    onChange={(v) => setAddPatientId(v)}
+                    placeholder="搜索并选择患者..."
                     searchable
+                    clearable
                     style={{ flex: 1 }}
                   />
-                  <Button size="sm" onClick={() => { addPatients.mutate({ id: selected.id, patientIds: addPatientIds }); setAddPatientIds([]) }}
-                    disabled={addPatientIds.length === 0}>
-                    添加 {addPatientIds.length || ''}
+                  <Button size="sm" onClick={() => { if (addPatientId) addPatients.mutate({ id: selected.id, patientIds: [addPatientId] }) }}
+                    disabled={!addPatientId}>
+                    添加
                   </Button>
                 </Group>
 

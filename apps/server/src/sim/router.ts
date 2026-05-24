@@ -5,7 +5,7 @@ import { requirePermission } from '../core/trpc/middleware/rbac'
 import { db } from '../core/db'
 import { patients, events } from '../core/db/schema'
 import {
-  createSim, updateSim, toggleSim, toggleSimMetric, deleteSim, updateSimMetric,
+  createSim, updateSim, toggleSim, toggleSimMetric, deleteSim, updateSimMetric, renameSim,
   addPatientsToSim, removePatientsFromSim,
   setGlobalSpeed, getStatus, getSimulations, getProfileConfig,
 } from './factory'
@@ -20,8 +20,8 @@ const overrideSchema = z.object({
 export const simRouter = router({
   create: protectedProcedure
     .use(requirePermission('patient:write'))
-    .input(z.object({ profile: z.string(), overrides: z.record(z.string(), overrideSchema).optional() }))
-    .mutation(({ input }) => createSim(input.profile, input.overrides)),
+    .input(z.object({ profile: z.string(), name: z.string().optional(), overrides: z.record(z.string(), overrideSchema).optional() }))
+    .mutation(({ ctx, input }) => createSim(ctx.db, input.profile, input.overrides, input.name)),
 
   update: protectedProcedure
     .use(requirePermission('patient:write'))
@@ -32,6 +32,11 @@ export const simRouter = router({
     .use(requirePermission('patient:write'))
     .input(z.object({ id: z.string(), running: z.boolean() }))
     .mutation(({ input }) => toggleSim(input.id, input.running)),
+
+  rename: protectedProcedure
+    .use(requirePermission('patient:write'))
+    .input(z.object({ id: z.string(), name: z.string().min(1).max(50) }))
+    .mutation(({ input }) => renameSim(input.id, input.name)),
 
   toggleMetric: protectedProcedure
     .use(requirePermission('patient:write'))
@@ -47,7 +52,7 @@ export const simRouter = router({
     .use(requirePermission('patient:write'))
     .input(z.object({ id: z.string(), patientIds: z.array(z.string().uuid()) }))
     .mutation(async ({ input }) => {
-      const rows = await db.select({ id: patients.id, name: patients.name })
+      const rows = await db.select({ id: patients.id, name: patients.name, userId: patients.userId })
         .from(patients)
         .where(inArray(patients.id, input.patientIds))
       return addPatientsToSim(db, input.id, rows)

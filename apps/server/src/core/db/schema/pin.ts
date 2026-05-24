@@ -1,11 +1,13 @@
 import { boolean, jsonb, pgTable, timestamp, uuid, varchar } from 'drizzle-orm/pg-core'
 import { users } from '../schema.js'
+import { pinTypeEnum } from './enums'
 
 export const usersPin = pgTable('users_pin', {
   pin: varchar('pin', { length: 6 }).primaryKey(),
   userId: uuid('user_id')
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
+  type: pinTypeEnum('type').notNull().default('device'),
   label: varchar('label', { length: 64 }).default(''),
   nickname: varchar('nickname', { length: 32 }).default(''),
   thingId: uuid('thing_id'),

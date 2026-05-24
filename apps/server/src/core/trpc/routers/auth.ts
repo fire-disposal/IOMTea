@@ -10,6 +10,7 @@ import { eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { wechatAccounts } from '../../db'
 import { refreshTokens, users, patients } from '../../db/schema.js'
+import { usersPin } from '../../db/schema/pin'
 import { signAccessToken, signRefreshToken, verifyToken } from '../../lib/jwt'
 import { hashPassword, verifyPassword } from '../../lib/password'
 import { code2session } from '../../lib/wechat'
@@ -41,6 +42,11 @@ export const authRouter = router({
         displayName: input.displayName,
       })
       .returning()
+
+    const pin = String(Math.floor(100000 + Math.random() * 900000))
+    await ctx.db.insert(usersPin).values({
+      pin, userId: user.id, type: 'user', label: user.displayName,
+    }).catch(() => {})
 
     const jwtPayload = { sub: user.id, role: user.role }
     const accessToken = await signAccessToken(jwtPayload)

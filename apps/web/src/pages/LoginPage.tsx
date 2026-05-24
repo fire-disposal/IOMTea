@@ -94,7 +94,7 @@ export function LoginPage() {
                   required
                   autoComplete="username"
                   value={field.state.value}
-                  onChange={(e) => field.handleChange(e.currentTarget.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => field.handleChange(e.currentTarget.value)}
                   error={field.state.meta.errors?.[0]}
                   styles={{
                     input: { background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: '#e2e8f0', '&:focus': { borderColor: '#38b2ac' } },
@@ -112,7 +112,7 @@ export function LoginPage() {
                   mt="md"
                   autoComplete={isRegister ? 'new-password' : 'current-password'}
                   value={field.state.value}
-                  onChange={(e) => field.handleChange(e.currentTarget.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => field.handleChange(e.currentTarget.value)}
                   error={field.state.meta.errors?.[0] || (field.state.meta.errorMap as any)?.onServer}
                   styles={{
                     input: { background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: '#e2e8f0', '&:focus': { borderColor: '#38b2ac' } },
