@@ -97,7 +97,7 @@ jobs:
             export IMAGE_TAG=$(echo "${{ github.sha }}" | cut -c1-7)
             printf '%s' "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
             docker compose pull web
-            docker compose up -d web
+            docker compose up -d --no-deps --force-recreate web
             for i in $(seq 1 30); do
               if curl -sf http://localhost:80; then
                 echo "Service healthy"
