@@ -1,8 +1,9 @@
 import { randomInt } from 'node:crypto'
 import { TRPCError } from '@trpc/server'
-import { eq } from 'drizzle-orm'
+import { eq, inArray } from 'drizzle-orm'
 import { z } from 'zod'
 import { events, patients } from '../../db/schema.js'
+import { userPatientLinks } from '../../db/schema/user-patient'
 import { usersPin } from '../../db/schema/pin'
 import { protectedProcedure, router } from '../index'
 
@@ -46,7 +47,8 @@ function startVirtualPin(pin: string, config: z.infer<typeof generatorConfigSche
         m.db
           .select({ id: patients.id })
           .from(patients)
-          .where(eq(patients.userId, pinRecord.userId))
+          .innerJoin(userPatientLinks, eq(userPatientLinks.patientId, patients.id))
+          .where(eq(userPatientLinks.userId, pinRecord.userId))
           .limit(1),
       )
       const patientId = patientRows[0]?.id

@@ -1,6 +1,7 @@
 import type { DbClient } from '../db'
 import { users, patients, events, medications, medicationSchedules } from '../db'
 import { usersPin } from '../db/schema/pin'
+import { userPatientLinks } from '../db/schema/user-patient'
 import { hashPassword } from '../lib/password'
 
 const now = new Date()
@@ -429,7 +430,6 @@ export async function seedDemoData(db: DbClient): Promise<void> {
     const [patient] = await db
       .insert(patients)
       .values({
-        userId: user.id,
         name: p.name,
         birthDate: p.birthDate,
         gender: p.gender,
@@ -440,6 +440,8 @@ export async function seedDemoData(db: DbClient): Promise<void> {
       })
       .returning({ id: patients.id })
     createdPatients.set(p.username, patient.id)
+
+    await db.insert(userPatientLinks).values({ userId: user.id, patientId: patient.id, relation: 'primary' }).onConflictDoNothing()
 
     const pins: string[] = []
     for (const label of p.pinLabels) {

@@ -8,7 +8,7 @@ export const patientSchema = z.object({
   gender: z.enum(GENDERS).nullable(),
   status: z.enum(PATIENT_STATUSES),
   phone: z.string().max(20).nullable().optional(),
-  isActivated: z.boolean().optional(),
+  tagIds: z.array(z.string().uuid()).optional(),
   tags: z.record(z.string(), z.unknown()).default({}),
   createdAt: z.number(),
 })

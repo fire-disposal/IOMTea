@@ -1,7 +1,8 @@
 import { db } from '../core/db'
 import { usersPin } from '../core/db/schema/pin'
 import { events, patients } from '../core/db/schema.js'
-import { eq } from 'drizzle-orm'
+import { userPatientLinks } from '../core/db/schema/user-patient'
+import { eq, inArray } from 'drizzle-orm'
 import mqtt from 'mqtt'
 import { broadcastManager } from '../core/realtime/broadcast'
 import { createChildLogger } from '../core/lib/logger'
@@ -21,7 +22,7 @@ async function handleDeviceEvent(topicId: string, body: Record<string, unknown>)
     return
   }
 
-  const [patient] = await db.select({ id: patients.id }).from(patients).where(eq(patients.userId, pinRecord.userId)).limit(1)
+  const [patient] = await db.select({ id: patients.id }).from(patients).innerJoin(userPatientLinks, eq(userPatientLinks.patientId, patients.id)).where(eq(userPatientLinks.userId, pinRecord.userId)).limit(1)
   if (!patient) {
     logger.debug({ pin, userId: pinRecord.userId }, 'PIN 未关联患者，跳过')
     return
@@ -213,8 +214,9 @@ async function resolvePatientId(userId: string): Promise<string | null> {
   const [patient] = await db
     .select({ id: patients.id })
     .from(patients)
-    .where(eq(patients.userId, userId))
-    .orderBy(patients.createdAt)
+    .innerJoin(userPatientLinks, eq(userPatientLinks.patientId, patients.id))
+    .where(eq(userPatientLinks.userId, userId))
+    .orderBy(userPatientLinks.createdAt)
     .limit(1)
   return patient?.id ?? null
 }

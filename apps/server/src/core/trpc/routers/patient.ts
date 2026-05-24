@@ -5,10 +5,12 @@ import {
   patientUpdateSchema,
 } from '@iomtea/shared-types'
 import { TRPCError } from '@trpc/server'
-import { eq, inArray, and, sql } from 'drizzle-orm'
+import { eq, inArray, and } from 'drizzle-orm'
 import { z } from 'zod'
-import { patients, users } from '../../db/schema.js'
+import { patients } from '../../db/schema.js'
+import { users } from '../../db/schema.js'
 import { patientTagLinks } from '../../db/schema/tag'
+import { userPatientLinks } from '../../db/schema/user-patient'
 import { hashPassword } from '../../lib/password'
 import { requirePermission } from '../middleware/rbac'
 import { protectedProcedure, router } from '../index'
@@ -29,15 +31,25 @@ export const patientRouter = router({
           tags: patients.tags,
           phone: patients.phone,
           createdAt: patients.createdAt,
-          isActivated: sql<boolean>`CASE WHEN ${users.lastLoginAt} IS NOT NULL THEN true ELSE false END`,
         })
         .from(patients)
-        .leftJoin(users, eq(patients.userId, users.id))
         .$dynamic()
+
       if (input.status) {
         query = query.where(eq(patients.status, input.status))
       }
       const rows = await query.limit(input.pageSize).offset(offset).orderBy(patients.createdAt)
+
+      const pids = rows.map((r) => r.id)
+      const tagLinks = pids.length > 0
+        ? await ctx.db.select({ patientId: patientTagLinks.patientId, tagId: patientTagLinks.tagId }).from(patientTagLinks).where(inArray(patientTagLinks.patientId, pids))
+        : []
+      const tagMap = new Map<string, string[]>()
+      for (const tl of tagLinks) {
+        const existing = tagMap.get(tl.patientId) || []
+        existing.push(tl.tagId)
+        tagMap.set(tl.patientId, existing)
+      }
 
       return rows.map((p) =>
         patientSchema.parse({
@@ -48,7 +60,7 @@ export const patientRouter = router({
           status: p.status,
           tags: p.tags,
           phone: p.phone,
-          isActivated: p.isActivated,
+          tagIds: tagMap.get(p.id) || [],
           createdAt: p.createdAt.getTime(),
         }),
       )
@@ -155,7 +167,6 @@ export const patientRouter = router({
           }).returning()
           const [patient] = await ctx.db.insert(patients).values({
             name: p.name,
-            userId: user.id,
             gender: p.gender,
             birthDate: p.birthDate,
             phone: p.phone,
@@ -166,6 +177,7 @@ export const patientRouter = router({
             emergencyContact: p.emergencyContact,
             emergencyPhone: p.emergencyPhone,
           }).returning()
+          await ctx.db.insert(userPatientLinks).values({ userId: user.id, patientId: patient.id, relation: 'primary' }).onConflictDoNothing()
           if (input.tagIds?.length) {
             await ctx.db.insert(patientTagLinks).values(
               input.tagIds.map((tagId) => ({ patientId: patient.id, tagId })),
@@ -205,5 +217,42 @@ export const patientRouter = router({
       await ctx.db.delete(patientTagLinks).where(
         and(inArray(patientTagLinks.patientId, input.patientIds), inArray(patientTagLinks.tagId, input.tagIds)),
       )
+    }),
+
+  linkUser: protectedProcedure
+    .use(requirePermission('patient:write'))
+    .input(z.object({ patientId: z.string().uuid(), userId: z.string().uuid(), relation: z.string().default('caregiver') }))
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db.insert(userPatientLinks).values({ patientId: input.patientId, userId: input.userId, relation: input.relation }).onConflictDoNothing()
+    }),
+
+  unlinkUser: protectedProcedure
+    .use(requirePermission('patient:write'))
+    .input(z.object({ patientId: z.string().uuid(), userId: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db.delete(userPatientLinks).where(
+        and(eq(userPatientLinks.patientId, input.patientId), eq(userPatientLinks.userId, input.userId)),
+      )
+    }),
+
+  linkedUsers: protectedProcedure
+    .use(requirePermission('patient:read'))
+    .input(z.string().uuid())
+    .query(async ({ ctx, input: patientId }) => {
+      return ctx.db
+        .select({ userId: userPatientLinks.userId, relation: userPatientLinks.relation, displayName: users.displayName, username: users.username })
+        .from(userPatientLinks)
+        .innerJoin(users, eq(userPatientLinks.userId, users.id))
+        .where(eq(userPatientLinks.patientId, patientId))
+    }),
+
+  linkedPatients: protectedProcedure
+    .query(async ({ ctx }) => {
+      if (!ctx.userId) return []
+      return ctx.db
+        .select({ patientId: userPatientLinks.patientId, relation: userPatientLinks.relation, name: patients.name })
+        .from(userPatientLinks)
+        .innerJoin(patients, eq(userPatientLinks.patientId, patients.id))
+        .where(eq(userPatientLinks.userId, ctx.userId))
     }),
 })

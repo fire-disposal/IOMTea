@@ -3,6 +3,7 @@ import { eq, and, sql, inArray } from 'drizzle-orm'
 import { z } from 'zod'
 import type { DbClient } from '../../db'
 import { events, patients, users } from '../../db/schema.js'
+import { userPatientLinks } from '../../db/schema/user-patient'
 import { dailyChecklists, streaks, creditTransactions } from '../../db/schema/plan'
 import { calculateCredit, calcNewStreak } from '../../../services/credit-calculator'
 import { protectedProcedure, router } from '../index'
@@ -267,8 +268,9 @@ async function resolvePatientIdForInput(
     const [patient] = await db
       .select({ id: patients.id })
       .from(patients)
-      .where(eq(patients.userId, userId))
-      .orderBy(patients.createdAt)
+      .innerJoin(userPatientLinks, eq(userPatientLinks.patientId, patients.id))
+      .where(eq(userPatientLinks.userId, userId))
+      .orderBy(userPatientLinks.createdAt)
       .limit(1)
 
     if (!patient) {
@@ -283,7 +285,8 @@ async function resolvePatientIdForInput(
   const [patient] = await db
     .select({ id: patients.id })
     .from(patients)
-    .where(and(eq(patients.id, patientIdFromInput), eq(patients.userId, userId)))
+    .innerJoin(userPatientLinks, eq(userPatientLinks.patientId, patients.id))
+    .where(and(eq(patients.id, patientIdFromInput), eq(userPatientLinks.userId, userId)))
     .limit(1)
 
   if (!patient) {

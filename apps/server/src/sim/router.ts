@@ -52,7 +52,7 @@ export const simRouter = router({
     .use(requirePermission('patient:write'))
     .input(z.object({ id: z.string(), patientIds: z.array(z.string().uuid()) }))
     .mutation(async ({ input }) => {
-      const rows = await db.select({ id: patients.id, name: patients.name, userId: patients.userId })
+      const rows = await db.select({ id: patients.id, name: patients.name })
         .from(patients)
         .where(inArray(patients.id, input.patientIds))
       return addPatientsToSim(db, input.id, rows)

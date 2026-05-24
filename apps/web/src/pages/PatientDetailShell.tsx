@@ -105,8 +105,6 @@ export function PatientDetailShell({ children }: { children: ReactNode }) {
             <Text size="sm" fw={500}>{temp != null ? temp : '--'}<Text span size="xs" c="dimmed">°C</Text></Text>
           </Group>
           <Divider orientation="vertical" size="sm" />
-           <Box w={8} h={8} style={{ borderRadius: '50%', background: isOnline ? 'var(--mantine-color-green-6)' : 'var(--mantine-color-gray-5)', transition: 'background 0.4s ease' }} />
-          <Text size="xs" c={isOnline ? 'green' : 'dimmed'}>{isOnline ? '在线' : '离线'}</Text>
         </Group>
       </Group>
 

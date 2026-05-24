@@ -15,8 +15,6 @@ import {
   alertSeverityEnum,
   alertStatusEnum,
   bloodTypeEnum,
-  deviceStatusEnum,
-  deviceTypeEnum,
   eventSourceEnum,
   genderEnum,
   kindEnum,
@@ -24,6 +22,7 @@ import {
   roleEnum,
   userStatusEnum,
 } from './schema/enums'
+import { usersPin } from './schema/pin'
 
 export const users = pgTable('users', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -60,7 +59,6 @@ export const refreshTokens = pgTable(
 
 export const patients = pgTable('patients', {
   id: uuid('id').defaultRandom().primaryKey(),
-  userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
   name: varchar('name', { length: 100 }).notNull(),
   birthDate: date('birth_date'),
   gender: genderEnum('gender'),
@@ -72,7 +70,6 @@ export const patients = pgTable('patients', {
   emergencyContact: varchar('emergency_contact', { length: 100 }),
   emergencyPhone: varchar('emergency_phone', { length: 20 }),
   status: patientStatusEnum('status').notNull().default('active'),
-  primaryDoctorId: uuid('primary_doctor_id').references(() => users.id, { onDelete: 'set null' }),
   tags: jsonb('tags').default({}).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
@@ -87,7 +84,7 @@ export const events = pgTable(
     patientId: uuid('patient_id')
       .notNull()
       .references(() => patients.id, { onDelete: 'cascade' }),
-    pinCode: varchar('pin_code', { length: 6 }),
+    pinCode: varchar('pin_code', { length: 6 }).references(() => usersPin.pin, { onDelete: 'set null' }),
     kind: kindEnum('kind').notNull(),
     metric: varchar('metric', { length: 100 }).notNull(),
     value: doublePrecision('value'),

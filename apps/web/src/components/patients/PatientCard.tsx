@@ -66,8 +66,7 @@ export function PatientCard({ patient, alertCount = 0, onDelete }: PatientCardPr
           <Text fw={600} truncate>{patient.name}</Text>
           <Group gap={6} mt={2}>
             {age != null && <Text size="xs" c="dimmed">{age}岁</Text>}
-            {patient.gender && <Text size="xs" c="dimmed">{patient.gender === 'male' ? '男' : patient.gender === 'female' ? '女' : '其他'}</Text>}
-            <Badge size="xs" color={isOnline ? 'green' : 'gray'} variant="light">{isOnline ? '在线' : '离线'}</Badge>
+              {patient.gender && <Text size="xs" c="dimmed">{patient.gender === 'male' ? '男' : patient.gender === 'female' ? '女' : '其他'}</Text>}
           </Group>
         </Box>
         {alertCount > 0 && (

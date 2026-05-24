@@ -1,6 +1,8 @@
 import {
   ActionIcon,
+  Box,
   Button,
+  Chip,
   Container,
   Group,
   Modal,
@@ -40,6 +42,8 @@ export function PatientWall() {
 
   const patients = trpc.patient.list.useQuery({ pageSize: 100, status: 'active' })
   const alerts = trpc.alert.list.useQuery({ pageSize: 100 }, { refetchInterval: 30000 })
+  const { data: tags } = trpc.tag.list.useQuery()
+  const [filterTagIds, setFilterTagIds] = useState<string[]>([])
   const createPatient = trpc.patient.create.useMutation({
     onSuccess: () => {
       notifications.show({ title: '成功', message: '患者已创建', color: 'green' })
@@ -120,6 +124,20 @@ export function PatientWall() {
         onChange={(e) => setSearch(e.currentTarget.value)}
         mb="xl"
       />
+
+      {tags && tags.length > 0 && (
+        <Box mb="md">
+        <Chip.Group multiple value={filterTagIds} onChange={setFilterTagIds}>
+          <Group gap="xs">
+            {tags.map((tag: any) => (
+              <Chip key={tag.id} value={tag.id} color={tag.color?.replace('#', '') || 'teal'} variant="light" size="xs">
+                {tag.name}
+              </Chip>
+            ))}
+          </Group>
+        </Chip.Group>
+        </Box>
+      )}
 
       {patients.isLoading && (
         <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>

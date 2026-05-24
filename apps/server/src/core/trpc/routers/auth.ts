@@ -10,6 +10,7 @@ import { eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { wechatAccounts } from '../../db'
 import { refreshTokens, users, patients } from '../../db/schema.js'
+import { userPatientLinks } from '../../db/schema/user-patient'
 import { usersPin } from '../../db/schema/pin'
 import { signAccessToken, signRefreshToken, verifyToken } from '../../lib/jwt'
 import { hashPassword, verifyPassword } from '../../lib/password'
@@ -147,16 +148,30 @@ export const authRouter = router({
         unionId: unionid || null,
       })
 
-      await ctx.db
+      const [patientRecord] = await ctx.db
         .insert(patients)
         .values({
-          userId: newUser.id,
           name: `微信用户${openid.slice(-6)}`,
           status: 'active',
         })
+        .returning()
         .catch((err) => {
           console.error('WeChat login: failed to create patient record', err)
+          return []
         })
+
+      if (patientRecord) {
+        await ctx.db
+          .insert(userPatientLinks)
+          .values({
+            userId: newUser.id,
+            patientId: patientRecord.id,
+            relation: 'primary',
+          })
+          .catch((err) => {
+            console.error('WeChat login: failed to create user-patient link', err)
+          })
+      }
 
       userId = newUser.id
       role = newUser.role

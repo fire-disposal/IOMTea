@@ -83,6 +83,11 @@ export function PatientImport({ opened, onClose, onImported }: PatientImportProp
     <Modal opened={opened} onClose={handleClose} title="批量导入患者" size="xl">
       <Stepper active={step} onStepClick={setStep}>
         <Stepper.Step label="上传文件" description="CSV 格式">
+          <Text size="xs" c="dimmed" mb="sm">
+            CSV 表头格式: <Text span ff="monospace">name,phone,gender,birth_date,height_cm,weight_kg,blood_type,address,emergency_contact,emergency_phone</Text>
+            <br />必填: <Text span fw={500}>name</Text>。性别取值: male/female/other。日期格式: YYYY-MM-DD。
+            <br />示例行: <Text span ff="monospace">张三,13800138000,male,1980-05-15,170,65,A,北京市东城区,张四,13900139000</Text>
+          </Text>
           <FileInput
             label="选择 CSV 文件"
             placeholder="点击选择 .csv 文件"

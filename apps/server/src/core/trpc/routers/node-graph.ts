@@ -1,7 +1,8 @@
 import { TRPCError } from '@trpc/server'
-import { desc, eq } from 'drizzle-orm'
+import { desc, eq, inArray } from 'drizzle-orm'
 import { z } from 'zod'
 import { events, patients } from '../../db/schema.js'
+import { userPatientLinks } from '../../db/schema/user-patient'
 import { usersPin } from '../../db/schema/pin'
 import { protectedProcedure, router } from '../index'
 
@@ -40,7 +41,8 @@ export const nodeGraphRouter = router({
         tags: patients.tags,
       })
       .from(patients)
-      .where(eq(patients.userId, userId))
+      .innerJoin(userPatientLinks, eq(userPatientLinks.patientId, patients.id))
+      .where(eq(userPatientLinks.userId, userId))
 
     const allPins = await ctx.db
       .select({
@@ -161,7 +163,8 @@ export const nodeGraphRouter = router({
           tags: patients.tags,
         })
         .from(patients)
-        .where(eq(patients.userId, userId))
+        .innerJoin(userPatientLinks, eq(userPatientLinks.patientId, patients.id))
+        .where(eq(userPatientLinks.userId, userId))
 
       for (const p of pts) {
         const tags = (p.tags as Record<string, unknown>) || {}
@@ -228,7 +231,8 @@ export const nodeGraphRouter = router({
           tags: patients.tags,
         })
         .from(patients)
-        .where(eq(patients.userId, userId))
+        .innerJoin(userPatientLinks, eq(userPatientLinks.patientId, patients.id))
+        .where(eq(userPatientLinks.userId, userId))
 
       for (const p of pts) {
         const tags = (p.tags as Record<string, unknown>) || {}

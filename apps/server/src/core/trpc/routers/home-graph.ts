@@ -1,7 +1,8 @@
 import { TRPCError } from '@trpc/server'
-import { eq } from 'drizzle-orm'
+import { eq, inArray } from 'drizzle-orm'
 import { z } from 'zod'
 import { events, patients } from '../../db/schema.js'
+import { userPatientLinks } from '../../db/schema/user-patient'
 import { usersPin } from '../../db/schema/pin'
 import { publicProcedure, protectedProcedure, router } from '../index'
 import { twinState } from '../../../twin/twin-state'
@@ -70,7 +71,8 @@ export const homeGraphRouter = router({
             lastSeenAt: usersPin.lastSeenAt,
           })
           .from(usersPin)
-          .innerJoin(patients, eq(patients.userId, usersPin.userId))
+          .innerJoin(userPatientLinks, eq(userPatientLinks.userId, usersPin.userId))
+          .innerJoin(patients, eq(patients.id, userPatientLinks.patientId))
           .where(eq(patients.id, input.patientId))
 
         for (const room of graph.rooms) {
@@ -138,7 +140,8 @@ export const homeGraphRouter = router({
       const patientRows = await ctx.db
         .select({ tags: patients.tags })
         .from(patients)
-        .where(eq(patients.userId, userId))
+        .innerJoin(userPatientLinks, eq(userPatientLinks.patientId, patients.id))
+        .where(eq(userPatientLinks.userId, userId))
         .limit(1)
       if (patientRows.length === 0) return []
       const tags = (patientRows[0].tags as Record<string, unknown>) || {}
@@ -188,7 +191,8 @@ export const homeGraphRouter = router({
       const patientRows = await ctx.db
         .select({ id: patients.id, tags: patients.tags })
         .from(patients)
-        .where(eq(patients.userId, userId))
+        .innerJoin(userPatientLinks, eq(userPatientLinks.patientId, patients.id))
+        .where(eq(userPatientLinks.userId, userId))
         .limit(1)
       if (patientRows.length === 0)
         throw new TRPCError({ code: 'NOT_FOUND', message: '未找到关联患者' })
