@@ -14,7 +14,7 @@ import {
   adherenceStatusEnum,
   confirmationMethodEnum,
 } from './enums'
-import { users, patients } from '../schema'
+import { users, patients } from '../schema.js'
 
 export const medications = pgTable('medications', {
   id: uuid('id').defaultRandom().primaryKey(),

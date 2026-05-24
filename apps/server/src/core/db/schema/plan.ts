@@ -11,7 +11,7 @@ import {
   varchar,
 } from 'drizzle-orm/pg-core'
 import { checklistStatusEnum, transactionTypeEnum } from './enums'
-import { events, users } from '../schema'
+import { events, users } from '../schema.js'
 
 export const plans = pgTable('plans', {
   id: uuid('id').defaultRandom().primaryKey(),

@@ -2,7 +2,7 @@ import { randomInt } from 'node:crypto'
 import { TRPCError } from '@trpc/server'
 import { eq } from 'drizzle-orm'
 import { z } from 'zod'
-import { events, patients } from '../../db/schema'
+import { events, patients } from '../../db/schema.js'
 import { usersPin } from '../../db/schema/pin'
 import { protectedProcedure, router } from '../index'
 

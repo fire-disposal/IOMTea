@@ -1,7 +1,7 @@
 import { eventTimeSeriesInputSchema, observationSchema } from '@iomtea/shared-types'
 import { and, desc, eq, gte, inArray, lte } from 'drizzle-orm'
 import { z } from 'zod'
-import { events } from '../../db/schema'
+import { events } from '../../db/schema.js'
 import { protectedProcedure, router } from '../index'
 
 export const dataRouter = router({

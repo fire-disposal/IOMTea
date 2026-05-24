@@ -1,6 +1,6 @@
 import { db } from '../core/db'
 import { usersPin } from '../core/db/schema/pin'
-import { events, patients } from '../core/db/schema'
+import { events, patients } from '../core/db/schema.js'
 import { eq } from 'drizzle-orm'
 import mqtt from 'mqtt'
 import { broadcastManager } from '../core/realtime/broadcast'

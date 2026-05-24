@@ -8,9 +8,11 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "typecheck": "tsc --noEmit",
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
-    "db:push": "drizzle-kit push",
+    "check": "pnpm typecheck && pnpm check:imports",
+    "check:imports": "node scripts/check-imports.mjs",
+    "db:generate": "tsx node_modules/drizzle-kit/bin.cjs generate",
+    "db:migrate": "tsx node_modules/drizzle-kit/bin.cjs migrate",
+    "db:push": "tsx node_modules/drizzle-kit/bin.cjs push",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -32,13 +34,13 @@
     "ws": "^8.20.0",
     "yaml": "^2.9.0",
     "zod": "^3.24.0",
+    "drizzle-kit": "^0.30.0",
     "tsx": "^4.19.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
     "@types/uuid": "^10.0.0",
     "@types/ws": "^8.18.1",
-    "drizzle-kit": "^0.30.0",
     "typescript": "^5.7.0",
     "vitest": "^4.1.6"
   }

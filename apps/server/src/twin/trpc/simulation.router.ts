@@ -10,7 +10,7 @@ import {
   getEngineStatus,
   listEngines,
 } from '../engine'
-import { patients } from '../../core/db/schema'
+import { patients } from '../../core/db/schema.js'
 import { requirePermission } from '../../core/trpc/middleware/rbac'
 import { protectedProcedure, router } from '../../core/trpc/index'
 

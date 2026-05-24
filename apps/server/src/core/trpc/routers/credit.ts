@@ -1,7 +1,7 @@
 import { eq, desc, and } from 'drizzle-orm'
 import { z } from 'zod'
 import { creditTransactions } from '../../db/schema/plan'
-import { users } from '../../db/schema'
+import { users } from '../../db/schema.js'
 import { protectedProcedure, router } from '../index'
 
 export const creditRouter = router({

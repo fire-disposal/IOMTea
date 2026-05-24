@@ -2,7 +2,7 @@ import { ALERT_SEVERITIES, ALERT_STATUSES, alertSchema } from '@iomtea/shared-ty
 import { TRPCError } from '@trpc/server'
 import { and, desc, eq, gte } from 'drizzle-orm'
 import { z } from 'zod'
-import { events } from '../../db/schema'
+import { events } from '../../db/schema.js'
 import { requirePermission } from '../middleware/rbac'
 import { protectedProcedure, router } from '../index'
 

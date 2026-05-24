@@ -66,16 +66,32 @@ jobs:
             type=ref,event=tag
             type=sha,prefix=,format=short
 
-      - name: Build and push
+      - name: Build image
         uses: docker/build-push-action@v6
         with:
           context: .
           file: apps/server/Dockerfile
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          load: true
+          tags: ghcr.io/${{ github.repository }}/server:ci-smoke
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Smoke test
+        run: |
+          IMAGE_REPO=${{ github.repository }} IMAGE_TAG=ci-smoke DB_PASSWORD=test JWT_SECRET=test docker compose up -d postgres mosquitto server
+          if ! curl -sf --retry 20 --retry-delay 2 http://localhost:3000/health; then
+            docker compose logs server --tail 80
+            docker compose down
+            exit 1
+          fi
+          docker compose down
+
+      - name: Tag and push
+        run: |
+          while IFS= read -r tag; do
+            docker tag ghcr.io/${{ github.repository }}/server:ci-smoke "$tag"
+            docker push "$tag"
+          done <<< "${{ steps.meta.outputs.tags }}"
 
       - name: Deploy to server
         uses: appleboy/ssh-action@v1
@@ -90,15 +106,21 @@ jobs:
             printf '%s' "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
             docker compose pull server
             docker compose up -d server
+            healthy=0
             for i in $(seq 1 30); do
-              if curl -sf http://${{ secrets.SSH_HOST }}:3000/health; then
+              if curl -sf http://localhost:3000/health; then
                 echo "Service healthy"
+                healthy=1
                 break
               fi
               echo "Waiting... ($i/30)"
               sleep 2
             done
-            docker compose exec -T server node apps/server/dist/db-migrate.js || echo "Migration skipped (no db-migrate.js)"
+            if [ "$healthy" -eq 0 ]; then
+              echo "ERROR: Server failed to become healthy"
+              docker compose logs server --tail 80
+              exit 1
+            fi
             docker logout ghcr.io
 
   db-migrate:
@@ -113,5 +135,9 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd ${{ secrets.DEPLOY_PATH }}
-            docker compose run --rm server pnpm --filter @iomtea/server db:migrate
+            cd "${{ secrets.DEPLOY_PATH }}"
+            export IMAGE_REPO=${{ github.repository }}
+            export IMAGE_TAG=$(echo "${{ github.sha }}" | cut -c1-7)
+            printf '%s' "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+            docker compose run --rm server pnpm db:migrate
+            docker logout ghcr.io

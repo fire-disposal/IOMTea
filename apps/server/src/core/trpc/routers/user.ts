@@ -2,7 +2,7 @@ import { userListInputSchema, userSchema, userUpdateSchema } from '@iomtea/share
 import { TRPCError } from '@trpc/server'
 import { eq } from 'drizzle-orm'
 import { z } from 'zod'
-import { users } from '../../db/schema'
+import { users } from '../../db/schema.js'
 import { protectedProcedure, router } from '../index'
 
 export const userRouter = router({

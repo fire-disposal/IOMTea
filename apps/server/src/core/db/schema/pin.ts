@@ -1,5 +1,5 @@
 import { boolean, jsonb, pgTable, timestamp, uuid, varchar } from 'drizzle-orm/pg-core'
-import { users } from '../schema'
+import { users } from '../schema.js'
 
 export const usersPin = pgTable('users_pin', {
   pin: varchar('pin', { length: 6 }).primaryKey(),

@@ -2,7 +2,7 @@ import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 import { env } from '../../env'
 import { createChildLogger } from '../lib/logger'
-import * as schema from './schema'
+import * as schema from './schema.js'
 
 const logger = createChildLogger('db')
 
@@ -21,7 +21,7 @@ client
 export const db = drizzle(client, { schema })
 export type DbClient = typeof db
 
-export * from './schema'
+export * from './schema.js'
 export * from './schema/enums'
 export * from './schema/auth-ext'
 export * from './schema/medication'

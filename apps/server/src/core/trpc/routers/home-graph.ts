@@ -1,7 +1,7 @@
 import { TRPCError } from '@trpc/server'
 import { eq } from 'drizzle-orm'
 import { z } from 'zod'
-import { events, patients, devices } from '../../db/schema'
+import { events, patients, devices } from '../../db/schema.js'
 import { usersPin } from '../../db/schema/pin'
 import { publicProcedure, protectedProcedure, router } from '../index'
 import { twinState } from '../../../twin/twin-state'

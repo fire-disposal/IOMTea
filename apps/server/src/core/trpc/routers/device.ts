@@ -7,7 +7,7 @@ import {
 import { TRPCError } from '@trpc/server'
 import { eq } from 'drizzle-orm'
 import { z } from 'zod'
-import { devices } from '../../db/schema'
+import { devices } from '../../db/schema.js'
 import { requirePermission } from '../middleware/rbac'
 import { protectedProcedure, router } from '../index'
 

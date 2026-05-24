@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm'
 import { v4 as uuid } from 'uuid'
 import type { DbClient } from '../core/db'
-import { events, patients, devices } from '../core/db/schema'
+import { events, patients, devices } from '../core/db/schema.js'
 import { broadcastManager } from '../core/realtime/broadcast'
 import type { PatientProfile, Posture, SimulatedEvent } from './types'
 import { getProfile } from './profiles'

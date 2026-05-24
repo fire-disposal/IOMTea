@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm'
 import { z } from 'zod'
-import { patients } from '../../db/schema'
+import { patients } from '../../db/schema.js'
 import { protectedProcedure, router } from '../index'
 import { DEFAULT_THRESHOLDS } from './thresholds'
 
