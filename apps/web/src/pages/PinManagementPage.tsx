@@ -39,8 +39,8 @@ export function PinManagementPage() {
   const fetchPins = useCallback(async () => {
     setIsLoading(true)
     try {
-      const data = await api.get<any[]>('/pins')
-      setPins(data)
+      const { data } = await api.GET('/pins')
+      setPins(data ?? [])
       setIsError(false)
     } catch {
       setIsError(true)
