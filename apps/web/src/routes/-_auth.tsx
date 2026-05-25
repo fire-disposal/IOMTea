@@ -18,6 +18,7 @@ import {
   IconFlask,
   IconKey,
   IconLogout,
+  IconShield,
   IconScreenShare,
   IconUsers,
   IconUsersGroup,
@@ -65,7 +66,10 @@ const navGroups: NavGroup[] = [
   },
   {
     label: '系统',
-    items: [{ label: '用户管理', icon: IconUsersGroup, path: '/settings/users' }],
+    items: [
+      { label: '用户管理', icon: IconUsersGroup, path: '/settings/users' },
+      { label: '权限管理', icon: IconShield, path: '/settings/rbac' },
+    ],
     roles: ['super_admin'],
   },
 ]
@@ -180,8 +184,8 @@ export const authBeforeLoad = ({ location }: { location: { href: string } }) => 
   const state = useAuthStore.getState()
   if (!state.token) throw redirect({ to: '/login', search: { redirect: location.href } })
 
-  const adminRoutes = ['/patients', '/medications', '/data-export', '/simulation', '/iot/pins']
-  const superAdminRoutes = ['/settings/users']
+  const adminRoutes = ['/patients', '/data-export', '/simulation', '/iot/pins', '/plans', '/node-graph']
+  const superAdminRoutes = ['/settings/users', '/settings/rbac']
   const pathname = location.href || ''
 
   if (superAdminRoutes.some((r) => pathname.startsWith(r)) && state.role !== 'super_admin') {

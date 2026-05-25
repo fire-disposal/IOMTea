@@ -19,6 +19,7 @@ import { PatientProfile } from './pages/PatientProfile'
 import { PatientWall } from './pages/PatientWall'
 import { PinManagementPage } from './pages/PinManagementPage'
 import { PlanManagementPage } from './pages/PlanManagementPage'
+import { RbacManagementPage } from './pages/RbacManagementPage'
 import { SimulationPage } from './pages/SimulationPage'
 import { UserManagementPage } from './pages/UserManagementPage'
 import { RootLayout } from './routes/__root'
@@ -122,6 +123,12 @@ const usersRoute = createRoute({
   component: UserManagementPage,
 })
 
+const rbacRoute = createRoute({
+  getParentRoute: () => authRoute,
+  path: '/settings/rbac',
+  component: RbacManagementPage,
+})
+
 const nodeGraphRoute = createRoute({
   getParentRoute: () => authRoute,
   path: '/node-graph',
@@ -152,6 +159,7 @@ const routeTree = rootRoute.addChildren([
     pinsRoute,
     simRoute,
     usersRoute,
+    rbacRoute,
     nodeGraphRoute,
     plansRoute,
   ]),
