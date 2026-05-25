@@ -1,0 +1,176 @@
+import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+import { db } from '../core/db'
+import { patients } from '../core/db/schema'
+import { userPatientLinks } from '../core/db/schema/user-patient'
+import { eq, and } from 'drizzle-orm'
+import { jwtAuth } from '../middleware/auth'
+
+const patientsApp = new OpenAPIHono()
+patientsApp.use('*', jwtAuth)
+
+const listPatRoute = createRoute({
+  method: 'get',
+  path: '/',
+  request: {
+    query: z.object({
+      page: z.coerce.number().min(1).default(1),
+      pageSize: z.coerce.number().min(1).max(200).default(50),
+      status: z.string().optional(),
+      search: z.string().optional(),
+    }),
+  },
+  responses: { 200: { description: 'Patient list' } },
+})
+
+patientsApp.openapi(listPatRoute, async (c) => {
+  const q = c.req.valid('query')
+  const rows = await db.select().from(patients).limit(q.pageSize).offset((q.page - 1) * q.pageSize)
+  return c.json(rows)
+})
+
+const createPatRoute = createRoute({
+  method: 'post',
+  path: '/',
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: z.object({
+            name: z.string().min(1).max(100).openapi({ example: '张三' }),
+            birthDate: z.string().optional().openapi({ example: '1960-01-01' }),
+            gender: z.string().optional().openapi({ example: 'male' }),
+            heightCm: z.number().optional(),
+            weightKg: z.number().optional(),
+            bloodType: z.string().optional(),
+            phone: z.string().optional(),
+            address: z.string().optional(),
+            tags: z.record(z.string(), z.unknown()).optional(),
+          }),
+        },
+      },
+    },
+  },
+  responses: { 201: { description: 'Created' } },
+})
+
+patientsApp.openapi(createPatRoute, async (c) => {
+  const body = c.req.valid('json')
+  const [row] = await db
+    .insert(patients)
+    .values({
+      name: body.name,
+      birthDate: body.birthDate ?? null,
+      gender: body.gender ?? null,
+      heightCm: body.heightCm ?? null,
+      weightKg: body.weightKg ?? null,
+      bloodType: body.bloodType ?? null,
+      phone: body.phone ?? null,
+      address: body.address ?? null,
+      tags: body.tags ?? {},
+    } as any)
+    .returning()
+  return c.json(row, 201 as any)
+})
+
+const detailPatRoute = createRoute({
+  method: 'get',
+  path: '/:id',
+  responses: { 200: { description: 'Patient detail' }, 404: { description: 'Not found' } },
+})
+
+patientsApp.openapi(detailPatRoute, async (c) => {
+  const id = c.req.param('id')
+  const [row] = await db.select().from(patients).where(eq(patients.id, id)).limit(1)
+  if (!row) return c.json({ error: 'Not found' }, 404 as any)
+  return c.json(row)
+})
+
+const updatePatRoute = createRoute({
+  method: 'patch',
+  path: '/:id',
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: z.object({
+            name: z.string().optional(),
+            gender: z.string().optional(),
+            heightCm: z.number().optional(),
+            weightKg: z.number().optional(),
+            phone: z.string().optional(),
+            address: z.string().optional(),
+            status: z.string().optional(),
+            tags: z.record(z.string(), z.unknown()).optional(),
+          }),
+        },
+      },
+    },
+  },
+  responses: { 200: { description: 'Updated' }, 404: { description: 'Not found' } },
+})
+
+patientsApp.openapi(updatePatRoute, async (c) => {
+  const id = c.req.param('id')
+  const body = c.req.valid('json')
+  const [row] = await db.update(patients).set(body as any).where(eq(patients.id, id)).returning()
+  if (!row) return c.json({ error: 'Not found' }, 404 as any)
+  return c.json(row)
+})
+
+const deletePatRoute = createRoute({
+  method: 'delete',
+  path: '/:id',
+  responses: { 200: { description: 'Deleted' } },
+})
+
+patientsApp.openapi(deletePatRoute, async (c) => {
+  const id = c.req.param('id')
+  await db.delete(patients).where(eq(patients.id, id))
+  return c.json({ success: true })
+})
+
+const linkUserPatRoute = createRoute({
+  method: 'post',
+  path: '/:id/users',
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: z.object({
+            userId: z.string().uuid(),
+            relation: z.string().optional().openapi({ example: 'caregiver' }),
+          }),
+        },
+      },
+    },
+  },
+  responses: { 201: { description: 'User linked' } },
+})
+
+patientsApp.openapi(linkUserPatRoute, async (c) => {
+  const patientId = c.req.param('id')
+  const body = c.req.valid('json')
+  await db.insert(userPatientLinks).values({
+    userId: body.userId,
+    patientId,
+    relation: body.relation ?? null,
+  } as any)
+  return c.json({ success: true }, 201 as any)
+})
+
+const unlinkUserPatRoute = createRoute({
+  method: 'delete',
+  path: '/:id/users/:userId',
+  responses: { 200: { description: 'User unlinked' } },
+})
+
+patientsApp.openapi(unlinkUserPatRoute, async (c) => {
+  const patientId = c.req.param('id')
+  const userId = c.req.param('userId')
+  await db
+    .delete(userPatientLinks)
+    .where(and(eq(userPatientLinks.userId, userId), eq(userPatientLinks.patientId, patientId)))
+  return c.json({ success: true })
+})
+
+export { patientsApp }
