@@ -4,13 +4,14 @@ import { and, gte, sql } from 'drizzle-orm'
 import { db } from '../core/db'
 import { events, patients } from '../core/db/schema'
 import { jwtAuth } from '../middleware/auth'
+import { requirePermission } from '../middleware/rbac'
 
 const dashboard = new OpenAPIHono()
-dashboard.use('*', jwtAuth)
 
 const summaryRoute = createRoute({
   method: 'get',
   path: '/summary',
+  middleware: [jwtAuth, requirePermission('/dashboard', 'read')] as const,
   responses: {
     200: {
       content: { 'application/json': { schema: dashboardResponseSchema } },
