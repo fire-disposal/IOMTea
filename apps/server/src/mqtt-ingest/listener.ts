@@ -29,40 +29,41 @@ export function startMqttListener(
   brokerUrl: string,
   opts?: { username?: string; password?: string },
 ): mqtt.MqttClient {
+  let reconnectAttempts = 0
+  let reconnectTimer: ReturnType<typeof setTimeout> | null = null
+  const MAX_RECONNECT = 3
+  const BASE_DELAY_MS = 1000
+
   const mqttClient = mqtt.connect(brokerUrl, {
     username: opts?.username,
     password: opts?.password,
     clientId: `iomtea-pin-${Date.now()}`,
-    reconnectPeriod: 5000,
+    reconnectPeriod: 0,
     connectTimeout: 30000,
     keepalive: 60,
     clean: true,
   })
   client = mqttClient
 
+  const scheduleReconnect = () => {
+    const delay = Math.min(BASE_DELAY_MS * Math.pow(2, reconnectAttempts), 30000)
+    reconnectTimer = setTimeout(() => {
+      mqttClient.reconnect()
+    }, delay)
+  }
+
   mqttClient.on('connect', () => {
+    reconnectAttempts = 0
+    if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null }
     logger.info('✓ MQTT Broker 已连接')
     subscribeTopic(mqttClient, TOPIC, `√ 已订阅 PIN 数据主题: ${TOPIC}`, '✗ MQTT 主题订阅失败')
-    subscribeTopic(
-      mqttClient,
-      ADMIN_TOPIC,
-      `√ 已订阅管理主题: ${ADMIN_TOPIC}`,
-      '✗ MQTT 管理主题订阅失败',
-    )
-    subscribeTopic(
-      mqttClient,
-      DEVICE_EVENTS_TOPIC,
-      `√ 已订阅设备事件主题: ${DEVICE_EVENTS_TOPIC}`,
-      '✗ MQTT 设备事件主题订阅失败',
-    )
+    subscribeTopic(mqttClient, ADMIN_TOPIC, `√ 已订阅管理主题: ${ADMIN_TOPIC}`, '✗ MQTT 管理主题订阅失败')
+    subscribeTopic(mqttClient, DEVICE_EVENTS_TOPIC, `√ 已订阅设备事件主题: ${DEVICE_EVENTS_TOPIC}`, '✗ MQTT 设备事件主题订阅失败')
   })
 
   mqttClient.on('message', async (topic, payload) => {
-    try {
-      await routeMessage(topic, payload, mqttClient)
-    } catch (err) {
-      logger.error({ err, topic }, 'MQTT 消息路由失败')
-    }
+    try { await routeMessage(topic, payload, mqttClient) }
+    catch (err) { logger.error({ err, topic }, 'MQTT 消息路由失败') }
   })
 
   mqttClient.on('error', (err) => {
@@ -70,15 +71,16 @@ export function startMqttListener(
   })
 
   mqttClient.on('close', () => {
-    logger.warn('MQTT Broker 连接已断开，将自动重连')
-  })
-
-  mqttClient.on('reconnect', () => {
-    logger.info('MQTT 正在重连 ...')
-  })
-
-  mqttClient.on('offline', () => {
-    logger.warn('MQTT 客户端离线')
+    reconnectAttempts++
+    if (reconnectAttempts > MAX_RECONNECT) {
+      logger.warn(`MQTT 重连已达上限 (${MAX_RECONNECT} 次)，放弃连接`)
+      mqttClient.end()
+      client = null
+      return
+    }
+    const delay = Math.min(BASE_DELAY_MS * Math.pow(2, reconnectAttempts), 30000)
+    logger.warn(`MQTT 断开，${delay / 1000}s 后重连 (${reconnectAttempts}/${MAX_RECONNECT})`)
+    scheduleReconnect()
   })
 
   return mqttClient
