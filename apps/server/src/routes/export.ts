@@ -1,15 +1,16 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
-import { and, asc, desc, eq, gte, lte, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm'
 import { db } from '../core/db'
 import { events, patients } from '../core/db/schema'
 import { jwtAuth } from '../middleware/auth'
+import { requirePermission } from '../middleware/rbac'
 
 const exportApp = new OpenAPIHono()
-exportApp.use('*', jwtAuth)
 
 const previewRoute = createRoute({
   method: 'get',
   path: '/preview',
+  middleware: [jwtAuth, requirePermission('/export', 'read')] as const,
   request: {
     query: z.object({
       patientId: z.string().uuid().optional(),
@@ -59,6 +60,7 @@ exportApp.openapi(previewRoute, async (c) => {
 const downloadRoute = createRoute({
   method: 'post',
   path: '/download',
+  middleware: [jwtAuth, requirePermission('/export', 'read')] as const,
   request: {
     body: {
       content: {
@@ -83,7 +85,7 @@ exportApp.openapi(downloadRoute, async (c) => {
   if (input.patientId) conditions.push(eq(events.patientId, input.patientId))
   if (input.from) conditions.push(gte(events.recordedAt, new Date(input.from)))
   if (input.to) conditions.push(lte(events.recordedAt, new Date(input.to)))
-  if (input.metrics?.length) conditions.push(eq(events.metric, input.metrics[0]))
+  if (input.metrics?.length) conditions.push(inArray(events.metric, input.metrics))
 
   const rows = await db
     .select()
