@@ -47,8 +47,8 @@ export function PatientWall() {
   const fetchPatients = useCallback(async () => {
     setPLoading(true)
     try {
-      const data = await api.get<any[]>('/patients', { pageSize: 100, status: 'active' })
-      setPatients(data)
+      const { data } = await api.GET('/patients', { params: { query: { pageSize: 100, status: 'active' } } })
+      setPatients(data ?? [])
       setPError(false)
     } catch {
       setPError(true)
@@ -59,15 +59,15 @@ export function PatientWall() {
 
   const fetchAlerts = useCallback(async () => {
     try {
-      const data = await api.get<any[]>('/alerts', { pageSize: 100 })
-      setAlerts(data)
+      const { data } = await api.GET('/alerts', { params: { query: { pageSize: 100 } } })
+      setAlerts(data ?? [])
     } catch { /* silent */ }
   }, [])
 
   const fetchTags = useCallback(async () => {
     try {
-      const data = await api.get<any[]>('/tags')
-      setTags(data)
+      const { data } = await api.GET('/tags')
+      setTags(data ?? [])
     } catch { /* silent */ }
   }, [])
 
@@ -80,7 +80,7 @@ export function PatientWall() {
   const handleCreate = async (value: any) => {
     setCreateLoading(true)
     try {
-      await api.post('/patients', value)
+      await api.POST('/patients', { body: value })
       notifications.show({ title: '成功', message: '患者已创建', color: 'green' })
       setCreateOpen(false)
       form.reset()
@@ -96,7 +96,7 @@ export function PatientWall() {
     if (!deleteTarget) return
     setDeleteLoading(true)
     try {
-      await api.delete(`/patients/${deleteTarget}`)
+      await api.DELETE('/patients/{id}', { params: { path: { id: deleteTarget! } } })
       notifications.show({ title: '成功', message: '患者已删除', color: 'green' })
       setDeleteTarget(null)
       fetchPatients()
