@@ -21,6 +21,23 @@ import { logger } from './core/lib/logger'
 import { printBanner } from './core/lib/banner'
 import './core/pipeline/registry'
 
+// ── REST Route imports ──
+import { auth } from './routes/auth'
+import { usersApp } from './routes/users'
+import { dashboard } from './routes/dashboard'
+import { pinsApp } from './routes/pins'
+import { tagsApp } from './routes/tags'
+import { patientsApp } from './routes/patients'
+import { alertsApp } from './routes/alerts'
+import { alertRulesApp } from './routes/alertRules'
+import { ingestApp } from './routes/ingest'
+import { dataApp } from './routes/data'
+import { exportApp } from './routes/export'
+import { twinApp } from './routes/twin'
+import { homeGraphApp } from './routes/homeGraph'
+import { nodeGraphApp } from './routes/nodeGraph'
+import { openapiApp } from './routes/openapi'
+
 function resolveCorsOrigins(rawCorsOrigin: string | undefined): string[] {
   if (!rawCorsOrigin) return ['http://localhost:5173']
   return rawCorsOrigin.split(',').map((origin) => origin.trim())
@@ -49,16 +66,14 @@ if (env.JWT_SECRET === 'dev-secret-change-in-production') {
 // ============================================================
 const app = new Hono()
 
+// Global CORS
 app.use(
-  '/trpc/*',
+  '*',
   cors({
     origin: resolveCorsOrigins(env.CORS_ORIGIN),
     credentials: true,
   }),
 )
-
-app.use('/trpc/*', trpcServer({ router: appRouter, createContext }))
-app.get('/health', (c) => c.json({ status: 'ok' }))
 
 // HTTP 请求日志
 app.use(
@@ -67,6 +82,28 @@ app.use(
     logger.info(str.replace(/\s+/g, ' ').trim())
   }),
 )
+
+// ── REST API routes ──
+app.route('/openapi', openapiApp)
+app.route('/auth', auth)
+app.route('/users', usersApp)
+app.route('/dashboard', dashboard)
+app.route('/pins', pinsApp)
+app.route('/tags', tagsApp)
+app.route('/patients', patientsApp)
+app.route('/alerts', alertsApp)
+app.route('/alert-rules', alertRulesApp)
+app.route('/ingest', ingestApp)
+app.route('/data', dataApp)
+app.route('/export', exportApp)
+app.route('/twin', twinApp)
+app.route('/home-graph', homeGraphApp)
+app.route('/node-graph', nodeGraphApp)
+
+app.get('/health', (c) => c.json({ status: 'ok' }))
+
+// ── tRPC (deprecated, to be removed in Task 14) ──
+app.use('/trpc/*', trpcServer({ router: appRouter, createContext }))
 
 // ============================================================
 // 启动流程
