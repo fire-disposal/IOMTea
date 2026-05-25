@@ -13,9 +13,7 @@ import { pinRouter } from './pin'
 import { tagRouter } from './tag'
 import { userRouter } from './user'
 import { virtualPinRouter } from './virtual-pin'
-import { simulationRouter } from '../../../twin/trpc/simulation.router'
-import { twinRouter } from '../../../twin/trpc/twin.router'
-import { simRouter } from '../../../sim/router'
+import { simRouter } from '../../../modules/twin/sim-router'
 
 export const appRouter = router({
   alert: alertRouter,
@@ -30,9 +28,7 @@ export const appRouter = router({
   patient: patientRouter,
   pin: pinRouter,
   sim: simRouter,
-  simulation: simulationRouter,
   tag: tagRouter,
-  twin: twinRouter,
   user: userRouter,
   virtualPin: virtualPinRouter,
 })
