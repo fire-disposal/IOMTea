@@ -25,6 +25,7 @@
     "@tanstack/router-plugin": "^1.168.5",
     "@trpc/client": "^11.0.0",
     "@trpc/react-query": "^11.0.0",
+    "axios": "^1.16.1",
     "html-to-image": "^1.11.13",
     "openapi-fetch": "^0.17.0",
     "react": "^19.0.0",

@@ -1,18 +1,29 @@
-import createClient from 'openapi-fetch'
+import axios from 'axios'
 import type { paths } from './types'
 
-const baseUrl = 'http://localhost:3000'
+const http = axios.create({
+  baseURL: 'http://localhost:3000',
+  headers: { 'Content-Type': 'application/json' },
+})
 
-export const api = createClient<paths>({ baseUrl })
+http.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token')
+  if (token) config.headers.Authorization = `Bearer ${token}`
+  return config
+})
 
-api.use({
-  async onResponse({ response }) {
-    if (response.status === 401) {
+http.interceptors.response.use(
+  (res) => res,
+  (err) => {
+    if (err.response?.status === 401) {
       localStorage.removeItem('token')
-      const currentPath = window.location.pathname
-      if (currentPath !== '/login') {
-        window.location.href = `/login?redirect=${encodeURIComponent(currentPath)}`
+      if (window.location.pathname !== '/login') {
+        window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`
       }
     }
+    return Promise.reject(err)
   },
-})
+)
+
+export { http }
+export type { paths }

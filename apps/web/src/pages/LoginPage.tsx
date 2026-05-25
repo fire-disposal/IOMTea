@@ -2,21 +2,16 @@ import { Button, Container, Paper, PasswordInput, TextInput, Title } from '@mant
 import { notifications } from '@mantine/notifications'
 import { useState } from 'react'
 import { useForm } from '@tanstack/react-form'
-import { z } from 'zod'
+import { loginSchema } from '@iomtea/shared-types'
 import { useAuthStore } from '../store/auth'
-import { api } from '../api/client'
+import { http } from '../api/client'
 import { useNavigate } from '@tanstack/react-router'
 import classes from './LoginPage.module.css'
 
-const loginSchema = z.object({
-  username: z.string().min(2, '用户名至少 2 个字符'),
-  password: z.string().min(6, '密码至少 6 个字符'),
-})
-
-function zodCheck(schema: z.ZodType<any>) {
+function zodCheck(schema: any) {
   return ({ value }: { value: unknown }) => {
     const r = schema.safeParse(value)
-    return r.success ? undefined : r.error.errors.map((e) => e.message).join(', ')
+    return r.success ? undefined : r.error.issues.map((e: any) => e.message).join(', ')
   }
 }
 
@@ -37,7 +32,7 @@ export function LoginPage() {
   const setTokens = useAuthStore((s) => s.setTokens)
   const navigate = useNavigate()
 
-  const handleAuthSuccess = (data: { accessToken: string; refreshToken: string }) => {
+  const handleAuthSuccess = (data: { accessToken: string; refreshToken: string; user: unknown }) => {
     setTokens(data.accessToken, data.refreshToken, Date.now() + 3600000)
     notifications.show({ title: '登录成功', message: '欢迎使用 IOMTea', color: 'green' })
     const params = new URLSearchParams(window.location.search)
@@ -51,17 +46,15 @@ export function LoginPage() {
       setLoading(true)
       setError('')
       try {
-        const result = isRegister
-          ? await api.POST('/auth/register', { body: value })
-          : await api.POST('/auth/login', { body: value })
-
-        if (result.error) {
-          setError(String(result.error))
-        } else if (result.data) {
-          handleAuthSuccess(result.data)
+        const endpoint = isRegister ? '/auth/register' : '/auth/login'
+        const res = await http.post(endpoint, value)
+        if (res.data.error) {
+          setError(res.data.error)
+        } else {
+          handleAuthSuccess(res.data)
         }
-      } catch (err) {
-        setError((err as Error).message)
+      } catch (err: any) {
+        setError(err.response?.data?.error || err.message)
       } finally {
         setLoading(false)
       }
