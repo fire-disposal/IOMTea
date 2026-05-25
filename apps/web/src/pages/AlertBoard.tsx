@@ -1,104 +1,57 @@
-import {
-  ActionIcon,
-  Badge,
-  Container,
-  Group,
-  Paper,
-  SegmentedControl,
-  Text,
-  Title,
-} from '@mantine/core'
-import { IconCheck } from '@tabler/icons-react'
-import { useEffect, useState } from 'react'
-import { http } from '../api/client'
+import { Badge, Container, Group, Paper, Skeleton, Text, Title } from '@mantine/core'
+import { useGet } from '../api/hooks'
+import { usePost } from '../api/hooks'
 
 interface Alert {
   id: string
-  patientId: string
   metric: string
   value: unknown
   unit: string | null
   severity: string | null
   status: string | null
-  recordedAt: string | null
 }
 
 export function AlertBoard() {
-  const [alerts, setAlerts] = useState<Alert[]>([])
-  const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState('active')
+  const { data: alerts, isLoading, refetch } = useGet<Alert[]>('/alerts', { pageSize: 100 })
+  const acknowledge = usePost('/alerts/:id')
 
-  const fetchAlerts = () => {
-    http.get('/alerts', { params: { pageSize: 100 } }).then((res) => {
-      setAlerts(res.data as Alert[])
-      setLoading(false)
-    })
-  }
-  useEffect(() => {
-    fetchAlerts()
-  }, [])
+  const filtered = (alerts ?? []).filter((a) => a.status !== 'closed' && a.status !== 'resolved')
 
-  const filtered =
-    filter === 'all'
-      ? alerts
-      : alerts.filter((a) => a.status !== 'closed' && a.status !== 'resolved')
-
-  const handleAction = async (id: string, action: string) => {
-    try {
-      await http.patch('/alerts/' + id, { action } as any)
-      fetchAlerts()
-    } catch {
-      /* ignore */
-    }
-  }
-
-  if (loading)
+  if (isLoading)
     return (
       <Container py="md">
-        <Title order={2}>告警看板</Title>
-        <p>Loading...</p>
+        {Array.from({ length: 4 }, (_, i) => (
+          <Skeleton key={i} height={24} mb="sm" />
+        ))}
       </Container>
     )
 
   return (
     <Container py="md">
-      <Group justify="space-between" mb="md">
-        <Title order={2}>告警看板</Title>
-        <SegmentedControl
-          data={[
-            { value: 'active', label: '活跃' },
-            { value: 'all', label: '全部' },
-          ]}
-          value={filter}
-          onChange={setFilter}
-        />
-      </Group>
+      <Title order={2}>告警看板</Title>
       {filtered.map((a) => (
         <Paper key={a.id} p="sm" mb="xs" withBorder>
           <Group justify="space-between">
             <Group gap="xs">
-              <Badge
-                color={
-                  a.severity === 'critical' ? 'red' : a.severity === 'warning' ? 'yellow' : 'blue'
-                }
-                size="xs"
-              >
-                {a.severity ?? 'info'}
+              <Badge color={a.severity === 'critical' ? 'red' : 'yellow'} size="xs">
+                {a.severity}
               </Badge>
-              <Text size="sm" fw={500}>
-                {a.metric}: {String(a.value ?? '-')} {a.unit ?? ''}
+              <Text size="sm">
+                {a.metric}: {String(a.value ?? '-')} {a.unit}
               </Text>
             </Group>
             <Group gap="xs">
               {a.status === 'new' && (
-                <ActionIcon
-                  variant="light"
+                <Badge
+                  size="xs"
+                  style={{ cursor: 'pointer' }}
                   color="green"
-                  size="sm"
-                  onClick={() => handleAction(a.id, 'acknowledge')}
+                  onClick={() => {
+                    acknowledge.mutate({ id: a.id, action: 'acknowledge' } as any)
+                  }}
                 >
-                  <IconCheck size={14} />
-                </ActionIcon>
+                  确认
+                </Badge>
               )}
               <Badge size="xs" variant="light">
                 {a.status}

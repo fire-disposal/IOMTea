@@ -1,39 +1,41 @@
-import { Box, Container, Group, Paper, Select, Text, ThemeIcon, Title } from '@mantine/core'
+import {
+  Box,
+  Container,
+  Group,
+  Paper,
+  Select,
+  Skeleton,
+  Text,
+  ThemeIcon,
+  Title,
+} from '@mantine/core'
 import { IconChartLine } from '@tabler/icons-react'
-import { useEffect, useState } from 'react'
-import { http } from '../api/client'
+import { useState } from 'react'
+import { useGet } from '../api/hooks'
 
-interface MetricInfo {
+interface M {
   metric: string
   displayName: string
   unit: string
   defaultChart: string
-  category: string
 }
 
 export function DataDashboard() {
-  const [metrics, setMetrics] = useState<MetricInfo[]>([])
+  const { data: metrics } = useGet<M[]>('/data/metrics')
   const [selected, setSelected] = useState('heart_rate')
-  const [trend, setTrend] = useState<{ bucket: string; value: number }[]>([])
+  const from = new Date(Date.now() - 7 * 86400000).toISOString()
+  const { data: trend, isLoading } = useGet<{ rows: { bucket: string; value: number }[] }>(
+    '/data/aggregate',
+    {
+      patientId: '00000000-0000-0000-0000-000000000000',
+      metric: selected,
+      interval: 'day',
+      fn: 'avg',
+      from,
+    },
+  )
 
-  useEffect(() => {
-    http.get('/data/metrics').then((res) => setMetrics(res.data as MetricInfo[]))
-  }, [])
-
-  useEffect(() => {
-    if (!selected) return
-    const from = new Date(Date.now() - 7 * 86400000).toISOString()
-    http
-      .get('/data/aggregate', {
-        params: { patientId: 'dummy', metric: selected, interval: 'day', fn: 'avg', from },
-      })
-      .then((res) => {
-        setTrend((res.data as any)?.rows ?? [])
-      })
-      .catch(() => {})
-  }, [selected])
-
-  const selectedDef = metrics.find((m) => m.metric === selected)
+  const def = (metrics ?? []).find((m) => m.metric === selected)
 
   return (
     <Container py="md">
@@ -46,22 +48,26 @@ export function DataDashboard() {
         </Group>
         <Select
           size="sm"
-          data={metrics.map((m) => ({ value: m.metric, label: `${m.displayName} (${m.unit})` }))}
+          data={(metrics ?? []).map((m) => ({
+            value: m.metric,
+            label: `${m.displayName} (${m.unit})`,
+          }))}
           value={selected}
           onChange={(v) => setSelected(v ?? 'heart_rate')}
           w={200}
         />
       </Group>
       <Paper p="md" withBorder>
-        {trend.length === 0 ? (
+        {isLoading ? (
+          <Skeleton height={120} />
+        ) : !trend?.rows?.length ? (
           <Text c="dimmed" ta="center">
-            No data
+            暂无数据
           </Text>
         ) : (
           <Group gap={0} align="flex-end" h={120}>
-            {trend.map((r, i) => {
-              const maxVal = Math.max(...trend.map((t) => t.value || 0), 1)
-              const height = Math.max(4, ((r.value || 0) / maxVal) * 100)
+            {trend.rows.map((r, i) => {
+              const maxV = Math.max(...trend.rows.map((t) => t.value || 0), 1)
               return (
                 <Box
                   key={i}
@@ -80,7 +86,7 @@ export function DataDashboard() {
                   <Box
                     style={{
                       width: '80%',
-                      height: `${height}%`,
+                      height: `${Math.max(4, ((r.value || 0) / maxV) * 100)}%`,
                       backgroundColor: 'var(--mantine-color-teal-5)',
                       borderRadius: '4px 4px 0 0',
                       minHeight: 4,

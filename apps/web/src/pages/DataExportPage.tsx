@@ -1,39 +1,40 @@
-import { Button, Container, Group, Paper, Select, Table, Text, Title } from '@mantine/core'
+import {
+  Button,
+  Container,
+  Group,
+  Paper,
+  Select,
+  Skeleton,
+  Table,
+  Text,
+  Title,
+} from '@mantine/core'
 import { notifications } from '@mantine/notifications'
 import { useState } from 'react'
-import { http } from '../api/client'
+import { useGet, usePost } from '../api/hooks'
 
 export function DataExportPage() {
-  const [format, setFormat] = useState<'csv' | 'long' | 'wide'>('csv')
-  const [preview, setPreview] = useState<{
+  const [format, setFormat] = useState('csv')
+  const { data: preview, isLoading } = useGet<{
     columns: string[]
     rows: Record<string, unknown>[]
     total: number
-  } | null>(null)
-  const [exporting, setExporting] = useState(false)
+  }>('/export/preview', { limit: 20 })
+  const doExport = usePost('/export/download')
 
-  const loadPreview = async () => {
-    const res = await http.get('/export/preview', { params: { limit: 20 } })
-    setPreview(res.data as any)
-  }
-
-  const handleExport = async () => {
-    setExporting(true)
-    try {
-      const res = await http.post('/export/download', { format } as any)
-      const { data: base64, filename, mime } = res.data as any
-      const binary = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0))
-      const blob = new Blob([binary], { type: mime })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = filename
-      a.click()
-      URL.revokeObjectURL(url)
-      notifications.show({ title: '导出成功', message: filename, color: 'green' })
-    } finally {
-      setExporting(false)
-    }
+  const handleExport = () => {
+    doExport.mutate({ format } as any, {
+      onSuccess: (data: any) => {
+        const binary = Uint8Array.from(atob(data.data), (c) => c.charCodeAt(0))
+        const blob = new Blob([binary], { type: data.mime })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = data.filename
+        a.click()
+        URL.revokeObjectURL(url)
+      },
+    })
   }
 
   return (
@@ -44,50 +45,48 @@ export function DataExportPage() {
       <Paper p="md" withBorder mb="md">
         <Group mb="md">
           <Select
-            label="导出格式"
+            label="格式"
             data={[
-              { value: 'csv', label: 'CSV (扁平表)' },
-              { value: 'long', label: 'Long (Tidy Data)' },
-              { value: 'wide', label: 'Wide (SPSS 重复测量)' },
+              { value: 'csv', label: 'CSV' },
+              { value: 'long', label: 'Long' },
+              { value: 'wide', label: 'Wide' },
             ]}
             value={format}
-            onChange={(v) => setFormat(v as any)}
+            onChange={(v) => setFormat(v ?? 'csv')}
           />
         </Group>
-        <Group>
-          <Button variant="light" onClick={loadPreview}>
-            预览
-          </Button>
-          <Button loading={exporting} onClick={handleExport}>
-            导出 {format.toUpperCase()}
-          </Button>
-        </Group>
+        <Button loading={doExport.isPending} onClick={handleExport}>
+          导出 {format.toUpperCase()}
+        </Button>
       </Paper>
-
-      {preview && (
-        <Paper p="md" withBorder>
-          <Text size="sm" mb="sm">
-            预览 ({preview.total} 条记录)
-          </Text>
-          <Table striped stickyHeader>
-            <Table.Thead>
-              <Table.Tr>
-                {preview.columns.map((c) => (
-                  <Table.Th key={c}>{c}</Table.Th>
-                ))}
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {preview.rows.map((row, i) => (
-                <Table.Tr key={i}>
+      {isLoading ? (
+        <Skeleton height={100} />
+      ) : (
+        preview && (
+          <Paper p="md" withBorder>
+            <Text size="sm" mb="sm">
+              预览 ({preview.total} 条)
+            </Text>
+            <Table striped>
+              <Table.Thead>
+                <Table.Tr>
                   {preview.columns.map((c) => (
-                    <Table.Td key={c}>{String(row[c] ?? '-')}</Table.Td>
+                    <Table.Th key={c}>{c}</Table.Th>
                   ))}
                 </Table.Tr>
-              ))}
-            </Table.Tbody>
-          </Table>
-        </Paper>
+              </Table.Thead>
+              <Table.Tbody>
+                {preview.rows.map((r, i) => (
+                  <Table.Tr key={i}>
+                    {preview.columns.map((c) => (
+                      <Table.Td key={c}>{String(r[c] ?? '-')}</Table.Td>
+                    ))}
+                  </Table.Tr>
+                ))}
+              </Table.Tbody>
+            </Table>
+          </Paper>
+        )
       )}
     </Container>
   )

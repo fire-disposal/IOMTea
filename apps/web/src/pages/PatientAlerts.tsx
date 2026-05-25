@@ -1,16 +1,5 @@
-import {
-  ActionIcon,
-  Badge,
-  Container,
-  Group,
-  Paper,
-  SegmentedControl,
-  Skeleton,
-  Text,
-} from '@mantine/core'
-import { IconCheck } from '@tabler/icons-react'
-import { useEffect, useState } from 'react'
-import { http } from '../api/client'
+import { Badge, Container, Group, Paper, SegmentedControl, Skeleton, Text } from '@mantine/core'
+import { useGet, usePatch } from '../api/hooks'
 
 interface A {
   id: string
@@ -26,28 +15,9 @@ function parseId() {
 
 export function PatientAlerts() {
   const pid = parseId()
-  const [alerts, setAlerts] = useState<A[]>([])
-  const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState('active')
+  const { data: alerts, isLoading } = useGet<A[]>('/alerts', { patientId: pid, pageSize: 100 })
 
-  const fetch = () => {
-    http.get('/alerts', { params: { patientId: pid, pageSize: 100 } }).then((r) => {
-      setAlerts(r.data as A[])
-      setLoading(false)
-    })
-  }
-  useEffect(() => {
-    fetch()
-  }, [pid])
-
-  const filtered =
-    filter === 'all'
-      ? alerts
-      : alerts.filter((a) => a.status !== 'closed' && a.status !== 'resolved')
-  const act = (id: string, action: string) =>
-    http.patch('/alerts/' + id, { action } as any).then(fetch)
-
-  if (loading)
+  if (isLoading)
     return (
       <Container py="md">
         {Array.from({ length: 4 }, (_, i) => (
@@ -57,46 +27,26 @@ export function PatientAlerts() {
     )
 
   return (
-    <div>
-      <Group justify="space-between" mb="md">
-        <SegmentedControl
-          data={[
-            { value: 'active', label: '活跃' },
-            { value: 'all', label: '全部' },
-          ]}
-          value={filter}
-          onChange={setFilter}
-        />
-      </Group>
-      {filtered.map((a) => (
-        <Paper key={a.id} p="sm" mb="xs" withBorder>
-          <Group justify="space-between">
-            <Group gap="xs">
-              <Badge color={a.severity === 'critical' ? 'red' : 'yellow'} size="xs">
-                {a.severity}
-              </Badge>
-              <Text size="sm" fw={500}>
-                {a.metric}: {String(a.value ?? '-')} {a.unit}
-              </Text>
-            </Group>
-            <Group gap="xs">
-              {a.status === 'new' && (
-                <ActionIcon
-                  variant="light"
-                  color="green"
-                  size="sm"
-                  onClick={() => act(a.id, 'acknowledge')}
-                >
-                  <IconCheck size={14} />
-                </ActionIcon>
-              )}
+    <Container py="md">
+      {(alerts ?? [])
+        .filter((a) => a.status !== 'closed')
+        .map((a) => (
+          <Paper key={a.id} p="sm" mb="xs" withBorder>
+            <Group justify="space-between">
+              <Group gap="xs">
+                <Badge color={a.severity === 'critical' ? 'red' : 'yellow'} size="xs">
+                  {a.severity}
+                </Badge>
+                <Text size="sm">
+                  {a.metric}: {String(a.value ?? '-')} {a.unit}
+                </Text>
+              </Group>
               <Badge size="xs" variant="light">
                 {a.status}
               </Badge>
             </Group>
-          </Group>
-        </Paper>
-      ))}
-    </div>
+          </Paper>
+        ))}
+    </Container>
   )
 }

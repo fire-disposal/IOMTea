@@ -1,6 +1,6 @@
 import { Box, Container, Group, Paper, Select, Skeleton, Text } from '@mantine/core'
-import { useEffect, useState } from 'react'
-import { http } from '../api/client'
+import { useState } from 'react'
+import { useGet } from '../api/hooks'
 
 interface M {
   metric: string
@@ -13,33 +13,14 @@ function parseId() {
 
 export function HealthTimeline() {
   const pid = parseId()
-  const [metrics, setMetrics] = useState<M[]>([])
+  const { data: metrics } = useGet<M[]>('/data/metrics')
   const [selected, setSelected] = useState('heart_rate')
-  const [trend, setTrend] = useState<{ recordedAt: number; numericValue: number }[]>([])
-  const [loading, setLoading] = useState(true)
+  const from = new Date(Date.now() - 7 * 86400000).toISOString()
+  const { data: trend, isLoading } = useGet<{
+    rows: { recordedAt: number; numericValue: number }[]
+  }>('/data/raw', { patientId: pid, metric: selected, from, limit: 200 })
 
-  useEffect(() => {
-    http.get('/data/metrics').then((r) => {
-      setMetrics(r.data as M[])
-      setLoading(false)
-    })
-  }, [])
-
-  useEffect(() => {
-    if (!selected) return
-    http
-      .get('/data/raw', {
-        params: {
-          patientId: pid,
-          metric: selected,
-          from: new Date(Date.now() - 7 * 86400000).toISOString(),
-          limit: 200,
-        },
-      })
-      .then((r) => setTrend((r.data as any).rows ?? []))
-  }, [pid, selected])
-
-  if (loading)
+  if (isLoading)
     return (
       <Container py="md">
         {Array.from({ length: 3 }, (_, i) => (
@@ -49,25 +30,28 @@ export function HealthTimeline() {
     )
 
   return (
-    <div>
+    <Container py="md">
       <Group justify="space-between" mb="md">
         <Select
           size="sm"
-          data={metrics.map((m) => ({ value: m.metric, label: `${m.displayName} (${m.unit})` }))}
+          data={(metrics ?? []).map((m) => ({
+            value: m.metric,
+            label: `${m.displayName} (${m.unit})`,
+          }))}
           value={selected}
           onChange={(v) => setSelected(v ?? 'heart_rate')}
           w={200}
         />
       </Group>
       <Paper p="md" withBorder>
-        {trend.length === 0 ? (
+        {!trend?.rows?.length ? (
           <Text c="dimmed" ta="center">
             暂无数据
           </Text>
         ) : (
           <Group gap={0} align="flex-end" h={120}>
-            {trend.map((r, i) => {
-              const maxV = Math.max(...trend.map((t) => t.numericValue || 0), 1)
+            {trend.rows.map((r, i) => {
+              const maxV = Math.max(...trend.rows.map((t) => t.numericValue || 0), 1)
               return (
                 <Box
                   key={i}
@@ -98,6 +82,6 @@ export function HealthTimeline() {
           </Group>
         )}
       </Paper>
-    </div>
+    </Container>
   )
 }

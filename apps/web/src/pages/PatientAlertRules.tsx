@@ -1,6 +1,8 @@
 import { Button, Container, Group, NumberInput, Paper, Skeleton, Switch } from '@mantine/core'
+import { notifications } from '@mantine/notifications'
 import { useEffect, useState } from 'react'
 import { http } from '../api/client'
+import { useGet } from '../api/hooks'
 
 interface R {
   metric: string
@@ -16,35 +18,14 @@ function parseId() {
 
 export function PatientAlertRules() {
   const pid = parseId()
-  const [rules, setRules] = useState<R[]>([])
-  const [loading, setLoading] = useState(true)
+  const {
+    data: rules,
+    isLoading,
+    refetch,
+  } = useGet<R[]>(`/alert-rules/patients/${pid}/alert-rules`)
   const [saving, setSaving] = useState(false)
 
-  useEffect(() => {
-    http.get('/alert-rules/patients/' + pid + '/alert-rules').then((r) => {
-      setRules(r.data as R[])
-      setLoading(false)
-    })
-  }, [pid])
-
-  const toggle = (i: number) => {
-    const n = [...rules]
-    n[i].enabled = !n[i].enabled
-    setRules(n)
-  }
-  const upd = (i: number, f: string, v: string | number) => {
-    const n = [...rules]
-    ;(n[i] as any)[f] = v
-    setRules(n)
-  }
-  const save = () => {
-    setSaving(true)
-    http
-      .put('/alert-rules/patients/' + pid + '/alert-rules', { rules } as any)
-      .finally(() => setSaving(false))
-  }
-
-  if (loading)
+  if (isLoading || !rules)
     return (
       <Container py="md">
         {Array.from({ length: 4 }, (_, i) => (
@@ -53,44 +34,59 @@ export function PatientAlertRules() {
       </Container>
     )
 
+  const toggle = (i: number) => {
+    const n = [...rules]
+    n[i].enabled = !n[i].enabled
+  }
+  const save = async () => {
+    setSaving(true)
+    try {
+      await http.put(`/alert-rules/patients/${pid}/alert-rules`, { rules } as any)
+      notifications.show({ title: '已保存', color: 'green', message: '' as any })
+      refetch()
+    } catch {
+    } finally {
+      setSaving(false)
+    }
+  }
+
   return (
-    <div>
+    <Container py="md">
       <Group justify="flex-end" mb="md">
         <Button loading={saving} onClick={save}>
-          保存阈值
+          保存
         </Button>
       </Group>
       {rules.map((r, i) => (
         <Paper key={r.metric} p="sm" mb="xs" withBorder>
-          <Group justify="space-between" mb="xs">
-            <Group gap="xs">
-              <Switch checked={r.enabled} onChange={() => toggle(i)} />
-              <span style={{ fontWeight: 500 }}>
-                {r.label || r.metric}{' '}
-                {r.unit && <small style={{ color: '#868e96' }}>({r.unit})</small>}
-              </span>
-            </Group>
+          <Group gap="xs" mb="xs">
+            <Switch checked={r.enabled} onChange={() => toggle(i)} />
+            <span>{r.label || r.metric}</span>
           </Group>
           {r.enabled && (
             <Group>
               <NumberInput
                 size="xs"
-                label="最小值"
+                label="Min"
                 w={100}
                 value={r.min ?? ''}
-                onChange={(v) => upd(i, 'min', Number(v))}
+                onChange={(v) => {
+                  rules[i].min = Number(v)
+                }}
               />
               <NumberInput
                 size="xs"
-                label="最大值"
+                label="Max"
                 w={100}
                 value={r.max ?? ''}
-                onChange={(v) => upd(i, 'max', Number(v))}
+                onChange={(v) => {
+                  rules[i].max = Number(v)
+                }}
               />
             </Group>
           )}
         </Paper>
       ))}
-    </div>
+    </Container>
   )
 }

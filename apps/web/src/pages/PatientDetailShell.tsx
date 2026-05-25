@@ -17,8 +17,7 @@ import {
   IconUser,
 } from '@tabler/icons-react'
 import { Outlet, useNavigate, useRouterState } from '@tanstack/react-router'
-import { useEffect, useState } from 'react'
-import { http } from '../api/client'
+import { useGet } from '../api/hooks'
 
 interface Patient {
   id: string
@@ -39,35 +38,18 @@ interface LatestItem {
   recordedAt: number | null
 }
 
-function parsePatientId(): string {
+function parseId() {
   return window.location.pathname.split('/patients/')[1]?.split('/')[0] || ''
 }
 
-export function PatientDetailShell({ children }: { children?: React.ReactNode }) {
-  const patientId = parsePatientId()
-  const [patient, setPatient] = useState<Patient | null>(null)
-  const [latest, setLatest] = useState<LatestItem[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+export function PatientDetailShell() {
+  const pid = parseId()
+  const { data: patient, isLoading: pLoading } = useGet<Patient>(`/patients/${pid}`)
+  const { data: latest } = useGet<LatestItem[]>('/data/latest', { patientId: pid })
   const navigate = useNavigate()
   const pathname = useRouterState({ select: (s) => s.location.pathname })
 
-  useEffect(() => {
-    if (!patientId) return
-    setLoading(true)
-    Promise.all([
-      http.get('/patients/' + patientId),
-      http.get('/data/latest', { params: { patientId } }),
-    ])
-      .then(([pRes, dRes]) => {
-        setPatient(pRes.data as Patient)
-        setLatest(dRes.data as LatestItem[])
-      })
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false))
-  }, [patientId])
-
-  const tabValue = pathname.includes('/profile')
+  const tab = pathname.includes('/profile')
     ? 'profile'
     : pathname.includes('/alerts')
       ? 'alerts'
@@ -77,7 +59,7 @@ export function PatientDetailShell({ children }: { children?: React.ReactNode })
           ? 'timeline'
           : 'overview'
 
-  if (loading)
+  if (pLoading || !patient)
     return (
       <Container py="md">
         {Array.from({ length: 5 }, (_, i) => (
@@ -85,24 +67,13 @@ export function PatientDetailShell({ children }: { children?: React.ReactNode })
         ))}
       </Container>
     )
-  if (error || !patient)
-    return (
-      <Container py="md">
-        <Paper p="xl" withBorder ta="center">
-          <Text c="red">{error || '未找到患者'}</Text>
-        </Paper>
-      </Container>
-    )
 
   return (
     <Container py="md">
       <Group justify="space-between" mb="md">
         <Title order={2}>{patient.name}</Title>
-        <Badge size="lg" color={patient.status === 'active' ? 'teal' : 'gray'}>
-          {patient.status}
-        </Badge>
+        <Badge size="lg">{patient.status}</Badge>
       </Group>
-
       <SimpleGrid cols={{ base: 2, sm: 4 }} mb="md">
         <Paper p="xs" withBorder>
           <Text size="xs" c="dimmed">
@@ -118,23 +89,19 @@ export function PatientDetailShell({ children }: { children?: React.ReactNode })
         </Paper>
         <Paper p="xs" withBorder>
           <Text size="xs" c="dimmed">
-            身高/体重
+            血型
           </Text>
-          <Text>
-            {patient.heightCm ? patient.heightCm + 'cm / ' : ''}
-            {patient.weightKg ? patient.weightKg + 'kg' : '-'}
-          </Text>
+          <Text>{patient.bloodType ?? '-'}</Text>
         </Paper>
         <Paper p="xs" withBorder>
           <Text size="xs" c="dimmed">
-            血型/电话
+            电话
           </Text>
-          <Text>{[patient.bloodType, patient.phone].filter(Boolean).join(' / ') || '-'}</Text>
+          <Text>{patient.phone ?? '-'}</Text>
         </Paper>
       </SimpleGrid>
-
       <SimpleGrid cols={{ base: 2, sm: 4 }} mb="md">
-        {latest.slice(0, 4).map((m) => (
+        {(latest ?? []).slice(0, 4).map((m) => (
           <Paper key={m.metric} p="xs" withBorder>
             <Text size="xs" c="dimmed">
               {m.metric}
@@ -145,20 +112,18 @@ export function PatientDetailShell({ children }: { children?: React.ReactNode })
           </Paper>
         ))}
       </SimpleGrid>
-
       <Tabs
-        value={tabValue}
+        value={tab}
         onChange={(v) => {
           if (!v) return
-          const base = '/patients/' + patientId
           const map: Record<string, string> = {
-            overview: base,
-            profile: base + '/profile',
-            alerts: base + '/alerts',
-            rules: base + '/alert-rules',
-            timeline: base + '/health-timeline',
+            overview: `/patients/${pid}`,
+            profile: `/patients/${pid}/profile`,
+            alerts: `/patients/${pid}/alerts`,
+            rules: `/patients/${pid}/alert-rules`,
+            timeline: `/patients/${pid}/health-timeline`,
           }
-          navigate({ to: map[v] || base })
+          navigate({ to: map[v] || `/patients/${pid}` })
         }}
       >
         <Tabs.List>
@@ -179,8 +144,7 @@ export function PatientDetailShell({ children }: { children?: React.ReactNode })
           </Tabs.Tab>
         </Tabs.List>
       </Tabs>
-
-      {children || <Outlet />}
+      <Outlet />
     </Container>
   )
 }

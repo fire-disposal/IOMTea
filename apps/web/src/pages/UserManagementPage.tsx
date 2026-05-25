@@ -1,6 +1,5 @@
-import { Button, Container, Group, Modal, Table, TextInput, Title } from '@mantine/core'
-import { useEffect, useState } from 'react'
-import { http } from '../api/client'
+import { Container, Skeleton, Table, Title } from '@mantine/core'
+import { useGet } from '../api/hooks'
 
 interface User {
   id: string
@@ -13,24 +12,14 @@ interface User {
 }
 
 export function UserManagementPage() {
-  const [users, setUsers] = useState<User[]>([])
-  const [loading, setLoading] = useState(true)
+  const { data: users, isLoading } = useGet<User[]>('/users')
 
-  const fetchUsers = () => {
-    http.get('/users').then((res) => {
-      setUsers(res.data as User[])
-      setLoading(false)
-    })
-  }
-  useEffect(() => {
-    fetchUsers()
-  }, [])
-
-  if (loading)
+  if (isLoading)
     return (
       <Container py="md">
-        <Title order={2}>用户管理</Title>
-        <p>Loading...</p>
+        {Array.from({ length: 4 }, (_, i) => (
+          <Skeleton key={i} height={24} mb="sm" />
+        ))}
       </Container>
     )
 
@@ -49,7 +38,7 @@ export function UserManagementPage() {
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
-          {users.map((u) => (
+          {(users ?? []).map((u) => (
             <Table.Tr key={u.id}>
               <Table.Td>{u.username}</Table.Td>
               <Table.Td>{u.displayName ?? '-'}</Table.Td>

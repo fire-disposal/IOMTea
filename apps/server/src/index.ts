@@ -110,25 +110,27 @@ app.get('/docs', swaggerUI({ url: '/openapi.json' }))
 app.get('/health', (c) => c.json({ status: 'ok' }))
 
 // Root: API info
-app.get('/', (c) => c.json({
-  name: 'IOMTea API',
-  version: '2.0.0',
-  docs: `/docs`,
-  openapi: `/openapi.json`,
-  health: `/health`,
-  endpoints: {
-    auth: '/auth',
-    users: '/users',
-    dashboard: '/dashboard',
-    patients: '/patients',
-    alerts: '/alerts',
-    pins: '/pins',
-    data: '/data',
-    ingest: '/ingest',
-    export: '/export',
-    twin: '/twin',
-  },
-}))
+app.get('/', (c) =>
+  c.json({
+    name: 'IOMTea API',
+    version: '2.0.0',
+    docs: `/docs`,
+    openapi: `/openapi.json`,
+    health: `/health`,
+    endpoints: {
+      auth: '/auth',
+      users: '/users',
+      dashboard: '/dashboard',
+      patients: '/patients',
+      alerts: '/alerts',
+      pins: '/pins',
+      data: '/data',
+      ingest: '/ingest',
+      export: '/export',
+      twin: '/twin',
+    },
+  }),
+)
 
 // ============================================================
 // 启动流程

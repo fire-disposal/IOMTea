@@ -1,8 +1,7 @@
-import { ActionIcon, Badge, Container, Group, Table, Text, Title } from '@mantine/core'
+import { ActionIcon, Badge, Container, Skeleton, Table, Title } from '@mantine/core'
 import { IconEye } from '@tabler/icons-react'
 import { useNavigate } from '@tanstack/react-router'
-import { useEffect, useState } from 'react'
-import { http } from '../api/client'
+import { useGet } from '../api/hooks'
 
 interface Patient {
   id: string
@@ -10,26 +9,18 @@ interface Patient {
   gender: string | null
   status: string
   phone: string | null
-  birthDate: string | null
 }
 
 export function PatientWall() {
-  const [patients, setPatients] = useState<Patient[]>([])
-  const [loading, setLoading] = useState(true)
+  const { data: patients, isLoading } = useGet<Patient[]>('/patients')
   const navigate = useNavigate()
 
-  useEffect(() => {
-    http.get('/patients').then((res) => {
-      setPatients(res.data as Patient[])
-      setLoading(false)
-    })
-  }, [])
-
-  if (loading)
+  if (isLoading)
     return (
       <Container py="md">
-        <Title order={2}>患者管理</Title>
-        <p>Loading...</p>
+        {Array.from({ length: 5 }, (_, i) => (
+          <Skeleton key={i} height={24} mb="sm" />
+        ))}
       </Container>
     )
 
@@ -44,19 +35,17 @@ export function PatientWall() {
             <Table.Th>姓名</Table.Th>
             <Table.Th>性别</Table.Th>
             <Table.Th>状态</Table.Th>
-            <Table.Th>电话</Table.Th>
             <Table.Th>操作</Table.Th>
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
-          {patients.map((p) => (
+          {(patients ?? []).map((p) => (
             <Table.Tr key={p.id}>
               <Table.Td>{p.name}</Table.Td>
               <Table.Td>{p.gender ?? '-'}</Table.Td>
               <Table.Td>
                 <Badge size="xs">{p.status}</Badge>
               </Table.Td>
-              <Table.Td>{p.phone ?? '-'}</Table.Td>
               <Table.Td>
                 <ActionIcon variant="light" onClick={() => navigate({ to: '/patients/' + p.id })}>
                   <IconEye size={14} />

@@ -1,14 +1,13 @@
-import { Group, Paper, SimpleGrid, Text, ThemeIcon, Title } from '@mantine/core'
+import { Group, Paper, SimpleGrid, Skeleton, Text, ThemeIcon, Title } from '@mantine/core'
 import { IconAlertTriangle, IconAmbulance, IconUsers } from '@tabler/icons-react'
-import { useEffect, useState } from 'react'
-import { http } from '../api/client'
+import { useGet } from '../api/hooks'
 
 function StatCard({
   label,
   value,
   color,
   icon,
-}: { label: string; value: number; color: string; icon: React.ReactNode }) {
+}: { label: string; value: number | string; color: string; icon: React.ReactNode }) {
   return (
     <Paper p="md" withBorder>
       <Group gap="xs" mb={4}>
@@ -27,23 +26,19 @@ function StatCard({
 }
 
 export function DashboardPage() {
-  const [data, setData] = useState({ patientCount: 0, activeAlerts24h: 0, criticalAlerts: 0 })
-  const [loading, setLoading] = useState(true)
+  const { data, isLoading } = useGet<{
+    patientCount: number
+    activeAlerts24h: number
+    criticalAlerts: number
+  }>('/dashboard/summary')
 
-  useEffect(() => {
-    http
-      .get('/dashboard/summary')
-      .then((res) => {
-        setData(res.data)
-      })
-      .finally(() => setLoading(false))
-  }, [])
-
-  if (loading)
+  if (isLoading)
     return (
-      <Text p="md" c="dimmed">
-        Loading...
-      </Text>
+      <div style={{ padding: 24 }}>
+        {Array.from({ length: 3 }, (_, i) => (
+          <Skeleton key={i} height={60} mb="sm" />
+        ))}
+      </div>
     )
 
   return (
@@ -54,19 +49,19 @@ export function DashboardPage() {
       <SimpleGrid cols={{ base: 1, sm: 3 }}>
         <StatCard
           label="在管患者"
-          value={data.patientCount}
+          value={data?.patientCount ?? 0}
           color="teal"
           icon={<IconUsers size={14} />}
         />
         <StatCard
           label="24h 活跃告警"
-          value={data.activeAlerts24h}
+          value={data?.activeAlerts24h ?? 0}
           color="orange"
           icon={<IconAlertTriangle size={14} />}
         />
         <StatCard
           label="严重告警"
-          value={data.criticalAlerts}
+          value={data?.criticalAlerts ?? 0}
           color="red"
           icon={<IconAmbulance size={14} />}
         />

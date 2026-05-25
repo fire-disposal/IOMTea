@@ -4,14 +4,14 @@ import {
   Button,
   Container,
   Group,
-  Modal,
+  Skeleton,
   Table,
   TextInput,
   Title,
 } from '@mantine/core'
 import { IconPlus, IconTrash } from '@tabler/icons-react'
-import { useEffect, useState } from 'react'
-import { http } from '../api/client'
+import { useState } from 'react'
+import { useDelete, useGet, usePost } from '../api/hooks'
 
 interface Pin {
   pin: string
@@ -21,36 +21,17 @@ interface Pin {
 }
 
 export function PinManagementPage() {
-  const [pins, setPins] = useState<Pin[]>([])
-  const [loading, setLoading] = useState(true)
-  const [newLabel, setNewLabel] = useState('')
+  const { data: pins, isLoading, refetch } = useGet<Pin[]>('/pins')
+  const createPin = usePost('/pins', ['pins'])
+  const deletePin = useDelete('/pins', ['pins'])
+  const [label, setLabel] = useState('')
 
-  const fetchPins = () => {
-    http.get('/pins').then((r) => {
-      setPins(r.data as Pin[])
-      setLoading(false)
-    })
-  }
-  useEffect(() => {
-    fetchPins()
-  }, [])
-
-  const createPin = async () => {
-    await http.post('/pins', { userId: 'dummy', type: 'virtual', label: newLabel } as any)
-    setNewLabel('')
-    fetchPins()
-  }
-
-  const revokePin = async (code: string) => {
-    await http.delete('/pins/' + code)
-    fetchPins()
-  }
-
-  if (loading)
+  if (isLoading)
     return (
       <Container py="md">
-        <Title order={2}>PIN 管理</Title>
-        <p>Loading...</p>
+        {Array.from({ length: 3 }, (_, i) => (
+          <Skeleton key={i} height={24} mb="sm" />
+        ))}
       </Container>
     )
 
@@ -62,10 +43,17 @@ export function PinManagementPage() {
           <TextInput
             size="xs"
             placeholder="标签"
-            value={newLabel}
-            onChange={(e) => setNewLabel(e.currentTarget.value)}
+            value={label}
+            onChange={(e) => setLabel(e.currentTarget.value)}
           />
-          <Button size="xs" leftSection={<IconPlus size={12} />} onClick={createPin}>
+          <Button
+            size="xs"
+            leftSection={<IconPlus size={12} />}
+            onClick={() => {
+              createPin.mutate({ userId: 'dummy', type: 'virtual', label } as any)
+              setLabel('')
+            }}
+          >
             新建
           </Button>
         </Group>
@@ -80,7 +68,7 @@ export function PinManagementPage() {
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
-          {pins.map((p) => (
+          {(pins ?? []).map((p) => (
             <Table.Tr key={p.pin}>
               <Table.Td>
                 <Badge variant="light">{p.pin}</Badge>
@@ -88,7 +76,7 @@ export function PinManagementPage() {
               <Table.Td>{p.type}</Table.Td>
               <Table.Td>{p.label ?? '-'}</Table.Td>
               <Table.Td>
-                <ActionIcon variant="light" color="red" onClick={() => revokePin(p.pin)}>
+                <ActionIcon variant="light" color="red" onClick={() => deletePin.mutate(p.pin)}>
                   <IconTrash size={14} />
                 </ActionIcon>
               </Table.Td>
