@@ -4,11 +4,23 @@ import { eq } from 'drizzle-orm'
 import { db } from '../core/db'
 import { patients } from '../core/db/schema'
 import { jwtAuth } from '../middleware/auth'
+import { requirePermission } from '../middleware/rbac'
+import { listMetrics } from '../core/pipeline/registry'
 
-const DEFAULT_THRESHOLDS: Record<
-  string,
-  { metric: string; min?: number; max?: number; enabled?: boolean; label?: string; unit?: string }[]
-> = {}
+function getDefaultThresholds(): {
+  metric: string; min?: number; max?: number; enabled: boolean; label: string; unit: string
+}[] {
+  return listMetrics()
+    .filter((m) => m.normalRange)
+    .map((m) => ({
+      metric: m.metric,
+      label: m.displayName,
+      unit: m.unit,
+      min: m.normalRange!.min,
+      max: m.normalRange!.max,
+      enabled: true,
+    }))
+}
 
 const ruleSchema = z.object({
   metric: z.string(),
@@ -25,6 +37,7 @@ alertRulesApp.use('*', jwtAuth)
 const getRulesRoute = createRoute({
   method: 'get',
   path: '/patients/:id/alert-rules',
+  middleware: [jwtAuth, requirePermission('/alert-rules', 'write')] as const,
   responses: {
     200: {
       content: { 'application/json': { schema: z.array(z.unknown()) } },
@@ -46,12 +59,8 @@ alertRulesApp.openapi(getRulesRoute, async (c) => {
 
   const tags = (patient.tags as Record<string, unknown>) || {}
   const customThresholds = (tags.customThresholds as any[]) || []
-  const profileId = (tags.profileId as string) || ''
 
-  const defaults =
-    profileId && profileId in DEFAULT_THRESHOLDS
-      ? DEFAULT_THRESHOLDS[profileId as keyof typeof DEFAULT_THRESHOLDS]
-      : []
+  const defaults = getDefaultThresholds()
 
   const merged = defaults.map((d: any) => {
     const custom = customThresholds.find((c: any) => c.metric === d.metric)
@@ -64,6 +73,7 @@ alertRulesApp.openapi(getRulesRoute, async (c) => {
 const upsertRulesRoute = createRoute({
   method: 'put',
   path: '/patients/:id/alert-rules',
+  middleware: [jwtAuth, requirePermission('/alert-rules', 'write')] as const,
   request: {
     body: {
       content: {
