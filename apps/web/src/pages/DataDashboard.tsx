@@ -1,8 +1,9 @@
-import { Badge, Box, Group, Paper, SimpleGrid, Text, ThemeIcon, Title } from '@mantine/core'
+import { Badge, Box, Group, Paper, Select, SimpleGrid, Text, ThemeIcon, Title } from '@mantine/core'
 import { AccentPaper } from '../components/shared/AccentPaper'
-import { IconAlertTriangle, IconUsers } from '@tabler/icons-react'
+import { IconAlertTriangle, IconUsers, IconChartLine } from '@tabler/icons-react'
 import { trpc } from '../trpc'
 import { StateSkeleton, StateError } from '../components/shared/StateComponents'
+import { useState } from 'react'
 
 function StatCard({
   label,
@@ -30,6 +31,21 @@ function StatCard({
 export function DataDashboard() {
   const patients = trpc.patient.list.useQuery({ pageSize: 100, status: 'active' })
   const alerts = trpc.alert.list.useQuery({ pageSize: 50 }, { refetchInterval: 10000 })
+  const { data: metrics } = trpc.data.metrics.useQuery()
+  const [selectedMetric, setSelectedMetric] = useState<string>('heart_rate')
+
+  const { data: trendData, isLoading: trendLoading } = trpc.data.aggregate.useQuery(
+    {
+      patientId: (patients.data?.[0] as any)?.id ?? '',
+      metric: selectedMetric,
+      interval: 'day' as const,
+      fn: 'avg' as const,
+      from: new Date(Date.now() - 7 * 86400000).toISOString(),
+    },
+    { enabled: !!patients.data?.length },
+  )
+
+  const selectedDef = metrics?.find((m: any) => m.metric === selectedMetric)
 
   const isLoading = patients.isLoading || alerts.isLoading
   const isError = patients.isError || alerts.isError
@@ -88,6 +104,70 @@ export function DataDashboard() {
           icon={<IconAlertTriangle size={14} />}
         />
       </SimpleGrid>
+
+      <Paper p="md" withBorder mb="md">
+        <Group justify="space-between" mb="sm">
+          <Group gap="xs">
+            <ThemeIcon size="sm" variant="light">
+              <IconChartLine size={14} />
+            </ThemeIcon>
+            <Text size="sm" fw={600}>
+              指标趋势
+            </Text>
+          </Group>
+          <Select
+            size="xs"
+            data={(metrics ?? []).map((m: any) => ({
+              value: m.metric,
+              label: `${m.displayName} (${m.unit})`,
+            }))}
+            value={selectedMetric}
+            onChange={(v) => setSelectedMetric(v ?? 'heart_rate')}
+            w={200}
+          />
+        </Group>
+        {trendLoading ? (
+          <StateSkeleton variant="chart" />
+        ) : !trendData?.rows?.length ? (
+          <Text size="sm" c="dimmed" ta="center" py="md">
+            暂无数据
+          </Text>
+        ) : (
+          <Box>
+            <Group gap={0} align="flex-end" h={120}>
+              {(trendData.rows as any[]).map((row: any, i: number) => {
+                const maxVal = Math.max(...(trendData.rows as any[]).map((r: any) => r.value || 0), 1)
+                const height = Math.max(4, ((row.value || 0) / maxVal) * 100)
+                return (
+                  <Box key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', height: '100%' }}>
+                    <Text size="xs" c="dimmed" mb={2}>
+                      {row.value?.toFixed?.(1) ?? '-'}
+                    </Text>
+                    <Box
+                      style={{
+                        width: '80%',
+                        height: `${height}%`,
+                        backgroundColor: 'var(--mantine-color-teal-5)',
+                        borderRadius: '4px 4px 0 0',
+                        minHeight: 4,
+                        transition: 'height 0.3s ease',
+                      }}
+                    />
+                  </Box>
+                )
+              })}
+            </Group>
+            <Group justify="space-between" mt={4}>
+              <Text size="xs" c="dimmed">
+                {new Date(Date.now() - 7 * 86400000).toLocaleDateString('zh-CN')}
+              </Text>
+              <Text size="xs" c="dimmed">
+                {new Date().toLocaleDateString('zh-CN')}
+              </Text>
+            </Group>
+          </Box>
+        )}
+      </Paper>
 
       <SimpleGrid cols={{ base: 1, lg: 2 }} mb="md">
         <Paper p="md" withBorder>
