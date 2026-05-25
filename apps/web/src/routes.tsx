@@ -3,23 +3,22 @@ import { RootLayout } from './routes/__root'
 import { AuthLayout, authBeforeLoad } from './routes/_auth'
 import { LoginPage } from './pages/LoginPage'
 import { DashboardPage } from './pages/DashboardPage'
-import { PatientWall } from './pages/PatientWall'
-import { AlertBoard } from './pages/AlertBoard'
-import { GlobalMedications } from './pages/GlobalMedications'
 import { DataDashboard } from './pages/DataDashboard'
-import { DataExportPage } from './routes/_auth.data-export'
-import { SimPage } from './routes/_auth.simulation'
+import { DataExportPage } from './pages/DataExportPage'
 import { PinManagementPage } from './pages/PinManagementPage'
-import { DeviceListPage } from './pages/DeviceListPage'
 import { UserManagementPage } from './pages/UserManagementPage'
-import { PatientDetailShell } from './pages/PatientDetailShell'
-import { PatientOverview } from './pages/PatientOverview'
-import { PatientAlerts } from './pages/PatientAlerts'
-import { PatientAlertRules } from './pages/PatientAlertRules'
-import { PatientMedications } from './pages/PatientMedications'
-import { PatientProfile } from './pages/PatientProfile'
-import { HealthTimeline } from './pages/HealthTimeline'
-import { GraphEditorPage } from './twin3d/GraphEditorPage'
+import { SimPage } from './modules/twin/pages/SimulationPage'
+import { PatientWall } from './modules/monitor/pages/PatientWall'
+import { AlertBoard } from './modules/monitor/pages/AlertBoard'
+import { GlobalMedications } from './modules/monitor/pages/GlobalMedications'
+import { PatientDetailShell } from './modules/monitor/pages/PatientDetailShell'
+import { PatientOverview } from './modules/monitor/pages/PatientOverview'
+import { PatientAlerts } from './modules/monitor/pages/PatientAlerts'
+import { PatientAlertRules } from './modules/monitor/pages/PatientAlertRules'
+import { PatientMedications } from './modules/monitor/pages/PatientMedications'
+import { PatientProfile } from './modules/monitor/pages/PatientProfile'
+import { HealthTimeline } from './modules/monitor/pages/HealthTimeline'
+import { GraphEditorPage } from './modules/twin/components/twin3d/GraphEditorPage'
 import { useParams } from '@tanstack/react-router'
 
 function MapEditorPage() {
@@ -147,12 +146,6 @@ const pinsRoute = createRoute({
   component: PinManagementPage,
 })
 
-const settingsRoute = createRoute({
-  getParentRoute: () => authRoute,
-  path: '/settings',
-  component: DeviceListPage,
-})
-
 const usersRoute = createRoute({
   getParentRoute: () => authRoute,
   path: '/settings/users',
@@ -179,7 +172,6 @@ const routeTree = rootRoute.addChildren([
     dataExportRoute,
     simRoute,
     pinsRoute,
-    settingsRoute,
     usersRoute,
   ]),
 ])

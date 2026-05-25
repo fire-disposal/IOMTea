@@ -185,7 +185,6 @@ export const authBeforeLoad = ({ location }: { location: { href: string } }) => 
     '/medications',
     '/data-export',
     '/simulation',
-    '/settings',
     '/iot/pins',
   ]
   const superAdminRoutes = ['/settings/users']
