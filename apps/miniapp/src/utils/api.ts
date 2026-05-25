@@ -1,4 +1,5 @@
 import Taro from '@tarojs/taro'
+import type { paths } from '../api/types'
 
 function getBase(): string {
   return (Taro.getStorageSync('server_url') as string) || 'http://localhost:3000'

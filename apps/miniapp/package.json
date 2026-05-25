@@ -6,7 +6,8 @@
   "scripts": {
     "build:weapp": "taro build --type weapp",
     "dev:weapp": "taro build --type weapp --watch",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "generate-api": "openapi-typescript ../server/openapi.json -o src/api/types.ts"
   },
   "dependencies": {
     "@babel/runtime": "^7.26.0",
@@ -28,6 +29,7 @@
     "@tarojs/webpack5-runner": "^4.0.0",
     "@types/react": "^18.3.0",
     "babel-preset-taro": "^4.0.0",
+    "openapi-typescript": "^7.13.0",
     "typescript": "^5.7.0"
   }
 }
