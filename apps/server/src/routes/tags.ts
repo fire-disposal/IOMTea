@@ -4,13 +4,14 @@ import { eq } from 'drizzle-orm'
 import { db } from '../core/db'
 import { patientTagLinks, patientTags } from '../core/db/schema/tag'
 import { jwtAuth } from '../middleware/auth'
+import { requirePermission } from '../middleware/rbac'
 
 const tagsApp = new OpenAPIHono()
-tagsApp.use('*', jwtAuth)
 
 const listRoute = createRoute({
   method: 'get',
   path: '/',
+  middleware: [jwtAuth, requirePermission('/tags', 'read')] as const,
   responses: {
     200: { content: { 'application/json': { schema: tagListSchema } }, description: 'Tag list' },
   },
@@ -24,6 +25,7 @@ tagsApp.openapi(listRoute, async (c) => {
 const createTagRoute = createRoute({
   method: 'post',
   path: '/',
+  middleware: [jwtAuth, requirePermission('/tags', 'write')] as const,
   request: {
     body: {
       content: {
@@ -53,6 +55,7 @@ tagsApp.openapi(createTagRoute, async (c) => {
 const deleteTagRoute = createRoute({
   method: 'delete',
   path: '/:id',
+  middleware: [jwtAuth, requirePermission('/tags', 'write')] as const,
   responses: {
     200: { content: { 'application/json': { schema: successSchema } }, description: 'Deleted' },
     404: { description: 'Not found' },
