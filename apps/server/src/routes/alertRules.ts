@@ -32,7 +32,6 @@ const ruleSchema = z.object({
 })
 
 const alertRulesApp = new OpenAPIHono()
-alertRulesApp.use('*', jwtAuth)
 
 const getRulesRoute = createRoute({
   method: 'get',
