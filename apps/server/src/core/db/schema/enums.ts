@@ -35,6 +35,7 @@ export const kindEnum = pgEnum('kind', [
   'location',
   'ema_response',
   'batch_record',
+  'plan_earn',
 ])
 
 export const userStatusEnum = pgEnum('user_status', ['active', 'disabled', 'pending'])

@@ -18,6 +18,7 @@ export const userResponseSchema = z.object({
   displayName: z.string().nullable(),
   phone: z.string().nullable(),
   email: z.string().nullable(),
+  credit: z.number().default(0),
   status: z.string(),
   createdAt: z.string().nullable(),
 })
