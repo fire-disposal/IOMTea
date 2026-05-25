@@ -43,7 +43,7 @@ export function PatientDetailShell({ children }: { children: ReactNode }) {
     if (!id) return
     setPLoading(true)
     try {
-      const data = await api.get<any>(`/patients/${id}`)
+      const { data } = await api.GET('/patients/{id}', { params: { path: { id } } })
       setPatient(data)
       setPError(false)
     } catch {
@@ -56,8 +56,8 @@ export function PatientDetailShell({ children }: { children: ReactNode }) {
   const fetchLatest = useCallback(async () => {
     if (!id) return
     try {
-      const data = await api.get<any[]>('/data/latest', { patientId: id })
-      setLatestVitals(data)
+      const { data } = await api.GET('/data/latest', { params: { query: { patientId: id } } })
+      setLatestVitals(data ?? [])
     } catch { /* silent */ }
   }, [id])
 
