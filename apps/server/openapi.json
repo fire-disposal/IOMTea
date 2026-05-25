@@ -489,6 +489,60 @@
             "description": "Not found"
           }
         }
+      },
+      "get": {
+        "responses": {
+          "200": {
+            "description": "User detail"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      },
+      "delete": {
+        "responses": {
+          "200": {
+            "description": "Deleted"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
+    "/users/:id/role": {
+      "patch": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "super_admin",
+                      "admin",
+                      "user"
+                    ]
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Role updated"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
       }
     },
     "/dashboard/summary": {
@@ -519,6 +573,40 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/dashboard/trends": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 30,
+              "default": 7
+            },
+            "required": false,
+            "name": "days",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Alert trend data"
+          }
+        }
+      }
+    },
+    "/dashboard/patient/:id": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Patient dashboard overview"
+          },
+          "404": {
+            "description": "Not found"
           }
         }
       }
@@ -803,6 +891,46 @@
                 }
               }
             }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      },
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Tag detail"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      },
+      "patch": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 50
+                  },
+                  "color": {
+                    "type": "string",
+                    "pattern": "^#[0-9a-fA-F]{6}$"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated"
           },
           "404": {
             "description": "Not found"
@@ -3328,6 +3456,116 @@
         "responses": {
           "200": {
             "description": "Completion history"
+          }
+        }
+      }
+    },
+    "/credits/balance": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Current credit balance",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "balance": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "balance"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/credits/earn": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "amount": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "source": {
+                    "type": "string",
+                    "default": "manual"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "patientId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                "required": [
+                  "userId",
+                  "amount"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Credits earned"
+          }
+        }
+      }
+    },
+    "/credits/spend": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "amount": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "source": {
+                    "type": "string",
+                    "default": "redeem"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "patientId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                "required": [
+                  "userId",
+                  "amount"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Credits spent"
           }
         }
       }
