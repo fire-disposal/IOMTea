@@ -198,7 +198,7 @@ async function bootstrap() {
 bootstrap().then(() => {
   // ---- MQTT ----
   if (env.MQTT_ENABLED && env.MQTT_BROKER) {
-    logger.info({ broker: env.MQTT_BROKER }, '→ 正在连接 MQTT Broker ...')
+    logger.info(`→ 正在连接 MQTT Broker ... (${env.MQTT_BROKER})`)
     try {
       startMqttListener(env.MQTT_BROKER, {
         username: env.MQTT_USERNAME,
