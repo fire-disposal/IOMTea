@@ -2,6 +2,7 @@ import { createRoute, createRootRoute, createRouter, Outlet } from '@tanstack/re
 import { RootLayout } from './routes/__root'
 import { AuthLayout, authBeforeLoad } from './routes/_auth'
 import { LoginPage } from './pages/LoginPage'
+import { DashboardPage } from './pages/DashboardPage'
 
 const rootRoute = createRootRoute({
   component: RootLayout,
@@ -23,7 +24,7 @@ const authRoute = createRoute({
 const dashboardRoute = createRoute({
   getParentRoute: () => authRoute,
   path: '/',
-  component: () => <div style={{ padding: 32 }}><h1>IOMTea Dashboard</h1><p>REST API ready</p></div>,
+  component: DashboardPage,
 })
 
 const routeTree = rootRoute.addChildren([

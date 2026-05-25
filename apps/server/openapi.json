@@ -44,7 +44,51 @@
         },
         "responses": {
           "201": {
-            "description": "User created"
+            "description": "User created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "accessToken": {
+                      "type": "string"
+                    },
+                    "refreshToken": {
+                      "type": "string"
+                    },
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "username": {
+                          "type": "string"
+                        },
+                        "role": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string",
+                          "nullable": true
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "username",
+                        "role",
+                        "displayName"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "accessToken",
+                    "refreshToken",
+                    "user"
+                  ]
+                }
+              }
+            }
           },
           "409": {
             "description": "Username taken"
@@ -79,7 +123,51 @@
         },
         "responses": {
           "200": {
-            "description": "Login success"
+            "description": "Login success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "accessToken": {
+                      "type": "string"
+                    },
+                    "refreshToken": {
+                      "type": "string"
+                    },
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "username": {
+                          "type": "string"
+                        },
+                        "role": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string",
+                          "nullable": true
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "username",
+                        "role",
+                        "displayName"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "accessToken",
+                    "refreshToken",
+                    "user"
+                  ]
+                }
+              }
+            }
           },
           "401": {
             "description": "Invalid credentials"
@@ -109,7 +197,51 @@
         },
         "responses": {
           "200": {
-            "description": "Token refreshed"
+            "description": "Token refreshed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "accessToken": {
+                      "type": "string"
+                    },
+                    "refreshToken": {
+                      "type": "string"
+                    },
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "username": {
+                          "type": "string"
+                        },
+                        "role": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string",
+                          "nullable": true
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "username",
+                        "role",
+                        "displayName"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "accessToken",
+                    "refreshToken",
+                    "user"
+                  ]
+                }
+              }
+            }
           },
           "401": {
             "description": "Invalid refresh token"
@@ -121,7 +253,58 @@
       "get": {
         "responses": {
           "200": {
-            "description": "User list"
+            "description": "User list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "username": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "role": {
+                        "type": "string"
+                      },
+                      "displayName": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "phone": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "email": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "status": {
+                        "type": "string"
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "nullable": true
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "username",
+                      "role",
+                      "displayName",
+                      "phone",
+                      "email",
+                      "status",
+                      "createdAt"
+                    ]
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -130,7 +313,58 @@
       "get": {
         "responses": {
           "200": {
-            "description": "Current user"
+            "description": "Current user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "username": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "role": {
+                      "type": "string"
+                    },
+                    "displayName": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "phone": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "email": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "status": {
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "username",
+                    "role",
+                    "displayName",
+                    "phone",
+                    "email",
+                    "status",
+                    "createdAt"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
           }
         }
       }
@@ -159,7 +393,55 @@
         },
         "responses": {
           "200": {
-            "description": "Updated"
+            "description": "Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "username": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "role": {
+                      "type": "string"
+                    },
+                    "displayName": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "phone": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "email": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "status": {
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "username",
+                    "role",
+                    "displayName",
+                    "phone",
+                    "email",
+                    "status",
+                    "createdAt"
+                  ]
+                }
+              }
+            }
           },
           "404": {
             "description": "Not found"
@@ -171,7 +453,30 @@
       "get": {
         "responses": {
           "200": {
-            "description": "Dashboard summary"
+            "description": "Dashboard summary",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "patientCount": {
+                      "type": "number"
+                    },
+                    "activeAlerts24h": {
+                      "type": "number"
+                    },
+                    "criticalAlerts": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "patientCount",
+                    "activeAlerts24h",
+                    "criticalAlerts"
+                  ]
+                }
+              }
+            }
           }
         }
       }
@@ -180,7 +485,48 @@
       "get": {
         "responses": {
           "200": {
-            "description": "PIN list"
+            "description": "PIN list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "pin": {
+                        "type": "string"
+                      },
+                      "userId": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string"
+                      },
+                      "label": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "isVirtual": {
+                        "type": "boolean",
+                        "nullable": true
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "nullable": true
+                      }
+                    },
+                    "required": [
+                      "pin",
+                      "userId",
+                      "type",
+                      "label",
+                      "isVirtual",
+                      "createdAt"
+                    ]
+                  }
+                }
+              }
+            }
           }
         }
       },
@@ -224,7 +570,45 @@
         },
         "responses": {
           "201": {
-            "description": "Created"
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pin": {
+                      "type": "string"
+                    },
+                    "userId": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string"
+                    },
+                    "label": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "isVirtual": {
+                      "type": "boolean",
+                      "nullable": true
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "pin",
+                    "userId",
+                    "type",
+                    "label",
+                    "isVirtual",
+                    "createdAt"
+                  ]
+                }
+              }
+            }
           }
         }
       }
@@ -233,7 +617,22 @@
       "delete": {
         "responses": {
           "200": {
-            "description": "Revoked"
+            "description": "Revoked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
           },
           "404": {
             "description": "Not found"
@@ -245,7 +644,39 @@
       "get": {
         "responses": {
           "200": {
-            "description": "Tag list"
+            "description": "Tag list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "color": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "nullable": true
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "name",
+                      "color",
+                      "createdAt"
+                    ]
+                  }
+                }
+              }
+            }
           }
         }
       },
@@ -276,7 +707,36 @@
         },
         "responses": {
           "201": {
-            "description": "Created"
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "color": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "color",
+                    "createdAt"
+                  ]
+                }
+              }
+            }
           }
         }
       }
@@ -285,7 +745,22 @@
       "delete": {
         "responses": {
           "200": {
-            "description": "Deleted"
+            "description": "Deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
           },
           "404": {
             "description": "Not found"
@@ -336,7 +811,76 @@
         ],
         "responses": {
           "200": {
-            "description": "Patient list"
+            "description": "Patient list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "gender": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "birthDate": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "heightCm": {
+                        "type": "number",
+                        "nullable": true
+                      },
+                      "weightKg": {
+                        "type": "number",
+                        "nullable": true
+                      },
+                      "bloodType": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "phone": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "address": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "status": {
+                        "type": "string"
+                      },
+                      "tags": {
+                        "nullable": true
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "nullable": true
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "name",
+                      "gender",
+                      "birthDate",
+                      "heightCm",
+                      "weightKg",
+                      "bloodType",
+                      "phone",
+                      "address",
+                      "status",
+                      "createdAt"
+                    ]
+                  }
+                }
+              }
+            }
           }
         }
       },
@@ -392,7 +936,73 @@
         },
         "responses": {
           "201": {
-            "description": "Created"
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "gender": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "birthDate": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "heightCm": {
+                      "type": "number",
+                      "nullable": true
+                    },
+                    "weightKg": {
+                      "type": "number",
+                      "nullable": true
+                    },
+                    "bloodType": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "phone": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "address": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "status": {
+                      "type": "string"
+                    },
+                    "tags": {
+                      "nullable": true
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "gender",
+                    "birthDate",
+                    "heightCm",
+                    "weightKg",
+                    "bloodType",
+                    "phone",
+                    "address",
+                    "status",
+                    "createdAt"
+                  ]
+                }
+              }
+            }
           }
         }
       }
@@ -401,7 +1011,73 @@
       "get": {
         "responses": {
           "200": {
-            "description": "Patient detail"
+            "description": "Patient detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "gender": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "birthDate": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "heightCm": {
+                      "type": "number",
+                      "nullable": true
+                    },
+                    "weightKg": {
+                      "type": "number",
+                      "nullable": true
+                    },
+                    "bloodType": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "phone": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "address": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "status": {
+                      "type": "string"
+                    },
+                    "tags": {
+                      "nullable": true
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "gender",
+                    "birthDate",
+                    "heightCm",
+                    "weightKg",
+                    "bloodType",
+                    "phone",
+                    "address",
+                    "status",
+                    "createdAt"
+                  ]
+                }
+              }
+            }
           },
           "404": {
             "description": "Not found"
@@ -449,7 +1125,73 @@
         },
         "responses": {
           "200": {
-            "description": "Updated"
+            "description": "Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "gender": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "birthDate": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "heightCm": {
+                      "type": "number",
+                      "nullable": true
+                    },
+                    "weightKg": {
+                      "type": "number",
+                      "nullable": true
+                    },
+                    "bloodType": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "phone": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "address": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "status": {
+                      "type": "string"
+                    },
+                    "tags": {
+                      "nullable": true
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "gender",
+                    "birthDate",
+                    "heightCm",
+                    "weightKg",
+                    "bloodType",
+                    "phone",
+                    "address",
+                    "status",
+                    "createdAt"
+                  ]
+                }
+              }
+            }
           },
           "404": {
             "description": "Not found"
@@ -459,7 +1201,22 @@
       "delete": {
         "responses": {
           "200": {
-            "description": "Deleted"
+            "description": "Deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
           }
         }
       }
@@ -490,7 +1247,22 @@
         },
         "responses": {
           "201": {
-            "description": "User linked"
+            "description": "User linked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
           }
         }
       }
@@ -499,7 +1271,22 @@
       "delete": {
         "responses": {
           "200": {
-            "description": "User unlinked"
+            "description": "User unlinked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
           }
         }
       }
@@ -556,7 +1343,73 @@
         ],
         "responses": {
           "200": {
-            "description": "Alert list"
+            "description": "Alert list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "patientId": {
+                        "type": "string"
+                      },
+                      "kind": {
+                        "type": "string"
+                      },
+                      "metric": {
+                        "type": "string"
+                      },
+                      "value": {
+                        "nullable": true
+                      },
+                      "unit": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "severity": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "status": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "source": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "recordedAt": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "tags": {
+                        "nullable": true
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "patientId",
+                      "kind",
+                      "metric",
+                      "unit",
+                      "severity",
+                      "status",
+                      "source",
+                      "recordedAt",
+                      "createdAt"
+                    ]
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -565,7 +1418,70 @@
       "get": {
         "responses": {
           "200": {
-            "description": "Alert detail"
+            "description": "Alert detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "patientId": {
+                      "type": "string"
+                    },
+                    "kind": {
+                      "type": "string"
+                    },
+                    "metric": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "nullable": true
+                    },
+                    "unit": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "severity": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "status": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "source": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "recordedAt": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "tags": {
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "patientId",
+                    "kind",
+                    "metric",
+                    "unit",
+                    "severity",
+                    "status",
+                    "source",
+                    "recordedAt",
+                    "createdAt"
+                  ]
+                }
+              }
+            }
           },
           "404": {
             "description": "Not found"
@@ -601,7 +1517,22 @@
         },
         "responses": {
           "200": {
-            "description": "Updated"
+            "description": "Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
           },
           "404": {
             "description": "Not found"
@@ -613,7 +1544,22 @@
       "post": {
         "responses": {
           "200": {
-            "description": "Closed"
+            "description": "Closed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
           },
           "404": {
             "description": "Not found"
@@ -625,7 +1571,17 @@
       "get": {
         "responses": {
           "200": {
-            "description": "Alert rules for patient"
+            "description": "Alert rules for patient",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "nullable": true
+                  }
+                }
+              }
+            }
           },
           "404": {
             "description": "Not found"
@@ -679,7 +1635,22 @@
         },
         "responses": {
           "200": {
-            "description": "Updated"
+            "description": "Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
           },
           "404": {
             "description": "Not found"
@@ -843,7 +1814,83 @@
       "get": {
         "responses": {
           "200": {
-            "description": "Metric list"
+            "description": "Metric list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "metric": {
+                        "type": "string"
+                      },
+                      "displayName": {
+                        "type": "string"
+                      },
+                      "unit": {
+                        "type": "string"
+                      },
+                      "valueType": {
+                        "type": "string"
+                      },
+                      "fields": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "path": {
+                              "type": "string"
+                            },
+                            "label": {
+                              "type": "string"
+                            },
+                            "type": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "path",
+                            "label",
+                            "type"
+                          ]
+                        }
+                      },
+                      "defaultChart": {
+                        "type": "string"
+                      },
+                      "category": {
+                        "type": "string"
+                      },
+                      "normalRange": {
+                        "type": "object",
+                        "nullable": true,
+                        "properties": {
+                          "min": {
+                            "type": "number"
+                          },
+                          "max": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "min",
+                          "max"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "metric",
+                      "displayName",
+                      "unit",
+                      "valueType",
+                      "defaultChart",
+                      "category"
+                    ]
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -920,7 +1967,29 @@
         ],
         "responses": {
           "200": {
-            "description": "Raw time series"
+            "description": "Raw time series",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "metric": {
+                      "type": "string"
+                    },
+                    "rows": {
+                      "type": "array",
+                      "items": {
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "metric",
+                    "rows"
+                  ]
+                }
+              }
+            }
           }
         }
       }
@@ -1005,7 +2074,29 @@
         ],
         "responses": {
           "200": {
-            "description": "Aggregated time series"
+            "description": "Aggregated time series",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "metric": {
+                      "type": "string"
+                    },
+                    "rows": {
+                      "type": "array",
+                      "items": {
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "metric",
+                    "rows"
+                  ]
+                }
+              }
+            }
           }
         }
       }
@@ -1025,7 +2116,17 @@
         ],
         "responses": {
           "200": {
-            "description": "Latest values"
+            "description": "Latest values",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "nullable": true
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -1131,7 +2232,44 @@
       "get": {
         "responses": {
           "200": {
-            "description": "Profile list"
+            "description": "Profile list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "displayName": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "baselines": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "nullable": true
+                        }
+                      },
+                      "metrics": {
+                        "type": "array",
+                        "items": {
+                          "nullable": true
+                        }
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "displayName"
+                    ]
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -1140,7 +2278,44 @@
       "get": {
         "responses": {
           "200": {
-            "description": "Profile config"
+            "description": "Profile config",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "displayName": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "baselines": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "nullable": true
+                      }
+                    },
+                    "metrics": {
+                      "type": "array",
+                      "items": {
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "displayName"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
           }
         }
       }
@@ -1149,7 +2324,48 @@
       "get": {
         "responses": {
           "200": {
-            "description": "Simulation list"
+            "description": "Simulation list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "profileName": {
+                        "type": "string"
+                      },
+                      "running": {
+                        "type": "boolean"
+                      },
+                      "metrics": {
+                        "type": "array",
+                        "items": {
+                          "nullable": true
+                        }
+                      },
+                      "patientCount": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "name",
+                      "profileName",
+                      "running",
+                      "metrics",
+                      "patientCount"
+                    ]
+                  }
+                }
+              }
+            }
           }
         }
       },
@@ -1177,7 +2393,48 @@
         },
         "responses": {
           "201": {
-            "description": "Created"
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "profileName": {
+                      "type": "string"
+                    },
+                    "running": {
+                      "type": "boolean"
+                    },
+                    "metrics": {
+                      "type": "array",
+                      "items": {
+                        "nullable": true
+                      }
+                    },
+                    "patientCount": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "profileName",
+                    "running",
+                    "metrics",
+                    "patientCount"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Creation failed"
           }
         }
       }
@@ -1186,14 +2443,70 @@
       "get": {
         "responses": {
           "200": {
-            "description": "Simulation detail"
+            "description": "Simulation detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "profileName": {
+                      "type": "string"
+                    },
+                    "running": {
+                      "type": "boolean"
+                    },
+                    "metrics": {
+                      "type": "array",
+                      "items": {
+                        "nullable": true
+                      }
+                    },
+                    "patientCount": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "profileName",
+                    "running",
+                    "metrics",
+                    "patientCount"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
           }
         }
       },
       "delete": {
         "responses": {
           "200": {
-            "description": "Deleted"
+            "description": "Deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
           }
         }
       }
@@ -1219,7 +2532,22 @@
         },
         "responses": {
           "200": {
-            "description": "Toggled"
+            "description": "Toggled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
           }
         }
       }
@@ -1245,7 +2573,22 @@
         },
         "responses": {
           "200": {
-            "description": "Renamed"
+            "description": "Renamed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
           }
         }
       }
@@ -1271,7 +2614,22 @@
         },
         "responses": {
           "200": {
-            "description": "Toggled"
+            "description": "Toggled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
           }
         }
       }
@@ -1300,7 +2658,22 @@
         },
         "responses": {
           "200": {
-            "description": "Updated"
+            "description": "Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
           }
         }
       }
@@ -1327,7 +2700,22 @@
         },
         "responses": {
           "201": {
-            "description": "Added"
+            "description": "Added",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
           }
         }
       }
@@ -1336,7 +2724,22 @@
       "delete": {
         "responses": {
           "200": {
-            "description": "Removed"
+            "description": "Removed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
           }
         }
       }
@@ -1364,7 +2767,22 @@
         },
         "responses": {
           "200": {
-            "description": "Speed set"
+            "description": "Speed set",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "speed": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "speed"
+                  ]
+                }
+              }
+            }
           }
         }
       }
@@ -1391,7 +2809,22 @@
         },
         "responses": {
           "200": {
-            "description": "Scenario injected"
+            "description": "Scenario injected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
           }
         }
       }
@@ -1400,7 +2833,19 @@
       "get": {
         "responses": {
           "200": {
-            "description": "Home graph"
+            "description": "Home graph",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "homeGraph": {
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
           },
           "404": {
             "description": "Not found"
@@ -1439,7 +2884,25 @@
         },
         "responses": {
           "200": {
-            "description": "Updated"
+            "description": "Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
           }
         }
       }
@@ -1448,7 +2911,32 @@
       "get": {
         "responses": {
           "200": {
-            "description": "Node graph"
+            "description": "Node graph",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "nodes": {
+                      "type": "array",
+                      "items": {
+                        "nullable": true
+                      }
+                    },
+                    "edges": {
+                      "type": "array",
+                      "items": {
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "nodes",
+                    "edges"
+                  ]
+                }
+              }
+            }
           }
         }
       },
@@ -1478,7 +2966,22 @@
         },
         "responses": {
           "200": {
-            "description": "Saved"
+            "description": "Saved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
           }
         }
       }
