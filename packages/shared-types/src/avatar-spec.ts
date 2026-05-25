@@ -437,7 +437,7 @@ export function parseAvatarSpec(input: unknown): AvatarSpec {
   const maybeV1 = z
     .object({
       version: z.literal(1),
-      face: z.record(z.any()),
+      face: z.record(z.string(), z.any()),
       seed: z.number().optional(),
     })
     .safeParse(input)

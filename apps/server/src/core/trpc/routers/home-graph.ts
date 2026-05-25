@@ -179,7 +179,7 @@ export const homeGraphRouter = router({
         unit: z.string().optional(),
         source: z.enum(['iot', 'cv', 'simulator', 'manual']).optional(),
         severity: z.enum(['critical', 'warning', 'info']).optional(),
-        metadata: z.record(z.unknown()).optional(),
+        metadata: z.record(z.string(), z.unknown()).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {

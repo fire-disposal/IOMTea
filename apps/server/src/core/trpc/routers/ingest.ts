@@ -16,7 +16,7 @@ const singleEventSchema = z.object({
   value: z.unknown(),
   unit: z.string().optional(),
   confidence: z.number().optional(),
-  tags: z.record(z.unknown()).optional(),
+  tags: z.record(z.string(), z.unknown()).optional(),
   recordedAt: z.string().datetime().optional(),
 })
 

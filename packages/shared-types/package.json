@@ -14,7 +14,8 @@
     "./ema": "./src/ema/index.ts"
   },
   "dependencies": {
-    "zod": "^3.24.0"
+    "@hono/zod-openapi": "^1.4.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "vitest": "^4.1.6"

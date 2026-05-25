@@ -125,7 +125,7 @@ export const virtualPinRouter = router({
         userId: z.string().uuid(),
         label: z.string().max(64).default(''),
         nickname: z.string().max(32).default(''),
-        generatorConfig: generatorConfigSchema.default({}),
+        generatorConfig: generatorConfigSchema.optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -157,7 +157,7 @@ export const virtualPinRouter = router({
         })
       }
 
-      const config = generatorConfigSchema.parse(input.generatorConfig)
+      const config = generatorConfigSchema.parse(input.generatorConfig ?? {})
       if (config.enabled) startVirtualPin(pin, config)
       else stopVirtualPin(pin)
 
