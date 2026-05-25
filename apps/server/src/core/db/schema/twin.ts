@@ -9,7 +9,7 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core'
-import { patients } from '../../core/db/schema.js'
+import { patients } from '../schema.js'
 
 export const simConfigs = pgTable('sim_configs', {
   id: uuid('id').defaultRandom().primaryKey(),

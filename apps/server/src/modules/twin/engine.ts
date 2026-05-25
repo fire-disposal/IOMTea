@@ -5,7 +5,7 @@ import * as phys from '../../core/pipeline/physiology.js'
 import { getProfile, listProfiles, profiles } from './profiles.js'
 import type { MetricConfig, UnifiedProfile } from './profiles.js'
 import { MetricScheduler } from './scheduler.js'
-import { simConfigs, simPatients } from './schema.js'
+import { simConfigs, simPatients } from '../../core/db/schema/twin.js'
 
 interface PatientRunner {
   patientId: string
