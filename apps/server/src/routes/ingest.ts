@@ -4,14 +4,15 @@ import { events } from '../core/db/schema'
 import { createChildLogger } from '../core/lib/logger'
 import { getMetricOrDefault } from '../core/pipeline/registry'
 import { jwtAuth } from '../middleware/auth'
+import { requirePermission } from '../middleware/rbac'
 
 const logger = createChildLogger('ingest')
 const ingestApp = new OpenAPIHono()
-ingestApp.use('*', jwtAuth)
 
 const singleRoute = createRoute({
   method: 'post',
   path: '/single',
+  middleware: [jwtAuth, requirePermission('/ingest', 'write')] as const,
   request: {
     body: {
       content: {
@@ -71,6 +72,7 @@ ingestApp.openapi(singleRoute, async (c) => {
 const batchRoute = createRoute({
   method: 'post',
   path: '/batch',
+  middleware: [jwtAuth, requirePermission('/ingest', 'write')] as const,
   request: {
     body: {
       content: {
