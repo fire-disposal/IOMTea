@@ -4,8 +4,10 @@ import { and, eq, gt } from 'drizzle-orm'
 import { v4 as uuid } from 'uuid'
 import { db } from '../core/db'
 import { refreshTokens, users } from '../core/db/schema'
+import { wechatAccounts } from '../core/db/schema/auth-ext'
 import { signAccessToken, signRefreshToken, verifyToken } from '../core/lib/jwt'
 import { hashPassword, verifyPassword } from '../core/lib/password'
+import { code2session } from '../core/lib/wechat'
 
 const auth = new OpenAPIHono()
 
@@ -145,6 +147,35 @@ auth.openapi(refreshRoute, async (c) => {
   } catch {
     return c.json({ error: 'Invalid refresh token' }, 401 as any)
   }
+})
+
+// ── WeChat login ──
+
+const wechatLoginRoute = createRoute({
+  method: 'post', path: '/wechat-login',
+  request: { body: { content: { 'application/json': { schema: z.object({ code: z.string().min(1) }) } } } },
+  responses: { 200: { description: 'OK' }, 400: { description: 'WeChat login failed' } },
+})
+
+auth.openapi(wechatLoginRoute, async (c) => {
+  const body = c.req.valid('json')
+  let session
+  try { session = await code2session(body.code) } catch { return c.json({ error: 'WeChat failed' } as any, 400) }
+
+  const [account] = await db.select().from(wechatAccounts).where(eq(wechatAccounts.openId, session.openid)).limit(1)
+
+  let userId: string
+  if (account) { userId = account.userId }
+  else {
+    const [newUser] = await db.insert(users).values({ username: `wx_${session.openid.slice(0, 8)}`, displayName: '微信用户', role: 'user', passwordHash: '' } as any).returning()
+    await db.insert(wechatAccounts).values({ userId: newUser.id, openId: session.openid } as any)
+    userId = newUser.id
+  }
+
+  const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1)
+  const accessToken = await signAccessToken({ sub: userId, role: user!.role })
+  const rt = await signRefreshToken(userId)
+  return c.json({ accessToken, refreshToken: rt.token, user: { id: user!.id, username: user!.username, role: user!.role, displayName: user!.displayName } })
 })
 
 export { auth }

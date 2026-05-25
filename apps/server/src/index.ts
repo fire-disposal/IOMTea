@@ -34,6 +34,8 @@ import { pinsApp } from './routes/pins'
 import { tagsApp } from './routes/tags'
 import { twinApp } from './routes/twin'
 import { usersApp } from './routes/users'
+import { plansApp } from './routes/plans'
+import { creditsApp } from './routes/credits'
 
 function resolveCorsOrigins(rawCorsOrigin: string | undefined): string[] {
   if (!rawCorsOrigin) return ['http://localhost:5173']
@@ -93,6 +95,8 @@ app.route('/ingest', ingestApp)
 app.route('/data', dataApp)
 app.route('/export', exportApp)
 app.route('/twin', twinApp)
+app.route('/plans', plansApp)
+app.route('/credits', creditsApp)
 
 // OpenAPI spec (auto-collects from all mounted OpenAPIHono sub-apps)
 app.doc('/openapi.json', {

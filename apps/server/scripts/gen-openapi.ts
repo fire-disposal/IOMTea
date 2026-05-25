@@ -14,6 +14,8 @@ import { pinsApp } from '../src/routes/pins'
 import { tagsApp } from '../src/routes/tags'
 import { twinApp } from '../src/routes/twin'
 import { usersApp } from '../src/routes/users'
+import { plansApp } from '../src/routes/plans'
+import { creditsApp } from '../src/routes/credits'
 
 const app = new OpenAPIHono()
 
@@ -29,6 +31,8 @@ app.route('/ingest', ingestApp)
 app.route('/data', dataApp)
 app.route('/export', exportApp)
 app.route('/twin', twinApp)
+app.route('/plans', plansApp)
+app.route('/credits', creditsApp)
 
 const partialDoc = (app as any).getOpenAPIDocument()
 const doc = {
