@@ -10,12 +10,12 @@ import {
   ThemeIcon,
   Title,
 } from '@mantine/core'
-import { AccentPaper } from '../components/shared/AccentPaper'
+import { AccentPaper } from '../../../components/shared/AccentPaper'
 import { IconPill, IconUsers } from '@tabler/icons-react'
 import { createColumnHelper } from '@tanstack/react-table'
-import { trpc } from '../trpc'
-import { DataTable } from '../components/shared/DataTable'
-import { QueryGate } from '../components/shared/QueryGate'
+import { trpc } from '../../../trpc'
+import { DataTable } from '../../../components/shared/DataTable'
+import { QueryGate } from '../../../components/shared/QueryGate'
 import { useNavigate } from '@tanstack/react-router'
 
 const STATUS_COLORS: Record<string, string> = {

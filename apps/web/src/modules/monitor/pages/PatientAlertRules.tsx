@@ -1,8 +1,8 @@
 import { Button, Group, NumberInput, Paper, Switch, Text, Title } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
 import { useForm } from '@tanstack/react-form'
-import { trpc } from '../trpc'
-import { StateSkeleton, StateError } from '../components/shared/StateComponents'
+import { trpc } from '../../../trpc'
+import { StateSkeleton, StateError } from '../../../components/shared/StateComponents'
 
 interface RuleItem {
   metric: string

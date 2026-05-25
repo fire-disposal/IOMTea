@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Stack } from '@mantine/core'
 import { useParams, useNavigate } from '@tanstack/react-router'
-import { trpc } from '../trpc'
-import { VitalsChart } from './components/VitalsChart'
-import { GraphViewer } from '../twin3d/GraphViewer'
-import { ScenarioModal } from './components/ScenarioModal'
+import { trpc } from '../../../trpc'
+import { VitalsChart } from '../components/VitalsChart'
+import { GraphViewer } from '../../twin/components/twin3d/GraphViewer'
+import { ScenarioModal } from '../components/ScenarioModal'
 
 const SPEEDS = [1, 2, 5, 10]
 

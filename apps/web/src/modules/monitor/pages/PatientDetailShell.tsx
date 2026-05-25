@@ -20,7 +20,7 @@ import {
 } from '@tabler/icons-react'
 import { useNavigate, useParams, useRouterState } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
-import { trpc } from '../trpc'
+import { trpc } from '../../../trpc'
 
 function genderLabel(g: string) {
   if (g === 'male') return '男'

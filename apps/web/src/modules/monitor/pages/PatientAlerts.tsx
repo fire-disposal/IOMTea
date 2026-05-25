@@ -13,8 +13,8 @@ import { notifications } from '@mantine/notifications'
 import { IconAlertTriangle, IconBell, IconCheck, IconInfoCircle } from '@tabler/icons-react'
 import { useState } from 'react'
 import { useParams } from '@tanstack/react-router'
-import { trpc } from '../trpc'
-import { StateEmpty, StateError } from '../components/shared/StateComponents'
+import { trpc } from '../../../trpc'
+import { StateEmpty, StateError } from '../../../components/shared/StateComponents'
 
 const severityColor: Record<string, string> = { critical: 'red', warning: 'orange', info: 'blue' }
 const severityLabel: Record<string, string> = { critical: '严重', warning: '警告', info: '信息' }

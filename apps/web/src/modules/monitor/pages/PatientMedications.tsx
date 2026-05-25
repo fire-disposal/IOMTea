@@ -21,8 +21,8 @@ import { notifications } from '@mantine/notifications'
 import { useState } from 'react'
 import { useForm } from '@tanstack/react-form'
 import { useParams } from '@tanstack/react-router'
-import { trpc } from '../trpc'
-import { StateEmpty } from '../components/shared/StateComponents'
+import { trpc } from '../../../trpc'
+import { StateEmpty } from '../../../components/shared/StateComponents'
 
 const routeLabels: Record<string, string> = {
   oral: '口服',

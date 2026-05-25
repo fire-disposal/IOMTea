@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Paper } from '@mantine/core'
 import { useParams } from '@tanstack/react-router'
-import { EventTimeline } from '../components/sim/EventTimeline'
+import { EventTimeline } from '../../../components/sim/EventTimeline'
 
 export function HealthTimeline() {
   const { id } = useParams({ from: '/_auth/patients/$id' })

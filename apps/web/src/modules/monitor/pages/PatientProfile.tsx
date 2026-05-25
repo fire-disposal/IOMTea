@@ -17,7 +17,7 @@ import { notifications } from '@mantine/notifications'
 import { useState } from 'react'
 import { useForm } from '@tanstack/react-form'
 import { useParams, useNavigate } from '@tanstack/react-router'
-import { trpc } from '../trpc'
+import { trpc } from '../../../trpc'
 
 const genderOptions = [
   { value: 'male', label: '男' },

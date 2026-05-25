@@ -29,8 +29,8 @@ import {
   IconCheck,
   IconX,
 } from '@tabler/icons-react'
-import { trpc } from '../trpc'
-import { SimTimeline } from '../components/sim/SimTimeline'
+import { trpc } from '../../../trpc'
+import { SimTimeline } from '../components/SimTimeline'
 
 const PROFILES = [
   { value: 'elderly-cardiac', label: '老年心脏' },

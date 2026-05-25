@@ -13,7 +13,7 @@ import {
 } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
 import { IconPlus, IconTrash, IconLink } from '@tabler/icons-react'
-import { trpc } from '../trpc'
+import { trpc } from '../../../../trpc'
 
 const ROOM_TYPES = [
   { value: 'livingroom', label: '客厅' },

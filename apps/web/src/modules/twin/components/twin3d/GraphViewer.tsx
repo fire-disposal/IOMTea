@@ -7,8 +7,8 @@ import {
   IconSpeedboat,
 } from '@tabler/icons-react'
 import { RoomNodeGraph } from './RoomNodeGraph'
-import { trpc } from '../trpc'
-import { useRealtime } from '../hooks/useRealtime'
+import { trpc } from '../../../../trpc'
+import { useRealtime } from '../../../../hooks/useRealtime'
 
 const SPEEDS = [1, 2, 5, 10]
 

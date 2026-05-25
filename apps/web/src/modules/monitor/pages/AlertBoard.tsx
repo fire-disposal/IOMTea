@@ -12,11 +12,11 @@ import {
   Stack,
   SimpleGrid,
 } from '@mantine/core'
-import { AccentPaper } from '../components/shared/AccentPaper'
+import { AccentPaper } from '../../../components/shared/AccentPaper'
 import { useDisclosure } from '@mantine/hooks'
 import { notifications } from '@mantine/notifications'
-import { trpc } from '../trpc'
-import { StateSkeleton, StateError } from '../components/shared/StateComponents'
+import { trpc } from '../../../trpc'
+import { StateSkeleton, StateError } from '../../../components/shared/StateComponents'
 
 interface AlertItem {
   id: string
