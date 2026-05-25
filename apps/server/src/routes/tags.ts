@@ -70,4 +70,45 @@ tagsApp.openapi(deleteTagRoute, async (c) => {
   return c.json({ success: true })
 })
 
+const getTagRoute = createRoute({
+  method: 'get',
+  path: '/:id',
+  middleware: [jwtAuth, requirePermission('/tags', 'read')] as const,
+  responses: { 200: { description: 'Tag detail' }, 404: { description: 'Not found' } },
+})
+
+tagsApp.openapi(getTagRoute, async (c) => {
+  const id = c.req.param('id')
+  const [tag] = await db.select().from(patientTags).where(eq(patientTags.id, id)).limit(1)
+  if (!tag) return c.json({ error: 'Not found' }, 404 as any)
+  return c.json(tag)
+})
+
+const updateTagRoute = createRoute({
+  method: 'patch',
+  path: '/:id',
+  middleware: [jwtAuth, requirePermission('/tags', 'write')] as const,
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: z.object({
+            name: z.string().min(1).max(50).optional(),
+            color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+          }),
+        },
+      },
+    },
+  },
+  responses: { 200: { description: 'Updated' }, 404: { description: 'Not found' } },
+})
+
+tagsApp.openapi(updateTagRoute, async (c) => {
+  const id = c.req.param('id')
+  const body = c.req.valid('json')
+  const [tag] = await db.update(patientTags).set(body as any).where(eq(patientTags.id, id)).returning()
+  if (!tag) return c.json({ error: 'Not found' }, 404 as any)
+  return c.json(tag)
+})
+
 export { tagsApp }
