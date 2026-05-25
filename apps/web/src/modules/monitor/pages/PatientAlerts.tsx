@@ -67,14 +67,14 @@ export function PatientAlerts() {
   const fetchAlerts = useCallback(async () => {
     if (!id) return
     try {
-      const params: Record<string, string | number | undefined> = {
+      const queryParams: Record<string, string | number | undefined> = {
         patientId: id,
         pageSize: 50,
       }
-      if (severityFilter !== 'all') params.severity = severityFilter
-      if (statusFilter !== 'all') params.status = statusFilter
-      const data = await api.get<any[]>('/alerts', params)
-      setAlerts(data)
+      if (severityFilter !== 'all') queryParams.severity = severityFilter
+      if (statusFilter !== 'all') queryParams.status = statusFilter
+      const { data } = await api.GET('/alerts', { params: { query: queryParams } })
+      setAlerts(data ?? [])
       setAError(false)
     } catch {
       setAError(true)
@@ -92,7 +92,7 @@ export function PatientAlerts() {
   const acknowledge = async (alertId: string) => {
     setAckLoadingId(alertId)
     try {
-      await api.patch(`/alerts/${alertId}`, { action: 'acknowledge' })
+      await api.PATCH('/alerts/{id}', { params: { path: { id: alertId } }, body: { action: 'acknowledge' } })
       notifications.show({ title: '已确认告警', message: '', color: 'blue' })
       fetchAlerts()
     } catch (err: any) {
@@ -105,7 +105,7 @@ export function PatientAlerts() {
   const resolve = async (alertId: string) => {
     setResolveLoadingId(alertId)
     try {
-      await api.patch(`/alerts/${alertId}`, { action: 'resolve' })
+      await api.PATCH('/alerts/{id}', { params: { path: { id: alertId } }, body: { action: 'resolve' } })
       notifications.show({ title: '已解决告警', message: '', color: 'green' })
       fetchAlerts()
     } catch (err: any) {
