@@ -46,8 +46,8 @@ export function UserManagementPage() {
   const fetchUsers = useCallback(async () => {
     setULoading(true)
     try {
-      const data = await api.get<any[]>('/users')
-      setUsers(data)
+      const { data } = await api.GET('/users')
+      setUsers(data ?? [])
       setUError(false)
     } catch {
       setUError(true)
@@ -62,7 +62,7 @@ export function UserManagementPage() {
     if (!editUser) return
     setUpdateLoading(true)
     try {
-      await api.PATCH(`/users/${editUser.id}`, { role: editUser.role })
+      await api.PATCH('/users/{id}', { params: { path: { id: editUser.id } }, body: { role: editUser.role } })
       notifications.show({ title: '已更新', message: '', color: 'green' })
       setEditUser(null)
       fetchUsers()
