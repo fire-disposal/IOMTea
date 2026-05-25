@@ -22,11 +22,11 @@
 | 层 | 技术 | 说明 |
 |----|------|------|
 | Server 路由 | Hono (`app.route()`) | 已用 Hono，仅扩展 |
-| 校验 | `@hono/zod-openapi` | Zod schema 加 `.openapi()` 元数据 |
-| API 文档 | 自动生成 OpenAPI 3.0 spec | `/openapi.json` 端点 |
-| Web 客户端 | `openapi-fetch` + 自动生成类型 | 类型安全的 fetch 封装 |
-| 小程序客户端 | `openapi-fetch` + Taro request 适配 | ~20 行适配器 |
-| Flutter 客户端 | `openapi-generator` 生成 Dart | 自动从 spec 生成 |
+| 校验 | Zod (保持 v3) | 复用现有 schema，不加 `.openapi()` |
+| OpenAPI 生成 | `zod-to-openapi` 脚本 | 手写转换脚本，避免升 zod v4 |
+| Web 客户端 | 手写类型 + fetch 封装 | 基于 `z.infer` 推断请求/响应类型 |
+| 小程序客户端 | 同 Web 类型 | Taro request 适配 |
+| Flutter | 保持 MQTT 为主 | 不在迁移范围 |
 
 ### 类型安全恢复路径
 
@@ -330,33 +330,39 @@ packages/shared-types/src/
   schemas/                   # Zod + .openapi() 元数据
 ```
 
-## 5. 迁移策略
+## 5. 迁移策略（直接切换）
 
-### 阶段 1：Server 双栈过渡 (1 周)
+### 5.1 执行顺序
 
-- Hono REST 路由与 tRPC 路由共存
-- 共享同一组 Zod schema
-- 共享同一组 service 层
-- 共享同一组 auth middleware
-- `/trpc/*` 和 REST 路由同时可用
+Server → Web → 清理，不做双栈过渡。
 
-### 阶段 2：Web + 小程序切换 (1 周)
+### 5.2 任务列表
 
-- Web：逐页替换 tRPC hooks 为 `api.GET()/api.POST()`
-- 小程序：替换 `utils/trpc.ts` 为 `api/client.ts`
-- Flutter：首次接入自动生成的 Dart client
+| # | 任务 | 涉及文件 | 耗时 |
+|---|------|---------|------|
+| 1 | Shared Zod schemas → `.openapi()` 标注 | `packages/shared-types/src/schemas/*.ts` (7 文件) | 2h |
+| 2 | Hono auth middleware | `apps/server/src/middleware/auth.ts` [新] | 1h |
+| 3 | Hono RBAC middleware | `apps/server/src/middleware/rbac.ts` [新] | 1h |
+| 4 | 生成 OpenAPI spec 端点 | `apps/server/src/routes/openapi.ts` [新] | 1h |
+| 5 | REST 路由实现 (55 条) | `apps/server/src/routes/*.ts` [新] | 30h |
+| 6 | 生成 TypeScript 客户端类型 | `apps/web/src/api/types.ts` [生成] | 1h |
+| 7 | Web API client 封装 | `apps/web/src/api/client.ts` [新] | 1h |
+| 8 | Web 22 页面替换 tRPC → REST | `apps/web/src/pages/*.tsx` | 23h |
+| 9 | 路由组件中去掉 tRPC imports | `apps/web/src/routes.tsx`, `__root.tsx` | 1h |
+| 10 | 删除旧 tRPC 代码 | `core/trpc/`, `web/src/trpc.ts` 等 | 2h |
+| 11 | 验证 + lint + typecheck | 全量 | 3h |
 
-### 阶段 3：清理 (半天)
+### 5.3 不做双栈的理由
 
-- 删除 `core/trpc/routers/` 下所有文件
-- 删除 `apps/web/src/trpc.ts`
-- 删除 tRPC 依赖
+- 共享同一组 Zod schema 和 service 层，REST 路由只是另一层薄封装
+- tRPC 的 `.input()` 和 REST 的 `c.req.valid()` 可同时从同一 Zod schema 工作
+- 先建完 REST 路由 → 改 Web → 删 tRPC，中间不部署
 
 ## 6. 风险评估
 
 | 风险 | 等级 | 缓解 |
 |------|------|------|
-| Schema 不一致 | 中 | 双栈期间对比 tRPC 和 REST 响应 |
+| Schema 不一致 | 中 | REST 路由直接用现有 Zod schema + `.openapi()`，验证逻辑一致 |
 | WebSocket 不受影响 | 低 | WS 独立于 tRPC/REST |
 | 小程序 fetch 适配 | 低 | 已有 taroFetcher 经验 |
 | 批量操作事务 | 低 | 使用 Hono middleware + Drizzle transaction |

@@ -1,7 +1,16 @@
 import { z } from 'zod'
 import { ALERT_SEVERITIES, ALERT_STATUSES } from '../constants'
 
-export const eventKindSchema = z.enum(['observation', 'alert', 'behavior', 'location'])
+export const eventKindSchema = z.enum([
+  'observation',
+  'alert',
+  'behavior',
+  'location',
+  'ema_response',
+  'batch_record',
+])
+
+export const eventSourceSchema = z.enum(['device', 'manual', 'sim', 'batch'])
 
 export const eventTagsSchema = z.record(z.string(), z.unknown()).default({})
 
@@ -10,7 +19,7 @@ export const observationSchema = z.object({
   patientId: z.string().uuid(),
   kind: z.literal('observation'),
   metric: z.string().max(50),
-  value: z.number().nullable(),
+  value: z.unknown(),
   unit: z.string().max(20).optional(),
   tags: eventTagsSchema,
   recordedAt: z.number(),
@@ -22,7 +31,7 @@ export const alertSchema = z.object({
   patientId: z.string().uuid(),
   kind: z.literal('alert'),
   metric: z.string().max(50),
-  value: z.number().nullable(),
+  value: z.unknown(),
   unit: z.string().max(20).optional(),
   severity: z.enum(ALERT_SEVERITIES).nullable(),
   status: z.enum(ALERT_STATUSES).nullable(),
@@ -34,7 +43,7 @@ export const alertSchema = z.object({
 export const observationIngestSchema = z.object({
   patientId: z.string().uuid(),
   metric: z.string().max(50),
-  value: z.number(),
+  value: z.unknown(),
   unit: z.string().max(20).optional(),
   tags: eventTagsSchema,
   recordedAt: z.number().optional(),

@@ -1,5 +1,5 @@
 import type { DbClient } from '../db'
-import { users, patients, events, medications, medicationSchedules } from '../db'
+import { users, patients, events, medications } from '../db'
 import { usersPin } from '../db/schema/pin'
 import { userPatientLinks } from '../db/schema/user-patient'
 import { hashPassword } from '../lib/password'
@@ -593,24 +593,7 @@ export async function seedDemoData(db: DbClient): Promise<void> {
         } as any)
         .returning({ id: medications.id })
 
-      const times: string[] = med.frequency.includes('2次')
-        ? ['08:00', '20:00']
-        : med.instructions?.includes('餐前')
-          ? ['07:00']
-          : med.instructions?.includes('睡前')
-            ? ['21:00']
-            : med.instructions?.includes('早餐后')
-              ? ['08:00']
-              : med.instructions?.includes('晚餐后')
-                ? ['19:00']
-                : ['08:00']
 
-      for (const t of times) {
-        await db.insert(medicationSchedules).values({
-          medicationId: medication.id,
-          scheduledTime: t,
-        })
-      }
     }
   }
 }

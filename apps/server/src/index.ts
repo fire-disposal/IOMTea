@@ -19,6 +19,7 @@ import { seedPermissions } from './core/services/permission-seed'
 import { seedDemoData } from './core/services/demo-seed'
 import { logger } from './core/lib/logger'
 import { printBanner } from './core/lib/banner'
+import './core/pipeline/registry'
 
 function resolveCorsOrigins(rawCorsOrigin: string | undefined): string[] {
   if (!rawCorsOrigin) return ['http://localhost:5173']
