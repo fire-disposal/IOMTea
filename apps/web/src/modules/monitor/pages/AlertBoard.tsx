@@ -49,8 +49,8 @@ export function AlertBoard() {
   const fetchAlerts = useCallback(async () => {
     setIsLoading(true)
     try {
-      const data = await api.get<any[]>('/alerts', { pageSize: 100 })
-      setAlerts(data)
+      const { data } = await api.GET('/alerts', { params: { query: { pageSize: 100 } } })
+      setAlerts(data ?? [])
       setIsError(false)
     } catch {
       setIsError(true)
@@ -74,7 +74,7 @@ export function AlertBoard() {
     if (!selected) return
     setHandleLoading(true)
     try {
-      await api.patch(`/alerts/${selected.id}`, { action: 'acknowledge' })
+      await api.PATCH('/alerts/{id}', { params: { path: { id: selected.id } }, body: { action: 'acknowledge' } })
       setNote('')
       close()
       fetchAlerts()
@@ -89,7 +89,7 @@ export function AlertBoard() {
     if (!selected) return
     setCloseLoading(true)
     try {
-      await api.POST(`/alerts/${selected.id}/close`)
+      await api.POST('/alerts/{id}/close', { params: { path: { id: selected.id } } })
       setResolution('')
       close()
       fetchAlerts()
