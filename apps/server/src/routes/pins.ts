@@ -4,13 +4,14 @@ import { eq } from 'drizzle-orm'
 import { db } from '../core/db'
 import { usersPin } from '../core/db/schema/pin'
 import { jwtAuth } from '../middleware/auth'
+import { requirePermission } from '../middleware/rbac'
 
 const pinsApp = new OpenAPIHono()
-pinsApp.use('*', jwtAuth)
 
 const listRoute = createRoute({
   method: 'get',
   path: '/',
+  middleware: [jwtAuth, requirePermission('/pins', 'read')] as const,
   responses: {
     200: { content: { 'application/json': { schema: pinListSchema } }, description: 'PIN list' },
   },
@@ -24,6 +25,7 @@ pinsApp.openapi(listRoute, async (c) => {
 const createPinRoute = createRoute({
   method: 'post',
   path: '/',
+  middleware: [jwtAuth, requirePermission('/pins', 'write')] as const,
   request: {
     body: {
       content: {
@@ -56,6 +58,7 @@ pinsApp.openapi(createPinRoute, async (c) => {
 const revokePinRoute = createRoute({
   method: 'delete',
   path: '/:code',
+  middleware: [jwtAuth, requirePermission('/pins', 'write')] as const,
   responses: {
     200: { content: { 'application/json': { schema: successSchema } }, description: 'Revoked' },
     404: { description: 'Not found' },
