@@ -22,7 +22,7 @@ import { PlanManagementPage } from './pages/PlanManagementPage'
 import { SimulationPage } from './pages/SimulationPage'
 import { UserManagementPage } from './pages/UserManagementPage'
 import { RootLayout } from './routes/__root'
-import { AuthLayout, authBeforeLoad } from './routes/_auth'
+import { AuthLayout, authBeforeLoad } from './routes/-_auth'
 
 const rootRoute = createRootRoute({ component: RootLayout })
 
