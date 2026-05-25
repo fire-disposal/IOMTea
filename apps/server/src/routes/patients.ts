@@ -210,7 +210,73 @@ patientsApp.openapi(unlinkUserPatRoute, async (c) => {
   await db
     .delete(userPatientLinks)
     .where(and(eq(userPatientLinks.userId, userId), eq(userPatientLinks.patientId, patientId)))
-  return c.json({ success: true })
+   return c.json({ success: true })
+})
+
+// ── Batch create patients ──
+
+const bulkCreatePatRoute = createRoute({
+  method: 'post',
+  path: '/bulk',
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: z.object({
+            patients: z.array(z.object({
+              name: z.string().min(1).max(100),
+              gender: z.string().optional(),
+              birthDate: z.string().optional(),
+              tags: z.record(z.string(), z.unknown()).optional(),
+            })).min(1).max(100),
+          }),
+        },
+      },
+    },
+  },
+  responses: {
+    201: { description: 'Batch created' },
+    200: { content: { 'application/json': { schema: z.object({ created: z.number(), errors: z.array(z.string()) }) } }, description: 'Batch result' },
+  },
+})
+
+patientsApp.openapi(bulkCreatePatRoute, async (c) => {
+  const body = c.req.valid('json')
+  let created = 0
+  const errors: string[] = []
+  for (const p of body.patients) {
+    try {
+      await db.insert(patients).values({
+        name: p.name,
+        gender: p.gender ?? null,
+        birthDate: p.birthDate ?? null,
+        tags: p.tags ?? {},
+      } as any)
+      created++
+    } catch (e) {
+      errors.push(`${p.name}: ${(e as Error).message}`)
+    }
+  }
+  return c.json({ created, errors })
+})
+
+// ── List linked users for a patient ──
+
+const listUsersPatRoute = createRoute({
+  method: 'get',
+  path: '/:id/users',
+  responses: {
+    200: { content: { 'application/json': { schema: z.array(z.object({ userId: z.string(), relation: z.string().nullable() })) } }, description: 'Linked users' },
+  },
+})
+
+patientsApp.openapi(listUsersPatRoute, async (c) => {
+  const patientId = c.req.param('id')
+  const rows = await db
+    .select({ userId: userPatientLinks.userId, relation: userPatientLinks.relation })
+    .from(userPatientLinks)
+    .where(eq(userPatientLinks.patientId, patientId))
+  return c.json(rows)
 })
 
 export { patientsApp }

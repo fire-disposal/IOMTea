@@ -1,16 +1,19 @@
-import { Container, Title, Table, Badge, ActionIcon, Skeleton, Group } from '@mantine/core'
-import { IconEye } from '@tabler/icons-react'
+import { Container, Title, Table, Badge, ActionIcon, Skeleton, Group, Button, Modal } from '@mantine/core'
+import { IconEye, IconPlus } from '@tabler/icons-react'
 import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useGet } from '../api/hooks'
 import { TagFilter } from '../components/TagFilter'
+import { BatchImportModal } from '../components/BatchImportModal'
 
 interface Patient { id: string; name: string; gender: string | null; status: string; phone: string | null; tags?: Record<string, unknown> | null }
 
 export function PatientWall() {
   const { data: patients, isLoading } = useGet<Patient[]>('/patients', { pageSize: 200 })
   const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [importOpen, setImportOpen] = useState(false)
   const navigate = useNavigate()
+  const { refetch } = useGet<Patient[]>('/patients', { pageSize: 200 })
 
   const filtered = (patients ?? []).filter((p) => {
     if (selectedTags.length === 0) return true
@@ -28,8 +31,9 @@ export function PatientWall() {
   return (
     <Container py="md">
       <Title order={2} mb="md">患者管理</Title>
-      <Group mb="md">
+      <Group mb="md" justify="space-between">
         <TagFilter selected={selectedTags} onChange={setSelectedTags} />
+        <Button size="xs" leftSection={<IconPlus size={12} />} onClick={() => setImportOpen(true)}>批量导入</Button>
       </Group>
       <Table striped>
         <Table.Thead><Table.Tr><Table.Th>姓名</Table.Th><Table.Th>性别</Table.Th><Table.Th>标签</Table.Th><Table.Th>状态</Table.Th><Table.Th>操作</Table.Th></Table.Tr></Table.Thead>
@@ -46,6 +50,7 @@ export function PatientWall() {
           )
         })}</Table.Tbody>
       </Table>
+      <BatchImportModal opened={importOpen} onClose={() => setImportOpen(false)} onSuccess={refetch} />
     </Container>
   )
 }

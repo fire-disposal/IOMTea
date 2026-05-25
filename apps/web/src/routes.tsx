@@ -18,6 +18,7 @@ import { PatientProfile } from './pages/PatientProfile'
 import { PatientWall } from './pages/PatientWall'
 import { PinManagementPage } from './pages/PinManagementPage'
 import { SimulationPage } from './pages/SimulationPage'
+import { NodeGraph } from './components/NodeGraph'
 import { UserManagementPage } from './pages/UserManagementPage'
 import { RootLayout } from './routes/__root'
 import { AuthLayout, authBeforeLoad } from './routes/_auth'
@@ -120,6 +121,12 @@ const usersRoute = createRoute({
   component: UserManagementPage,
 })
 
+const nodeGraphRoute = createRoute({
+  getParentRoute: () => authRoute,
+  path: '/node-graph',
+  component: NodeGraph,
+})
+
 const routeTree = rootRoute.addChildren([
   loginRoute,
   authRoute.addChildren([
@@ -138,6 +145,7 @@ const routeTree = rootRoute.addChildren([
     pinsRoute,
     simRoute,
     usersRoute,
+    nodeGraphRoute,
   ]),
 ])
 
