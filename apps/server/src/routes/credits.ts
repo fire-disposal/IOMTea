@@ -3,13 +3,14 @@ import { and, desc, eq } from 'drizzle-orm'
 import { db } from '../core/db'
 import { creditTransactions } from '../core/db/schema/plan'
 import { jwtAuth } from '../middleware/auth'
+import { requirePermission } from '../middleware/rbac'
 
 const creditsApp = new OpenAPIHono()
-creditsApp.use('*', jwtAuth)
 
 const transactionsRoute = createRoute({
   method: 'get',
   path: '/transactions',
+  middleware: [jwtAuth, requirePermission('/credits', 'read')] as const,
   request: {
     query: z.object({
       patientId: z.string().uuid().optional(),
