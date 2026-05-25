@@ -1,59 +1,50 @@
-import { ActionIcon, Badge, Container, Skeleton, Table, Title } from '@mantine/core'
+import { Container, Title, Table, Badge, ActionIcon, Skeleton, Group } from '@mantine/core'
 import { IconEye } from '@tabler/icons-react'
 import { useNavigate } from '@tanstack/react-router'
+import { useState } from 'react'
 import { useGet } from '../api/hooks'
+import { TagFilter } from '../components/TagFilter'
 
-interface Patient {
-  id: string
-  name: string
-  gender: string | null
-  status: string
-  phone: string | null
-}
+interface Patient { id: string; name: string; gender: string | null; status: string; phone: string | null; tags?: Record<string, unknown> | null }
 
 export function PatientWall() {
-  const { data: patients, isLoading } = useGet<Patient[]>('/patients')
+  const { data: patients, isLoading } = useGet<Patient[]>('/patients', { pageSize: 200 })
+  const [selectedTags, setSelectedTags] = useState<string[]>([])
   const navigate = useNavigate()
 
-  if (isLoading)
-    return (
-      <Container py="md">
-        {Array.from({ length: 5 }, (_, i) => (
-          <Skeleton key={i} height={24} mb="sm" />
-        ))}
-      </Container>
+  const filtered = (patients ?? []).filter((p) => {
+    if (selectedTags.length === 0) return true
+    const ptags = p.tags as Record<string, unknown> | null
+    if (!ptags) return false
+    return selectedTags.some((tag) =>
+      Object.values(ptags).some((v) =>
+        String(v).toLowerCase().includes(tag.toLowerCase()),
+      ),
     )
+  })
+
+  if (isLoading) return <Container py="md">{Array.from({ length: 5 }, (_, i) => <Skeleton key={i} height={24} mb="sm" />)}</Container>
 
   return (
     <Container py="md">
-      <Title order={2} mb="md">
-        患者管理
-      </Title>
+      <Title order={2} mb="md">患者管理</Title>
+      <Group mb="md">
+        <TagFilter selected={selectedTags} onChange={setSelectedTags} />
+      </Group>
       <Table striped>
-        <Table.Thead>
-          <Table.Tr>
-            <Table.Th>姓名</Table.Th>
-            <Table.Th>性别</Table.Th>
-            <Table.Th>状态</Table.Th>
-            <Table.Th>操作</Table.Th>
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>
-          {(patients ?? []).map((p) => (
+        <Table.Thead><Table.Tr><Table.Th>姓名</Table.Th><Table.Th>性别</Table.Th><Table.Th>标签</Table.Th><Table.Th>状态</Table.Th><Table.Th>操作</Table.Th></Table.Tr></Table.Thead>
+        <Table.Tbody>{filtered.slice(0, 50).map((p) => {
+          const tags = p.tags ? Object.values(p.tags as object) : []
+          return (
             <Table.Tr key={p.id}>
               <Table.Td>{p.name}</Table.Td>
               <Table.Td>{p.gender ?? '-'}</Table.Td>
-              <Table.Td>
-                <Badge size="xs">{p.status}</Badge>
-              </Table.Td>
-              <Table.Td>
-                <ActionIcon variant="light" onClick={() => navigate({ to: '/patients/' + p.id })}>
-                  <IconEye size={14} />
-                </ActionIcon>
-              </Table.Td>
+              <Table.Td><Group gap={4}>{(tags as string[]).slice(0, 3).map((t) => <Badge key={t} size="xs" variant="light">{String(t)}</Badge>)}</Group></Table.Td>
+              <Table.Td><Badge size="xs">{p.status}</Badge></Table.Td>
+              <Table.Td><ActionIcon variant="light" onClick={() => navigate({ to: '/patients/' + p.id })}><IconEye size={14} /></ActionIcon></Table.Td>
             </Table.Tr>
-          ))}
-        </Table.Tbody>
+          )
+        })}</Table.Tbody>
       </Table>
     </Container>
   )
