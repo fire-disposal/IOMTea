@@ -42,36 +42,28 @@ const patientsRoute = createRoute({
   getParentRoute: () => authRoute, path: '/patients', component: PatientWall,
 })
 
-function PatLayout() { return <PatientDetailShell patientId={useParams({ from: '/_auth/patients/$id' }).id}><Outlet /></PatientDetailShell> }
-
 const patientDetailRoute = createRoute({
-  getParentRoute: () => authRoute, path: '/patients/$id', component: PatLayout,
+  getParentRoute: () => authRoute, path: '/patients/$id', component: PatientDetailShell,
 })
 
 const pOverviewRoute = createRoute({
-  getParentRoute: () => patientDetailRoute, path: '/', component: function Overview() {
-    return <PatientDetailShell patientId={useParams({ from: '/_auth/patients/$id' }).id} />
-  },
+  getParentRoute: () => patientDetailRoute, path: '/',
 })
 
 const pProfileRoute = createRoute({
-  getParentRoute: () => patientDetailRoute, path: '/profile',
-  component: function Profile() { return <PatientProfile patientId={useParams({ from: '/_auth/patients/$id' }).id} /> },
+  getParentRoute: () => patientDetailRoute, path: '/profile', component: PatientProfile,
 })
 
 const pAlertsRoute = createRoute({
-  getParentRoute: () => patientDetailRoute, path: '/alerts',
-  component: function Alerts() { return <PatientAlerts patientId={useParams({ from: '/_auth/patients/$id' }).id} /> },
+  getParentRoute: () => patientDetailRoute, path: '/alerts', component: PatientAlerts,
 })
 
 const pRulesRoute = createRoute({
-  getParentRoute: () => patientDetailRoute, path: '/alert-rules',
-  component: function Rules() { return <PatientAlertRules patientId={useParams({ from: '/_auth/patients/$id' }).id} /> },
+  getParentRoute: () => patientDetailRoute, path: '/alert-rules', component: PatientAlertRules,
 })
 
 const pTimelineRoute = createRoute({
-  getParentRoute: () => patientDetailRoute, path: '/health-timeline',
-  component: function Timeline() { return <HealthTimeline patientId={useParams({ from: '/_auth/patients/$id' }).id} /> },
+  getParentRoute: () => patientDetailRoute, path: '/health-timeline', component: HealthTimeline,
 })
 
 const alertsRoute = createRoute({

@@ -1,42 +1,39 @@
-import { Container, Title, Paper, Text, Switch, TextInput, NumberInput, Button, Group } from '@mantine/core'
+import { Paper, Switch, NumberInput, Button, Group, Skeleton, Container } from '@mantine/core'
 import { useEffect, useState } from 'react'
 import { http } from '../api/client'
 
-interface Rule { metric: string; min?: number; max?: number; enabled: boolean; label?: string; unit?: string }
+interface R { metric: string; min?: number; max?: number; enabled: boolean; label?: string; unit?: string }
+function parseId() { return window.location.pathname.split('/patients/')[1]?.split('/')[0] || '' }
 
-export function PatientAlertRules({ patientId }: { patientId: string }) {
-  const [rules, setRules] = useState<Rule[]>([])
+export function PatientAlertRules() {
+  const pid = parseId()
+  const [rules, setRules] = useState<R[]>([])
+  const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    http.get('/alert-rules/patients/' + patientId + '/alert-rules').then((r) => setRules(r.data as Rule[]))
-  }, [patientId])
+    http.get('/alert-rules/patients/' + pid + '/alert-rules').then((r) => { setRules(r.data as R[]); setLoading(false) })
+  }, [pid])
 
-  const toggle = (i: number) => { const next = [...rules]; next[i].enabled = !next[i].enabled; setRules(next) }
-  const update = (i: number, field: string, value: string | number) => { const next = [...rules]; (next[i] as any)[field] = value; setRules(next) }
+  const toggle = (i: number) => { const n = [...rules]; n[i].enabled = !n[i].enabled; setRules(n) }
+  const upd = (i: number, f: string, v: string | number) => { const n = [...rules]; (n[i] as any)[f] = v; setRules(n) }
+  const save = () => { setSaving(true); http.put('/alert-rules/patients/' + pid + '/alert-rules', { rules } as any).finally(() => setSaving(false)) }
 
-  const save = async () => {
-    setSaving(true)
-    await http.put('/alert-rules/patients/' + patientId + '/alert-rules', { rules } as any)
-    setSaving(false)
-  }
+  if (loading) return <Container py="md">{Array.from({ length: 4 }, (_, i) => <Skeleton key={i} height={24} mb="sm" />)}</Container>
 
   return (
-    <Container py="md">
-      <Group justify="space-between" mb="md"><Title order={3}>告警阈值</Title><Button loading={saving} onClick={save}>保存</Button></Group>
+    <div>
+      <Group justify="flex-end" mb="md"><Button loading={saving} onClick={save}>保存阈值</Button></Group>
       {rules.map((r, i) => (
         <Paper key={r.metric} p="sm" mb="xs" withBorder>
           <Group justify="space-between" mb="xs">
-            <Group gap="xs"><Switch checked={r.enabled} onChange={() => toggle(i)} /><Text fw={500}>{r.label || r.metric}</Text>{r.unit && <Text size="xs" c="dimmed">({r.unit})</Text>}</Group>
+            <Group gap="xs"><Switch checked={r.enabled} onChange={() => toggle(i)} /><span style={{ fontWeight: 500 }}>{r.label || r.metric} {r.unit && <small style={{ color: '#868e96' }}>({r.unit})</small>}</span></Group>
           </Group>
           {r.enabled && (
-            <Group>
-              <NumberInput size="xs" label="最小值" w={100} value={r.min ?? ''} onChange={(v) => update(i, 'min', Number(v))} />
-              <NumberInput size="xs" label="最大值" w={100} value={r.max ?? ''} onChange={(v) => update(i, 'max', Number(v))} />
-            </Group>
+            <Group><NumberInput size="xs" label="最小值" w={100} value={r.min ?? ''} onChange={(v) => upd(i, 'min', Number(v))} /><NumberInput size="xs" label="最大值" w={100} value={r.max ?? ''} onChange={(v) => upd(i, 'max', Number(v))} /></Group>
           )}
         </Paper>
       ))}
-    </Container>
+    </div>
   )
 }

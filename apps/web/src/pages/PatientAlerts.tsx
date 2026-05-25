@@ -1,30 +1,30 @@
-import { Container, Title, Paper, Badge, Group, Text, ActionIcon, SegmentedControl } from '@mantine/core'
+import { Paper, Badge, Group, Text, ActionIcon, SegmentedControl, Skeleton, Container } from '@mantine/core'
 import { IconCheck } from '@tabler/icons-react'
 import { useEffect, useState } from 'react'
 import { http } from '../api/client'
 
-interface Alert { id: string; metric: string; value: unknown; unit: string | null; severity: string | null; status: string | null; recordedAt: string | null }
+interface A { id: string; metric: string; value: unknown; unit: string | null; severity: string | null; status: string | null }
+function parseId() { return window.location.pathname.split('/patients/')[1]?.split('/')[0] || '' }
 
-export function PatientAlerts({ patientId }: { patientId: string }) {
-  const [alerts, setAlerts] = useState<Alert[]>([])
+export function PatientAlerts() {
+  const pid = parseId()
+  const [alerts, setAlerts] = useState<A[]>([])
+  const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('active')
 
   const fetch = () => {
-    http.get('/alerts', { params: { patientId, pageSize: 100 } }).then((r) => setAlerts(r.data as Alert[]))
+    http.get('/alerts', { params: { patientId: pid, pageSize: 100 } }).then((r) => { setAlerts(r.data as A[]); setLoading(false) })
   }
-  useEffect(() => { fetch() }, [patientId])
+  useEffect(() => { fetch() }, [pid])
 
   const filtered = filter === 'all' ? alerts : alerts.filter((a) => a.status !== 'closed' && a.status !== 'resolved')
+  const act = (id: string, action: string) => http.patch('/alerts/' + id, { action } as any).then(fetch)
 
-  const act = async (id: string, action: string) => {
-    await http.patch('/alerts/' + id, { action } as any)
-    fetch()
-  }
+  if (loading) return <Container py="md">{Array.from({ length: 4 }, (_, i) => <Skeleton key={i} height={24} mb="sm" />)}</Container>
 
   return (
-    <Container py="md">
+    <div>
       <Group justify="space-between" mb="md">
-        <Title order={3}>告警记录</Title>
         <SegmentedControl data={[{ value: 'active', label: '活跃' }, { value: 'all', label: '全部' }]} value={filter} onChange={setFilter} />
       </Group>
       {filtered.map((a) => (
@@ -41,6 +41,6 @@ export function PatientAlerts({ patientId }: { patientId: string }) {
           </Group>
         </Paper>
       ))}
-    </Container>
+    </div>
   )
 }
