@@ -54,16 +54,32 @@ export function startMqttListener(
 
   mqttClient.on('connect', () => {
     reconnectAttempts = 0
-    if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null }
+    if (reconnectTimer) {
+      clearTimeout(reconnectTimer)
+      reconnectTimer = null
+    }
     logger.info('✓ MQTT Broker 已连接')
     subscribeTopic(mqttClient, TOPIC, `√ 已订阅 PIN 数据主题: ${TOPIC}`, '✗ MQTT 主题订阅失败')
-    subscribeTopic(mqttClient, ADMIN_TOPIC, `√ 已订阅管理主题: ${ADMIN_TOPIC}`, '✗ MQTT 管理主题订阅失败')
-    subscribeTopic(mqttClient, DEVICE_EVENTS_TOPIC, `√ 已订阅设备事件主题: ${DEVICE_EVENTS_TOPIC}`, '✗ MQTT 设备事件主题订阅失败')
+    subscribeTopic(
+      mqttClient,
+      ADMIN_TOPIC,
+      `√ 已订阅管理主题: ${ADMIN_TOPIC}`,
+      '✗ MQTT 管理主题订阅失败',
+    )
+    subscribeTopic(
+      mqttClient,
+      DEVICE_EVENTS_TOPIC,
+      `√ 已订阅设备事件主题: ${DEVICE_EVENTS_TOPIC}`,
+      '✗ MQTT 设备事件主题订阅失败',
+    )
   })
 
   mqttClient.on('message', async (topic, payload) => {
-    try { await routeMessage(topic, payload, mqttClient) }
-    catch (err) { logger.error({ err, topic }, 'MQTT 消息路由失败') }
+    try {
+      await routeMessage(topic, payload, mqttClient)
+    } catch (err) {
+      logger.error({ err, topic }, 'MQTT 消息路由失败')
+    }
   })
 
   mqttClient.on('error', (err) => {

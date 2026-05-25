@@ -20,9 +20,15 @@ export function RbacManagementPage() {
     patchRole.mutate(
       { id: userId, role: newRole },
       {
-        onSuccess: () => notifications.show({ title: '角色已更新', message: `用户角色已更新为 ${newRole}`, color: 'green' }),
-        onError: () => notifications.show({ title: '更新失败', message: '角色更新失败', color: 'red' }),
-      }
+        onSuccess: () =>
+          notifications.show({
+            title: '角色已更新',
+            message: `用户角色已更新为 ${newRole}`,
+            color: 'green',
+          }),
+        onError: () =>
+          notifications.show({ title: '更新失败', message: '角色更新失败', color: 'red' }),
+      },
     )
   }
 

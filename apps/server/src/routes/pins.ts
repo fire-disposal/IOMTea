@@ -111,7 +111,11 @@ pinsApp.openapi(updatePinRoute, async (c) => {
   const updateData: Record<string, unknown> = {}
   if (body.label !== undefined) updateData.label = body.label
   if (body.pinType !== undefined) updateData.type = body.pinType
-  const [pin] = await db.update(usersPin).set(updateData as any).where(eq(usersPin.pin, code)).returning()
+  const [pin] = await db
+    .update(usersPin)
+    .set(updateData as any)
+    .where(eq(usersPin.pin, code))
+    .returning()
   if (!pin) return c.json({ error: 'Not found' }, 404 as any)
   return c.json(pin)
 })

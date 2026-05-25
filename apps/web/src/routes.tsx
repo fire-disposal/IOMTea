@@ -22,8 +22,8 @@ import { PlanManagementPage } from './pages/PlanManagementPage'
 import { RbacManagementPage } from './pages/RbacManagementPage'
 import { SimulationPage } from './pages/SimulationPage'
 import { UserManagementPage } from './pages/UserManagementPage'
-import { RootLayout } from './routes/__root'
 import { AuthLayout, authBeforeLoad } from './routes/-_auth'
+import { RootLayout } from './routes/__root'
 
 const rootRoute = createRootRoute({ component: RootLayout })
 

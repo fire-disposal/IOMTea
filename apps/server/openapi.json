@@ -1993,10 +1993,6 @@
                     "format": "uuid",
                     "example": "00000000-0000-0000-0000-000000000001"
                   },
-                  "sessionId": {
-                    "type": "string",
-                    "format": "uuid"
-                  },
                   "pinCode": {
                     "type": "string"
                   },
@@ -2067,10 +2063,6 @@
                       "type": "object",
                       "properties": {
                         "patientId": {
-                          "type": "string",
-                          "format": "uuid"
-                        },
-                        "sessionId": {
                           "type": "string",
                           "format": "uuid"
                         },

@@ -29,7 +29,11 @@ const balanceRoute = createRoute({
 
 creditsApp.openapi(balanceRoute, async (c) => {
   const uid = c.get('userId')
-  const [user] = await db.select({ credit: users.credit }).from(users).where(eq(users.id, uid)).limit(1)
+  const [user] = await db
+    .select({ credit: users.credit })
+    .from(users)
+    .where(eq(users.id, uid))
+    .limit(1)
   return c.json({ balance: user?.credit ?? 0 })
 })
 
@@ -100,7 +104,11 @@ const spendRoute = createRoute({
 creditsApp.openapi(spendRoute, async (c) => {
   const body = c.req.valid('json')
 
-  const [user] = await db.select({ credit: users.credit }).from(users).where(eq(users.id, body.userId)).limit(1)
+  const [user] = await db
+    .select({ credit: users.credit })
+    .from(users)
+    .where(eq(users.id, body.userId))
+    .limit(1)
   if (!user || (user.credit ?? 0) < body.amount) {
     return c.json({ error: 'Insufficient credits' }, 400 as any)
   }

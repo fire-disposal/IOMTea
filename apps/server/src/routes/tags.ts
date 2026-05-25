@@ -94,7 +94,10 @@ const updateTagRoute = createRoute({
         'application/json': {
           schema: z.object({
             name: z.string().min(1).max(50).optional(),
-            color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+            color: z
+              .string()
+              .regex(/^#[0-9a-fA-F]{6}$/)
+              .optional(),
           }),
         },
       },
@@ -106,7 +109,11 @@ const updateTagRoute = createRoute({
 tagsApp.openapi(updateTagRoute, async (c) => {
   const id = c.req.param('id')
   const body = c.req.valid('json')
-  const [tag] = await db.update(patientTags).set(body as any).where(eq(patientTags.id, id)).returning()
+  const [tag] = await db
+    .update(patientTags)
+    .set(body as any)
+    .where(eq(patientTags.id, id))
+    .returning()
   if (!tag) return c.json({ error: 'Not found' }, 404 as any)
   return c.json(tag)
 })

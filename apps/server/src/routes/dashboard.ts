@@ -76,7 +76,10 @@ const patientDashboardRoute = createRoute({
   method: 'get',
   path: '/patient/:id',
   middleware: [jwtAuth, requirePermission('/dashboard', 'read')] as const,
-  responses: { 200: { description: 'Patient dashboard overview' }, 404: { description: 'Not found' } },
+  responses: {
+    200: { description: 'Patient dashboard overview' },
+    404: { description: 'Not found' },
+  },
 })
 
 dashboard.openapi(patientDashboardRoute, async (c) => {

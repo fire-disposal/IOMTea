@@ -18,8 +18,8 @@ import {
   IconFlask,
   IconKey,
   IconLogout,
-  IconShield,
   IconScreenShare,
+  IconShield,
   IconUsers,
   IconUsersGroup,
 } from '@tabler/icons-react'
@@ -184,7 +184,14 @@ export const authBeforeLoad = ({ location }: { location: { href: string } }) => 
   const state = useAuthStore.getState()
   if (!state.token) throw redirect({ to: '/login', search: { redirect: location.href } })
 
-  const adminRoutes = ['/patients', '/data-export', '/simulation', '/iot/pins', '/plans', '/node-graph']
+  const adminRoutes = [
+    '/patients',
+    '/data-export',
+    '/simulation',
+    '/iot/pins',
+    '/plans',
+    '/node-graph',
+  ]
   const superAdminRoutes = ['/settings/users', '/settings/rbac']
   const pathname = location.href || ''
 

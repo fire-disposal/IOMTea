@@ -3,12 +3,17 @@ import { successSchema } from '@iomtea/shared-types'
 import { eq } from 'drizzle-orm'
 import { db } from '../core/db'
 import { patients } from '../core/db/schema'
+import { listMetrics } from '../core/pipeline/registry'
 import { jwtAuth } from '../middleware/auth'
 import { requirePermission } from '../middleware/rbac'
-import { listMetrics } from '../core/pipeline/registry'
 
 function getDefaultThresholds(): {
-  metric: string; min?: number; max?: number; enabled: boolean; label: string; unit: string
+  metric: string
+  min?: number
+  max?: number
+  enabled: boolean
+  label: string
+  unit: string
 }[] {
   return listMetrics()
     .filter((m) => m.normalRange)
