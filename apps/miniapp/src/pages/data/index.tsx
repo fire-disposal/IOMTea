@@ -1,45 +1,37 @@
-// @ts-nocheck
-import { Picker, Text, View } from '@tarojs/components'
+import { Text, View } from '@tarojs/components'
 import { useEffect, useState } from 'react'
-import { trpc } from '../../utils/trpc'
+import { api } from '../../utils/api'
+import './index.scss'
 
-export default function Data() {
+export default function DataView() {
   const [patients, setPatients] = useState<any[]>([])
-  const [selectedId, setSelectedId] = useState('')
-  const [vitals, setVitals] = useState<any[]>([])
+  const [selected, setSelected] = useState('')
+  const [latest, setLatest] = useState<any[]>([])
 
-  useEffect(() => {
-    trpc.patient.list.query({ pageSize: 100, status: 'active' }).then((r: any) => {
-      setPatients(r || [])
-      if (r && r.length > 0) setSelectedId(r[0].id)
-    })
-  }, [])
+  useEffect(() => { api.get<any[]>('/patients').then(setPatients).catch(() => {}) }, [])
 
-  useEffect(() => {
-    if (!selectedId) return
-    trpc.data.latest.query({ patientId: selectedId }).then((r: any) => setVitals(r || []))
-  }, [selectedId])
-
-  const selectedName = patients.find((p) => p.id === selectedId)?.name || ''
+  const selectPatient = (id: string) => {
+    setSelected(id)
+    api.get<any[]>('/data/latest', { patientId: id }).then(setLatest).catch(() => {})
+  }
 
   return (
-    <View className="page">
-      <Picker
-        mode="selector"
-        range={patients.map((p) => p.name)}
-        onChange={(e) => setSelectedId(patients[Number(e.detail.value)]?.id)}
-      >
-        <View className="picker">当前患�? {selectedName}</View>
-      </Picker>
-      {vitals.length === 0 && <Text className="empty">暂无数据</Text>}
-      {vitals.map((v) => (
-        <View key={v.metric} className="vital-item">
-          <Text className="vital-metric">{v.metric}</Text>
-          <Text className="vital-value">
-            {v.value} {v.unit}
-          </Text>
+    <View className="data-page">
+      <View className="page-title">数据查看</View>
+      {!selected ? patients.map((p: any) => (
+        <View key={p.id} className="data-patient" onClick={() => selectPatient(p.id)}>
+          <Text>{p.name}</Text>
         </View>
-      ))}
+      )) : (
+        <View>
+          <View onClick={() => setSelected('')}><Text>← 返回</Text></View>
+          {latest.map((m: any) => (
+            <View key={m.metric} className="data-item">
+              <Text>{m.metric}: {String(m.value ?? '-')} {m.unit}</Text>
+            </View>
+          ))}
+        </View>
+      )}
     </View>
   )
 }

@@ -1,40 +1,35 @@
-// @ts-nocheck
-import { getUnsyncedRecords, markSynced } from './storage'
-import { trpc } from './trpc'
+import Taro from '@tarojs/taro'
+import { api } from './api'
+import { STORAGE_KEYS } from '../constants/storage-keys'
 
-const SYNC_INTERVAL = 5 * 60 * 1000
+export async function syncUnsyncedRecords(): Promise<void> {
+  const records = (Taro.getStorageSync(STORAGE_KEYS.RECORDS) || []) as any[]
+  const unsynced = records.filter((r: any) => !r.synced)
 
-export interface SyncResult {
-  syncedIds: string[]
-  earnedCredits?: Array<{ moduleKey: string; amount: number; streakDay: number }>
-}
+  if (unsynced.length === 0) return
 
-export async function syncUnsyncedRecords(): Promise<SyncResult | null> {
-  const unsynced = getUnsyncedRecords()
-  if (unsynced.length === 0) return null
+  const events = unsynced.map((r: any) => {
+    let metric = r.type
+    let value = r.data
 
-  try {
-    const result = await trpc.healthRecords.batchCreate.mutate({ records: unsynced })
-    if (result?.syncedIds) {
-      markSynced(result.syncedIds)
-    }
+    if (r.type === 'blood_glucose') { metric = 'glucose'; value = r.data.value_mgdl ?? Number(r.data.value) }
+    else if (r.type === 'blood_pressure') { metric = 'systolic_bp'; value = Number(r.data.systolic) }
+    else if (r.type === 'weight') metric = 'weight'
+    else if (r.type === 'medication') { metric = 'medication'; value = r.data }
+    else if (r.type === 'period') { metric = 'period'; value = r.data }
+
     return {
-      syncedIds: result?.syncedIds ?? [],
-      earnedCredits: result?.earnedCredits,
+      patientId: Taro.getStorageSync(STORAGE_KEYS.PATIENT_ID) || '',
+      kind: 'observation',
+      metric,
+      value: typeof value === 'number' ? value : value ?? 0,
+      source: 'manual',
+      recordedAt: r.recordedAt || new Date().toISOString(),
     }
-  } catch (err) {
-    console.warn('[Sync] failed, will retry later:', err)
-    return null
-  }
-}
-
-export function startAutoSync(onSyncResult?: (result: SyncResult) => void): void {
-  syncUnsyncedRecords().then((r) => {
-    if (r) onSyncResult?.(r)
   })
-  setInterval(() => {
-    syncUnsyncedRecords().then((r) => {
-      if (r) onSyncResult?.(r)
-    })
-  }, SYNC_INTERVAL)
+
+  await api.post('/ingest/batch', { events })
+
+  for (const r of unsynced) r.synced = true
+  Taro.setStorageSync(STORAGE_KEYS.RECORDS, records)
 }

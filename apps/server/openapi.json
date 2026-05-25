@@ -249,6 +249,36 @@
         }
       }
     },
+    "/auth/wechat-login": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "code"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "WeChat login failed"
+          }
+        }
+      }
+    },
     "/users": {
       "get": {
         "responses": {
@@ -282,6 +312,10 @@
                       "email": {
                         "type": "string",
                         "nullable": true
+                      },
+                      "credit": {
+                        "type": "number",
+                        "default": 0
                       },
                       "status": {
                         "type": "string"
@@ -340,6 +374,10 @@
                     "email": {
                       "type": "string",
                       "nullable": true
+                    },
+                    "credit": {
+                      "type": "number",
+                      "default": 0
                     },
                     "status": {
                       "type": "string"
@@ -420,6 +458,10 @@
                     "email": {
                       "type": "string",
                       "nullable": true
+                    },
+                    "credit": {
+                      "type": "number",
+                      "default": 0
                     },
                     "status": {
                       "type": "string"
@@ -1265,6 +1307,36 @@
             }
           }
         }
+      },
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Linked users",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "userId": {
+                        "type": "string"
+                      },
+                      "relation": {
+                        "type": "string",
+                        "nullable": true
+                      }
+                    },
+                    "required": [
+                      "userId",
+                      "relation"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/patients/:id/users/:userId": {
@@ -1287,6 +1359,84 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/patients/bulk": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "patients": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 100
+                        },
+                        "gender": {
+                          "type": "string"
+                        },
+                        "birthDate": {
+                          "type": "string"
+                        },
+                        "tags": {
+                          "type": "object",
+                          "additionalProperties": {
+                            "nullable": true
+                          }
+                        }
+                      },
+                      "required": [
+                        "name"
+                      ]
+                    },
+                    "minItems": 1,
+                    "maxItems": 100
+                  }
+                },
+                "required": [
+                  "patients"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Batch result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "created": {
+                      "type": "number"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "required": [
+                    "created",
+                    "errors"
+                  ]
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Batch created"
           }
         }
       }
@@ -2825,6 +2975,409 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/plans": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "All plans"
+          }
+        }
+      },
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  },
+                  "title": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "fields": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "label": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "choice",
+                            "multi",
+                            "likert",
+                            "vas",
+                            "number",
+                            "text"
+                          ]
+                        },
+                        "required": {
+                          "type": "boolean",
+                          "default": true
+                        },
+                        "options": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "value": {
+                                "type": "string"
+                              },
+                              "label": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "value",
+                              "label"
+                            ]
+                          }
+                        },
+                        "labels": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "min_label": {
+                          "type": "string"
+                        },
+                        "max_label": {
+                          "type": "string"
+                        },
+                        "min": {
+                          "type": "number"
+                        },
+                        "max": {
+                          "type": "number"
+                        },
+                        "unit": {
+                          "type": "string"
+                        },
+                        "placeholder": {
+                          "type": "string"
+                        },
+                        "rows": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "default": 3
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "label",
+                        "type"
+                      ]
+                    },
+                    "default": []
+                  },
+                  "rewardCredits": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "default": 0
+                  },
+                  "cron": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "title"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        }
+      }
+    },
+    "/plans/:id": {
+      "patch": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  },
+                  "title": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "fields": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "label": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "choice",
+                            "multi",
+                            "likert",
+                            "vas",
+                            "number",
+                            "text"
+                          ]
+                        },
+                        "required": {
+                          "type": "boolean",
+                          "default": true
+                        },
+                        "options": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "value": {
+                                "type": "string"
+                              },
+                              "label": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "value",
+                              "label"
+                            ]
+                          }
+                        },
+                        "labels": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "min_label": {
+                          "type": "string"
+                        },
+                        "max_label": {
+                          "type": "string"
+                        },
+                        "min": {
+                          "type": "number"
+                        },
+                        "max": {
+                          "type": "number"
+                        },
+                        "unit": {
+                          "type": "string"
+                        },
+                        "placeholder": {
+                          "type": "string"
+                        },
+                        "rows": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "default": 3
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "label",
+                        "type"
+                      ]
+                    },
+                    "default": []
+                  },
+                  "rewardCredits": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "default": 0
+                  },
+                  "cron": {
+                    "type": "string"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "active",
+                      "archived"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      },
+      "delete": {
+        "responses": {
+          "200": {
+            "description": "Archived"
+          }
+        }
+      }
+    },
+    "/plans/today": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "patientId",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Today plans"
+          }
+        }
+      }
+    },
+    "/plans/:id/complete": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "patientId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "userId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "responses": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "nullable": true
+                    }
+                  }
+                },
+                "required": [
+                  "patientId"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Completed + credits earned"
+          }
+        }
+      }
+    },
+    "/plans/:id/completions": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false,
+            "name": "patientId",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Completion history"
+          }
+        }
+      }
+    },
+    "/credits/transactions": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false,
+            "name": "patientId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false,
+            "name": "userId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "number",
+              "minimum": 1,
+              "default": 1
+            },
+            "required": false,
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 50
+            },
+            "required": false,
+            "name": "pageSize",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Credit transactions"
           }
         }
       }
