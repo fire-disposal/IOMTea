@@ -1,6 +1,5 @@
 import {
   date,
-  doublePrecision,
   index,
   integer,
   jsonb,
@@ -11,6 +10,7 @@ import {
   uuid,
   varchar,
 } from 'drizzle-orm/pg-core'
+import { sql } from 'drizzle-orm'
 import {
   alertSeverityEnum,
   alertStatusEnum,
@@ -70,9 +70,23 @@ export const patients = pgTable('patients', {
   emergencyContact: varchar('emergency_contact', { length: 100 }),
   emergencyPhone: varchar('emergency_phone', { length: 20 }),
   status: patientStatusEnum('status').notNull().default('active'),
-  tags: jsonb('tags').default({}).notNull(),
+  tags: jsonb('tags').default(sql`'{}'::jsonb`).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+})
+
+export const sessions = pgTable('sessions', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  patientId: uuid('patient_id')
+    .notNull()
+    .references(() => patients.id, { onDelete: 'cascade' }),
+  source: text('source').notNull(),
+  type: text('type'),
+  status: text('status').default('active'),
+  startedAt: timestamp('started_at', { mode: 'date' }).notNull().defaultNow(),
+  endedAt: timestamp('ended_at', { mode: 'date' }),
+  tags: jsonb('tags').default(sql`'{}'::jsonb`),
+  createdAt: timestamp('created_at', { mode: 'date' }).defaultNow(),
 })
 
 export const events = pgTable(
@@ -87,13 +101,14 @@ export const events = pgTable(
     }),
     kind: kindEnum('kind').notNull(),
     metric: varchar('metric', { length: 100 }).notNull(),
-    value: doublePrecision('value'),
+    value: jsonb('value').notNull(),
     unit: varchar('unit', { length: 50 }),
     confidence: real('confidence'),
     source: eventSourceEnum('source').default('manual'),
     severity: alertSeverityEnum('severity'),
     status: alertStatusEnum('status'),
-    tags: jsonb('tags').default({}).notNull(),
+    sessionId: uuid('session_id').references(() => sessions.id, { onDelete: 'set null' }),
+    tags: jsonb('tags').default(sql`'{}'::jsonb`).notNull(),
     recordedAt: timestamp('recorded_at', { withTimezone: true }).notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },

@@ -1,18 +1,15 @@
 import {
   date,
-  integer,
+  jsonb,
   pgTable,
   text,
-  time,
   timestamp,
-  uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core'
+import { sql } from 'drizzle-orm'
 import {
   medicationStatusEnum,
   medicationRouteEnum,
-  adherenceStatusEnum,
-  confirmationMethodEnum,
 } from './enums'
 import { users, patients } from '../schema.js'
 
@@ -30,38 +27,9 @@ export const medications = pgTable('medications', {
   startDate: date('start_date').notNull(),
   endDate: date('end_date'),
   instructions: text('instructions'),
+  tags: jsonb('tags').default(sql`'{}'::jsonb`),
   status: medicationStatusEnum('status').notNull().default('active'),
   prescribedById: uuid('prescribed_by_id').references(() => users.id, { onDelete: 'set null' }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 })
-
-export const medicationSchedules = pgTable('medication_schedules', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  medicationId: uuid('medication_id')
-    .references(() => medications.id, { onDelete: 'cascade' })
-    .notNull(),
-  scheduledTime: time('scheduled_time').notNull(),
-  dayOfWeek: integer('day_of_week').array(),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-})
-
-export const medicationAdherence = pgTable(
-  'medication_adherence',
-  {
-    id: uuid('id').defaultRandom().primaryKey(),
-    scheduleId: uuid('schedule_id')
-      .references(() => medicationSchedules.id, { onDelete: 'cascade' })
-      .notNull(),
-    dueDate: date('due_date').notNull(),
-    dueTime: time('due_time').notNull(),
-    takenAt: timestamp('taken_at', { withTimezone: true }),
-    status: adherenceStatusEnum('status').notNull().default('missed'),
-    confirmedBy: confirmationMethodEnum('confirmed_by').default('unknown'),
-    notes: text('notes'),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  },
-  (t) => ({
-    unq: uniqueIndex('adherence_unique').on(t.scheduleId, t.dueDate, t.dueTime),
-  }),
-)

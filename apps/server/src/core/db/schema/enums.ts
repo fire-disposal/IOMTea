@@ -28,12 +28,12 @@ export const alertStatusEnum = pgEnum('alert_status', [
   'handled',
   'closed',
 ])
-export const kindEnum = pgEnum('kind', ['observation', 'alert', 'behavior', 'location'])
+export const kindEnum = pgEnum('kind', ['observation', 'alert', 'behavior', 'location', 'ema_response', 'batch_record'])
 
 export const userStatusEnum = pgEnum('user_status', ['active', 'disabled', 'pending'])
 export const genderEnum = pgEnum('gender', ['male', 'female', 'other'])
 export const bloodTypeEnum = pgEnum('blood_type', ['A', 'B', 'AB', 'O'])
-export const eventSourceEnum = pgEnum('event_source', ['iot', 'cv', 'simulator', 'manual'])
+export const eventSourceEnum = pgEnum('event_source', ['iot', 'cv', 'simulator', 'manual', 'batch'])
 export const medicationStatusEnum = pgEnum('medication_status', [
   'active',
   'completed',
@@ -81,12 +81,12 @@ export type AlertStatus =
   | 'assigned'
   | 'handled'
   | 'closed'
-export type EventKind = 'observation' | 'alert' | 'behavior' | 'location'
+export type EventKind = 'observation' | 'alert' | 'behavior' | 'location' | 'ema_response' | 'batch_record'
 
 export type UserStatus = 'active' | 'disabled' | 'pending'
 export type Gender = 'male' | 'female' | 'other'
 export type BloodType = 'A' | 'B' | 'AB' | 'O'
-export type EventSource = 'iot' | 'cv' | 'simulator' | 'manual'
+export type EventSource = 'iot' | 'cv' | 'simulator' | 'manual' | 'batch'
 export type MedicationStatus = 'active' | 'completed' | 'paused' | 'cancelled'
 export type MedicationRoute = 'oral' | 'injection' | 'topical' | 'inhalation' | 'other'
 export type AdherenceStatus = 'taken' | 'missed' | 'skipped' | 'delayed'
