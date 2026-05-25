@@ -6,8 +6,8 @@ import { addLocalRecord, getTrendData } from '../../../utils/storage'
 import './index.scss'
 
 const TOGGLE_OPTIONS = [
-  { value: 'no', label: '仅体�? },
-  { value: 'yes', label: '含体�? },
+  { value: 'no', label: '仅体重' },
+  { value: 'yes', label: '含体脂' },
 ]
 
 export default function WeightRecord() {
@@ -24,7 +24,7 @@ export default function WeightRecord() {
 
   const handleSave = useCallback(() => {
     if (!weight) {
-      Taro.showToast({ title: '请输入体�?, icon: 'none' })
+      Taro.showToast({ title: '请输入体重', icon: 'none' })
       return
     }
     setSaving(true)
@@ -61,7 +61,7 @@ export default function WeightRecord() {
       {showFat === 'yes' && (
         <View className="weight-section">
           <NumberInput value={bodyFat} onChange={setBodyFat} decimal placeholder="20.0" />
-          <Text className="weight-label">体脂�?(%)</Text>
+          <Text className="weight-label">体脂率 (%)</Text>
         </View>
       )}
     </FormShell>

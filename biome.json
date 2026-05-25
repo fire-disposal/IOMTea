@@ -11,6 +11,9 @@
     "enabled": true,
     "rules": { "recommended": true }
   },
+  "css": {
+    "parser": { "cssModules": true }
+  },
   "javascript": {
     "formatter": {
       "quoteStyle": "single",

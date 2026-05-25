@@ -1,8 +1,6 @@
-import { useMemo } from 'react'
-import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend,
-} from 'recharts'
 import { Paper, Text } from '@mantine/core'
+import { useMemo } from 'react'
+import { Bar, BarChart, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
 interface TimelinePoint {
   time: number
@@ -43,7 +41,10 @@ export function GanttTimeline({ data, height = 300 }: Props) {
       const bucketStart = min + i * bucketMs
       const bucketEnd = bucketStart + bucketMs
       const bucketData: Record<string, unknown> = {
-        time: new Date(bucketStart).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
+        time: new Date(bucketStart).toLocaleTimeString('zh-CN', {
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
         _ts: bucketStart,
       }
       for (const m of metrics) {
@@ -67,7 +68,13 @@ export function GanttTimeline({ data, height = 300 }: Props) {
   }, [data])
 
   if (data.length === 0) {
-    return <Paper p="md" withBorder><Text c="dimmed" ta="center">暂无数据</Text></Paper>
+    return (
+      <Paper p="md" withBorder>
+        <Text c="dimmed" ta="center">
+          暂无数据
+        </Text>
+      </Paper>
+    )
   }
 
   return (
@@ -76,10 +83,12 @@ export function GanttTimeline({ data, height = 300 }: Props) {
         <XAxis dataKey="time" tick={{ fontSize: 11 }} />
         <YAxis tick={false} width={30} />
         <Tooltip
-          formatter={((value: unknown, name: string) => {
-            const v = Number(value)
-            return [isNaN(v) ? '-' : v.toFixed(1), displayNameMap[name] || name]
-          }) as any}
+          formatter={
+            ((value: unknown, name: string) => {
+              const v = Number(value)
+              return [isNaN(v) ? '-' : v.toFixed(1), displayNameMap[name] || name]
+            }) as any
+          }
           labelFormatter={(label) => `时间: ${label}`}
         />
         <Legend

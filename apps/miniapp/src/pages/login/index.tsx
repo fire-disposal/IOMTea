@@ -13,32 +13,21 @@ export default function Login() {
     try {
       const res = await Taro.login()
       if (!res.code) throw new Error('wx.login failed')
-
-      const data = await api.post<{
-        accessToken: string
-        refreshToken: string
-        user: { id: string; username: string; displayName: string | null; role: string }
-      }>('/auth/wechat-login', { code: res.code })
-
+      const data = await api.post<{ accessToken: string; refreshToken: string; user: { id: string; username: string; displayName: string | null } }>('/auth/wechat-login', { code: res.code })
       Taro.setStorageSync(STORAGE_KEYS.TOKEN, data.accessToken)
       Taro.setStorageSync(STORAGE_KEYS.REFRESH_TOKEN, data.refreshToken)
       Taro.setStorageSync(STORAGE_KEYS.USER_NAME, data.user.displayName || data.user.username)
       Taro.setStorageSync(STORAGE_KEYS.USER_ID, data.user.id)
-
       Taro.redirectTo({ url: '/pages/index/index' })
-    } catch (e: any) {
-      console.error('Login failed:', e.message)
-    } finally {
-      setLoading(false)
-    }
+    } catch { Taro.showToast({ title: '登录失败', icon: 'none' }) }
+    finally { setLoading(false) }
   }
 
   return (
     <View className="login-page">
-      <View className="login-logo">🍵 IOMTea</View>
+      <View className="login-logo">IOMTea</View>
       <View className="login-desc">健康数据监护平台</View>
-      <Button className="login-btn" loading={loading} onClick={handleWechatLogin}>
-        微信一键登�?      </Button>
+      <Button className="login-btn" loading={loading} onClick={handleWechatLogin}>微信一键登录</Button>
     </View>
   )
 }

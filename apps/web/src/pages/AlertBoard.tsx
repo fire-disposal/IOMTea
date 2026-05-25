@@ -1,9 +1,17 @@
-import { Container, Title, Group, Paper, Badge, Text, Skeleton, ActionIcon } from '@mantine/core'
+import { ActionIcon, Badge, Container, Group, Paper, Skeleton, Text, Title } from '@mantine/core'
 import { IconEye } from '@tabler/icons-react'
 import { useNavigate } from '@tanstack/react-router'
 import { useGet, usePost } from '../api/hooks'
 
-interface Alert { id: string; patientId: string; metric: string; value: unknown; unit: string | null; severity: string | null; status: string | null }
+interface Alert {
+  id: string
+  patientId: string
+  metric: string
+  value: unknown
+  unit: string | null
+  severity: string | null
+  status: string | null
+}
 
 export function AlertBoard() {
   const { data: alerts, isLoading } = useGet<Alert[]>('/alerts', { pageSize: 100 })
@@ -12,26 +20,52 @@ export function AlertBoard() {
 
   const filtered = (alerts ?? []).filter((a) => a.status !== 'closed' && a.status !== 'resolved')
 
-  if (isLoading) return <Container py="md">{Array.from({ length: 4 }, (_, i) => <Skeleton key={i} height={24} mb="sm" />)}</Container>
+  if (isLoading)
+    return (
+      <Container py="md">
+        {Array.from({ length: 4 }, (_, i) => (
+          <Skeleton key={i} height={24} mb="sm" />
+        ))}
+      </Container>
+    )
 
   return (
     <Container py="md">
-      <Title order={2} mb="md">告警看板</Title>
+      <Title order={2} mb="md">
+        告警看板
+      </Title>
       {filtered.map((a) => (
         <Paper key={a.id} p="sm" mb="xs" withBorder>
           <Group justify="space-between">
             <Group gap="xs">
-              <Badge color={a.severity === 'critical' ? 'red' : 'yellow'} size="xs">{a.severity}</Badge>
-              <Text size="sm">{a.metric}: {String(a.value ?? '-')} {a.unit}</Text>
+              <Badge color={a.severity === 'critical' ? 'red' : 'yellow'} size="xs">
+                {a.severity}
+              </Badge>
+              <Text size="sm">
+                {a.metric}: {String(a.value ?? '-')} {a.unit}
+              </Text>
             </Group>
             <Group gap="xs">
               {a.status === 'new' && (
-                <Badge size="xs" style={{ cursor: 'pointer' }} color="green" onClick={() => acknowledge.mutate({ id: a.id, action: 'acknowledge' } as any)}>确认</Badge>
+                <Badge
+                  size="xs"
+                  style={{ cursor: 'pointer' }}
+                  color="green"
+                  onClick={() => acknowledge.mutate({ id: a.id, action: 'acknowledge' } as any)}
+                >
+                  确认
+                </Badge>
               )}
-              <ActionIcon variant="light" size="sm" onClick={() => navigate({ to: `/patients/${a.patientId}/alerts` })}>
+              <ActionIcon
+                variant="light"
+                size="sm"
+                onClick={() => navigate({ to: `/patients/${a.patientId}/alerts` })}
+              >
                 <IconEye size={14} />
               </ActionIcon>
-              <Badge size="xs" variant="light">{a.status}</Badge>
+              <Badge size="xs" variant="light">
+                {a.status}
+              </Badge>
             </Group>
           </Group>
         </Paper>

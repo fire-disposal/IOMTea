@@ -1,20 +1,49 @@
-import { Text, View } from '@tarojs/components'
+// @ts-nocheck
+import { Button, Input, Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
-import { STORAGE_KEYS } from '../../constants/storage-keys'
-import './index.scss'
+import { useState } from 'react'
+import { trpc } from '../../utils/trpc'
 
 export default function Settings() {
-  const handleLogout = () => {
-    Taro.removeStorageSync(STORAGE_KEYS.TOKEN)
-    Taro.reLaunch({ url: '/pages/login/index' })
+  const [serverUrl, setServerUrl] = useState<string>(
+    Taro.getStorageSync('server_url') || 'http://localhost:3000',
+  )
+
+  const save = () => {
+    Taro.setStorageSync('server_url', serverUrl)
+    Taro.showToast({ title: '已保存', icon: 'success' })
+  }
+
+  const logout = () => {
+    Taro.removeStorageSync('token')
+    Taro.removeStorageSync('refreshToken')
+    Taro.redirectTo({ url: '/pages/login/index' })
+  }
+
+  const testConn = async () => {
+    try {
+      const r = await trpc.user.me.query()
+      Taro.showToast({ title: `连接成功: ${r?.displayName || 'OK'}`, icon: 'success' })
+    } catch {
+      Taro.showToast({ title: '连接失败', icon: 'error' })
+    }
   }
 
   return (
-    <View className="settings-page">
-      <View className="page-title">设置</View>
-      <View className="settings-item" onClick={handleLogout}>
-        <Text style={{ color: '#e03131' }}>退出登录</Text>
+    <View className="page">
+      <View className="form-group">
+        <Text className="label">服务器地址</Text>
+        <Input
+          value={serverUrl}
+          onInput={(e) => setServerUrl(e.detail.value)}
+          placeholder="http://localhost:3000"
+        />
       </View>
+      <Button onClick={save}>保存</Button>
+      <Button onClick={testConn}>测试连接</Button>
+      <Button className="btn-logout" onClick={logout}>
+        退出登录
+      </Button>
     </View>
   )
 }

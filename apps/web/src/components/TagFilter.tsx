@@ -1,7 +1,11 @@
-import { Group, Badge, Text } from '@mantine/core'
+import { Badge, Group, Text } from '@mantine/core'
 import { useGet } from '../api/hooks'
 
-interface Tag { id: string; name: string; color: string | null }
+interface Tag {
+  id: string
+  name: string
+  color: string | null
+}
 
 interface Props {
   selected: string[]
@@ -18,7 +22,9 @@ export function TagFilter({ selected, onChange }: Props) {
 
   return (
     <Group gap="xs">
-      <Text size="sm" c="dimmed">筛选:</Text>
+      <Text size="sm" c="dimmed">
+        筛选:
+      </Text>
       {(tags ?? []).map((t) => (
         <Badge
           key={t.id}

@@ -210,7 +210,7 @@ patientsApp.openapi(unlinkUserPatRoute, async (c) => {
   await db
     .delete(userPatientLinks)
     .where(and(eq(userPatientLinks.userId, userId), eq(userPatientLinks.patientId, patientId)))
-   return c.json({ success: true })
+  return c.json({ success: true })
 })
 
 // ── Batch create patients ──
@@ -223,12 +223,17 @@ const bulkCreatePatRoute = createRoute({
       content: {
         'application/json': {
           schema: z.object({
-            patients: z.array(z.object({
-              name: z.string().min(1).max(100),
-              gender: z.string().optional(),
-              birthDate: z.string().optional(),
-              tags: z.record(z.string(), z.unknown()).optional(),
-            })).min(1).max(100),
+            patients: z
+              .array(
+                z.object({
+                  name: z.string().min(1).max(100),
+                  gender: z.string().optional(),
+                  birthDate: z.string().optional(),
+                  tags: z.record(z.string(), z.unknown()).optional(),
+                }),
+              )
+              .min(1)
+              .max(100),
           }),
         },
       },
@@ -236,7 +241,14 @@ const bulkCreatePatRoute = createRoute({
   },
   responses: {
     201: { description: 'Batch created' },
-    200: { content: { 'application/json': { schema: z.object({ created: z.number(), errors: z.array(z.string()) }) } }, description: 'Batch result' },
+    200: {
+      content: {
+        'application/json': {
+          schema: z.object({ created: z.number(), errors: z.array(z.string()) }),
+        },
+      },
+      description: 'Batch result',
+    },
   },
 })
 
@@ -266,7 +278,14 @@ const listUsersPatRoute = createRoute({
   method: 'get',
   path: '/:id/users',
   responses: {
-    200: { content: { 'application/json': { schema: z.array(z.object({ userId: z.string(), relation: z.string().nullable() })) } }, description: 'Linked users' },
+    200: {
+      content: {
+        'application/json': {
+          schema: z.array(z.object({ userId: z.string(), relation: z.string().nullable() })),
+        },
+      },
+      description: 'Linked users',
+    },
   },
 })
 

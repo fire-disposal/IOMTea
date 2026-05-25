@@ -16,7 +16,7 @@ export default function Spo2Record() {
 
   const handleSave = useCallback(() => {
     if (!value || Number(value) <= 0 || Number(value) > 100) {
-      Taro.showToast({ title: '请输入有效血氧�?(0-100)', icon: 'none' })
+      Taro.showToast({ title: '请输入有效血氧值 (0-100)', icon: 'none' })
       return
     }
     setSaving(true)
@@ -34,7 +34,7 @@ export default function Spo2Record() {
 
   return (
     <FormShell
-      title="记录血�?
+      title="记录血氧"
       unit="%"
       onSave={handleSave}
       saving={saving}

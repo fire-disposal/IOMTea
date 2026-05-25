@@ -61,7 +61,7 @@ export default function HealthPage() {
         </View>
 
         <View className="health-cal-toggle" onClick={() => setCalVisible((v) => !v)}>
-          <Text>{calVisible ? '收起日历 �? : '展开日历 �?}</Text>
+          <Text>{calVisible ? '收起日历 ▲' : '展开日历 ▼'}</Text>
         </View>
 
         {calVisible && (
@@ -100,7 +100,7 @@ export default function HealthPage() {
                 description={m.unit ? `记录${m.unit}` : '记录'}
                 extra={
                   <Tag type={counts[m.key] > 0 ? 'primary' : 'default'}>
-                    {counts[m.key] > 0 ? `今日 ${counts[m.key]} 次` : '未记�?}
+                    {counts[m.key] > 0 ? `今日 ${counts[m.key]} 次` : '未记录'}
                   </Tag>
                 }
                 onClick={() => Taro.navigateTo({ url: m.page })}
@@ -108,8 +108,8 @@ export default function HealthPage() {
             ))}
             <Cell
               title="全部记录"
-              description="按类型筛选历史数�?
-              extra={<Text style={{ color: '#999', fontSize: '12px' }}>�?/Text>}
+              description="按类型筛选历史数据"
+              extra={<Text style={{ color: '#999', fontSize: '12px' }}>→</Text>}
               onClick={() => Taro.navigateTo({ url: '/pages/records/index' })}
             />
           </CellGroup>

@@ -25,17 +25,17 @@ import { alertRulesApp } from './routes/alertRules'
 import { alertsApp } from './routes/alerts'
 // ── REST Route imports ──
 import { auth } from './routes/auth'
+import { creditsApp } from './routes/credits'
 import { dashboard } from './routes/dashboard'
 import { dataApp } from './routes/data'
 import { exportApp } from './routes/export'
 import { ingestApp } from './routes/ingest'
 import { patientsApp } from './routes/patients'
 import { pinsApp } from './routes/pins'
+import { plansApp } from './routes/plans'
 import { tagsApp } from './routes/tags'
 import { twinApp } from './routes/twin'
 import { usersApp } from './routes/users'
-import { plansApp } from './routes/plans'
-import { creditsApp } from './routes/credits'
 
 function resolveCorsOrigins(rawCorsOrigin: string | undefined): string[] {
   if (!rawCorsOrigin) return ['http://localhost:5173']

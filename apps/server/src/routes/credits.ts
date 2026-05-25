@@ -1,14 +1,15 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+import { and, desc, eq } from 'drizzle-orm'
 import { db } from '../core/db'
 import { creditTransactions } from '../core/db/schema/plan'
-import { eq, and, desc } from 'drizzle-orm'
 import { jwtAuth } from '../middleware/auth'
 
 const creditsApp = new OpenAPIHono()
 creditsApp.use('*', jwtAuth)
 
 const transactionsRoute = createRoute({
-  method: 'get', path: '/transactions',
+  method: 'get',
+  path: '/transactions',
   request: {
     query: z.object({
       patientId: z.string().uuid().optional(),

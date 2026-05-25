@@ -7,7 +7,7 @@ import './index.scss'
 
 const CONTEXT_OPTIONS = [
   { value: 'resting', label: '静息' },
-  { value: 'after_exercise', label: '运动�? },
+  { value: 'after_exercise', label: '运动后' },
   { value: 'random', label: '随机' },
 ]
 
@@ -24,7 +24,7 @@ export default function HeartRateRecord() {
 
   const handleSave = useCallback(() => {
     if (!value || Number(value) <= 0) {
-      Taro.showToast({ title: '请输入心�?, icon: 'none' })
+      Taro.showToast({ title: '请输入心率', icon: 'none' })
       return
     }
     setSaving(true)

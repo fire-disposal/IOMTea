@@ -5,6 +5,7 @@ import {
   createRouter,
   useParams,
 } from '@tanstack/react-router'
+import { NodeGraph } from './components/NodeGraph'
 import { AlertBoard } from './pages/AlertBoard'
 import { DashboardPage } from './pages/DashboardPage'
 import { DataDashboard } from './pages/DataDashboard'
@@ -19,7 +20,6 @@ import { PatientWall } from './pages/PatientWall'
 import { PinManagementPage } from './pages/PinManagementPage'
 import { PlanManagementPage } from './pages/PlanManagementPage'
 import { SimulationPage } from './pages/SimulationPage'
-import { NodeGraph } from './components/NodeGraph'
 import { UserManagementPage } from './pages/UserManagementPage'
 import { RootLayout } from './routes/__root'
 import { AuthLayout, authBeforeLoad } from './routes/_auth'

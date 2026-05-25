@@ -1,6 +1,6 @@
-import { Modal, Textarea, Button, Table, Group, Text, Stack } from '@mantine/core'
-import { useState } from 'react'
+import { Button, Group, Modal, Stack, Table, Text, Textarea } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
+import { useState } from 'react'
 import { http } from '../api/client'
 
 interface Props {
@@ -16,10 +16,12 @@ export function BatchImportModal({ opened, onClose, onSuccess }: Props) {
 
   const parseInput = () => {
     const lines = text.trim().split('\n').filter(Boolean)
-    const parsed = lines.map((line) => {
-      const parts = line.split(/[,;\t]+/)
-      return { name: parts[0]?.trim() || '', gender: parts[1]?.trim() }
-    }).filter((p) => p.name)
+    const parsed = lines
+      .map((line) => {
+        const parts = line.split(/[,;\t]+/)
+        return { name: parts[0]?.trim() || '', gender: parts[1]?.trim() }
+      })
+      .filter((p) => p.name)
     setPreview(parsed)
   }
 
@@ -39,13 +41,17 @@ export function BatchImportModal({ opened, onClose, onSuccess }: Props) {
       setPreview([])
     } catch (e: any) {
       notifications.show({ title: '导入失败', message: e.message, color: 'red' })
-    } finally { setLoading(false) }
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
     <Modal opened={opened} onClose={onClose} title="批量导入患者" size="lg">
       <Stack>
-        <Text size="xs" c="dimmed">每行一个患者，格式: 姓名,性别</Text>
+        <Text size="xs" c="dimmed">
+          每行一个患者，格式: 姓名,性别
+        </Text>
         <Textarea
           minRows={6}
           maxRows={10}
@@ -54,14 +60,30 @@ export function BatchImportModal({ opened, onClose, onSuccess }: Props) {
           onChange={(e) => setText(e.currentTarget.value)}
         />
         <Group>
-          <Button variant="light" onClick={parseInput}>解析预览</Button>
-          <Button loading={loading} onClick={handleImport} disabled={preview.length === 0}>确认导入 ({preview.length} 条)</Button>
+          <Button variant="light" onClick={parseInput}>
+            解析预览
+          </Button>
+          <Button loading={loading} onClick={handleImport} disabled={preview.length === 0}>
+            确认导入 ({preview.length} 条)
+          </Button>
         </Group>
         {preview.length > 0 && (
           <Table striped>
-            <Table.Thead><Table.Tr><Table.Th>#</Table.Th><Table.Th>姓名</Table.Th><Table.Th>性别</Table.Th></Table.Tr></Table.Thead>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>#</Table.Th>
+                <Table.Th>姓名</Table.Th>
+                <Table.Th>性别</Table.Th>
+              </Table.Tr>
+            </Table.Thead>
             <Table.Tbody>
-              {preview.map((p, i) => <Table.Tr key={i}><Table.Td>{i + 1}</Table.Td><Table.Td>{p.name}</Table.Td><Table.Td>{p.gender ?? '-'}</Table.Td></Table.Tr>)}
+              {preview.map((p, i) => (
+                <Table.Tr key={i}>
+                  <Table.Td>{i + 1}</Table.Td>
+                  <Table.Td>{p.name}</Table.Td>
+                  <Table.Td>{p.gender ?? '-'}</Table.Td>
+                </Table.Tr>
+              ))}
             </Table.Tbody>
           </Table>
         )}
