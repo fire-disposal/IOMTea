@@ -1,7 +1,8 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
-import { db } from '../core/db'
-import { patientTags, patientTagLinks } from '../core/db/schema/tag'
+import { successSchema, tagListSchema, tagResponseSchema } from '@iomtea/shared-types'
 import { eq } from 'drizzle-orm'
+import { db } from '../core/db'
+import { patientTagLinks, patientTags } from '../core/db/schema/tag'
 import { jwtAuth } from '../middleware/auth'
 
 const tagsApp = new OpenAPIHono()
@@ -10,7 +11,9 @@ tagsApp.use('*', jwtAuth)
 const listRoute = createRoute({
   method: 'get',
   path: '/',
-  responses: { 200: { description: 'Tag list' } },
+  responses: {
+    200: { content: { 'application/json': { schema: tagListSchema } }, description: 'Tag list' },
+  },
 })
 
 tagsApp.openapi(listRoute, async (c) => {
@@ -33,7 +36,9 @@ const createTagRoute = createRoute({
       },
     },
   },
-  responses: { 201: { description: 'Created' } },
+  responses: {
+    201: { content: { 'application/json': { schema: tagResponseSchema } }, description: 'Created' },
+  },
 })
 
 tagsApp.openapi(createTagRoute, async (c) => {
@@ -48,7 +53,10 @@ tagsApp.openapi(createTagRoute, async (c) => {
 const deleteTagRoute = createRoute({
   method: 'delete',
   path: '/:id',
-  responses: { 200: { description: 'Deleted' }, 404: { description: 'Not found' } },
+  responses: {
+    200: { content: { 'application/json': { schema: successSchema } }, description: 'Deleted' },
+    404: { description: 'Not found' },
+  },
 })
 
 tagsApp.openapi(deleteTagRoute, async (c) => {

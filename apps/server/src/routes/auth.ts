@@ -1,10 +1,11 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
-import { db } from '../core/db'
-import { users, refreshTokens } from '../core/db/schema'
-import { eq, and, gt } from 'drizzle-orm'
-import { hashPassword, verifyPassword } from '../core/lib/password'
-import { signAccessToken, signRefreshToken, verifyToken } from '../core/lib/jwt'
+import { authResponseSchema } from '@iomtea/shared-types'
+import { and, eq, gt } from 'drizzle-orm'
 import { v4 as uuid } from 'uuid'
+import { db } from '../core/db'
+import { refreshTokens, users } from '../core/db/schema'
+import { signAccessToken, signRefreshToken, verifyToken } from '../core/lib/jwt'
+import { hashPassword, verifyPassword } from '../core/lib/password'
 
 const auth = new OpenAPIHono()
 
@@ -25,7 +26,10 @@ const registerRoute = createRoute({
     },
   },
   responses: {
-    201: { description: 'User created' },
+    201: {
+      content: { 'application/json': { schema: authResponseSchema } },
+      description: 'User created',
+    },
     409: { description: 'Username taken' },
   },
 })
@@ -64,7 +68,10 @@ const loginRoute = createRoute({
     },
   },
   responses: {
-    200: { description: 'Login success' },
+    200: {
+      content: { 'application/json': { schema: authResponseSchema } },
+      description: 'Login success',
+    },
     401: { description: 'Invalid credentials' },
   },
 })
@@ -107,7 +114,10 @@ const refreshRoute = createRoute({
     },
   },
   responses: {
-    200: { description: 'Token refreshed' },
+    200: {
+      content: { 'application/json': { schema: authResponseSchema } },
+      description: 'Token refreshed',
+    },
     401: { description: 'Invalid refresh token' },
   },
 })

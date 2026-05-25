@@ -1,7 +1,8 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+import { alertListSchema, alertResponseSchema, successSchema } from '@iomtea/shared-types'
+import { and, desc, eq } from 'drizzle-orm'
 import { db } from '../core/db'
 import { events } from '../core/db/schema'
-import { eq, and, desc } from 'drizzle-orm'
 import { jwtAuth } from '../middleware/auth'
 
 const alertsApp = new OpenAPIHono()
@@ -19,7 +20,12 @@ const listAlertsRoute = createRoute({
       status: z.string().optional(),
     }),
   },
-  responses: { 200: { description: 'Alert list' } },
+  responses: {
+    200: {
+      content: { 'application/json': { schema: alertListSchema } },
+      description: 'Alert list',
+    },
+  },
 })
 
 alertsApp.openapi(listAlertsRoute, async (c) => {
@@ -43,7 +49,13 @@ alertsApp.openapi(listAlertsRoute, async (c) => {
 const getAlertRoute = createRoute({
   method: 'get',
   path: '/:id',
-  responses: { 200: { description: 'Alert detail' }, 404: { description: 'Not found' } },
+  responses: {
+    200: {
+      content: { 'application/json': { schema: alertResponseSchema } },
+      description: 'Alert detail',
+    },
+    404: { description: 'Not found' },
+  },
 })
 
 alertsApp.openapi(getAlertRoute, async (c) => {
@@ -72,7 +84,10 @@ const updateAlertRoute = createRoute({
       },
     },
   },
-  responses: { 200: { description: 'Updated' }, 404: { description: 'Not found' } },
+  responses: {
+    200: { content: { 'application/json': { schema: successSchema } }, description: 'Updated' },
+    404: { description: 'Not found' },
+  },
 })
 
 alertsApp.openapi(updateAlertRoute, async (c) => {
@@ -114,7 +129,10 @@ alertsApp.openapi(updateAlertRoute, async (c) => {
 const closeAlertRoute = createRoute({
   method: 'post',
   path: '/:id/close',
-  responses: { 200: { description: 'Closed' }, 404: { description: 'Not found' } },
+  responses: {
+    200: { content: { 'application/json': { schema: successSchema } }, description: 'Closed' },
+    404: { description: 'Not found' },
+  },
 })
 
 alertsApp.openapi(closeAlertRoute, async (c) => {

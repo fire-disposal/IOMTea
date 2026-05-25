@@ -1,22 +1,55 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+import {
+  profileResponseSchema,
+  simulationResponseSchema,
+  successSchema,
+} from '@iomtea/shared-types'
+import { eq } from 'drizzle-orm'
 import { db } from '../core/db'
 import { patients } from '../core/db/schema'
-import { eq } from 'drizzle-orm'
-import { listProfiles, getProfile, createSimulation, deleteSimulation, toggleSimulation, setSpeed, addPatient, removePatient, getSimulations, getSimulation, toggleMetric, updateMetric, renameSim, injectScenario } from '../modules/twin'
 import { jwtAuth } from '../middleware/auth'
+import {
+  addPatient,
+  createSimulation,
+  deleteSimulation,
+  getProfile,
+  getSimulation,
+  getSimulations,
+  injectScenario,
+  listProfiles,
+  removePatient,
+  renameSim,
+  setSpeed,
+  toggleMetric,
+  toggleSimulation,
+  updateMetric,
+} from '../modules/twin'
 
 const twinApp = new OpenAPIHono()
 twinApp.use('*', jwtAuth)
 
 const profListRoute = createRoute({
-  method: 'get', path: '/profiles',
-  responses: { 200: { description: 'Profile list' } },
+  method: 'get',
+  path: '/profiles',
+  responses: {
+    200: {
+      content: { 'application/json': { schema: z.array(profileResponseSchema) } },
+      description: 'Profile list',
+    },
+  },
 })
 twinApp.openapi(profListRoute, async (c) => c.json(listProfiles()))
 
 const profDetailRoute = createRoute({
-  method: 'get', path: '/profiles/:name',
-  responses: { 200: { description: 'Profile config' } },
+  method: 'get',
+  path: '/profiles/:name',
+  responses: {
+    200: {
+      content: { 'application/json': { schema: profileResponseSchema } },
+      description: 'Profile config',
+    },
+    404: { description: 'Not found' },
+  },
 })
 twinApp.openapi(profDetailRoute, async (c) => {
   const config = getProfile(c.req.param('name'))
@@ -25,14 +58,27 @@ twinApp.openapi(profDetailRoute, async (c) => {
 })
 
 const simListRoute = createRoute({
-  method: 'get', path: '/simulations',
-  responses: { 200: { description: 'Simulation list' } },
+  method: 'get',
+  path: '/simulations',
+  responses: {
+    200: {
+      content: { 'application/json': { schema: z.array(simulationResponseSchema) } },
+      description: 'Simulation list',
+    },
+  },
 })
 twinApp.openapi(simListRoute, async (c) => c.json(getSimulations()))
 
 const simDetailRoute = createRoute({
-  method: 'get', path: '/simulations/:id',
-  responses: { 200: { description: 'Simulation detail' } },
+  method: 'get',
+  path: '/simulations/:id',
+  responses: {
+    200: {
+      content: { 'application/json': { schema: simulationResponseSchema } },
+      description: 'Simulation detail',
+    },
+    404: { description: 'Not found' },
+  },
 })
 twinApp.openapi(simDetailRoute, async (c) => {
   const sim = getSimulation(c.req.param('id'))
@@ -41,24 +87,44 @@ twinApp.openapi(simDetailRoute, async (c) => {
 })
 
 const simCreateRoute = createRoute({
-  method: 'post', path: '/simulations',
+  method: 'post',
+  path: '/simulations',
   request: {
-    body: { content: { 'application/json': { schema: z.object({
-      profile: z.string().openapi({ example: 'elderly-cardiac' }),
-      name: z.string().optional(),
-    }) } } },
+    body: {
+      content: {
+        'application/json': {
+          schema: z.object({
+            profile: z.string().openapi({ example: 'elderly-cardiac' }),
+            name: z.string().optional(),
+          }),
+        },
+      },
+    },
   },
-  responses: { 201: { description: 'Created' } },
+  responses: {
+    201: {
+      content: { 'application/json': { schema: simulationResponseSchema } },
+      description: 'Created',
+    },
+    500: { description: 'Creation failed' },
+  },
 })
 twinApp.openapi(simCreateRoute, async (c) => {
   const body = c.req.valid('json')
-  const sim = await createSimulation(db, { profileName: body.profile, name: body.name ?? body.profile })
+  const sim = await createSimulation(db, {
+    profileName: body.profile,
+    name: body.name ?? body.profile,
+  })
+  if (!sim) return c.json({ error: 'Failed to create simulation' }, 500 as any)
   return c.json(sim, 201 as any)
 })
 
 const simDeleteRoute = createRoute({
-  method: 'delete', path: '/simulations/:id',
-  responses: { 200: { description: 'Deleted' } },
+  method: 'delete',
+  path: '/simulations/:id',
+  responses: {
+    200: { content: { 'application/json': { schema: successSchema } }, description: 'Deleted' },
+  },
 })
 twinApp.openapi(simDeleteRoute, async (c) => {
   await deleteSimulation(db, c.req.param('id'))
@@ -66,13 +132,22 @@ twinApp.openapi(simDeleteRoute, async (c) => {
 })
 
 const simToggleRoute = createRoute({
-  method: 'post', path: '/simulations/:id/toggle',
+  method: 'post',
+  path: '/simulations/:id/toggle',
   request: {
-    body: { content: { 'application/json': { schema: z.object({
-      running: z.boolean(),
-    }) } } },
+    body: {
+      content: {
+        'application/json': {
+          schema: z.object({
+            running: z.boolean(),
+          }),
+        },
+      },
+    },
   },
-  responses: { 200: { description: 'Toggled' } },
+  responses: {
+    200: { content: { 'application/json': { schema: successSchema } }, description: 'Toggled' },
+  },
 })
 twinApp.openapi(simToggleRoute, async (c) => {
   const body = c.req.valid('json')
@@ -81,13 +156,22 @@ twinApp.openapi(simToggleRoute, async (c) => {
 })
 
 const simRenameRoute = createRoute({
-  method: 'patch', path: '/simulations/:id/rename',
+  method: 'patch',
+  path: '/simulations/:id/rename',
   request: {
-    body: { content: { 'application/json': { schema: z.object({
-      name: z.string(),
-    }) } } },
+    body: {
+      content: {
+        'application/json': {
+          schema: z.object({
+            name: z.string(),
+          }),
+        },
+      },
+    },
   },
-  responses: { 200: { description: 'Renamed' } },
+  responses: {
+    200: { content: { 'application/json': { schema: successSchema } }, description: 'Renamed' },
+  },
 })
 twinApp.openapi(simRenameRoute, async (c) => {
   const body = c.req.valid('json')
@@ -96,13 +180,22 @@ twinApp.openapi(simRenameRoute, async (c) => {
 })
 
 const simMetricToggleRoute = createRoute({
-  method: 'post', path: '/simulations/:id/metrics/:metricName/toggle',
+  method: 'post',
+  path: '/simulations/:id/metrics/:metricName/toggle',
   request: {
-    body: { content: { 'application/json': { schema: z.object({
-      enabled: z.boolean(),
-    }) } } },
+    body: {
+      content: {
+        'application/json': {
+          schema: z.object({
+            enabled: z.boolean(),
+          }),
+        },
+      },
+    },
   },
-  responses: { 200: { description: 'Toggled' } },
+  responses: {
+    200: { content: { 'application/json': { schema: successSchema } }, description: 'Toggled' },
+  },
 })
 twinApp.openapi(simMetricToggleRoute, async (c) => {
   const body = c.req.valid('json')
@@ -111,15 +204,24 @@ twinApp.openapi(simMetricToggleRoute, async (c) => {
 })
 
 const simMetricUpdateRoute = createRoute({
-  method: 'patch', path: '/simulations/:id/metrics/:metricName',
+  method: 'patch',
+  path: '/simulations/:id/metrics/:metricName',
   request: {
-    body: { content: { 'application/json': { schema: z.object({
-      intervalMin: z.number().optional(),
-      intervalMax: z.number().optional(),
-      jitter: z.number().optional(),
-    }) } } },
+    body: {
+      content: {
+        'application/json': {
+          schema: z.object({
+            intervalMin: z.number().optional(),
+            intervalMax: z.number().optional(),
+            jitter: z.number().optional(),
+          }),
+        },
+      },
+    },
   },
-  responses: { 200: { description: 'Updated' } },
+  responses: {
+    200: { content: { 'application/json': { schema: successSchema } }, description: 'Updated' },
+  },
 })
 twinApp.openapi(simMetricUpdateRoute, async (c) => {
   const body = c.req.valid('json')
@@ -128,25 +230,39 @@ twinApp.openapi(simMetricUpdateRoute, async (c) => {
 })
 
 const simAddPatientRoute = createRoute({
-  method: 'post', path: '/simulations/:id/patients',
+  method: 'post',
+  path: '/simulations/:id/patients',
   request: {
-    body: { content: { 'application/json': { schema: z.object({
-      patientId: z.string().uuid(),
-    }) } } },
+    body: {
+      content: {
+        'application/json': {
+          schema: z.object({
+            patientId: z.string().uuid(),
+          }),
+        },
+      },
+    },
   },
-  responses: { 201: { description: 'Added' } },
+  responses: {
+    201: { content: { 'application/json': { schema: successSchema } }, description: 'Added' },
+  },
 })
 twinApp.openapi(simAddPatientRoute, async (c) => {
   const body = c.req.valid('json')
   const patientId = body.patientId
-  const patientName = (await db.select().from(patients).where(eq(patients.id, patientId)).limit(1))[0]?.name ?? patientId
+  const patientName =
+    (await db.select().from(patients).where(eq(patients.id, patientId)).limit(1))[0]?.name ??
+    patientId
   await addPatient(db, c.req.param('id'), { id: patientId, name: patientName })
   return c.json({ success: true }, 201 as any)
 })
 
 const simRemovePatientRoute = createRoute({
-  method: 'delete', path: '/simulations/:id/patients/:patientId',
-  responses: { 200: { description: 'Removed' } },
+  method: 'delete',
+  path: '/simulations/:id/patients/:patientId',
+  responses: {
+    200: { content: { 'application/json': { schema: successSchema } }, description: 'Removed' },
+  },
 })
 twinApp.openapi(simRemovePatientRoute, async (c) => {
   await removePatient(db, c.req.param('id'), c.req.param('patientId'))
@@ -154,13 +270,25 @@ twinApp.openapi(simRemovePatientRoute, async (c) => {
 })
 
 const speedRoute = createRoute({
-  method: 'patch', path: '/speed',
+  method: 'patch',
+  path: '/speed',
   request: {
-    body: { content: { 'application/json': { schema: z.object({
-      speed: z.number().min(0.1).max(100),
-    }) } } },
+    body: {
+      content: {
+        'application/json': {
+          schema: z.object({
+            speed: z.number().min(0.1).max(100),
+          }),
+        },
+      },
+    },
   },
-  responses: { 200: { description: 'Speed set' } },
+  responses: {
+    200: {
+      content: { 'application/json': { schema: z.object({ speed: z.number() }) } },
+      description: 'Speed set',
+    },
+  },
 })
 twinApp.openapi(speedRoute, async (c) => {
   const body = c.req.valid('json')
@@ -169,13 +297,25 @@ twinApp.openapi(speedRoute, async (c) => {
 })
 
 const scenarioRoute = createRoute({
-  method: 'post', path: '/simulations/:id/patients/:patientId/scenario',
+  method: 'post',
+  path: '/simulations/:id/patients/:patientId/scenario',
   request: {
-    body: { content: { 'application/json': { schema: z.object({
-      type: z.string().openapi({ example: 'tachycardia' }),
-    }) } } },
+    body: {
+      content: {
+        'application/json': {
+          schema: z.object({
+            type: z.string().openapi({ example: 'tachycardia' }),
+          }),
+        },
+      },
+    },
   },
-  responses: { 200: { description: 'Scenario injected' } },
+  responses: {
+    200: {
+      content: { 'application/json': { schema: successSchema } },
+      description: 'Scenario injected',
+    },
+  },
 })
 twinApp.openapi(scenarioRoute, async (c) => {
   const body = c.req.valid('json')

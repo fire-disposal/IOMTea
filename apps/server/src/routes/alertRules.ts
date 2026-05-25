@@ -1,10 +1,14 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+import { successSchema } from '@iomtea/shared-types'
+import { eq } from 'drizzle-orm'
 import { db } from '../core/db'
 import { patients } from '../core/db/schema'
-import { eq } from 'drizzle-orm'
 import { jwtAuth } from '../middleware/auth'
 
-const DEFAULT_THRESHOLDS: Record<string, { metric: string; min?: number; max?: number; enabled?: boolean; label?: string; unit?: string }[]> = {}
+const DEFAULT_THRESHOLDS: Record<
+  string,
+  { metric: string; min?: number; max?: number; enabled?: boolean; label?: string; unit?: string }[]
+> = {}
 
 const ruleSchema = z.object({
   metric: z.string(),
@@ -21,7 +25,13 @@ alertRulesApp.use('*', jwtAuth)
 const getRulesRoute = createRoute({
   method: 'get',
   path: '/patients/:id/alert-rules',
-  responses: { 200: { description: 'Alert rules for patient' }, 404: { description: 'Not found' } },
+  responses: {
+    200: {
+      content: { 'application/json': { schema: z.array(z.unknown()) } },
+      description: 'Alert rules for patient',
+    },
+    404: { description: 'Not found' },
+  },
 })
 
 alertRulesApp.openapi(getRulesRoute, async (c) => {
@@ -44,9 +54,7 @@ alertRulesApp.openapi(getRulesRoute, async (c) => {
       : []
 
   const merged = defaults.map((d: any) => {
-    const custom = customThresholds.find(
-      (c: any) => c.metric === d.metric,
-    )
+    const custom = customThresholds.find((c: any) => c.metric === d.metric)
     return custom || d
   })
 
@@ -67,7 +75,10 @@ const upsertRulesRoute = createRoute({
       },
     },
   },
-  responses: { 200: { description: 'Updated' }, 404: { description: 'Not found' } },
+  responses: {
+    200: { content: { 'application/json': { schema: successSchema } }, description: 'Updated' },
+    404: { description: 'Not found' },
+  },
 })
 
 alertRulesApp.openapi(upsertRulesRoute, async (c) => {
@@ -85,7 +96,10 @@ alertRulesApp.openapi(upsertRulesRoute, async (c) => {
   const currentTags = (patient.tags as Record<string, unknown>) || {}
   const newTags = { ...currentTags, customThresholds: body.rules }
 
-  await db.update(patients).set({ tags: newTags } as any).where(eq(patients.id, patientId))
+  await db
+    .update(patients)
+    .set({ tags: newTags } as any)
+    .where(eq(patients.id, patientId))
 
   return c.json({ success: true })
 })

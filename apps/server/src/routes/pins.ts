@@ -1,7 +1,8 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+import { pinListSchema, pinResponseSchema, successSchema } from '@iomtea/shared-types'
+import { eq } from 'drizzle-orm'
 import { db } from '../core/db'
 import { usersPin } from '../core/db/schema/pin'
-import { eq } from 'drizzle-orm'
 import { jwtAuth } from '../middleware/auth'
 
 const pinsApp = new OpenAPIHono()
@@ -10,7 +11,9 @@ pinsApp.use('*', jwtAuth)
 const listRoute = createRoute({
   method: 'get',
   path: '/',
-  responses: { 200: { description: 'PIN list' } },
+  responses: {
+    200: { content: { 'application/json': { schema: pinListSchema } }, description: 'PIN list' },
+  },
 })
 
 pinsApp.openapi(listRoute, async (c) => {
@@ -35,7 +38,9 @@ const createPinRoute = createRoute({
       },
     },
   },
-  responses: { 201: { description: 'Created' } },
+  responses: {
+    201: { content: { 'application/json': { schema: pinResponseSchema } }, description: 'Created' },
+  },
 })
 
 pinsApp.openapi(createPinRoute, async (c) => {
@@ -51,7 +56,10 @@ pinsApp.openapi(createPinRoute, async (c) => {
 const revokePinRoute = createRoute({
   method: 'delete',
   path: '/:code',
-  responses: { 200: { description: 'Revoked' }, 404: { description: 'Not found' } },
+  responses: {
+    200: { content: { 'application/json': { schema: successSchema } }, description: 'Revoked' },
+    404: { description: 'Not found' },
+  },
 })
 
 pinsApp.openapi(revokePinRoute, async (c) => {

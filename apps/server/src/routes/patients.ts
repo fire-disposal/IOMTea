@@ -1,8 +1,9 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+import { patientListSchema, patientResponseSchema, successSchema } from '@iomtea/shared-types'
+import { and, eq } from 'drizzle-orm'
 import { db } from '../core/db'
 import { patients } from '../core/db/schema'
 import { userPatientLinks } from '../core/db/schema/user-patient'
-import { eq, and } from 'drizzle-orm'
 import { jwtAuth } from '../middleware/auth'
 
 const patientsApp = new OpenAPIHono()
@@ -19,12 +20,21 @@ const listPatRoute = createRoute({
       search: z.string().optional(),
     }),
   },
-  responses: { 200: { description: 'Patient list' } },
+  responses: {
+    200: {
+      content: { 'application/json': { schema: patientListSchema } },
+      description: 'Patient list',
+    },
+  },
 })
 
 patientsApp.openapi(listPatRoute, async (c) => {
   const q = c.req.valid('query')
-  const rows = await db.select().from(patients).limit(q.pageSize).offset((q.page - 1) * q.pageSize)
+  const rows = await db
+    .select()
+    .from(patients)
+    .limit(q.pageSize)
+    .offset((q.page - 1) * q.pageSize)
   return c.json(rows)
 })
 
@@ -50,7 +60,12 @@ const createPatRoute = createRoute({
       },
     },
   },
-  responses: { 201: { description: 'Created' } },
+  responses: {
+    201: {
+      content: { 'application/json': { schema: patientResponseSchema } },
+      description: 'Created',
+    },
+  },
 })
 
 patientsApp.openapi(createPatRoute, async (c) => {
@@ -75,7 +90,13 @@ patientsApp.openapi(createPatRoute, async (c) => {
 const detailPatRoute = createRoute({
   method: 'get',
   path: '/:id',
-  responses: { 200: { description: 'Patient detail' }, 404: { description: 'Not found' } },
+  responses: {
+    200: {
+      content: { 'application/json': { schema: patientResponseSchema } },
+      description: 'Patient detail',
+    },
+    404: { description: 'Not found' },
+  },
 })
 
 patientsApp.openapi(detailPatRoute, async (c) => {
@@ -106,13 +127,23 @@ const updatePatRoute = createRoute({
       },
     },
   },
-  responses: { 200: { description: 'Updated' }, 404: { description: 'Not found' } },
+  responses: {
+    200: {
+      content: { 'application/json': { schema: patientResponseSchema } },
+      description: 'Updated',
+    },
+    404: { description: 'Not found' },
+  },
 })
 
 patientsApp.openapi(updatePatRoute, async (c) => {
   const id = c.req.param('id')
   const body = c.req.valid('json')
-  const [row] = await db.update(patients).set(body as any).where(eq(patients.id, id)).returning()
+  const [row] = await db
+    .update(patients)
+    .set(body as any)
+    .where(eq(patients.id, id))
+    .returning()
   if (!row) return c.json({ error: 'Not found' }, 404 as any)
   return c.json(row)
 })
@@ -120,7 +151,9 @@ patientsApp.openapi(updatePatRoute, async (c) => {
 const deletePatRoute = createRoute({
   method: 'delete',
   path: '/:id',
-  responses: { 200: { description: 'Deleted' } },
+  responses: {
+    200: { content: { 'application/json': { schema: successSchema } }, description: 'Deleted' },
+  },
 })
 
 patientsApp.openapi(deletePatRoute, async (c) => {
@@ -144,7 +177,9 @@ const linkUserPatRoute = createRoute({
       },
     },
   },
-  responses: { 201: { description: 'User linked' } },
+  responses: {
+    201: { content: { 'application/json': { schema: successSchema } }, description: 'User linked' },
+  },
 })
 
 patientsApp.openapi(linkUserPatRoute, async (c) => {
@@ -161,7 +196,12 @@ patientsApp.openapi(linkUserPatRoute, async (c) => {
 const unlinkUserPatRoute = createRoute({
   method: 'delete',
   path: '/:id/users/:userId',
-  responses: { 200: { description: 'User unlinked' } },
+  responses: {
+    200: {
+      content: { 'application/json': { schema: successSchema } },
+      description: 'User unlinked',
+    },
+  },
 })
 
 patientsApp.openapi(unlinkUserPatRoute, async (c) => {

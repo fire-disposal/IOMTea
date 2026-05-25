@@ -1,7 +1,8 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+import { userResponseSchema } from '@iomtea/shared-types'
+import { eq } from 'drizzle-orm'
 import { db } from '../core/db'
 import { users } from '../core/db/schema'
-import { eq } from 'drizzle-orm'
 import { jwtAuth } from '../middleware/auth'
 
 const usersApp = new OpenAPIHono()
@@ -10,7 +11,12 @@ usersApp.use('*', jwtAuth)
 const listRoute = createRoute({
   method: 'get',
   path: '/',
-  responses: { 200: { description: 'User list' } },
+  responses: {
+    200: {
+      content: { 'application/json': { schema: z.array(userResponseSchema) } },
+      description: 'User list',
+    },
+  },
 })
 
 usersApp.openapi(listRoute, async (c) => {
@@ -22,7 +28,13 @@ usersApp.openapi(listRoute, async (c) => {
 const meRoute = createRoute({
   method: 'get',
   path: '/me',
-  responses: { 200: { description: 'Current user' } },
+  responses: {
+    200: {
+      content: { 'application/json': { schema: userResponseSchema } },
+      description: 'Current user',
+    },
+    404: { description: 'Not found' },
+  },
 })
 
 usersApp.openapi(meRoute, async (c) => {
@@ -49,7 +61,13 @@ const updateRoute = createRoute({
       },
     },
   },
-  responses: { 200: { description: 'Updated' }, 404: { description: 'Not found' } },
+  responses: {
+    200: {
+      content: { 'application/json': { schema: userResponseSchema } },
+      description: 'Updated',
+    },
+    404: { description: 'Not found' },
+  },
 })
 
 usersApp.openapi(updateRoute, async (c) => {

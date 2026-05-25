@@ -1,8 +1,9 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+import { metricResponseSchema } from '@iomtea/shared-types'
+import { and, asc, desc, eq, gte, lte, sql } from 'drizzle-orm'
 import { db } from '../core/db'
 import { events } from '../core/db/schema'
-import { eq, and, gte, lte, desc, asc, sql } from 'drizzle-orm'
-import { valueExpression, truncExpr } from '../core/pipeline/query-helpers'
+import { truncExpr, valueExpression } from '../core/pipeline/query-helpers'
 import { getMetricOrDefault, listMetrics } from '../core/pipeline/registry'
 import { jwtAuth } from '../middleware/auth'
 
@@ -12,7 +13,12 @@ dataApp.use('*', jwtAuth)
 const metricsRoute = createRoute({
   method: 'get',
   path: '/metrics',
-  responses: { 200: { description: 'Metric list' } },
+  responses: {
+    200: {
+      content: { 'application/json': { schema: z.array(metricResponseSchema) } },
+      description: 'Metric list',
+    },
+  },
 })
 
 dataApp.openapi(metricsRoute, async (c) => {
@@ -44,7 +50,16 @@ const rawRoute = createRoute({
       offset: z.coerce.number().min(0).default(0),
     }),
   },
-  responses: { 200: { description: 'Raw time series' } },
+  responses: {
+    200: {
+      content: {
+        'application/json': {
+          schema: z.object({ metric: z.string(), rows: z.array(z.unknown()) }),
+        },
+      },
+      description: 'Raw time series',
+    },
+  },
 })
 
 dataApp.openapi(rawRoute, async (c) => {
@@ -104,7 +119,16 @@ const aggregateRoute = createRoute({
       fn: z.enum(['avg', 'min', 'max', 'count']).default('avg'),
     }),
   },
-  responses: { 200: { description: 'Aggregated time series' } },
+  responses: {
+    200: {
+      content: {
+        'application/json': {
+          schema: z.object({ metric: z.string(), rows: z.array(z.unknown()) }),
+        },
+      },
+      description: 'Aggregated time series',
+    },
+  },
 })
 
 dataApp.openapi(aggregateRoute, async (c) => {
@@ -147,7 +171,12 @@ const latestRoute = createRoute({
   method: 'get',
   path: '/latest',
   request: { query: z.object({ patientId: z.string().uuid() }) },
-  responses: { 200: { description: 'Latest values' } },
+  responses: {
+    200: {
+      content: { 'application/json': { schema: z.array(z.unknown()) } },
+      description: 'Latest values',
+    },
+  },
 })
 
 dataApp.openapi(latestRoute, async (c) => {

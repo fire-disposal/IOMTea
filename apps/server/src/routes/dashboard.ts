@@ -1,7 +1,8 @@
-import { OpenAPIHono, createRoute } from '@hono/zod-openapi'
+import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+import { dashboardResponseSchema } from '@iomtea/shared-types'
+import { and, gte, sql } from 'drizzle-orm'
 import { db } from '../core/db'
-import { patients, events } from '../core/db/schema'
-import { sql, and, gte } from 'drizzle-orm'
+import { events, patients } from '../core/db/schema'
 import { jwtAuth } from '../middleware/auth'
 
 const dashboard = new OpenAPIHono()
@@ -10,7 +11,12 @@ dashboard.use('*', jwtAuth)
 const summaryRoute = createRoute({
   method: 'get',
   path: '/summary',
-  responses: { 200: { description: 'Dashboard summary' } },
+  responses: {
+    200: {
+      content: { 'application/json': { schema: dashboardResponseSchema } },
+      description: 'Dashboard summary',
+    },
+  },
 })
 
 dashboard.openapi(summaryRoute, async (c) => {
