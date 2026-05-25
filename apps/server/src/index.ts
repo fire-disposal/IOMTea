@@ -109,6 +109,27 @@ app.get('/docs', swaggerUI({ url: '/openapi.json' }))
 
 app.get('/health', (c) => c.json({ status: 'ok' }))
 
+// Root: API info
+app.get('/', (c) => c.json({
+  name: 'IOMTea API',
+  version: '2.0.0',
+  docs: `/docs`,
+  openapi: `/openapi.json`,
+  health: `/health`,
+  endpoints: {
+    auth: '/auth',
+    users: '/users',
+    dashboard: '/dashboard',
+    patients: '/patients',
+    alerts: '/alerts',
+    pins: '/pins',
+    data: '/data',
+    ingest: '/ingest',
+    export: '/export',
+    twin: '/twin',
+  },
+}))
+
 // ============================================================
 // 启动流程
 // ============================================================
@@ -287,14 +308,14 @@ bootstrap().then(() => {
   logger.info(`  本地地址:    http://localhost:${env.PORT}`)
   logger.info(`  健康检查:    http://localhost:${env.PORT}/health`)
   logger.info(`  REST API:    http://localhost:${env.PORT}`)
-  logger.info(`  Swagger UI:  http://localhost:${env.PORT}/docs`)
+  logger.info(`  API 文档:    http://localhost:${env.PORT}/docs`)
+  logger.info(`  OpenAPI:     http://localhost:${env.PORT}/openapi.json`)
   logger.info(`  WebSocket:   ws://localhost:${env.PORT}/ws`)
   logger.info(`  CORS 白名单: ${env.CORS_ORIGIN || 'http://localhost:5173'}`)
   if (env.MQTT_ENABLED) {
     logger.info(`  MQTT Broker: ${env.MQTT_BROKER}`)
     logger.info(`  MQTT 主题:   users/+/+/+  ·  users/+/admin/+`)
   }
-  logger.info(`  API 文档:    建议引入 @hono/scalar 或 @hono/swagger-ui`)
   logger.info('══════════════════════════════════════════════')
   logger.info('  使用 Ctrl+C 停止服务')
   logger.info('')
