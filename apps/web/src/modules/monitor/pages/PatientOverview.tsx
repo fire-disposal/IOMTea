@@ -7,6 +7,7 @@ import { GraphViewer } from '../../twin/components/twin3d/GraphViewer'
 import { ScenarioModal } from '../components/ScenarioModal'
 
 const SPEEDS = [1, 2, 5, 10]
+const METRICS = ['heart_rate', 'spo2', 'systolic_bp', 'temperature']
 
 export function PatientOverview() {
   const { id } = useParams({ from: '/_auth/patients/$id' })
@@ -28,9 +29,6 @@ export function PatientOverview() {
     '7d': 604800000,
   }
   const from = now - (timeMap[timeRange] || 21600000)
-  const METRICS = ['heart_rate', 'spo2', 'systolic_bp', 'temperature']
-
-  const METRICS = ['heart_rate', 'spo2', 'systolic_bp', 'temperature']
 
   const [batchData, setBatchData] = useState<Record<string, any[]>>({})
   const [engineStatus, setEngineStatus] = useState<any>(null)
@@ -46,14 +44,18 @@ export function PatientOverview() {
       const results: Record<string, any[]> = {}
       for (const metric of METRICS) {
         try {
-          const res = await api.get<any>('/data/raw', {
-            patientId: id,
-            metric,
-            from: new Date(from).toISOString(),
-            to: new Date(now).toISOString(),
-            limit: 200,
+          const { data: res } = await api.GET('/data/raw', {
+            params: {
+              query: {
+                patientId: id,
+                metric,
+                from: new Date(from).toISOString(),
+                to: new Date(now).toISOString(),
+                limit: 200,
+              },
+            },
           })
-          results[metric] = res.rows ?? []
+          results[metric] = (res as any)?.rows ?? []
         } catch {
           results[metric] = []
         }
@@ -69,7 +71,9 @@ export function PatientOverview() {
     if (!id) return
     const fetchStatus = async () => {
       try {
-        const res = await api.get<any>(`/twin/engine/${id}/status`)
+        const { data: res } = await api.GET('/twin/engine/{patientId}/status', {
+          params: { path: { patientId: id } },
+        })
         setEngineStatus(res)
       } catch { /* no engine status endpoint */ }
     }
@@ -82,9 +86,12 @@ export function PatientOverview() {
     if (!id) return
     setCreateMapLoading(true)
     try {
-      await api.put(`/home-graph/patients/${id}/home-graph`, {
-        rooms: [{ id: 'living', name: '客厅', type: 'livingroom', x: 0, y: 0, connections: [] }],
-        corridors: [],
+      await api.PUT('/home-graph/patients/{id}/home-graph', {
+        params: { path: { id } },
+        body: {
+          rooms: [{ id: 'living', name: '客厅', type: 'livingroom', x: 0, y: 0, connections: [] }],
+          corridors: [],
+        },
       })
     } finally {
       setCreateMapLoading(false)
@@ -99,11 +106,11 @@ export function PatientOverview() {
     if (!id) return
     if (isRunning) {
       setPauseLoading(true)
-      try { await api.post(`/twin/engine/${id}/pause`) } catch {}
+      try { await api.POST('/twin/engine/{patientId}/pause', { params: { path: { patientId: id } } }) } catch {}
       setPauseLoading(false)
     } else {
       setResumeLoading(true)
-      try { await api.post(`/twin/engine/${id}/resume`) } catch {}
+      try { await api.POST('/twin/engine/{patientId}/resume', { params: { path: { patientId: id } } }) } catch {}
       setResumeLoading(false)
     }
   }, [id, isRunning])
@@ -113,48 +120,20 @@ export function PatientOverview() {
     const idx = SPEEDS.indexOf(currentSpeed)
     const newSpeed = SPEEDS[(idx + 1) % SPEEDS.length]
     setSpeedLoading(true)
-    try { await api.patch('/twin/speed', { speed: newSpeed }) } catch {}
+    try { await api.PATCH('/twin/speed', { body: { speed: newSpeed } }) } catch {}
     setSpeedLoading(false)
   }, [id, currentSpeed])
 
   const handleInject = useCallback(async (type: string) => {
     if (!id) return
     setInjectLoading(true)
-    try { await api.post(`/twin/engine/${id}/scenario`, { type }) } catch {}
+    try { await api.POST('/twin/engine/{patientId}/scenario', {
+      params: { path: { patientId: id } },
+      body: { type },
+    }) } catch {}
     setInjectLoading(false)
     setScenarioOpen(false)
   }, [id])
-
-  const createMapMut = trpc.homeGraph.upsert.useMutation()
-  const utils = trpc.useUtils()
-
-  const handleCreateMap = useCallback(() => {
-    if (!id) return
-    createMapMut.mutate(
-      {
-        patientId: id,
-        graph: {
-          rooms: [{ id: 'living', name: '客厅', type: 'livingroom', x: 0, y: 0, connections: [] }],
-          entryRoomId: 'living',
-          personLocation: null,
-        },
-      },
-      { onSuccess: () => utils.homeGraph.get.invalidate({ patientId: id }) },
-    )
-  }, [id, createMapMut, utils])
-
-  const engineStatus = trpc.twin.engine.status.useQuery(
-    { patientId: id! },
-    { enabled: !!id, refetchInterval: 5000 },
-  )
-  const resumeMut = trpc.twin.engine.resume.useMutation()
-  const pauseMut = trpc.twin.engine.pause.useMutation()
-  const setSpeedMut = trpc.twin.engine.setSpeed.useMutation()
-  const injectMut = trpc.twin.engine.injectScenario.useMutation()
-
-  const es = engineStatus.data && !Array.isArray(engineStatus.data) ? engineStatus.data : null
-  const isRunning = es?.running ?? false
-  const currentSpeed = es?.speed ?? 1
 
   const chartData = useMemo(() => {
     const batch = batchData
@@ -182,27 +161,6 @@ export function PatientOverview() {
           d as { ts: number; hr?: number; spo2?: number; systolic_bp?: number; temp?: number },
       )
   }, [batchData])
-
-  const handlePlayPause = useCallback(() => {
-    if (!id) return
-    if (isRunning) pauseMut.mutate({ patientId: id })
-    else resumeMut.mutate({ patientId: id })
-  }, [id, isRunning, pauseMut, resumeMut])
-
-  const handleSpeedCycle = useCallback(() => {
-    if (!id) return
-    const idx = SPEEDS.indexOf(currentSpeed)
-    setSpeedMut.mutate({ patientId: id, speed: SPEEDS[(idx + 1) % SPEEDS.length] })
-  }, [id, currentSpeed, setSpeedMut])
-
-  const handleInject = useCallback(
-    (type: string) => {
-      if (!id) return
-      injectMut.mutate({ patientId: id, type: type as any })
-      setScenarioOpen(false)
-    },
-    [id, injectMut],
-  )
 
   return (
     <Stack h="100%" gap="md">
