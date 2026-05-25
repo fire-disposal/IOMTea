@@ -8,6 +8,7 @@ import { eq } from 'drizzle-orm'
 import { db } from '../core/db'
 import { patients } from '../core/db/schema'
 import { jwtAuth } from '../middleware/auth'
+import { requirePermission } from '../middleware/rbac'
 import {
   addPatient,
   createSimulation,
@@ -26,11 +27,11 @@ import {
 } from '../modules/twin'
 
 const twinApp = new OpenAPIHono()
-twinApp.use('*', jwtAuth)
 
 const profListRoute = createRoute({
   method: 'get',
   path: '/profiles',
+  middleware: [jwtAuth, requirePermission('/twin', 'read')] as const,
   responses: {
     200: {
       content: { 'application/json': { schema: z.array(profileResponseSchema) } },
@@ -43,6 +44,7 @@ twinApp.openapi(profListRoute, async (c) => c.json(listProfiles()))
 const profDetailRoute = createRoute({
   method: 'get',
   path: '/profiles/:name',
+  middleware: [jwtAuth, requirePermission('/twin', 'read')] as const,
   responses: {
     200: {
       content: { 'application/json': { schema: profileResponseSchema } },
@@ -60,6 +62,7 @@ twinApp.openapi(profDetailRoute, async (c) => {
 const simListRoute = createRoute({
   method: 'get',
   path: '/simulations',
+  middleware: [jwtAuth, requirePermission('/twin', 'read')] as const,
   responses: {
     200: {
       content: { 'application/json': { schema: z.array(simulationResponseSchema) } },
@@ -72,6 +75,7 @@ twinApp.openapi(simListRoute, async (c) => c.json(getSimulations()))
 const simDetailRoute = createRoute({
   method: 'get',
   path: '/simulations/:id',
+  middleware: [jwtAuth, requirePermission('/twin', 'read')] as const,
   responses: {
     200: {
       content: { 'application/json': { schema: simulationResponseSchema } },
@@ -89,6 +93,7 @@ twinApp.openapi(simDetailRoute, async (c) => {
 const simCreateRoute = createRoute({
   method: 'post',
   path: '/simulations',
+  middleware: [jwtAuth, requirePermission('/twin', 'write')] as const,
   request: {
     body: {
       content: {
@@ -122,6 +127,7 @@ twinApp.openapi(simCreateRoute, async (c) => {
 const simDeleteRoute = createRoute({
   method: 'delete',
   path: '/simulations/:id',
+  middleware: [jwtAuth, requirePermission('/twin', 'write')] as const,
   responses: {
     200: { content: { 'application/json': { schema: successSchema } }, description: 'Deleted' },
   },
@@ -134,6 +140,7 @@ twinApp.openapi(simDeleteRoute, async (c) => {
 const simToggleRoute = createRoute({
   method: 'post',
   path: '/simulations/:id/toggle',
+  middleware: [jwtAuth, requirePermission('/twin', 'write')] as const,
   request: {
     body: {
       content: {
@@ -158,6 +165,7 @@ twinApp.openapi(simToggleRoute, async (c) => {
 const simRenameRoute = createRoute({
   method: 'patch',
   path: '/simulations/:id/rename',
+  middleware: [jwtAuth, requirePermission('/twin', 'write')] as const,
   request: {
     body: {
       content: {
@@ -182,6 +190,7 @@ twinApp.openapi(simRenameRoute, async (c) => {
 const simMetricToggleRoute = createRoute({
   method: 'post',
   path: '/simulations/:id/metrics/:metricName/toggle',
+  middleware: [jwtAuth, requirePermission('/twin', 'write')] as const,
   request: {
     body: {
       content: {
@@ -206,6 +215,7 @@ twinApp.openapi(simMetricToggleRoute, async (c) => {
 const simMetricUpdateRoute = createRoute({
   method: 'patch',
   path: '/simulations/:id/metrics/:metricName',
+  middleware: [jwtAuth, requirePermission('/twin', 'write')] as const,
   request: {
     body: {
       content: {
@@ -232,6 +242,7 @@ twinApp.openapi(simMetricUpdateRoute, async (c) => {
 const simAddPatientRoute = createRoute({
   method: 'post',
   path: '/simulations/:id/patients',
+  middleware: [jwtAuth, requirePermission('/twin', 'write')] as const,
   request: {
     body: {
       content: {
@@ -260,6 +271,7 @@ twinApp.openapi(simAddPatientRoute, async (c) => {
 const simRemovePatientRoute = createRoute({
   method: 'delete',
   path: '/simulations/:id/patients/:patientId',
+  middleware: [jwtAuth, requirePermission('/twin', 'write')] as const,
   responses: {
     200: { content: { 'application/json': { schema: successSchema } }, description: 'Removed' },
   },
@@ -272,6 +284,7 @@ twinApp.openapi(simRemovePatientRoute, async (c) => {
 const speedRoute = createRoute({
   method: 'patch',
   path: '/speed',
+  middleware: [jwtAuth, requirePermission('/twin', 'write')] as const,
   request: {
     body: {
       content: {
@@ -299,6 +312,7 @@ twinApp.openapi(speedRoute, async (c) => {
 const scenarioRoute = createRoute({
   method: 'post',
   path: '/simulations/:id/patients/:patientId/scenario',
+  middleware: [jwtAuth, requirePermission('/twin', 'write')] as const,
   request: {
     body: {
       content: {
