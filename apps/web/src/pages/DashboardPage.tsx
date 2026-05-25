@@ -19,8 +19,8 @@ export function DashboardPage() {
   const fetchPatients = useCallback(async () => {
     setPLoading(true)
     try {
-      const data = await api.get<any[]>('/patients', { pageSize: 100, status: 'active' })
-      setPatients(data)
+      const { data } = await api.GET('/patients', { params: { query: { pageSize: 100, status: 'active' } } })
+      setPatients(data ?? [])
       setPError(false)
     } catch {
       setPError(true)
@@ -32,8 +32,8 @@ export function DashboardPage() {
   const fetchAlerts = useCallback(async () => {
     setALoading(true)
     try {
-      const data = await api.get<any[]>('/alerts', { pageSize: 100 })
-      setAlerts(data)
+      const { data } = await api.GET('/alerts', { params: { query: { pageSize: 100 } } })
+      setAlerts(data ?? [])
       setAError(false)
     } catch {
       setAError(true)
