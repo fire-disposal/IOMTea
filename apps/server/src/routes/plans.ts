@@ -6,7 +6,7 @@ import {
   planUpdateSchema,
 } from '@iomtea/shared-types'
 import { successSchema } from '@iomtea/shared-types'
-import { and, eq } from 'drizzle-orm'
+import { and, eq, sql } from 'drizzle-orm'
 import { db } from '../core/db'
 import { events, users } from '../core/db/schema'
 import { creditTransactions, planCompletions, plans } from '../core/db/schema/plan'
@@ -135,7 +135,7 @@ plansApp.openapi(completeRoute, async (c) => {
 
       await db
         .update(users)
-        .set({ credit: users.credit ?? 0 + plan.rewardCredits } as any)
+        .set({ credit: sql`${users.credit} + ${plan.rewardCredits}` } as any)
         .where(eq(users.id, uid))
     }
   }
