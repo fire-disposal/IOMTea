@@ -51,7 +51,7 @@ export function PatientProfile() {
     if (!id) return
     setPLoading(true)
     try {
-      const data = await api.get<any>(`/patients/${id}`)
+      const { data } = await api.GET('/patients/{id}', { params: { path: { id } } })
       setPatient(data)
       setPError(false)
     } catch {
@@ -65,8 +65,8 @@ export function PatientProfile() {
     if (!id) return
     setPinsLoading(true)
     try {
-      const data = await api.get<any[]>('/pins')
-      setPins(data)
+      const { data } = await api.GET('/pins')
+      setPins(data ?? [])
     } finally {
       setPinsLoading(false)
     }
@@ -77,7 +77,7 @@ export function PatientProfile() {
   const handleUpdate = async (data: any) => {
     setUpdateLoading(true)
     try {
-      await api.patch(`/patients/${id}`, data)
+      await api.PATCH('/patients/{id}', { params: { path: { id: id! } }, body: data })
       fetchPatient()
       setEditing(false)
       notifications.show({ title: '保存成功', message: '', color: 'green' })
@@ -91,7 +91,7 @@ export function PatientProfile() {
   const handleDelete = async () => {
     setDeleteLoading(true)
     try {
-      await api.delete(`/patients/${id!}`)
+      await api.DELETE('/patients/{id}', { params: { path: { id: id! } } })
       notifications.show({ title: '成功', message: '患者已删除', color: 'green' })
       navigate({ to: '/patients' })
     } catch (err: any) {
