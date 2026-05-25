@@ -14,7 +14,6 @@ import {
 import { IconEye, IconRefresh } from '@tabler/icons-react'
 import { trpc } from '../trpc'
 import { StateSkeleton, StateEmpty, StateError } from '../components/shared/StateComponents'
-import { SimTimeline } from '../components/sim/SimTimeline'
 
 const TYPE_LABELS: Record<string, string> = {
   device: '设备',
@@ -156,11 +155,6 @@ export function PinManagementPage() {
             <Text size="xs" c="dimmed">
               此 PIN 关联的所有数据提交记录：
             </Text>
-            <SimTimeline
-              patientId={detailPin.userId}
-              minutes={timelineMinutes}
-              onMinutesChange={setTimelineMinutes}
-            />
           </Stack>
         )}
       </Modal>

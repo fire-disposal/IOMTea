@@ -37,7 +37,7 @@ export const dataRouter = router({
       const conditions = [
         eq(events.patientId, input.patientId),
         eq(events.metric, input.metric),
-        eq(events.kind, input.kind),
+        eq(events.kind, input.kind as any),
         gte(events.recordedAt, new Date(input.from)),
       ]
       if (input.to) conditions.push(lte(events.recordedAt, new Date(input.to)))

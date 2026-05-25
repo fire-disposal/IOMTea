@@ -48,7 +48,7 @@ export const ingestRouter = router({
         confidence: input.confidence ?? 1.0,
         tags: input.tags ?? {},
         recordedAt: input.recordedAt ? new Date(input.recordedAt) : new Date(),
-      }).returning()
+      } as any).returning()
 
       return row
     }),
@@ -80,7 +80,7 @@ export const ingestRouter = router({
             confidence: event.confidence ?? 1.0,
             tags: event.tags ?? {},
             recordedAt: event.recordedAt ? new Date(event.recordedAt) : new Date(),
-          })
+          } as any)
 
           results.success++
         } catch (err) {

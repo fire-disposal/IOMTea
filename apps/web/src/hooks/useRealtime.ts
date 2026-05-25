@@ -1,6 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useRef } from 'react'
-import { useEntityStateStore } from '../store/entityState'
 
 interface WsEvent {
   patientId: string
@@ -47,8 +46,6 @@ export function useRealtime(wardId: string | undefined, mapId?: string, patientI
   const wsRef = useRef<WebSocket | null>(null)
   const reconnectRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const subscribedRef = useRef(false)
-  const setStates = useEntityStateStore((s) => s.setStates)
-  const setSimTime = useEntityStateStore((s) => s.setSimTime)
   const mapIdRef = useRef(mapId)
   const patientIdRef = useRef(patientId)
 
@@ -100,11 +97,6 @@ export function useRealtime(wardId: string | undefined, mapId?: string, patientI
             })),
           )
         } else if (msg.type === 'tick') {
-          setSimTime({ time: msg.simulatedTime, tz: msg.timezone, hour: msg.hourOfDay })
-          const newStates = new Map<string, EntityStatePayload>()
-          for (const es of msg.entityStates || []) newStates.set(es.entityId, es)
-          setStates(newStates)
-
           const observations = (msg.events || []).filter((e: any) => e.kind === 'observation')
           const alerts = (msg.events || []).filter((e: any) => e.kind === 'alert')
 

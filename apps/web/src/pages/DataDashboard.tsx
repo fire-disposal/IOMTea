@@ -31,7 +31,7 @@ function StatCard({
 export function DataDashboard() {
   const patients = trpc.patient.list.useQuery({ pageSize: 100, status: 'active' })
   const alerts = trpc.alert.list.useQuery({ pageSize: 50 }, { refetchInterval: 10000 })
-  const { data: metrics } = trpc.data.metrics.useQuery()
+  const { data: metrics } = trpc.data.metrics.useQuery({})
   const [selectedMetric, setSelectedMetric] = useState<string>('heart_rate')
 
   const { data: trendData, isLoading: trendLoading } = trpc.data.aggregate.useQuery(

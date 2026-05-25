@@ -10,12 +10,10 @@ import { UserManagementPage } from './pages/UserManagementPage'
 import { SimPage } from './modules/twin/pages/SimulationPage'
 import { PatientWall } from './modules/monitor/pages/PatientWall'
 import { AlertBoard } from './modules/monitor/pages/AlertBoard'
-import { GlobalMedications } from './modules/monitor/pages/GlobalMedications'
 import { PatientDetailShell } from './modules/monitor/pages/PatientDetailShell'
 import { PatientOverview } from './modules/monitor/pages/PatientOverview'
 import { PatientAlerts } from './modules/monitor/pages/PatientAlerts'
 import { PatientAlertRules } from './modules/monitor/pages/PatientAlertRules'
-import { PatientMedications } from './modules/monitor/pages/PatientMedications'
 import { PatientProfile } from './modules/monitor/pages/PatientProfile'
 import { HealthTimeline } from './modules/monitor/pages/HealthTimeline'
 import { GraphEditorPage } from './modules/twin/components/twin3d/GraphEditorPage'
@@ -86,12 +84,6 @@ const pAlertRulesRoute = createRoute({
   },
 })
 
-const pMedsRoute = createRoute({
-  getParentRoute: () => patientDetailRoute,
-  path: '/medications',
-  component: PatientMedications,
-})
-
 const pProfileRoute = createRoute({
   getParentRoute: () => patientDetailRoute,
   path: '/profile',
@@ -114,12 +106,6 @@ const alertsRoute = createRoute({
   getParentRoute: () => authRoute,
   path: '/alerts',
   component: AlertBoard,
-})
-
-const medsRoute = createRoute({
-  getParentRoute: () => authRoute,
-  path: '/medications',
-  component: GlobalMedications,
 })
 
 const dataDashRoute = createRoute({
@@ -161,13 +147,11 @@ const routeTree = rootRoute.addChildren([
       pOverviewRoute,
       pAlertsRoute,
       pAlertRulesRoute,
-      pMedsRoute,
       pProfileRoute,
       pTimelineRoute,
       pMapRoute,
     ]),
     alertsRoute,
-    medsRoute,
     dataDashRoute,
     dataExportRoute,
     simRoute,

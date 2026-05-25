@@ -7,7 +7,6 @@ import { dataRouter } from './data'
 import { exportRouter } from './export'
 import { homeGraphRouter } from './home-graph'
 import { ingestRouter } from './ingest'
-import { medicationRouter } from './medication'
 import { nodeGraphRouter } from './node-graph'
 import { patientRouter } from './patient'
 import { pinRouter } from './pin'
@@ -27,7 +26,6 @@ export const appRouter = router({
   export: exportRouter,
   homeGraph: homeGraphRouter,
   ingest: ingestRouter,
-  medication: medicationRouter,
   nodeGraph: nodeGraphRouter,
   patient: patientRouter,
   pin: pinRouter,

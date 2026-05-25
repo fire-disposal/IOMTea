@@ -1,27 +1,9 @@
 import { useEffect, useState } from 'react'
 import { trpc } from './trpc'
-import { usePatientStore } from './store/patients'
 import { useRealtime } from './hooks/useRealtime'
 
 export function StoreProvider() {
-  const setPatients = usePatientStore((s) => s.setPatients)
   const [wardId, setWardId] = useState<string>('')
-
-  const patientsQuery = trpc.patient.list.useQuery(
-    { pageSize: 100, status: 'active' },
-    { refetchInterval: 15000 },
-  )
-
-  useEffect(() => {
-    if (patientsQuery.data !== undefined) {
-      const list = (patientsQuery.data as any[]).map((p: any) => ({
-        id: p.id,
-        name: p.name,
-        status: p.status || 'active',
-      }))
-      setPatients(list, patientsQuery.isLoading)
-    }
-  }, [patientsQuery.data, patientsQuery.isLoading, setPatients])
 
   const wardStatus = trpc.twin.engine.status.useQuery({}, { refetchInterval: 5000 })
 

@@ -70,7 +70,7 @@ export function DashboardPage() {
                         {alert.metric}
                       </Text>
                       <Text size="xs" c="dimmed">
-                        {alert.value} {alert.unit} —{' '}
+                        {String(alert.value ?? '-')} {alert.unit} —{' '}
                         {new Date(alert.recordedAt).toLocaleString('zh-CN')}
                       </Text>
                     </div>

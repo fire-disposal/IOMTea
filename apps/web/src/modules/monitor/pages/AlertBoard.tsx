@@ -22,7 +22,7 @@ interface AlertItem {
   id: string
   patientId: string
   metric: string
-  value: number | null
+  value: unknown
   unit?: string
   severity: string | null
   status: string | null
@@ -135,13 +135,13 @@ export function AlertBoard() {
               color={
                 a.severity === 'critical' ? 'red' : a.severity === 'warning' ? 'yellow' : 'blue'
               }
-              onClick={() => openDetail(a)}
+              onClick={() => openDetail(a as AlertItem)}
             >
               <Text size="sm" fw={500}>
                 {a.metric}
               </Text>
               <Text size="xs" c="dimmed">
-                {a.value}
+                {String(a.value ?? '')}
                 {a.unit ? ` ${a.unit}` : ''}
               </Text>
             </AccentPaper>
@@ -178,7 +178,7 @@ export function AlertBoard() {
               color={
                 a.severity === 'critical' ? 'red' : a.severity === 'warning' ? 'yellow' : 'blue'
               }
-              onClick={() => openDetail(a)}
+              onClick={() => openDetail(a as AlertItem)}
             >
               <Text size="sm" fw={500}>
                 {a.metric}
@@ -235,7 +235,7 @@ export function AlertBoard() {
             <Paper p="sm" withBorder>
               <Text fw={500}>指标: {selected.metric}</Text>
               <Text>
-                值: {selected.value}
+                值: {String(selected.value ?? '')}
                 {selected.unit ? ` ${selected.unit}` : ''}
               </Text>
               <Text size="sm" c="dimmed">

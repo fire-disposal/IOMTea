@@ -132,7 +132,7 @@ export function PatientDetailShell({ children }: { children: ReactNode }) {
           <Group gap={4}>
             <IconHeart size={14} color="var(--mantine-color-red-6)" />
             <Text size="sm" fw={500}>
-              {hr != null ? hr : '--'}{' '}
+              {String(hr ?? '--')}{' '}
               <Text span size="xs" c="dimmed">
                 bpm
               </Text>
@@ -141,7 +141,7 @@ export function PatientDetailShell({ children }: { children: ReactNode }) {
           <Group gap={4}>
             <IconLungs size={14} color="var(--mantine-color-blue-6)" />
             <Text size="sm" fw={500}>
-              {spo2 != null ? spo2 : '--'}
+              {String(spo2 ?? '--')}
               <Text span size="xs" c="dimmed">
                 %
               </Text>
@@ -150,7 +150,7 @@ export function PatientDetailShell({ children }: { children: ReactNode }) {
           <Group gap={4}>
             <IconHeartbeat size={14} color="var(--mantine-color-orange-6)" />
             <Text size="sm" fw={500}>
-              {systolic != null ? systolic : '--'}/{diastolic != null ? diastolic : '--'}
+              {String(systolic ?? '--')}/{String(diastolic ?? '--')}
               <Text span size="xs" c="dimmed">
                 {' '}
                 mmHg
@@ -160,7 +160,7 @@ export function PatientDetailShell({ children }: { children: ReactNode }) {
           <Group gap={4}>
             <IconTemperatureCelsius size={14} color="var(--mantine-color-green-6)" />
             <Text size="sm" fw={500}>
-              {temp != null ? temp : '--'}
+              {String(temp ?? '--')}
               <Text span size="xs" c="dimmed">
                 °C
               </Text>
