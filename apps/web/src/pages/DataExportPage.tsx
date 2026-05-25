@@ -21,7 +21,7 @@ export function DataExportPage() {
   const fetchPreview = useCallback(async () => {
     setIsLoading(true)
     try {
-      const data = await api.get<any>('/export/preview', { limit: 50 })
+      const { data } = await api.GET('/export/preview', { params: { query: { limit: 50 } } })
       setPreview(data)
     } catch {
       setPreview(null)
@@ -35,8 +35,8 @@ export function DataExportPage() {
   const handleExport = async () => {
     setDownloadLoading(true)
     try {
-      const result = await api.post<any>('/export/download', { format } as any)
-      if (result.data) {
+      const { data: result } = await api.POST('/export/download', { body: { format } })
+      if (result?.data) {
         const binary = Uint8Array.from(atob(result.data), (c) => c.charCodeAt(0))
         const blob = new Blob([binary], { type: result.mime })
         const url = URL.createObjectURL(blob)
