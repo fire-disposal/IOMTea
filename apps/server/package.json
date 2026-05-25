@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.13.0",
+    "@hono/swagger-ui": "^0.6.1",
     "@hono/trpc-server": "^0.3.0",
     "@hono/zod-openapi": "^1.4.0",
     "@iomtea/shared-types": "workspace:*",

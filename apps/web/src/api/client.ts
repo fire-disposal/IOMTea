@@ -1,15 +1,9 @@
 import createClient from 'openapi-fetch'
 import type { paths } from './types'
 
-const baseUrl = import.meta.env.VITE_API_BASE || 'http://localhost:3000'
+const baseUrl = 'http://localhost:3000'
 
-export const api = createClient<paths>({
-  baseUrl,
-  headers: () => {
-    const token = localStorage.getItem('token')
-    return token ? { Authorization: `Bearer ${token}` } : {}
-  },
-})
+export const api = createClient<paths>({ baseUrl })
 
 api.use({
   async onResponse({ response }) {

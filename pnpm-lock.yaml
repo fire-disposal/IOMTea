@@ -84,6 +84,9 @@ importers:
       '@hono/node-server':
         specifier: ^1.13.0
         version: 1.19.14(hono@4.12.18)
+      '@hono/swagger-ui':
+        specifier: ^0.6.1
+        version: 0.6.1(hono@4.12.18)
       '@hono/trpc-server':
         specifier: ^0.3.0
         version: 0.3.4(@trpc/server@11.17.0(typescript@5.9.3))(hono@4.12.18)
@@ -1762,6 +1765,11 @@ packages:
     engines: {node: '>=18.14.1'}
     peerDependencies:
       hono: ^4
+
+  '@hono/swagger-ui@0.6.1':
+    resolution: {integrity: sha512-sJTvldu1GPeEPfyeLG7gRj+W4vEuD+JDi+JjJ3TJs/DvMUtBLs0KJO5yokGegWWdy5qrbdnQGekbhgNRmPmYKQ==}
+    peerDependencies:
+      hono: '>=4.0.0'
 
   '@hono/trpc-server@0.3.4':
     resolution: {integrity: sha512-xFOPjUPnII70FgicDzOJy1ufIoBTu8eF578zGiDOrYOrYN8CJe140s9buzuPkX+SwJRYK8LjEBHywqZtxdm8aA==}
@@ -9548,6 +9556,10 @@ snapshots:
       '@hapi/hoek': 9.3.0
 
   '@hono/node-server@1.19.14(hono@4.12.18)':
+    dependencies:
+      hono: 4.12.18
+
+  '@hono/swagger-ui@0.6.1(hono@4.12.18)':
     dependencies:
       hono: 4.12.18
 

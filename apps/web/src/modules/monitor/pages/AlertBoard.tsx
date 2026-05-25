@@ -89,7 +89,7 @@ export function AlertBoard() {
     if (!selected) return
     setCloseLoading(true)
     try {
-      await api.post(`/alerts/${selected.id}/close`)
+      await api.POST(`/alerts/${selected.id}/close`)
       setResolution('')
       close()
       fetchAlerts()

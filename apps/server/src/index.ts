@@ -4,6 +4,7 @@ import { trpcServer } from '@hono/trpc-server'
 import { eq } from 'drizzle-orm'
 import { Hono } from 'hono'
 import { OpenAPIHono } from '@hono/zod-openapi'
+import { swaggerUI } from '@hono/swagger-ui'
 import { cors } from 'hono/cors'
 import { logger as honoLogger } from 'hono/logger'
 import { WebSocketServer } from 'ws'
@@ -110,6 +111,9 @@ app.doc('/openapi.json', {
     description: 'Home health IoT monitoring platform — REST API',
   },
 })
+
+// Swagger UI
+app.get('/docs', swaggerUI({ url: '/openapi.json' }))
 
 app.get('/health', (c) => c.json({ status: 'ok' }))
 

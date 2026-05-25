@@ -62,7 +62,7 @@ export function UserManagementPage() {
     if (!editUser) return
     setUpdateLoading(true)
     try {
-      await api.patch(`/users/${editUser.id}`, { role: editUser.role })
+      await api.PATCH(`/users/${editUser.id}`, { role: editUser.role })
       notifications.show({ title: '已更新', message: '', color: 'green' })
       setEditUser(null)
       fetchUsers()
