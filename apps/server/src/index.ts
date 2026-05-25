@@ -3,6 +3,7 @@ import { serve } from '@hono/node-server'
 import { trpcServer } from '@hono/trpc-server'
 import { eq } from 'drizzle-orm'
 import { Hono } from 'hono'
+import { OpenAPIHono } from '@hono/zod-openapi'
 import { cors } from 'hono/cors'
 import { logger as honoLogger } from 'hono/logger'
 import { WebSocketServer } from 'ws'
@@ -14,6 +15,8 @@ import { broadcastManager } from './core/realtime/broadcast'
 import { createContext } from './core/trpc/context'
 import { appRouter } from './core/trpc/routers/_app'
 import { env } from './env'
+import fs from 'node:fs'
+import path from 'node:path'
 import { startMqttListener } from './mqtt-ingest'
 import { seedPermissions } from './core/services/permission-seed'
 import { seedDemoData } from './core/services/demo-seed'
@@ -36,7 +39,6 @@ import { exportApp } from './routes/export'
 import { twinApp } from './routes/twin'
 import { homeGraphApp } from './routes/homeGraph'
 import { nodeGraphApp } from './routes/nodeGraph'
-import { openapiApp } from './routes/openapi'
 
 function resolveCorsOrigins(rawCorsOrigin: string | undefined): string[] {
   if (!rawCorsOrigin) return ['http://localhost:5173']
@@ -64,7 +66,7 @@ if (env.JWT_SECRET === 'dev-secret-change-in-production') {
 // ============================================================
 // 应用初始化
 // ============================================================
-const app = new Hono()
+const app = new OpenAPIHono()
 
 // Global CORS
 app.use(
@@ -84,7 +86,6 @@ app.use(
 )
 
 // ── REST API routes ──
-app.route('/openapi', openapiApp)
 app.route('/auth', auth)
 app.route('/users', usersApp)
 app.route('/dashboard', dashboard)
@@ -99,6 +100,16 @@ app.route('/export', exportApp)
 app.route('/twin', twinApp)
 app.route('/home-graph', homeGraphApp)
 app.route('/node-graph', nodeGraphApp)
+
+// OpenAPI spec (auto-collects from all mounted OpenAPIHono sub-apps)
+app.doc('/openapi.json', {
+  openapi: '3.0.0',
+  info: {
+    title: 'IOMTea API',
+    version: '2.0.0',
+    description: 'Home health IoT monitoring platform — REST API',
+  },
+})
 
 app.get('/health', (c) => c.json({ status: 'ok' }))
 
@@ -287,6 +298,18 @@ bootstrap().then(() => {
         ws.close(4001, 'Unauthorized: invalid token')
       })
   })
+
+  // ============================================================
+  // OpenAPI JSON 导出（写入项目目录供代码生成使用）
+  // ============================================================
+  try {
+    const doc = (app as any).getOpenAPIDocument()
+    const outPath = path.resolve(import.meta.dirname, '..', 'openapi.json')
+    fs.writeFileSync(outPath, JSON.stringify(doc, null, 2), 'utf-8')
+    logger.info(`√ OpenAPI 文档已写入: ${outPath}`)
+  } catch (err) {
+    logger.warn({ err }, 'OpenAPI 文档写入失败')
+  }
 
   // ============================================================
   // 启动总结
