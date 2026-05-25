@@ -1,8 +1,9 @@
-// Main tables (users, patients, events, sessions, refresh_tokens) are imported directly from ../schema
+// Main tables (users, patients, events, refresh_tokens) are imported directly from ../schema
 export * from './auth-ext'
 export * from './enums'
 export * from './medication'
 export * from './pin'
 export * from './plan'
 export * from './tag'
+export * from './twin'
 export * from './user-patient'

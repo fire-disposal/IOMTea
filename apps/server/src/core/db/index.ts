@@ -23,8 +23,9 @@ export type DbClient = typeof db
 
 export * from './schema.js'
 export * from './schema/enums'
-export * from './schema/auth-ext'
 export * from './schema/medication'
 export * from './schema/pin'
+export * from './schema/plan'
 export * from './schema/tag'
+export * from './schema/twin'
 export * from './schema/user-patient'
