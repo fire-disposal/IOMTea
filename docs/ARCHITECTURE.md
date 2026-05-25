@@ -41,7 +41,7 @@ apps/server/src/
 
 ```
 twin      ──写入──▶ events 表 ◀──读取── core (dataRouter)
-twin      ◀──tRPC── core (deviceRouter.create/register)
+twin      ◀──tRPC── core (simRouter, pinRouter)
 mqtt-ingest──写入──▶ events 表
 mqtt-ingest◀──tRPC── core
 ```
@@ -68,7 +68,8 @@ mqtt-ingest◀──tRPC── core
 | `Observation` | kind='observation' 的事件 | 不要叫 Metric、Measurement |
 | `Alert` | kind='alert' 的事件 | 不要叫 Alarm、Warning、Notification |
 | `Patient` | patients 表中的实体 | — |
-| `Device` | devices 表中的实体 | 不要叫 Sensor、Node、Endpoint |
+| `Pin` | users_pin 表中的 PIN 码，充当设备/虚拟传感器/用户身份标识 | 不要叫 Device (devices 表已于 2026-05-24 删除) |
+| `UserPatientLink` | user_patient_links 表中的用户-患者关联 (含关系类型) | — |
 | `PatientInstance` | 模拟器中运行的患者实例 | 区分 Patient（DB实体） |
 | `SimulatedEvent` | 模拟器生成的事件 | 区分 Event（DB持久化后） |
 | `Profile` | 患者生理档案（配置模板） | 不要叫 Template、Preset、Config |
@@ -101,19 +102,21 @@ mqtt-ingest◀──tRPC── core
 
 ```
 events (
-  id, patient_id, device_id, pin_code,
-  kind,        -- 'observation' | 'alert'
+  id, patient_id, pin_code,
+  kind,        -- 'observation' | 'alert' | 'behavior' | 'location'
   metric,      -- 自由文本，不校验枚举
   value,       -- double，alert 可 null
   unit,        -- 自由文本
   confidence,  -- 信号质量 0-1
-  source,      -- 'manual' | 'device' | 'simulator' | 'imported'
+  source,      -- 'iot' | 'cv' | 'simulator' | 'manual'
   severity,    -- 仅 alert
-  status,      -- 仅 alert
+  status,      -- 仅 alert (new/assigned/acknowledged/handled/resolved/closed)
   tags,        -- jsonb，核心扩展机制
   recorded_at,
   created_at
 )
+
+注意: events.device_id 已移除，设备关联通过 pin_code (FK→users_pin) 实现。
 ```
 
 ### tags 扩展约定
@@ -244,3 +247,4 @@ Context: IOMTea 项目，Bounded Context = {core|twin|mqtt-ingest}
 |------|------|------|
 | v1.0 | 2026-05-10 | 初始版，定义 Bounded Context + 术语 + 分层 + 反模式 + AI 契约 |
 | v1.1 | 2026-05-16 | 更新 Context: simulator→twin, ingest→mqtt-ingest; 更新 event 结构 |
+| v1.2 | 2026-05-25 | devices 表已删除 (PIN 充当设备标识); events 新增 behavior/location kind, user_patient_links 替代 patients.userId; RBAC 已覆盖 9/20 路由 |

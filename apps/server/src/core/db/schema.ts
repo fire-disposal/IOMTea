@@ -75,8 +75,6 @@ export const patients = pgTable('patients', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 })
 
-
-
 export const events = pgTable(
   'events',
   {
@@ -84,7 +82,9 @@ export const events = pgTable(
     patientId: uuid('patient_id')
       .notNull()
       .references(() => patients.id, { onDelete: 'cascade' }),
-    pinCode: varchar('pin_code', { length: 6 }).references(() => usersPin.pin, { onDelete: 'set null' }),
+    pinCode: varchar('pin_code', { length: 6 }).references(() => usersPin.pin, {
+      onDelete: 'set null',
+    }),
     kind: kindEnum('kind').notNull(),
     metric: varchar('metric', { length: 100 }).notNull(),
     value: doublePrecision('value'),

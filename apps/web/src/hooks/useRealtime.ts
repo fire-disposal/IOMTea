@@ -81,15 +81,24 @@ export function useRealtime(wardId: string | undefined, mapId?: string, patientI
 
         if (msg.type === 'person_location') {
           const pl: PersonLocationMsg = msg
-          queryClient.setQueryData(['homeGraph', 'get', { patientId: pl.patientId }], (old: any) => {
-            if (!old) return old
-            return { ...old, personLocation: pl.roomId, trajectory: old.trajectory || [] }
-          })
+          queryClient.setQueryData(
+            ['homeGraph', 'get', { patientId: pl.patientId }],
+            (old: any) => {
+              if (!old) return old
+              return { ...old, personLocation: pl.roomId, trajectory: old.trajectory || [] }
+            },
+          )
         } else if (msg.type === 'vitals_update') {
           const vu: VitalsUpdateMsg = msg
-          queryClient.setQueryData(['data', 'latest', { patientId: vu.patientId }], vu.metrics.map((m) => ({
-            metric: m.metric, value: m.value, unit: m.unit, recordedAt: vu.timestamp,
-          })))
+          queryClient.setQueryData(
+            ['data', 'latest', { patientId: vu.patientId }],
+            vu.metrics.map((m) => ({
+              metric: m.metric,
+              value: m.value,
+              unit: m.unit,
+              recordedAt: vu.timestamp,
+            })),
+          )
         } else if (msg.type === 'tick') {
           setSimTime({ time: msg.simulatedTime, tz: msg.timezone, hour: msg.hourOfDay })
           const newStates = new Map<string, EntityStatePayload>()
@@ -105,10 +114,15 @@ export function useRealtime(wardId: string | undefined, mapId?: string, patientI
               const latestByMetric = new Map<string, any>()
               for (const obs of patientObs) {
                 const existing = latestByMetric.get(obs.metric)
-                if (!existing || new Date(obs.recordedAt) > new Date(existing.recordedAt)) latestByMetric.set(obs.metric, obs)
+                if (!existing || new Date(obs.recordedAt) > new Date(existing.recordedAt))
+                  latestByMetric.set(obs.metric, obs)
               }
               const latestArr = Array.from(latestByMetric.values()).map((o: any) => ({
-                metric: o.metric, value: o.value, unit: o.unit, tags: o.tags, recordedAt: new Date(o.recordedAt).getTime(),
+                metric: o.metric,
+                value: o.value,
+                unit: o.unit,
+                tags: o.tags,
+                recordedAt: new Date(o.recordedAt).getTime(),
               }))
               queryClient.setQueryData(['data', 'latest', { patientId: pid }], (old: any) => {
                 if (!old || !Array.isArray(old)) return latestArr
@@ -120,7 +134,9 @@ export function useRealtime(wardId: string | undefined, mapId?: string, patientI
           }
           if (alerts.length > 0) queryClient.invalidateQueries({ queryKey: ['alert', 'list'] })
         }
-      } catch { /* ignore parse errors */ }
+      } catch {
+        /* ignore parse errors */
+      }
     }
 
     ws.onclose = () => {
@@ -129,16 +145,23 @@ export function useRealtime(wardId: string | undefined, mapId?: string, patientI
       reconnectRef.current = setTimeout(() => connect(), 3000)
     }
 
-    ws.onerror = () => { ws.close(1000, 'error') }
+    ws.onerror = () => {
+      ws.close(1000, 'error')
+    }
   }, [wardId, queryClient])
 
   useEffect(() => {
-    mapIdRef.current = mapId; patientIdRef.current = patientId
+    mapIdRef.current = mapId
+    patientIdRef.current = patientId
     if (!wardId && !patientId) return
     connect()
     return () => {
       if (reconnectRef.current) clearTimeout(reconnectRef.current)
-      if (wsRef.current) { wsRef.current.onclose = null; wsRef.current.close(1000, 'cleanup'); wsRef.current = null }
+      if (wsRef.current) {
+        wsRef.current.onclose = null
+        wsRef.current.close(1000, 'cleanup')
+        wsRef.current = null
+      }
       subscribedRef.current = false
     }
   }, [wardId, patientId, connect])

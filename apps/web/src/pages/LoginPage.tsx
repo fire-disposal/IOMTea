@@ -35,7 +35,11 @@ export function LoginPage() {
   const setTokens = useAuthStore((s) => s.setTokens)
   const navigate = useNavigate()
 
-  const handleAuthSuccess = (data: { accessToken: string; refreshToken: string; expiresAt: number }) => {
+  const handleAuthSuccess = (data: {
+    accessToken: string
+    refreshToken: string
+    expiresAt: number
+  }) => {
     setTokens(data.accessToken, data.refreshToken, data.expiresAt)
     notifications.show({ title: '登录成功', message: '欢迎使用 IOMTea', color: 'green' })
     const params = new URLSearchParams(window.location.search)
@@ -53,12 +57,14 @@ export function LoginPage() {
 
   const login = trpc.auth.login.useMutation({
     onSuccess: handleAuthSuccess,
-    onError: (err) => form.setFieldMeta('username', (prev) => ({ ...prev, errorMap: { onServer: err.message } })),
+    onError: (err) =>
+      form.setFieldMeta('username', (prev) => ({ ...prev, errorMap: { onServer: err.message } })),
   })
 
   const register = trpc.auth.register.useMutation({
     onSuccess: handleAuthSuccess,
-    onError: (err) => form.setFieldMeta('username', (prev) => ({ ...prev, errorMap: { onServer: err.message } })),
+    onError: (err) =>
+      form.setFieldMeta('username', (prev) => ({ ...prev, errorMap: { onServer: err.message } })),
   })
 
   return (
@@ -68,7 +74,14 @@ export function LoginPage() {
           <div
             key={p.id}
             className={classes.particle}
-            style={{ left: p.left, top: p.top, animationDelay: p.animationDelay, animationDuration: p.animationDuration, width: p.width, height: p.height }}
+            style={{
+              left: p.left,
+              top: p.top,
+              animationDelay: p.animationDelay,
+              animationDuration: p.animationDuration,
+              width: p.width,
+              height: p.height,
+            }}
           />
         ))}
       </div>
@@ -77,7 +90,13 @@ export function LoginPage() {
       <div className={classes.shapeTriangle} />
 
       <Container size={420} style={{ position: 'relative', zIndex: 1 }}>
-        <Title ta="center" fz={36} fw={800} className={classes.title} style={{ textTransform: 'uppercase' }}>
+        <Title
+          ta="center"
+          fz={36}
+          fw={800}
+          className={classes.title}
+          style={{ textTransform: 'uppercase' }}
+        >
           IOMTea
         </Title>
         <Title ta="center" order={6} fw={400} mt={4} className={classes.subtitle}>
@@ -85,8 +104,16 @@ export function LoginPage() {
         </Title>
 
         <Paper className={classes.card} p={32} mt={28} radius="lg">
-          <form onSubmit={(e) => { e.preventDefault(); form.handleSubmit() }}>
-            <form.Field name="username" validators={{ onChange: zodCheck(loginSchema.shape.username) }}>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              form.handleSubmit()
+            }}
+          >
+            <form.Field
+              name="username"
+              validators={{ onChange: zodCheck(loginSchema.shape.username) }}
+            >
               {(field) => (
                 <TextInput
                   label="用户名"
@@ -94,16 +121,26 @@ export function LoginPage() {
                   required
                   autoComplete="username"
                   value={field.state.value}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => field.handleChange(e.currentTarget.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    field.handleChange(e.currentTarget.value)
+                  }
                   error={field.state.meta.errors?.[0]}
                   styles={{
-                    input: { background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: '#e2e8f0', '&:focus': { borderColor: '#38b2ac' } },
+                    input: {
+                      background: 'rgba(255,255,255,0.07)',
+                      border: '1px solid rgba(255,255,255,0.12)',
+                      color: '#e2e8f0',
+                      '&:focus': { borderColor: '#38b2ac' },
+                    },
                     label: { color: '#a0aec0' },
                   }}
                 />
               )}
             </form.Field>
-            <form.Field name="password" validators={{ onChange: zodCheck(loginSchema.shape.password) }}>
+            <form.Field
+              name="password"
+              validators={{ onChange: zodCheck(loginSchema.shape.password) }}
+            >
               {(field) => (
                 <PasswordInput
                   label="密码"
@@ -112,10 +149,20 @@ export function LoginPage() {
                   mt="md"
                   autoComplete={isRegister ? 'new-password' : 'current-password'}
                   value={field.state.value}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => field.handleChange(e.currentTarget.value)}
-                  error={field.state.meta.errors?.[0] || (field.state.meta.errorMap as any)?.onServer}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    field.handleChange(e.currentTarget.value)
+                  }
+                  error={
+                    field.state.meta.errors?.[0] ||
+                    (field.state.meta.errorMap as Record<string, string> | undefined)?.onServer
+                  }
                   styles={{
-                    input: { background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: '#e2e8f0', '&:focus': { borderColor: '#38b2ac' } },
+                    input: {
+                      background: 'rgba(255,255,255,0.07)',
+                      border: '1px solid rgba(255,255,255,0.12)',
+                      color: '#e2e8f0',
+                      '&:focus': { borderColor: '#38b2ac' },
+                    },
                     label: { color: '#a0aec0' },
                     innerInput: { color: '#e2e8f0' },
                   }}
@@ -145,7 +192,10 @@ export function LoginPage() {
               mt="sm"
               variant="subtle"
               className={classes.toggleBtn}
-              onClick={() => { setIsRegister(!isRegister); form.reset() }}
+              onClick={() => {
+                setIsRegister(!isRegister)
+                form.reset()
+              }}
             >
               {isRegister ? '已有账号？登录' : '没有账号？注册'}
             </Button>

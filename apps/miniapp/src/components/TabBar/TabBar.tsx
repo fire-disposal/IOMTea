@@ -15,15 +15,15 @@ interface TabBarProps {
 
 export function TabBar({ current }: TabBarProps) {
   return (
-    <View className='tab-bar'>
-      {TABS.map(tab => (
+    <View className="tab-bar">
+      {TABS.map((tab) => (
         <View
           key={tab.key}
           className={`tab-bar__item ${current === tab.key ? 'tab-bar__item--active' : ''}`}
           onClick={() => Taro.switchTab({ url: tab.path })}
         >
-          <Text className='tab-bar__icon'>{tab.icon}</Text>
-          <Text className='tab-bar__label'>{tab.label}</Text>
+          <Text className="tab-bar__icon">{tab.icon}</Text>
+          <Text className="tab-bar__label">{tab.label}</Text>
         </View>
       ))}
     </View>

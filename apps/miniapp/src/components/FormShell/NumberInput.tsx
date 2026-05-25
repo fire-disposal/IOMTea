@@ -41,46 +41,44 @@ export function NumberInput({ value, onChange, placeholder, decimal }: NumberInp
   }
 
   return (
-    <View className='number-input'>
-      <View className='number-input__display'>
-        <Text className='number-input__value'>{displayValue}</Text>
-        {!value && showHint && (
-          <Text className='number-input__hint'>点击任意键开始输入</Text>
-        )}
+    <View className="number-input">
+      <View className="number-input__display">
+        <Text className="number-input__value">{displayValue}</Text>
+        {!value && showHint && <Text className="number-input__hint">点击任意键开始输入</Text>}
       </View>
-      <View className='number-input__keypad'>
-        <View className='number-input__row'>
-          {['1','2','3'].map(d => (
-            <View key={d} className='number-input__key' onClick={() => handleDigit(d)}>
+      <View className="number-input__keypad">
+        <View className="number-input__row">
+          {['1', '2', '3'].map((d) => (
+            <View key={d} className="number-input__key" onClick={() => handleDigit(d)}>
               <Text>{d}</Text>
             </View>
           ))}
         </View>
-        <View className='number-input__row'>
-          {['4','5','6'].map(d => (
-            <View key={d} className='number-input__key' onClick={() => handleDigit(d)}>
+        <View className="number-input__row">
+          {['4', '5', '6'].map((d) => (
+            <View key={d} className="number-input__key" onClick={() => handleDigit(d)}>
               <Text>{d}</Text>
             </View>
           ))}
         </View>
-        <View className='number-input__row'>
-          {['7','8','9'].map(d => (
-            <View key={d} className='number-input__key' onClick={() => handleDigit(d)}>
+        <View className="number-input__row">
+          {['7', '8', '9'].map((d) => (
+            <View key={d} className="number-input__key" onClick={() => handleDigit(d)}>
               <Text>{d}</Text>
             </View>
           ))}
         </View>
-        <View className='number-input__row'>
+        <View className="number-input__row">
           {decimal && (
-            <View className='number-input__key' onClick={() => handleDigit('.')}>
+            <View className="number-input__key" onClick={() => handleDigit('.')}>
               <Text>.</Text>
             </View>
           )}
-          {!decimal && <View className='number-input__key number-input__key--empty' />}
-          <View className='number-input__key' onClick={() => handleDigit('0')}>
+          {!decimal && <View className="number-input__key number-input__key--empty" />}
+          <View className="number-input__key" onClick={() => handleDigit('0')}>
             <Text>0</Text>
           </View>
-          <View className='number-input__key' onClick={() => handleDigit('back')}>
+          <View className="number-input__key" onClick={() => handleDigit('back')}>
             <Text>⌫</Text>
           </View>
         </View>

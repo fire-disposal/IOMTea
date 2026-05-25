@@ -28,8 +28,12 @@ export async function syncUnsyncedRecords(): Promise<SyncResult | null> {
 }
 
 export function startAutoSync(onSyncResult?: (result: SyncResult) => void): void {
-  syncUnsyncedRecords().then((r) => { if (r) onSyncResult?.(r) })
+  syncUnsyncedRecords().then((r) => {
+    if (r) onSyncResult?.(r)
+  })
   setInterval(() => {
-    syncUnsyncedRecords().then((r) => { if (r) onSyncResult?.(r) })
+    syncUnsyncedRecords().then((r) => {
+      if (r) onSyncResult?.(r)
+    })
   }, SYNC_INTERVAL)
 }

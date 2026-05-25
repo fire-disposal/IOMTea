@@ -48,18 +48,20 @@ export const AvatarSpecSchema = z.object({
     style: AvatarHairStyleSchema,
     color: z.number().int().min(0).max(7),
   }),
-  accessory: z.object({
-    glasses: AvatarGlassesStyleSchema,
-    hat: AvatarHatStyleSchema,
-  }).superRefine((value, ctx) => {
-    if (value.hat === 'beanie' && value.glasses === 'round') {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'beanie 与 round 眼镜组合在 v2 中不可用',
-        path: ['glasses'],
-      })
-    }
-  }),
+  accessory: z
+    .object({
+      glasses: AvatarGlassesStyleSchema,
+      hat: AvatarHatStyleSchema,
+    })
+    .superRefine((value, ctx) => {
+      if (value.hat === 'beanie' && value.glasses === 'round') {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'beanie 与 round 眼镜组合在 v2 中不可用',
+          path: ['glasses'],
+        })
+      }
+    }),
   palette: z.object({
     background: z.number().int().min(0).max(7),
     clothing: z.number().int().min(0).max(7),
@@ -241,7 +243,12 @@ export const AVATAR_EDITOR_FIELDS: AvatarEditorField[] = [
     key: 'hair.style',
     label: '发型',
     control: 'select',
-    options: styleOptions(['short', 'long', 'buzz', 'curly'] as const, ['短发', '长发', '寸头', '卷发']),
+    options: styleOptions(['short', 'long', 'buzz', 'curly'] as const, [
+      '短发',
+      '长发',
+      '寸头',
+      '卷发',
+    ]),
   },
   {
     section: '头发',
@@ -367,7 +374,8 @@ export function migrateMiiParamsToAvatarSpec(input: MiiParams = DEFAULT_MII_PARA
     version: AVATAR_VERSION,
     seed: input.seed,
     face: {
-      shape: input.face.headWidth > 0.58 ? 'round' : input.face.headHeight > 0.58 ? 'oval' : 'square',
+      shape:
+        input.face.headWidth > 0.58 ? 'round' : input.face.headHeight > 0.58 ? 'oval' : 'square',
       skinTone: clamp(input.face.skinTone, 0, 5),
       headScale: 0.8 + clamp((input.face.headWidth + input.face.headHeight) / 2, 0, 1) * 0.4,
       jawRoundness: clamp((input.face.headWidth + (1 - input.face.headHeight)) / 2, 0, 1),
@@ -380,7 +388,12 @@ export function migrateMiiParamsToAvatarSpec(input: MiiParams = DEFAULT_MII_PARA
       color: clamp(input.face.eyeColor, 0, 5),
     },
     brows: {
-      style: input.face.eyebrowAngle > 0.25 ? 'sharp' : input.face.eyebrowAngle < -0.25 ? 'flat' : 'soft',
+      style:
+        input.face.eyebrowAngle > 0.25
+          ? 'sharp'
+          : input.face.eyebrowAngle < -0.25
+            ? 'flat'
+            : 'soft',
       angle: clamp(input.face.eyebrowAngle, -1, 1),
       thickness: 0.6 + clamp(input.face.eyebrowHeight, 0, 1) * 0.9,
     },
@@ -399,7 +412,8 @@ export function migrateMiiParamsToAvatarSpec(input: MiiParams = DEFAULT_MII_PARA
       color: clamp(input.face.hairColor, 0, 7),
     },
     accessory: {
-      glasses: input.face.accessory === 1 ? 'round' : input.face.accessory === 2 ? 'square' : 'none',
+      glasses:
+        input.face.accessory === 1 ? 'round' : input.face.accessory === 2 ? 'square' : 'none',
       hat: input.face.accessory >= 3 ? 'beanie' : 'none',
     },
     palette: {
@@ -420,11 +434,13 @@ export function parseAvatarSpec(input: unknown): AvatarSpec {
     return parsed.data
   }
 
-  const maybeV1 = z.object({
-    version: z.literal(1),
-    face: z.record(z.any()),
-    seed: z.number().optional(),
-  }).safeParse(input)
+  const maybeV1 = z
+    .object({
+      version: z.literal(1),
+      face: z.record(z.any()),
+      seed: z.number().optional(),
+    })
+    .safeParse(input)
 
   if (maybeV1.success) {
     return migrateMiiParamsToAvatarSpec(input as MiiParams)

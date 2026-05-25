@@ -48,10 +48,16 @@ export function PatientAlertRules({ patientId }: { patientId: string }) {
     <div>
       <Group justify="space-between" mb="md">
         <Title order={4}>告警规则配置</Title>
-        <Button size="sm" onClick={() => form.handleSubmit()} loading={upsert.isPending}>保存</Button>
+        <Button size="sm" onClick={() => form.handleSubmit()} loading={upsert.isPending}>
+          保存
+        </Button>
       </Group>
 
-      {data.length === 0 &&       <Text c="dimmed" ta="center" py="xl">暂无告警规则</Text>}
+      {data.length === 0 && (
+        <Text c="dimmed" ta="center" py="xl">
+          暂无告警规则
+        </Text>
+      )}
 
       {data.map((rule: any) => (
         <Paper key={rule.metric} p="sm" radius="md" withBorder mb="sm">

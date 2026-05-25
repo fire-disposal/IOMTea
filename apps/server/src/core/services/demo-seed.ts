@@ -441,7 +441,10 @@ export async function seedDemoData(db: DbClient): Promise<void> {
       .returning({ id: patients.id })
     createdPatients.set(p.username, patient.id)
 
-    await db.insert(userPatientLinks).values({ userId: user.id, patientId: patient.id, relation: 'primary' }).onConflictDoNothing()
+    await db
+      .insert(userPatientLinks)
+      .values({ userId: user.id, patientId: patient.id, relation: 'primary' })
+      .onConflictDoNothing()
 
     const pins: string[] = []
     for (const label of p.pinLabels) {
@@ -582,12 +585,12 @@ export async function seedDemoData(db: DbClient): Promise<void> {
           dosage: med.dosage,
           dosageUnit: med.dosageUnit,
           frequency: med.frequency,
-          route: med.route as any,
+          route: med.route,
           startDate: new Date(now.getTime() - 14 * 24 * HOUR_MS).toISOString().slice(0, 10),
           status: 'active',
           instructions: med.instructions,
           prescribedById: user,
-        })
+        } as any)
         .returning({ id: medications.id })
 
       const times: string[] = med.frequency.includes('2次')

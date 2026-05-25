@@ -5,6 +5,7 @@ import { events, patients } from '../../db/schema.js'
 import { userPatientLinks } from '../../db/schema/user-patient'
 import { usersPin } from '../../db/schema/pin'
 import { publicProcedure, protectedProcedure, router } from '../index'
+import { requirePermission } from '../middleware/rbac'
 import { twinState } from '../../../twin/twin-state'
 import { broadcastManager } from '../../realtime/broadcast'
 import { createChildLogger } from '../../lib/logger'
@@ -51,6 +52,7 @@ const graphSchema = z.object({
 
 export const homeGraphRouter = router({
   get: protectedProcedure
+    .use(requirePermission('patient:read'))
     .input(z.object({ patientId: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
       const [p] = await ctx.db
@@ -110,6 +112,7 @@ export const homeGraphRouter = router({
     }),
 
   upsert: protectedProcedure
+    .use(requirePermission('patient:read'))
     .input(z.object({ patientId: z.string().uuid(), graph: graphSchema }))
     .mutation(async ({ ctx, input }) => {
       const [p] = await ctx.db
@@ -226,12 +229,12 @@ export const homeGraphRouter = router({
           .values({
             patientId: patient.id,
             pinCode: input.pin,
-            kind: 'alert',
+            kind: 'alert' as const,
             metric: 'fall_detected',
             value: null,
-            severity: 'critical',
-            status: 'active',
-            source: 'iot',
+            severity: 'critical' as const,
+            status: 'active' as const,
+            source: 'iot' as const,
             tags: { ...(input.metadata || {}), pin: input.pin },
             recordedAt: new Date(),
           } as any)
@@ -243,10 +246,10 @@ export const homeGraphRouter = router({
           .values({
             patientId: patient.id,
             pinCode: input.pin,
-            kind: 'observation',
+            kind: 'observation' as const,
             metric: 'action',
             value: null,
-            source: 'iot',
+            source: 'iot' as const,
             tags: {
               action: input.action,
               roomId: input.roomId,
@@ -263,21 +266,23 @@ export const homeGraphRouter = router({
           .values({
             patientId: patient.id,
             pinCode: input.pin,
-            kind: 'observation',
+            kind: 'observation' as const,
             metric: input.metric,
             value: input.value ?? null,
             unit: input.unit ?? undefined,
-            source: (input.source || 'simulator') as any,
+            source: input.source || 'simulator',
             tags: { ...(input.metadata || {}), pin: input.pin },
             recordedAt: new Date(),
           } as any)
           .catch(() => {})
 
-        broadcastManager.broadcastVitals(patient.id, [{
-          metric: input.metric,
-          value: input.value ?? null,
-          unit: input.unit ?? null,
-        }])
+        broadcastManager.broadcastVitals(patient.id, [
+          {
+            metric: input.metric,
+            value: input.value ?? null,
+            unit: input.unit ?? null,
+          },
+        ])
 
         result = { event: 'healthObservation', metric: input.metric, value: input.value }
       } else if (input.event === 'healthAlert' && input.metric) {
@@ -286,23 +291,25 @@ export const homeGraphRouter = router({
           .values({
             patientId: patient.id,
             pinCode: input.pin,
-            kind: 'alert',
+            kind: 'alert' as const,
             metric: input.metric,
             value: input.value ?? null,
             unit: input.unit ?? undefined,
-            severity: (input.severity || 'warning') as any,
-            status: 'active' as any,
-            source: (input.source || 'simulator') as any,
+            severity: input.severity || 'warning',
+            status: 'active' as const,
+            source: input.source || 'simulator',
             tags: { ...(input.metadata || {}), pin: input.pin },
             recordedAt: new Date(),
           } as any)
           .catch(() => {})
 
-        broadcastManager.broadcastVitals(patient.id, [{
-          metric: input.metric,
-          value: input.value ?? null,
-          unit: input.unit ?? null,
-        }])
+        broadcastManager.broadcastVitals(patient.id, [
+          {
+            metric: input.metric,
+            value: input.value ?? null,
+            unit: input.unit ?? null,
+          },
+        ])
         result = { event: 'healthAlert', metric: input.metric, severity: input.severity }
       }
 

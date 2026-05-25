@@ -1,14 +1,34 @@
 import {
-  AppShell, Burger, Divider, Group, NavLink, Text, ThemeIcon,
-  ActionIcon, Modal, Button,
+  AppShell,
+  Burger,
+  Divider,
+  Group,
+  NavLink,
+  Text,
+  ThemeIcon,
+  ActionIcon,
+  Modal,
+  Button,
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import {
-  IconDashboard, IconLogout, IconUsers,
+  IconDashboard,
+  IconLogout,
+  IconUsers,
   IconScreenShare,
-  IconAlertTriangle, IconFileExport, IconFlask, IconKey, IconUsersGroup,
+  IconAlertTriangle,
+  IconFileExport,
+  IconFlask,
+  IconKey,
+  IconUsersGroup,
 } from '@tabler/icons-react'
-import { Outlet, createFileRoute, redirect, useNavigate, useRouterState } from '@tanstack/react-router'
+import {
+  Outlet,
+  createFileRoute,
+  redirect,
+  useNavigate,
+  useRouterState,
+} from '@tanstack/react-router'
 import { useAuthStore } from '../store/auth'
 import { StoreProvider } from '../StoreProvider'
 
@@ -29,7 +49,7 @@ const navGroups: NavGroup[] = [
     label: '监控',
     items: [
       { label: '数据大屏', icon: IconScreenShare, path: '/data-dashboard' },
-      { label: '工作台',   icon: IconDashboard,  path: '/' },
+      { label: '工作台', icon: IconDashboard, path: '/' },
       { label: '告警看板', icon: IconAlertTriangle, path: '/alerts' },
     ],
     roles: ['super_admin', 'admin', 'user'],
@@ -37,24 +57,20 @@ const navGroups: NavGroup[] = [
   {
     label: '管理',
     items: [
-      { label: '患者管理', icon: IconUsers,      path: '/patients' },
-      { label: '数据导出', icon: IconFileExport,  path: '/data-export' },
-      { label: '模拟工厂', icon: IconFlask,      path: '/simulation' },
+      { label: '患者管理', icon: IconUsers, path: '/patients' },
+      { label: '数据导出', icon: IconFileExport, path: '/data-export' },
+      { label: '模拟工厂', icon: IconFlask, path: '/simulation' },
     ],
     roles: ['super_admin', 'admin'],
   },
   {
     label: '设备与接入',
-    items: [
-      { label: 'PIN 管理', icon: IconKey,     path: '/iot/pins' },
-    ],
+    items: [{ label: 'PIN 管理', icon: IconKey, path: '/iot/pins' }],
     roles: ['super_admin', 'admin'],
   },
   {
     label: '系统',
-    items: [
-      { label: '用户管理', icon: IconUsersGroup, path: '/settings/users' },
-    ],
+    items: [{ label: '用户管理', icon: IconUsersGroup, path: '/settings/users' }],
     roles: ['super_admin'],
   },
 ]
@@ -79,23 +95,38 @@ function DashboardLayout() {
   const logout = useAuthStore((s) => s.logout)
   const role = useAuthStore((s) => s.role) ?? 'user'
 
-  const visibleGroups = navGroups.filter(g => g.roles.includes(role))
-  const allVisibleItems = visibleGroups.flatMap(g => g.items)
-  const currentPage = allVisibleItems.find((item) => item.path === '/' ? pathname === '/' : pathname.startsWith(item.path))
+  const visibleGroups = navGroups.filter((g) => g.roles.includes(role))
+  const allVisibleItems = visibleGroups.flatMap((g) => g.items)
+  const currentPage = allVisibleItems.find((item) =>
+    item.path === '/' ? pathname === '/' : pathname.startsWith(item.path),
+  )
 
-  const isActive = (path: string) => path === '/' ? pathname === '/' : pathname.startsWith(path)
+  const isActive = (path: string) => (path === '/' ? pathname === '/' : pathname.startsWith(path))
 
   return (
-    <AppShell header={{ height: 56 }} navbar={{ width: 220, breakpoint: 'sm', collapsed: { mobile: !opened } }} padding="md">
+    <AppShell
+      header={{ height: 56 }}
+      navbar={{ width: 220, breakpoint: 'sm', collapsed: { mobile: !opened } }}
+      padding="md"
+    >
       <AppShell.Header>
         <Group h="100%" px="md" justify="space-between">
           <Group>
             <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
-            <ThemeIcon size="lg" radius="md" variant="gradient" gradient={{ from: 'matchaGreen', to: '#8EC15B' }}>
+            <ThemeIcon
+              size="lg"
+              radius="md"
+              variant="gradient"
+              gradient={{ from: 'matchaGreen', to: '#8EC15B' }}
+            >
               <Text size="lg">🍵</Text>
             </ThemeIcon>
-            <Text fw={700} size="lg">IOMTea</Text>
-            <Text size="sm" c="dimmed" visibleFrom="sm">/ {currentPage?.label ?? ''}</Text>
+            <Text fw={700} size="lg">
+              IOMTea
+            </Text>
+            <Text size="sm" c="dimmed" visibleFrom="sm">
+              / {currentPage?.label ?? ''}
+            </Text>
           </Group>
           <ActionIcon variant="subtle" color="red" onClick={openLogoutModal}>
             <IconLogout size={18} />
@@ -106,12 +137,18 @@ function DashboardLayout() {
         {visibleGroups.map((group, gi) => (
           <div key={group.label}>
             {gi > 0 && <Divider my="xs" />}
-            <Text size="xs" c="dimmed" fw={500} px="sm" pt="xs" pb={4}>{group.label}</Text>
+            <Text size="xs" c="dimmed" fw={500} px="sm" pt="xs" pb={4}>
+              {group.label}
+            </Text>
             {group.items.map((item) => (
-              <NavLink key={item.label} label={item.label}
+              <NavLink
+                key={item.label}
+                label={item.label}
                 leftSection={<item.icon size={20} stroke={1.5} />}
                 active={isActive(item.path)}
-                onClick={() => navigate({ to: item.path })} variant="light" mb={2}
+                onClick={() => navigate({ to: item.path })}
+                variant="light"
+                mb={2}
               />
             ))}
           </div>
@@ -127,20 +164,37 @@ function DashboardLayout() {
       <Modal opened={logoutModal} onClose={closeLogoutModal} title="确认退出" size="sm">
         <Text mb="lg">确定要退出登录吗？</Text>
         <Group justify="flex-end">
-          <Button variant="subtle" onClick={closeLogoutModal}>取消</Button>
-          <Button color="red" onClick={() => { logout(); closeLogoutModal() }}>确认退出</Button>
+          <Button variant="subtle" onClick={closeLogoutModal}>
+            取消
+          </Button>
+          <Button
+            color="red"
+            onClick={() => {
+              logout()
+              closeLogoutModal()
+            }}
+          >
+            确认退出
+          </Button>
         </Group>
       </Modal>
     </AppShell>
   )
 }
 
-export const Route = (createFileRoute as any)('/_auth')({
+export const Route = createFileRoute('/_auth')({
   beforeLoad: ({ location }: { location: { href: string } }) => {
     const state = useAuthStore.getState()
     if (!state.token) throw redirect({ to: '/login', search: { redirect: location.href } })
 
-    const adminRoutes = ['/patients', '/medications', '/data-export', '/simulation', '/settings', '/iot/pins']
+    const adminRoutes = [
+      '/patients',
+      '/medications',
+      '/data-export',
+      '/simulation',
+      '/settings',
+      '/iot/pins',
+    ]
     const superAdminRoutes = ['/settings/users']
     const pathname = location.href || ''
 

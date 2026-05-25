@@ -265,11 +265,13 @@ export async function markMissed(
       .insert(events)
       .values({
         patientId: med.patientId,
-        kind: 'behavior',
+        kind: 'alert' as const,
         metric: 'medication_missed',
         value: null,
         unit: null,
-        source: 'manual',
+        severity: 'warning' as const,
+        status: 'active' as const,
+        source: 'manual' as const,
         tags: {
           scheduleId: input.scheduleId,
           dueDate: input.dueDate,
@@ -277,9 +279,9 @@ export async function markMissed(
           drugName: med.drugName,
         },
         recordedAt: new Date(),
-      })
+      } as any)
       .catch((err) => {
-        logger.warn({ err }, 'failed to insert medication_missed event')
+        logger.error({ err }, 'failed to insert medication_missed alert')
       })
   }
 

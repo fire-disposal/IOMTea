@@ -19,21 +19,23 @@ export default function Login() {
       Taro.redirectTo({ url: '/pages/pin-overview/index' })
     } catch (err: any) {
       Taro.showToast({ title: err?.message || '登录失败', icon: 'none' })
-    } finally { setLoading(false) }
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
-    <View className='login-page'>
-      <View className='login-hero anim-fade-up'>
-        <Text className='login-brand anim-pulse'>IOMTea</Text>
-        <Text className='login-desc'>居家健康管理</Text>
+    <View className="login-page">
+      <View className="login-hero anim-fade-up">
+        <Text className="login-brand anim-pulse">IOMTea</Text>
+        <Text className="login-desc">居家健康管理</Text>
       </View>
 
-      <View className='login-actions anim-fade-up' style='animation-delay:200ms'>
-        <Button type='primary' size='large' block loading={loading} onClick={handleWechatLogin}>
+      <View className="login-actions anim-fade-up" style="animation-delay:200ms">
+        <Button type="primary" size="large" block loading={loading} onClick={handleWechatLogin}>
           微信登录
         </Button>
-        <Text className='login-hint'>登录后同步健康数据</Text>
+        <Text className="login-hint">登录后同步健康数据</Text>
       </View>
     </View>
   )

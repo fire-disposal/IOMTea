@@ -42,7 +42,7 @@ export default function TrackingSettings() {
   const toggleReminder = (key: string, time: string) => {
     const c = config[key]
     const times = c.reminderTimes.includes(time)
-      ? c.reminderTimes.filter(t => t !== time)
+      ? c.reminderTimes.filter((t) => t !== time)
       : [...c.reminderTimes, time]
     const next = { ...config, [key]: { ...c, reminderTimes: times } }
     setConfig(next)
@@ -50,24 +50,28 @@ export default function TrackingSettings() {
   }
 
   return (
-    <View className='tracking-page'>
-      <View className='tracking-page__header'>
-        <Text className='tracking-page__back' onClick={() => Taro.navigateBack()}>← 返回</Text>
-        <Text className='tracking-page__title'>记录项目设置</Text>
+    <View className="tracking-page">
+      <View className="tracking-page__header">
+        <Text className="tracking-page__back" onClick={() => Taro.navigateBack()}>
+          ← 返回
+        </Text>
+        <Text className="tracking-page__title">记录项目设置</Text>
       </View>
-      {ALL_MODULES.map(m => (
-        <View key={m.key} className='tracking-item'>
-          <View className='tracking-item__row'>
-            <Text className='tracking-item__icon'>{m.icon}</Text>
-            <Text className='tracking-item__label'>{m.label}</Text>
+      {ALL_MODULES.map((m) => (
+        <View key={m.key} className="tracking-item">
+          <View className="tracking-item__row">
+            <Text className="tracking-item__icon">{m.icon}</Text>
+            <Text className="tracking-item__label">{m.label}</Text>
             <Switch checked={config[m.key]?.enabled ?? true} onClick={() => toggle(m.key)} />
           </View>
           {config[m.key]?.enabled && (
-            <View className='tracking-item__reminders'>
-              {REMINDER_TIMES.map(t => (
-                <View key={t}
+            <View className="tracking-item__reminders">
+              {REMINDER_TIMES.map((t) => (
+                <View
+                  key={t}
                   className={`tracking-chip ${config[m.key]?.reminderTimes.includes(t) ? 'tracking-chip--active' : ''}`}
-                  onClick={() => toggleReminder(m.key, t)}>
+                  onClick={() => toggleReminder(m.key, t)}
+                >
                   <Text>{t}</Text>
                 </View>
               ))}

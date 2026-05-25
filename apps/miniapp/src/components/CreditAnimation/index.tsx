@@ -12,8 +12,8 @@ export function CreditAnimation({ visible, amount, x, y }: CreditAnimationProps)
   if (!visible) return null
 
   return (
-    <View className='credit-anim' style={{ left: x, top: y }}>
-      <Text className='credit-anim__text anim-credit-float'>+{amount}</Text>
+    <View className="credit-anim" style={{ left: x, top: y }}>
+      <Text className="credit-anim__text anim-credit-float">+{amount}</Text>
     </View>
   )
 }

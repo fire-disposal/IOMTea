@@ -68,15 +68,17 @@ function startVirtualPin(pin: string, config: z.infer<typeof generatorConfigSche
           .values({
             patientId,
             pinCode: pin,
-            kind: 'observation',
+            kind: 'observation' as const,
             metric: normalizedMetric,
             value,
             unit: m.unit || undefined,
-            source: 'simulator',
+            source: 'simulator' as const,
             tags: { virtual: true, pin },
             recordedAt: new Date(),
           } as any)
-          .catch((err) => { logger.warn({ err, pin }, '虚拟PIN事件写入失败') })
+          .catch((err) => {
+            logger.warn({ err, pin }, '虚拟PIN事件写入失败')
+          })
       }
 
       await db

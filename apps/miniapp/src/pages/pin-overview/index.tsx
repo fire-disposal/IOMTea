@@ -51,24 +51,26 @@ export default function PinOverview() {
   }
 
   return (
-    <View className='pin-page'>
-      <Text className='pin-page__title'>设备连接</Text>
-      <Text className='pin-page__subtitle'>在传感设备上输入 PIN 码以连接数据</Text>
+    <View className="pin-page">
+      <Text className="pin-page__title">设备连接</Text>
+      <Text className="pin-page__subtitle">在传感设备上输入 PIN 码以连接数据</Text>
 
-      {loading && <View className='pin-page__skeleton' />}
+      {loading && <View className="pin-page__skeleton" />}
 
-      {pins.map(p => (
-        <View key={p.pin} className='pin-card'>
-          <Text className='pin-card__code'>{p.pin}</Text>
-          {p.nickname && <Text className='pin-card__nickname'>{p.nickname}</Text>}
-          {p.label && <Text className='pin-card__label'>{p.label}</Text>}
-          <View className='pin-card__actions'>
-            <Button className='pin-card__copy' onClick={() => copyPin(p.pin)}>复制 PIN</Button>
+      {pins.map((p) => (
+        <View key={p.pin} className="pin-card">
+          <Text className="pin-card__code">{p.pin}</Text>
+          {p.nickname && <Text className="pin-card__nickname">{p.nickname}</Text>}
+          {p.label && <Text className="pin-card__label">{p.label}</Text>}
+          <View className="pin-card__actions">
+            <Button className="pin-card__copy" onClick={() => copyPin(p.pin)}>
+              复制 PIN
+            </Button>
           </View>
         </View>
       ))}
 
-      <View className='pin-page__nav'>
+      <View className="pin-page__nav">
         <Button onClick={() => Taro.switchTab({ url: '/pages/index/index' })}>进入首页</Button>
       </View>
     </View>

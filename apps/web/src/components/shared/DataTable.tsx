@@ -1,10 +1,5 @@
 import { Table } from '@mantine/core'
-import {
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-  type ColumnDef,
-} from '@tanstack/react-table'
+import { flexRender, getCoreRowModel, useReactTable, type ColumnDef } from '@tanstack/react-table'
 
 interface DataTableProps<T> {
   data: T[]

@@ -5,7 +5,12 @@ import { useState, useEffect } from 'react'
 import { getLocalRecords } from '../../utils/storage'
 import { Calendar } from '../../components/Calendar'
 import { TabBar } from '../../components/TabBar'
-import { HEALTH_MODULE_META, HEALTH_MODULE_KEYS, type HealthModuleKey, getRecordPage } from '../../constants/modules'
+import {
+  HEALTH_MODULE_META,
+  HEALTH_MODULE_KEYS,
+  type HealthModuleKey,
+  getRecordPage,
+} from '../../constants/modules'
 import './index.scss'
 
 export default function HealthPage() {
@@ -17,13 +22,13 @@ export default function HealthPage() {
   const [loaded, setLoaded] = useState(false)
 
   const trackingConfig = Taro.getStorageSync('tracking_config') || {}
-  const modules = HEALTH_MODULE_KEYS
-    .filter((k) => trackingConfig[k]?.enabled !== false)
-    .map((k) => ({
+  const modules = HEALTH_MODULE_KEYS.filter((k) => trackingConfig[k]?.enabled !== false).map(
+    (k) => ({
       key: k,
       ...HEALTH_MODULE_META[k],
       page: getRecordPage(k),
-    }))
+    }),
+  )
 
   useEffect(() => {
     const all = getLocalRecords()
@@ -37,56 +42,80 @@ export default function HealthPage() {
       const types = grouped.get(date)!
       if (!types.includes(r.type)) types.push(r.type)
     }
-    setCounts(c); setActivityData(grouped); setLoaded(true)
+    setCounts(c)
+    setActivityData(grouped)
+    setLoaded(true)
   }, [])
 
   return (
-    <View className='health-page'>
-      <ScrollView className='health-scroll' scrollY>
-        <View className='health-header'>
-          <Text className='health-title'>健康记录</Text>
-          <Text className='health-gear' onClick={() => Taro.navigateTo({ url: '/pages/settings/tracking/index' })}>⚙️</Text>
+    <View className="health-page">
+      <ScrollView className="health-scroll" scrollY>
+        <View className="health-header">
+          <Text className="health-title">健康记录</Text>
+          <Text
+            className="health-gear"
+            onClick={() => Taro.navigateTo({ url: '/pages/settings/tracking/index' })}
+          >
+            ⚙️
+          </Text>
         </View>
 
-        <View className='health-cal-toggle' onClick={() => setCalVisible((v) => !v)}>
+        <View className="health-cal-toggle" onClick={() => setCalVisible((v) => !v)}>
           <Text>{calVisible ? '收起日历 ▲' : '展开日历 ▼'}</Text>
         </View>
 
         {calVisible && (
-          <View className='anim-fade-up'>
-            <Calendar year={calYear} month={calMonth} activityData={activityData}
-              onMonthChange={(y, m) => { setCalYear(y); setCalMonth(m) }}
-              onDayClick={(date) => Taro.showModal({ title: date, content: `${activityData.get(date)?.length || 0} 条记录`, showCancel: false })} />
+          <View className="anim-fade-up">
+            <Calendar
+              year={calYear}
+              month={calMonth}
+              activityData={activityData}
+              onMonthChange={(y, m) => {
+                setCalYear(y)
+                setCalMonth(m)
+              }}
+              onDayClick={(date) =>
+                Taro.showModal({
+                  title: date,
+                  content: `${activityData.get(date)?.length || 0} 条记录`,
+                  showCancel: false,
+                })
+              }
+            />
           </View>
         )}
 
         {!loaded ? (
-          <CellGroup className='anim-stagger'>
+          <CellGroup className="anim-stagger">
             {Array.from({ length: 4 }).map((_, i) => (
-              <Cell key={i} title={<Skeleton width='120px' height='20px' animated />} />
+              <Cell key={i} title={<Skeleton width="120px" height="20px" animated />} />
             ))}
           </CellGroup>
         ) : (
-          <CellGroup className='anim-stagger'>
+          <CellGroup className="anim-stagger">
             {modules.map((m) => (
               <Cell
                 key={m.key}
                 title={m.label}
                 description={m.unit ? `记录${m.unit}` : '记录'}
-                extra={<Tag type={counts[m.key] > 0 ? 'primary' : 'default'}>{counts[m.key] > 0 ? `今日 ${counts[m.key]} 次` : '未记录'}</Tag>}
+                extra={
+                  <Tag type={counts[m.key] > 0 ? 'primary' : 'default'}>
+                    {counts[m.key] > 0 ? `今日 ${counts[m.key]} 次` : '未记录'}
+                  </Tag>
+                }
                 onClick={() => Taro.navigateTo({ url: m.page })}
               />
             ))}
             <Cell
-              title='全部记录'
-              description='按类型筛选历史数据'
+              title="全部记录"
+              description="按类型筛选历史数据"
               extra={<Text style={{ color: '#999', fontSize: '12px' }}>→</Text>}
               onClick={() => Taro.navigateTo({ url: '/pages/records/index' })}
             />
           </CellGroup>
         )}
       </ScrollView>
-      <TabBar current='health' />
+      <TabBar current="health" />
     </View>
   )
 }

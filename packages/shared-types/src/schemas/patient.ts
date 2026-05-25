@@ -15,15 +15,30 @@ export const patientSchema = z.object({
 
 export const patientCreateSchema = z.object({
   name: z.string().min(1).max(100),
-  birthDate: z.preprocess((v: unknown) => v === '' ? undefined : v, z.string().optional()),
-  gender: z.preprocess((v: unknown) => v === '' ? undefined : v, z.enum(GENDERS).optional()),
-  heightCm: z.preprocess((v: unknown) => v === '' ? undefined : v, z.number().min(0).max(300).optional()),
-  weightKg: z.preprocess((v: unknown) => v === '' ? undefined : v, z.number().min(0).max(500).optional()),
-  bloodType: z.preprocess((v: unknown) => v === '' ? undefined : v, z.enum(['A', 'B', 'AB', 'O']).optional()),
-  phone: z.preprocess((v: unknown) => v === '' ? undefined : v, z.string().max(20).optional()),
-  address: z.preprocess((v: unknown) => v === '' ? undefined : v, z.string().optional()),
-  emergencyContact: z.preprocess((v: unknown) => v === '' ? undefined : v, z.string().max(100).optional()),
-  emergencyPhone: z.preprocess((v: unknown) => v === '' ? undefined : v, z.string().max(20).optional()),
+  birthDate: z.preprocess((v: unknown) => (v === '' ? undefined : v), z.string().optional()),
+  gender: z.preprocess((v: unknown) => (v === '' ? undefined : v), z.enum(GENDERS).optional()),
+  heightCm: z.preprocess(
+    (v: unknown) => (v === '' ? undefined : v),
+    z.number().min(0).max(300).optional(),
+  ),
+  weightKg: z.preprocess(
+    (v: unknown) => (v === '' ? undefined : v),
+    z.number().min(0).max(500).optional(),
+  ),
+  bloodType: z.preprocess(
+    (v: unknown) => (v === '' ? undefined : v),
+    z.enum(['A', 'B', 'AB', 'O']).optional(),
+  ),
+  phone: z.preprocess((v: unknown) => (v === '' ? undefined : v), z.string().max(20).optional()),
+  address: z.preprocess((v: unknown) => (v === '' ? undefined : v), z.string().optional()),
+  emergencyContact: z.preprocess(
+    (v: unknown) => (v === '' ? undefined : v),
+    z.string().max(100).optional(),
+  ),
+  emergencyPhone: z.preprocess(
+    (v: unknown) => (v === '' ? undefined : v),
+    z.string().max(20).optional(),
+  ),
 })
 
 export const patientUpdateSchema = patientCreateSchema.partial()

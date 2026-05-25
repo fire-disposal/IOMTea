@@ -5,7 +5,15 @@ const STORAGE_KEY = STORAGE_KEYS.RECORDS
 
 export interface HealthRecord {
   id: string
-  type: 'blood_glucose' | 'blood_pressure' | 'weight' | 'heart_rate' | 'temperature' | 'spo2' | 'medication' | 'period'
+  type:
+    | 'blood_glucose'
+    | 'blood_pressure'
+    | 'weight'
+    | 'heart_rate'
+    | 'temperature'
+    | 'spo2'
+    | 'medication'
+    | 'period'
   data: Record<string, unknown>
   recordedAt: string
   synced: boolean
@@ -13,7 +21,7 @@ export interface HealthRecord {
 
 export function getLocalRecords(type?: string): HealthRecord[] {
   const all: HealthRecord[] = Taro.getStorageSync(STORAGE_KEY) || []
-  return type ? all.filter(r => r.type === type) : all
+  return type ? all.filter((r) => r.type === type) : all
 }
 
 export function addLocalRecord(record: Omit<HealthRecord, 'id' | 'synced'>): HealthRecord {
@@ -37,18 +45,18 @@ export function markSynced(ids: string[]): void {
 }
 
 export function getUnsyncedRecords(): HealthRecord[] {
-  return getLocalRecords().filter(r => !r.synced)
+  return getLocalRecords().filter((r) => !r.synced)
 }
 
 export function getTrendData(type: string, days: number = 7): { value: number; date: string }[] {
   const records = getLocalRecords(type)
   const cutoff = Date.now() - days * 24 * 60 * 60 * 1000
   const filtered = records
-    .filter(r => new Date(r.recordedAt).getTime() > cutoff)
+    .filter((r) => new Date(r.recordedAt).getTime() > cutoff)
     .sort((a, b) => new Date(a.recordedAt).getTime() - new Date(b.recordedAt).getTime())
     .slice(-days)
 
-  return filtered.map(r => ({
+  return filtered.map((r) => ({
     date: r.recordedAt.slice(0, 10),
     value: extractPrimaryValue(r),
   }))
@@ -56,12 +64,19 @@ export function getTrendData(type: string, days: number = 7): { value: number; d
 
 function extractPrimaryValue(record: HealthRecord): number {
   switch (record.type) {
-    case 'blood_glucose': return record.data.value_mgdl as number
-    case 'blood_pressure': return record.data.systolic as number
-    case 'weight': return record.data.weight_kg as number
-    case 'heart_rate': return record.data.bpm as number
-    case 'temperature': return record.data.celsius as number
-    case 'spo2': return record.data.percentage as number
-    default: return 0
+    case 'blood_glucose':
+      return record.data.value_mgdl as number
+    case 'blood_pressure':
+      return record.data.systolic as number
+    case 'weight':
+      return record.data.weight_kg as number
+    case 'heart_rate':
+      return record.data.bpm as number
+    case 'temperature':
+      return record.data.celsius as number
+    case 'spo2':
+      return record.data.percentage as number
+    default:
+      return 0
   }
 }

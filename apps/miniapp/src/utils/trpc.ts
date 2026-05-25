@@ -62,4 +62,3 @@ export const trpc = new Proxy({} as any, {
     return (getClient() as any)[prop]
   },
 })
-

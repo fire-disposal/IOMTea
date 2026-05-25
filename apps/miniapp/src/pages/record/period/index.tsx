@@ -33,7 +33,7 @@ export default function PeriodRecord() {
   }, [])
 
   const toggleSymptom = useCallback((s: string) => {
-    setSymptoms(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])
+    setSymptoms((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]))
   }, [])
 
   const handleSave = useCallback(() => {
@@ -51,21 +51,28 @@ export default function PeriodRecord() {
   }, [flow, symptoms, notes])
 
   return (
-    <FormShell title='记录生理期' unit='' onSave={handleSave} saving={saving} saved={saved} recentData={trendData}>
-      <View className='period-section'>
-        <Text className='period-label'>日期</Text>
-        <Text className='period-date'>{formatDate(new Date())}</Text>
+    <FormShell
+      title="记录生理期"
+      unit=""
+      onSave={handleSave}
+      saving={saving}
+      saved={saved}
+      recentData={trendData}
+    >
+      <View className="period-section">
+        <Text className="period-label">日期</Text>
+        <Text className="period-date">{formatDate(new Date())}</Text>
       </View>
 
-      <View className='period-section'>
-        <Text className='period-label'>流量</Text>
+      <View className="period-section">
+        <Text className="period-label">流量</Text>
         <SegmentPicker options={FLOW_OPTIONS} value={flow} onChange={setFlow} />
       </View>
 
-      <View className='period-section'>
-        <Text className='period-label'>症状</Text>
-        <View className='period-chips'>
-          {SYMPTOM_OPTIONS.map(s => (
+      <View className="period-section">
+        <Text className="period-label">症状</Text>
+        <View className="period-chips">
+          {SYMPTOM_OPTIONS.map((s) => (
             <View
               key={s}
               className={`period-chip ${symptoms.includes(s) ? 'period-chip--active' : ''}`}
@@ -77,13 +84,13 @@ export default function PeriodRecord() {
         </View>
       </View>
 
-      <View className='period-section'>
-        <Text className='period-label'>备注</Text>
+      <View className="period-section">
+        <Text className="period-label">备注</Text>
         <Input
-          className='period-notes'
+          className="period-notes"
           value={notes}
-          onInput={e => setNotes(e.detail.value)}
-          placeholder='选填'
+          onInput={(e) => setNotes(e.detail.value)}
+          placeholder="选填"
         />
       </View>
     </FormShell>

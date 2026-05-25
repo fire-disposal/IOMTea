@@ -41,9 +41,13 @@ export const patientRouter = router({
       const rows = await query.limit(input.pageSize).offset(offset).orderBy(patients.createdAt)
 
       const pids = rows.map((r) => r.id)
-      const tagLinks = pids.length > 0
-        ? await ctx.db.select({ patientId: patientTagLinks.patientId, tagId: patientTagLinks.tagId }).from(patientTagLinks).where(inArray(patientTagLinks.patientId, pids))
-        : []
+      const tagLinks =
+        pids.length > 0
+          ? await ctx.db
+              .select({ patientId: patientTagLinks.patientId, tagId: patientTagLinks.tagId })
+              .from(patientTagLinks)
+              .where(inArray(patientTagLinks.patientId, pids))
+          : []
       const tagMap = new Map<string, string[]>()
       for (const tl of tagLinks) {
         const existing = tagMap.get(tl.patientId) || []
@@ -135,22 +139,29 @@ export const patientRouter = router({
 
   bulkCreate: protectedProcedure
     .use(requirePermission('patient:write'))
-    .input(z.object({
-      defaultPassword: z.string().min(6),
-      tagIds: z.array(z.string().uuid()).optional(),
-      patients: z.array(z.object({
-        name: z.string().min(1),
-        gender: z.enum(['male', 'female', 'other']).optional(),
-        birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-        phone: z.string().max(20).optional(),
-        heightCm: z.number().optional(),
-        weightKg: z.number().optional(),
-        bloodType: z.enum(['A', 'B', 'AB', 'O']).optional(),
-        address: z.string().optional(),
-        emergencyContact: z.string().max(100).optional(),
-        emergencyPhone: z.string().max(20).optional(),
-      })),
-    }))
+    .input(
+      z.object({
+        defaultPassword: z.string().min(6),
+        tagIds: z.array(z.string().uuid()).optional(),
+        patients: z.array(
+          z.object({
+            name: z.string().min(1),
+            gender: z.enum(['male', 'female', 'other']).optional(),
+            birthDate: z
+              .string()
+              .regex(/^\d{4}-\d{2}-\d{2}$/)
+              .optional(),
+            phone: z.string().max(20).optional(),
+            heightCm: z.number().optional(),
+            weightKg: z.number().optional(),
+            bloodType: z.enum(['A', 'B', 'AB', 'O']).optional(),
+            address: z.string().optional(),
+            emergencyContact: z.string().max(100).optional(),
+            emergencyPhone: z.string().max(20).optional(),
+          }),
+        ),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const results = { created: 0, errors: [] as { index: number; reason: string }[] }
       for (let i = 0; i < input.patients.length; i++) {
@@ -158,30 +169,39 @@ export const patientRouter = router({
         try {
           const username = p.phone || `user-${crypto.randomUUID().slice(0, 8)}`
           const pwHash = await hashPassword(input.defaultPassword)
-          const [user] = await ctx.db.insert(users).values({
-            username,
-            passwordHash: pwHash,
-            displayName: p.name,
-            phone: p.phone,
-            role: 'user',
-          }).returning()
-          const [patient] = await ctx.db.insert(patients).values({
-            name: p.name,
-            gender: p.gender,
-            birthDate: p.birthDate,
-            phone: p.phone,
-            heightCm: p.heightCm,
-            weightKg: p.weightKg,
-            bloodType: p.bloodType,
-            address: p.address,
-            emergencyContact: p.emergencyContact,
-            emergencyPhone: p.emergencyPhone,
-          }).returning()
-          await ctx.db.insert(userPatientLinks).values({ userId: user.id, patientId: patient.id, relation: 'primary' }).onConflictDoNothing()
+          const [user] = await ctx.db
+            .insert(users)
+            .values({
+              username,
+              passwordHash: pwHash,
+              displayName: p.name,
+              phone: p.phone,
+              role: 'user',
+            })
+            .returning()
+          const [patient] = await ctx.db
+            .insert(patients)
+            .values({
+              name: p.name,
+              gender: p.gender,
+              birthDate: p.birthDate,
+              phone: p.phone,
+              heightCm: p.heightCm,
+              weightKg: p.weightKg,
+              bloodType: p.bloodType,
+              address: p.address,
+              emergencyContact: p.emergencyContact,
+              emergencyPhone: p.emergencyPhone,
+            })
+            .returning()
+          await ctx.db
+            .insert(userPatientLinks)
+            .values({ userId: user.id, patientId: patient.id, relation: 'primary' })
+            .onConflictDoNothing()
           if (input.tagIds?.length) {
-            await ctx.db.insert(patientTagLinks).values(
-              input.tagIds.map((tagId) => ({ patientId: patient.id, tagId })),
-            )
+            await ctx.db
+              .insert(patientTagLinks)
+              .values(input.tagIds.map((tagId) => ({ patientId: patient.id, tagId })))
           }
           results.created++
         } catch (err: any) {
@@ -193,9 +213,17 @@ export const patientRouter = router({
 
   bulkUpdateStatus: protectedProcedure
     .use(requirePermission('patient:write'))
-    .input(z.object({ ids: z.array(z.string().uuid()), status: z.enum(['active', 'discharged', 'archived']) }))
+    .input(
+      z.object({
+        ids: z.array(z.string().uuid()),
+        status: z.enum(['active', 'discharged', 'archived']),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
-      await ctx.db.update(patients).set({ status: input.status }).where(inArray(patients.id, input.ids))
+      await ctx.db
+        .update(patients)
+        .set({ status: input.status })
+        .where(inArray(patients.id, input.ids))
       return { updated: input.ids.length }
     }),
 
@@ -214,25 +242,44 @@ export const patientRouter = router({
     .use(requirePermission('patient:write'))
     .input(z.object({ patientIds: z.array(z.string().uuid()), tagIds: z.array(z.string().uuid()) }))
     .mutation(async ({ ctx, input }) => {
-      await ctx.db.delete(patientTagLinks).where(
-        and(inArray(patientTagLinks.patientId, input.patientIds), inArray(patientTagLinks.tagId, input.tagIds)),
-      )
+      await ctx.db
+        .delete(patientTagLinks)
+        .where(
+          and(
+            inArray(patientTagLinks.patientId, input.patientIds),
+            inArray(patientTagLinks.tagId, input.tagIds),
+          ),
+        )
     }),
 
   linkUser: protectedProcedure
     .use(requirePermission('patient:write'))
-    .input(z.object({ patientId: z.string().uuid(), userId: z.string().uuid(), relation: z.string().default('caregiver') }))
+    .input(
+      z.object({
+        patientId: z.string().uuid(),
+        userId: z.string().uuid(),
+        relation: z.string().default('caregiver'),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
-      await ctx.db.insert(userPatientLinks).values({ patientId: input.patientId, userId: input.userId, relation: input.relation }).onConflictDoNothing()
+      await ctx.db
+        .insert(userPatientLinks)
+        .values({ patientId: input.patientId, userId: input.userId, relation: input.relation })
+        .onConflictDoNothing()
     }),
 
   unlinkUser: protectedProcedure
     .use(requirePermission('patient:write'))
     .input(z.object({ patientId: z.string().uuid(), userId: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
-      await ctx.db.delete(userPatientLinks).where(
-        and(eq(userPatientLinks.patientId, input.patientId), eq(userPatientLinks.userId, input.userId)),
-      )
+      await ctx.db
+        .delete(userPatientLinks)
+        .where(
+          and(
+            eq(userPatientLinks.patientId, input.patientId),
+            eq(userPatientLinks.userId, input.userId),
+          ),
+        )
     }),
 
   linkedUsers: protectedProcedure
@@ -240,19 +287,27 @@ export const patientRouter = router({
     .input(z.string().uuid())
     .query(async ({ ctx, input: patientId }) => {
       return ctx.db
-        .select({ userId: userPatientLinks.userId, relation: userPatientLinks.relation, displayName: users.displayName, username: users.username })
+        .select({
+          userId: userPatientLinks.userId,
+          relation: userPatientLinks.relation,
+          displayName: users.displayName,
+          username: users.username,
+        })
         .from(userPatientLinks)
         .innerJoin(users, eq(userPatientLinks.userId, users.id))
         .where(eq(userPatientLinks.patientId, patientId))
     }),
 
-  linkedPatients: protectedProcedure
-    .query(async ({ ctx }) => {
-      if (!ctx.userId) return []
-      return ctx.db
-        .select({ patientId: userPatientLinks.patientId, relation: userPatientLinks.relation, name: patients.name })
-        .from(userPatientLinks)
-        .innerJoin(patients, eq(userPatientLinks.patientId, patients.id))
-        .where(eq(userPatientLinks.userId, ctx.userId))
-    }),
+  linkedPatients: protectedProcedure.query(async ({ ctx }) => {
+    if (!ctx.userId) return []
+    return ctx.db
+      .select({
+        patientId: userPatientLinks.patientId,
+        relation: userPatientLinks.relation,
+        name: patients.name,
+      })
+      .from(userPatientLinks)
+      .innerJoin(patients, eq(userPatientLinks.patientId, patients.id))
+      .where(eq(userPatientLinks.userId, ctx.userId))
+  }),
 })

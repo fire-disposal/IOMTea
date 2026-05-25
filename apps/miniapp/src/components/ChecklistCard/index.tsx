@@ -33,31 +33,21 @@ export function ChecklistCard({
       className={`checklist-card checklist-card--${status} ${animDone ? 'anim-card-done' : ''}`}
       onClick={handleTap}
     >
-      <View className='checklist-card__accent' />
-      <View className='checklist-card__body'>
-        <View className='checklist-card__icon-wrap'>
-          <Text className='checklist-card__icon'>{icon}</Text>
+      <View className="checklist-card__accent" />
+      <View className="checklist-card__body">
+        <View className="checklist-card__icon-wrap">
+          <Text className="checklist-card__icon">{icon}</Text>
         </View>
-        <View className='checklist-card__info'>
-          <Text className='checklist-card__label'>{label}</Text>
-          {status === 'pending' && (
-            <Text className='checklist-card__hint'>今日尚未记录</Text>
-          )}
+        <View className="checklist-card__info">
+          <Text className="checklist-card__label">{label}</Text>
+          {status === 'pending' && <Text className="checklist-card__hint">今日尚未记录</Text>}
         </View>
-        <View className='checklist-card__status'>
-          {status === 'done' && (
-            <Text className='checklist-card__check'>✓</Text>
-          )}
-          {status === 'pending' && (
-            <View className='checklist-card__circle' />
-          )}
-          {status === 'skipped' && (
-            <Text className='checklist-card__skip'>—</Text>
-          )}
+        <View className="checklist-card__status">
+          {status === 'done' && <Text className="checklist-card__check">✓</Text>}
+          {status === 'pending' && <View className="checklist-card__circle" />}
+          {status === 'skipped' && <Text className="checklist-card__skip">—</Text>}
           {earnedCredits != null && animCredit && (
-            <Text className='checklist-card__credit anim-credit-float'>
-              +{earnedCredits}
-            </Text>
+            <Text className="checklist-card__credit anim-credit-float">+{earnedCredits}</Text>
           )}
         </View>
       </View>

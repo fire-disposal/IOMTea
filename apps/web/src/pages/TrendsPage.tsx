@@ -1,6 +1,14 @@
 import { useState, useMemo } from 'react'
 import { Container, Title, Group, Select, Paper, Center, Stack, Text } from '@mantine/core'
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from 'recharts'
 import { trpc } from '../trpc'
 import { StateSkeleton, StateEmpty, StateError } from '../components/shared/StateComponents'
 
@@ -39,7 +47,9 @@ export function TrendsPage() {
 
   return (
     <Container size="xl" py="xl">
-      <Title order={2} mb="lg">健康趋势</Title>
+      <Title order={2} mb="lg">
+        健康趋势
+      </Title>
 
       <Group mb="lg">
         <Select
@@ -70,24 +80,38 @@ export function TrendsPage() {
       {!patientId && (
         <Center py={80}>
           <Stack align="center" gap="md">
-            <Text c="dimmed" size="lg">请选择一个患者查看健康趋势</Text>
+            <Text c="dimmed" size="lg">
+              请选择一个患者查看健康趋势
+            </Text>
           </Stack>
         </Center>
       )}
 
       {patientId && timeseries.isLoading && <StateSkeleton variant="chart" />}
       {patientId && timeseries.isError && <StateError message="加载趋势数据失败" />}
-      {patientId && !timeseries.isLoading && !timeseries.isError && (timeseries.data?.length ?? 0) === 0 && (
-        <StateEmpty message="暂无数据" />
-      )}
-      {patientId && !timeseries.isLoading && !timeseries.isError && (timeseries.data?.length ?? 0) > 0 && (
+      {patientId &&
+        !timeseries.isLoading &&
+        !timeseries.isError &&
+        (timeseries.data?.length ?? 0) === 0 && <StateEmpty message="暂无数据" />}
+      {patientId &&
+        !timeseries.isLoading &&
+        !timeseries.isError &&
+        (timeseries.data?.length ?? 0) > 0 && (
           <Paper p="md" radius="md" withBorder>
             <ResponsiveContainer width="100%" height={400}>
               <AreaChart data={timeseries.data}>
                 <defs>
                   <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--mantine-color-matchaGreen-6)" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="var(--mantine-color-matchaGreen-6)" stopOpacity={0} />
+                    <stop
+                      offset="5%"
+                      stopColor="var(--mantine-color-matchaGreen-6)"
+                      stopOpacity={0.3}
+                    />
+                    <stop
+                      offset="95%"
+                      stopColor="var(--mantine-color-matchaGreen-6)"
+                      stopOpacity={0}
+                    />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -98,11 +122,18 @@ export function TrendsPage() {
                 />
                 <YAxis fontSize={12} />
                 <Tooltip labelFormatter={(ts: any) => new Date(ts).toLocaleString('zh-CN')} />
-                <Area type="monotone" dataKey="value" stroke="var(--mantine-color-matchaGreen-6)" strokeWidth={2} fill="url(#colorValue)" dot={false} />
+                <Area
+                  type="monotone"
+                  dataKey="value"
+                  stroke="var(--mantine-color-matchaGreen-6)"
+                  strokeWidth={2}
+                  fill="url(#colorValue)"
+                  dot={false}
+                />
               </AreaChart>
             </ResponsiveContainer>
           </Paper>
-      )}
+        )}
     </Container>
   )
 }

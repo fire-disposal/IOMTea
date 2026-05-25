@@ -9,7 +9,7 @@ import { ScenarioModal } from './components/ScenarioModal'
 const SPEEDS = [1, 2, 5, 10]
 
 export function PatientOverview() {
-  const { id } = (useParams as any)({ from: '/_auth/patients/$id' })
+  const { id } = useParams({ from: '/_auth/patients/$id' })
   const navigate = useNavigate()
   const [timeRange, setTimeRange] = useState('6h')
   const [chartVisible, setChartVisible] = useState(true)
@@ -21,7 +21,12 @@ export function PatientOverview() {
     return () => clearInterval(t)
   }, [])
 
-  const timeMap: Record<string, number> = { '1h': 3600000, '6h': 21600000, '24h': 86400000, '7d': 604800000 }
+  const timeMap: Record<string, number> = {
+    '1h': 3600000,
+    '6h': 21600000,
+    '24h': 86400000,
+    '7d': 604800000,
+  }
   const from = now - (timeMap[timeRange] || 21600000)
   const METRICS = ['heart_rate', 'spo2', 'systolic_bp', 'temperature']
 
@@ -35,23 +40,29 @@ export function PatientOverview() {
 
   const handleCreateMap = useCallback(() => {
     if (!id) return
-    createMapMut.mutate({
-      patientId: id,
-      graph: {
-        rooms: [{ id: 'living', name: '客厅', type: 'livingroom', x: 0, y: 0, connections: [] }],
-        entryRoomId: 'living',
-        personLocation: null,
+    createMapMut.mutate(
+      {
+        patientId: id,
+        graph: {
+          rooms: [{ id: 'living', name: '客厅', type: 'livingroom', x: 0, y: 0, connections: [] }],
+          entryRoomId: 'living',
+          personLocation: null,
+        },
       },
-    }, { onSuccess: () => utils.homeGraph.get.invalidate({ patientId: id }) })
+      { onSuccess: () => utils.homeGraph.get.invalidate({ patientId: id }) },
+    )
   }, [id, createMapMut, utils])
 
-  const engineStatus = trpc.twin.engine.status.useQuery({ patientId: id! }, { enabled: !!id, refetchInterval: 5000 })
+  const engineStatus = trpc.twin.engine.status.useQuery(
+    { patientId: id! },
+    { enabled: !!id, refetchInterval: 5000 },
+  )
   const resumeMut = trpc.twin.engine.resume.useMutation()
   const pauseMut = trpc.twin.engine.pause.useMutation()
   const setSpeedMut = trpc.twin.engine.setSpeed.useMutation()
   const injectMut = trpc.twin.engine.injectScenario.useMutation()
 
-  const es = (engineStatus.data && !Array.isArray(engineStatus.data)) ? engineStatus.data : null
+  const es = engineStatus.data && !Array.isArray(engineStatus.data) ? engineStatus.data : null
   const isRunning = es?.running ?? false
   const currentSpeed = es?.speed ?? 1
 
@@ -59,7 +70,12 @@ export function PatientOverview() {
     const batch = tsBatch.data ?? {}
     const bucket = (ts: number) => Math.floor(ts / 60000) * 60000
     const map = new Map<number, Record<string, number>>()
-    const metricKeys: Record<string, string> = { heart_rate: 'hr', spo2: 'spo2', systolic_bp: 'systolic_bp', temperature: 'temp' }
+    const metricKeys: Record<string, string> = {
+      heart_rate: 'hr',
+      spo2: 'spo2',
+      systolic_bp: 'systolic_bp',
+      temperature: 'temp',
+    }
     for (const [metric, points] of Object.entries(batch)) {
       const key = metricKeys[metric]
       if (!key) continue
@@ -69,7 +85,12 @@ export function PatientOverview() {
         map.get(b)![key] = p.value
       }
     }
-    return Array.from(map.entries()).sort(([a], [b]) => a - b).map(([, d]) => d as { ts: number; hr?: number; spo2?: number; systolic_bp?: number; temp?: number })
+    return Array.from(map.entries())
+      .sort(([a], [b]) => a - b)
+      .map(
+        ([, d]) =>
+          d as { ts: number; hr?: number; spo2?: number; systolic_bp?: number; temp?: number },
+      )
   }, [tsBatch.data])
 
   const handlePlayPause = useCallback(() => {
@@ -84,11 +105,14 @@ export function PatientOverview() {
     setSpeedMut.mutate({ patientId: id, speed: SPEEDS[(idx + 1) % SPEEDS.length] })
   }, [id, currentSpeed, setSpeedMut])
 
-  const handleInject = useCallback((type: string) => {
-    if (!id) return
-    injectMut.mutate({ patientId: id, type: type as any })
-    setScenarioOpen(false)
-  }, [id, injectMut])
+  const handleInject = useCallback(
+    (type: string) => {
+      if (!id) return
+      injectMut.mutate({ patientId: id, type: type as any })
+      setScenarioOpen(false)
+    },
+    [id, injectMut],
+  )
 
   return (
     <Stack h="100%" gap="md">

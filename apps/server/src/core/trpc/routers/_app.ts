@@ -4,6 +4,7 @@ import { alertRuleRouter } from './alertRule'
 import { authRouter } from './auth'
 import { checklistRouter } from './checklist'
 import { creditRouter } from './credit'
+import { dashboardRouter } from './dashboard'
 import { dataRouter } from './data'
 import { exportRouter } from './export'
 import { healthRecordsRouter } from './health-records'
@@ -27,6 +28,7 @@ export const appRouter = router({
   auth: authRouter,
   checklist: checklistRouter,
   credit: creditRouter,
+  dashboard: dashboardRouter,
   data: dataRouter,
   export: exportRouter,
   healthRecords: healthRecordsRouter,

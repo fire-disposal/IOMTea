@@ -1,12 +1,52 @@
 import { z } from 'zod'
 
 export const FormFieldSchema = z.discriminatedUnion('type', [
-  z.object({ id: z.string().min(1).max(64), label: z.string().min(1), required: z.boolean().default(true), type: z.literal('choice'), options: z.array(z.object({ value: z.string(), label: z.string() })).min(1) }),
-  z.object({ id: z.string().min(1).max(64), label: z.string().min(1), required: z.boolean().default(true), type: z.literal('multi'), options: z.array(z.object({ value: z.string(), label: z.string() })).min(1) }),
-  z.object({ id: z.string().min(1).max(64), label: z.string().min(1), required: z.boolean().default(true), type: z.literal('likert'), labels: z.array(z.string()).min(2).max(9) }),
-  z.object({ id: z.string().min(1).max(64), label: z.string().min(1), required: z.boolean().default(true), type: z.literal('vas'), min_label: z.string().optional(), max_label: z.string().optional() }),
-  z.object({ id: z.string().min(1).max(64), label: z.string().min(1), required: z.boolean().default(true), type: z.literal('number'), min: z.number().optional(), max: z.number().optional(), unit: z.string().optional() }),
-  z.object({ id: z.string().min(1).max(64), label: z.string().min(1), required: z.boolean().default(true), type: z.literal('text'), placeholder: z.string().optional(), rows: z.number().int().min(1).max(20).default(3) }),
+  z.object({
+    id: z.string().min(1).max(64),
+    label: z.string().min(1),
+    required: z.boolean().default(true),
+    type: z.literal('choice'),
+    options: z.array(z.object({ value: z.string(), label: z.string() })).min(1),
+  }),
+  z.object({
+    id: z.string().min(1).max(64),
+    label: z.string().min(1),
+    required: z.boolean().default(true),
+    type: z.literal('multi'),
+    options: z.array(z.object({ value: z.string(), label: z.string() })).min(1),
+  }),
+  z.object({
+    id: z.string().min(1).max(64),
+    label: z.string().min(1),
+    required: z.boolean().default(true),
+    type: z.literal('likert'),
+    labels: z.array(z.string()).min(2).max(9),
+  }),
+  z.object({
+    id: z.string().min(1).max(64),
+    label: z.string().min(1),
+    required: z.boolean().default(true),
+    type: z.literal('vas'),
+    min_label: z.string().optional(),
+    max_label: z.string().optional(),
+  }),
+  z.object({
+    id: z.string().min(1).max(64),
+    label: z.string().min(1),
+    required: z.boolean().default(true),
+    type: z.literal('number'),
+    min: z.number().optional(),
+    max: z.number().optional(),
+    unit: z.string().optional(),
+  }),
+  z.object({
+    id: z.string().min(1).max(64),
+    label: z.string().min(1),
+    required: z.boolean().default(true),
+    type: z.literal('text'),
+    placeholder: z.string().optional(),
+    rows: z.number().int().min(1).max(20).default(3),
+  }),
 ])
 
 export const FormDefinitionSchema = z.object({
@@ -20,7 +60,9 @@ export const FormDefinitionSchema = z.object({
 export type FormDefinition = z.infer<typeof FormDefinitionSchema>
 export type FormField = z.infer<typeof FormFieldSchema>
 
-export function buildResponseSchema(fields: FormField[]): z.ZodObject<Record<string, z.ZodTypeAny>> {
+export function buildResponseSchema(
+  fields: FormField[],
+): z.ZodObject<Record<string, z.ZodTypeAny>> {
   const shape: Record<string, z.ZodTypeAny> = {}
   for (const f of fields) {
     let field: z.ZodTypeAny
@@ -32,7 +74,11 @@ export function buildResponseSchema(fields: FormField[]): z.ZodObject<Record<str
         field = z.array(z.string())
         break
       case 'likert':
-        field = z.number().int().min(0).max(f.labels.length - 1)
+        field = z
+          .number()
+          .int()
+          .min(0)
+          .max(f.labels.length - 1)
         break
       case 'vas':
         field = z.number().min(0).max(100)

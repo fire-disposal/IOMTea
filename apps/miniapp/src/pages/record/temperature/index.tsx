@@ -33,8 +33,15 @@ export default function TemperatureRecord() {
   }, [value])
 
   return (
-    <FormShell title='记录体温' unit='°C' onSave={handleSave} saving={saving} saved={saved} recentData={trendData}>
-      <NumberInput value={value} onChange={setValue} decimal placeholder='36.5' />
+    <FormShell
+      title="记录体温"
+      unit="°C"
+      onSave={handleSave}
+      saving={saving}
+      saved={saved}
+      recentData={trendData}
+    >
+      <NumberInput value={value} onChange={setValue} decimal placeholder="36.5" />
     </FormShell>
   )
 }

@@ -104,34 +104,31 @@ const AuthPatientsIdProfileRoute = AuthPatientsIdProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => AuthPatientsIdRoute,
 } as any)
-const AuthPatientsIdMedicationsRoute =
-  AuthPatientsIdMedicationsRouteImport.update({
-    id: '/medications',
-    path: '/medications',
-    getParentRoute: () => AuthPatientsIdRoute,
-  } as any)
+const AuthPatientsIdMedicationsRoute = AuthPatientsIdMedicationsRouteImport.update({
+  id: '/medications',
+  path: '/medications',
+  getParentRoute: () => AuthPatientsIdRoute,
+} as any)
 const AuthPatientsIdMapEditorRoute = AuthPatientsIdMapEditorRouteImport.update({
   id: '/map-editor',
   path: '/map-editor',
   getParentRoute: () => AuthPatientsIdRoute,
 } as any)
-const AuthPatientsIdHealthTimelineRoute =
-  AuthPatientsIdHealthTimelineRouteImport.update({
-    id: '/health-timeline',
-    path: '/health-timeline',
-    getParentRoute: () => AuthPatientsIdRoute,
-  } as any)
+const AuthPatientsIdHealthTimelineRoute = AuthPatientsIdHealthTimelineRouteImport.update({
+  id: '/health-timeline',
+  path: '/health-timeline',
+  getParentRoute: () => AuthPatientsIdRoute,
+} as any)
 const AuthPatientsIdAlertsRoute = AuthPatientsIdAlertsRouteImport.update({
   id: '/alerts',
   path: '/alerts',
   getParentRoute: () => AuthPatientsIdRoute,
 } as any)
-const AuthPatientsIdAlertRulesRoute =
-  AuthPatientsIdAlertRulesRouteImport.update({
-    id: '/alert-rules',
-    path: '/alert-rules',
-    getParentRoute: () => AuthPatientsIdRoute,
-  } as any)
+const AuthPatientsIdAlertRulesRoute = AuthPatientsIdAlertRulesRouteImport.update({
+  id: '/alert-rules',
+  path: '/alert-rules',
+  getParentRoute: () => AuthPatientsIdRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthIndexRoute
@@ -445,9 +442,7 @@ const AuthPatientsRouteChildren: AuthPatientsRouteChildren = {
   AuthPatientsIdRoute: AuthPatientsIdRouteWithChildren,
 }
 
-const AuthPatientsRouteWithChildren = AuthPatientsRoute._addFileChildren(
-  AuthPatientsRouteChildren,
-)
+const AuthPatientsRouteWithChildren = AuthPatientsRoute._addFileChildren(AuthPatientsRouteChildren)
 
 interface AuthSettingsRouteChildren {
   AuthSettingsUsersRoute: typeof AuthSettingsUsersRoute
@@ -457,9 +452,7 @@ const AuthSettingsRouteChildren: AuthSettingsRouteChildren = {
   AuthSettingsUsersRoute: AuthSettingsUsersRoute,
 }
 
-const AuthSettingsRouteWithChildren = AuthSettingsRoute._addFileChildren(
-  AuthSettingsRouteChildren,
-)
+const AuthSettingsRouteWithChildren = AuthSettingsRoute._addFileChildren(AuthSettingsRouteChildren)
 
 interface AuthRouteChildren {
   AuthAlertsRoute: typeof AuthAlertsRoute

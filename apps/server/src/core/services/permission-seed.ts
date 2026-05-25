@@ -23,7 +23,7 @@ const DEFAULT_PERMISSIONS = [
 const ROLE_PERMISSION_MAP: Record<Role, string[]> = {
   super_admin: DEFAULT_PERMISSIONS.map((p) => p.code),
   admin: DEFAULT_PERMISSIONS.map((p) => p.code),
-  user: ['dashboard:view'],
+  user: ['dashboard:view', 'patient:read', 'alert:read', 'medication:read'],
 }
 
 export async function seedPermissions(db: DbClient): Promise<void> {

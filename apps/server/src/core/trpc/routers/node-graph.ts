@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { events, patients } from '../../db/schema.js'
 import { userPatientLinks } from '../../db/schema/user-patient'
 import { usersPin } from '../../db/schema/pin'
+import { requirePermission } from '../middleware/rbac'
 import { protectedProcedure, router } from '../index'
 
 const roomLayoutSchema = z.object({
@@ -32,7 +33,7 @@ const graphLayoutSchema = z.object({
 })
 
 export const nodeGraphRouter = router({
-  getGraph: protectedProcedure.query(async ({ ctx }) => {
+  getGraph: protectedProcedure.use(requirePermission('patient:read')).query(async ({ ctx }) => {
     const userId = ctx.userId
     const allPatients = await ctx.db
       .select({
@@ -111,7 +112,7 @@ export const nodeGraphRouter = router({
         recordedAt: events.recordedAt,
       })
       .from(events)
-      .where(eq(events.kind, 'observation' as any))
+      .where(eq(events.kind, 'observation' as const))
       .orderBy(desc(events.recordedAt))
       .limit(200)
 
@@ -146,6 +147,7 @@ export const nodeGraphRouter = router({
   }),
 
   saveGraph: protectedProcedure
+    .use(requirePermission('patient:read'))
     .input(z.object({ graph: graphLayoutSchema }))
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.userId
@@ -206,6 +208,7 @@ export const nodeGraphRouter = router({
     }),
 
   assignDevice: protectedProcedure
+    .use(requirePermission('patient:read'))
     .input(
       z.object({
         deviceId: z.string(),
@@ -222,6 +225,7 @@ export const nodeGraphRouter = router({
     }),
 
   deleteRoom: protectedProcedure
+    .use(requirePermission('patient:read'))
     .input(z.object({ roomId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.userId

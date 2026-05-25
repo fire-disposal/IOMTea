@@ -5,21 +5,33 @@ import { getLocalRecords, HealthRecord } from '../../utils/storage'
 import './index.scss'
 
 const TYPE_LABELS: Record<string, string> = {
-  blood_glucose: '血糖', blood_pressure: '血压', weight: '体重',
-  heart_rate: '心率', temperature: '体温', spo2: '血氧',
-  medication: '用药', period: '生理期',
+  blood_glucose: '血糖',
+  blood_pressure: '血压',
+  weight: '体重',
+  heart_rate: '心率',
+  temperature: '体温',
+  spo2: '血氧',
+  medication: '用药',
+  period: '生理期',
 }
 
 const GLUCOSE_CONTEXT_LABELS: Record<string, string> = {
-  fasting: '空腹', postprandial: '餐后', bedtime: '睡前', random: '随机',
+  fasting: '空腹',
+  postprandial: '餐后',
+  bedtime: '睡前',
+  random: '随机',
 }
 
 const HR_CONTEXT_LABELS: Record<string, string> = {
-  resting: '静息', after_exercise: '运动后', random: '随机',
+  resting: '静息',
+  after_exercise: '运动后',
+  random: '随机',
 }
 
 const FLOW_LABELS: Record<string, string> = {
-  light: '轻', medium: '中', heavy: '重',
+  light: '轻',
+  medium: '中',
+  heavy: '重',
 }
 
 function formatRecordContent(r: HealthRecord): string {
@@ -42,17 +54,26 @@ function formatRecordContent(r: HealthRecord): string {
       const ctx = HR_CONTEXT_LABELS[r.data.context as string] || r.data.context
       return `${r.data.bpm} bpm · ${ctx}`
     }
-    case 'temperature': return `${r.data.celsius} °C`
-    case 'spo2': return `${r.data.percentage}%`
-    case 'medication': return `${r.data.drug} · ${r.data.action === 'taken' ? '已服用' : '已跳过'}`
+    case 'temperature':
+      return `${r.data.celsius} °C`
+    case 'spo2':
+      return `${r.data.percentage}%`
+    case 'medication':
+      return `${r.data.drug} · ${r.data.action === 'taken' ? '已服用' : '已跳过'}`
     case 'period': {
-      const d = r.data as { flow?: string; symptoms?: string[]; notes?: string | null; date?: string }
+      const d = r.data as {
+        flow?: string
+        symptoms?: string[]
+        notes?: string | null
+        date?: string
+      }
       const parts: string[] = []
       if (d.flow) parts.push(`流量 ${FLOW_LABELS[d.flow] || d.flow}`)
       if (d.symptoms?.length) parts.push(d.symptoms.join(', '))
       return parts.join(' · ')
     }
-    default: return ''
+    default:
+      return ''
   }
 }
 
@@ -72,30 +93,36 @@ export default function RecordsPage() {
   const label = TYPE_LABELS[type] || '记录'
 
   return (
-    <View className='records-page animation-fade'>
-      <View className='records-page__header'>
-        <Text className='records-page__back' onClick={() => Taro.navigateBack()}>← 返回</Text>
-        <Text className='records-page__title'>{label}历史</Text>
+    <View className="records-page animation-fade">
+      <View className="records-page__header">
+        <Text className="records-page__back" onClick={() => Taro.navigateBack()}>
+          ← 返回
+        </Text>
+        <Text className="records-page__title">{label}历史</Text>
       </View>
       {loading ? (
-        <View className='records-page__skeleton'>
+        <View className="records-page__skeleton">
           {Array.from({ length: 5 }).map((_, i) => (
-            <View key={i} className='record-item-skeleton' />
+            <View key={i} className="record-item-skeleton" />
           ))}
         </View>
       ) : records.length === 0 ? (
-        <View className='records-page__empty'>
-          <View className='records-page__empty-icon'>📋</View>
-          <Text className='records-page__empty-text'>暂无记录</Text>
-          <Text className='records-page__empty-hint'>开始记录你的第一条健康数据</Text>
-          <View className='records-page__empty-btn' onClick={() => Taro.navigateBack()}>去记录</View>
+        <View className="records-page__empty">
+          <View className="records-page__empty-icon">📋</View>
+          <Text className="records-page__empty-text">暂无记录</Text>
+          <Text className="records-page__empty-hint">开始记录你的第一条健康数据</Text>
+          <View className="records-page__empty-btn" onClick={() => Taro.navigateBack()}>
+            去记录
+          </View>
         </View>
       ) : (
-        <View className='records-page__list'>
-          {records.map(r => (
-            <View key={r.id} className='record-item'>
-              <Text className='record-item__time'>{new Date(r.recordedAt).toLocaleString('zh-CN')}</Text>
-              <Text className='record-item__value'>{formatRecordContent(r)}</Text>
+        <View className="records-page__list">
+          {records.map((r) => (
+            <View key={r.id} className="record-item">
+              <Text className="record-item__time">
+                {new Date(r.recordedAt).toLocaleString('zh-CN')}
+              </Text>
+              <Text className="record-item__value">{formatRecordContent(r)}</Text>
             </View>
           ))}
         </View>

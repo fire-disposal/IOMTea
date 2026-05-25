@@ -9,9 +9,14 @@ import { trpc } from '../../utils/trpc'
 import './index.scss'
 
 const TYPE_LABELS: Record<string, string> = {
-  blood_glucose: '血糖', blood_pressure: '血压', weight: '体重',
-  heart_rate: '心率', temperature: '体温', spo2: '血氧',
-  medication: '用药', period: '生理期',
+  blood_glucose: '血糖',
+  blood_pressure: '血压',
+  weight: '体重',
+  heart_rate: '心率',
+  temperature: '体温',
+  spo2: '血氧',
+  medication: '用药',
+  period: '生理期',
 }
 
 interface PinInfo {
@@ -46,19 +51,33 @@ export default function ProfilePage() {
     setUnsyncedCount(unsynced)
   }
 
-  useEffect(() => { loadStats() }, [])
-
   useEffect(() => {
-    trpc.credit.balance.query().then((r: any) => { if (r) setCredit(r.balance) }).catch(() => {})
+    loadStats()
   }, [])
 
   useEffect(() => {
-    trpc.user.me.query().then((me: any) => {
-      if (me?.id) trpc.pin.list.query({ userId: me.id }).then((data: any) => {
-        setPins(data)
-        setPinsLoading(false)
-      }).catch(() => setPinsLoading(false))
-    }).catch(() => setPinsLoading(false))
+    trpc.credit.balance
+      .query()
+      .then((r: any) => {
+        if (r) setCredit(r.balance)
+      })
+      .catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    trpc.user.me
+      .query()
+      .then((me: any) => {
+        if (me?.id)
+          trpc.pin.list
+            .query({ userId: me.id })
+            .then((data: any) => {
+              setPins(data)
+              setPinsLoading(false)
+            })
+            .catch(() => setPinsLoading(false))
+      })
+      .catch(() => setPinsLoading(false))
   }, [])
 
   const handleSync = async () => {
@@ -83,7 +102,9 @@ export default function ProfilePage() {
     if (!nicknameInput.trim()) return
     try {
       await trpc.pin.update.mutate({ pin: pinId, nickname: nicknameInput.trim() })
-      setPins(prev => prev.map(p => p.pin === pinId ? { ...p, nickname: nicknameInput.trim() } : p))
+      setPins((prev) =>
+        prev.map((p) => (p.pin === pinId ? { ...p, nickname: nicknameInput.trim() } : p)),
+      )
       setEditingPinId(null)
       setNicknameInput('')
       Taro.showToast({ title: '已更新', icon: 'success' })
@@ -93,115 +114,162 @@ export default function ProfilePage() {
   }
 
   return (
-    <View className='profile-page animation-fade'>
-      <View className='profile-page__header'>
-        <View className='profile-page__avatar'>
-          <Text className='profile-page__avatar-text'>我</Text>
+    <View className="profile-page animation-fade">
+      <View className="profile-page__header">
+        <View className="profile-page__avatar">
+          <Text className="profile-page__avatar-text">我</Text>
         </View>
-        <Text className='profile-page__name'>用户</Text>
+        <Text className="profile-page__name">用户</Text>
       </View>
 
-      <View className='profile-page__credit-card'>
-        <View className='profile-credit-card__balance'>
+      <View className="profile-page__credit-card">
+        <View className="profile-credit-card__balance">
           <CreditIcon size={24} />
-          <Text className='profile-credit-card__num'>{credit}</Text>
-          <Text className='profile-credit-card__label'>credits</Text>
+          <Text className="profile-credit-card__num">{credit}</Text>
+          <Text className="profile-credit-card__label">credits</Text>
         </View>
-        <View className='profile-credit-card__link' onClick={() => Taro.navigateTo({ url: '/pages/credit/index' })}>
-          <Text className='profile-credit-card__link-text'>查看积分明细</Text>
-          <Text className='profile-credit-card__arrow'>›</Text>
+        <View
+          className="profile-credit-card__link"
+          onClick={() => Taro.navigateTo({ url: '/pages/credit/index' })}
+        >
+          <Text className="profile-credit-card__link-text">查看积分明细</Text>
+          <Text className="profile-credit-card__arrow">›</Text>
         </View>
       </View>
 
-      <View className='profile-page__section'>
-        <Text className='profile-page__section-title'>记录统计</Text>
-        <View className='profile-page__stats'>
+      <View className="profile-page__section">
+        <Text className="profile-page__section-title">记录统计</Text>
+        <View className="profile-page__stats">
           {Object.entries(TYPE_LABELS).map(([key, label]) => (
-            <View key={key} className='profile-stat-item'>
-              <Text className='profile-stat-item__num'>{recordCounts[key] || 0}</Text>
-              <Text className='profile-stat-item__label'>{label}</Text>
+            <View key={key} className="profile-stat-item">
+              <Text className="profile-stat-item__num">{recordCounts[key] || 0}</Text>
+              <Text className="profile-stat-item__label">{label}</Text>
             </View>
           ))}
         </View>
       </View>
 
-      <View className='profile-page__menu'>
-        <View className='profile-menu-item' onClick={() => Taro.navigateTo({ url: '/pages/export/index' })}>
-          <Text className='profile-menu-item__icon'>📤</Text>
-          <Text className='profile-menu-item__label'>导出数据</Text>
-          <Text className='profile-menu-item__arrow'>›</Text>
+      <View className="profile-page__menu">
+        <View
+          className="profile-menu-item"
+          onClick={() => Taro.navigateTo({ url: '/pages/export/index' })}
+        >
+          <Text className="profile-menu-item__icon">📤</Text>
+          <Text className="profile-menu-item__label">导出数据</Text>
+          <Text className="profile-menu-item__arrow">›</Text>
         </View>
-        <View className='profile-menu-item' onClick={() => Taro.navigateTo({ url: '/pages/settings/goals/index' })}>
-          <Text className='profile-menu-item__icon'>🎯</Text>
-          <Text className='profile-menu-item__label'>健康目标</Text>
-          <Text className='profile-menu-item__arrow'>›</Text>
+        <View
+          className="profile-menu-item"
+          onClick={() => Taro.navigateTo({ url: '/pages/settings/goals/index' })}
+        >
+          <Text className="profile-menu-item__icon">🎯</Text>
+          <Text className="profile-menu-item__label">健康目标</Text>
+          <Text className="profile-menu-item__arrow">›</Text>
         </View>
-        <View className='profile-menu-item' onClick={() => Taro.navigateTo({ url: '/pages/settings/index' })}>
-          <Text className='profile-menu-item__icon'>⚙️</Text>
-          <Text className='profile-menu-item__label'>系统设置</Text>
-          <Text className='profile-menu-item__arrow'>›</Text>
+        <View
+          className="profile-menu-item"
+          onClick={() => Taro.navigateTo({ url: '/pages/settings/index' })}
+        >
+          <Text className="profile-menu-item__icon">⚙️</Text>
+          <Text className="profile-menu-item__label">系统设置</Text>
+          <Text className="profile-menu-item__arrow">›</Text>
         </View>
-        <View className='profile-menu-item' onClick={() => Taro.navigateTo({ url: '/pages/devices/index' })}>
-          <Text className='profile-menu-item__icon'>📱</Text>
-          <Text className='profile-menu-item__label'>设备管理</Text>
-          <Text className='profile-menu-item__arrow'>›</Text>
+        <View
+          className="profile-menu-item"
+          onClick={() => Taro.navigateTo({ url: '/pages/devices/index' })}
+        >
+          <Text className="profile-menu-item__icon">📱</Text>
+          <Text className="profile-menu-item__label">设备管理</Text>
+          <Text className="profile-menu-item__arrow">›</Text>
         </View>
-        <View className='profile-menu-item' onClick={() => Taro.navigateTo({ url: '/pages/data/index' })}>
-          <Text className='profile-menu-item__icon'>📊</Text>
-          <Text className='profile-menu-item__label'>数据查看</Text>
-          <Text className='profile-menu-item__arrow'>›</Text>
+        <View
+          className="profile-menu-item"
+          onClick={() => Taro.navigateTo({ url: '/pages/data/index' })}
+        >
+          <Text className="profile-menu-item__icon">📊</Text>
+          <Text className="profile-menu-item__label">数据查看</Text>
+          <Text className="profile-menu-item__arrow">›</Text>
         </View>
       </View>
 
       {pinsLoading ? (
-        <View className='profile-page__section'>
-          <Text className='profile-page__section-title'>PIN 管理</Text>
-          <View className='profile-pins-skeleton'>
+        <View className="profile-page__section">
+          <Text className="profile-page__section-title">PIN 管理</Text>
+          <View className="profile-pins-skeleton">
             {Array.from({ length: 2 }).map((_, i) => (
-              <View key={i} className='pin-skeleton' />
+              <View key={i} className="pin-skeleton" />
             ))}
           </View>
         </View>
-      ) : pins.length > 0 && (
-        <View className='profile-page__section'>
-          <Text className='profile-page__section-title'>PIN 管理</Text>
-          {pins.map(pin => (
-            <View key={pin.pin} className='pin-item'>
-              <View className='pin-item__info'>
-                <Text className='pin-item__code'>{maskCode(pin.pin)}</Text>
-                {editingPinId === pin.pin ? (
-                  <Input className='pin-item__nickname-input'
-                    value={nicknameInput}
-                    onInput={e => setNicknameInput(e.detail.value)}
-                    onBlur={() => updateNickname(pin.pin)}
-                    confirmType='done'
-                    onConfirm={() => updateNickname(pin.pin)} />
-                ) : (
-                  <Text className='pin-item__nickname' onClick={() => { setEditingPinId(pin.pin); setNicknameInput(pin.nickname || '') }}>{pin.nickname || '点击设置昵称'}</Text>
-                )}
-                <Text className='pin-item__label'>{pin.label}</Text>
-                {pin.lastSeenAt && <Text className='pin-item__last-seen'>最近: {pin.lastSeenAt.slice(0, 10)}</Text>}
+      ) : (
+        pins.length > 0 && (
+          <View className="profile-page__section">
+            <Text className="profile-page__section-title">PIN 管理</Text>
+            {pins.map((pin) => (
+              <View key={pin.pin} className="pin-item">
+                <View className="pin-item__info">
+                  <Text className="pin-item__code">{maskCode(pin.pin)}</Text>
+                  {editingPinId === pin.pin ? (
+                    <Input
+                      className="pin-item__nickname-input"
+                      value={nicknameInput}
+                      onInput={(e) => setNicknameInput(e.detail.value)}
+                      onBlur={() => updateNickname(pin.pin)}
+                      confirmType="done"
+                      onConfirm={() => updateNickname(pin.pin)}
+                    />
+                  ) : (
+                    <Text
+                      className="pin-item__nickname"
+                      onClick={() => {
+                        setEditingPinId(pin.pin)
+                        setNicknameInput(pin.nickname || '')
+                      }}
+                    >
+                      {pin.nickname || '点击设置昵称'}
+                    </Text>
+                  )}
+                  <Text className="pin-item__label">{pin.label}</Text>
+                  {pin.lastSeenAt && (
+                    <Text className="pin-item__last-seen">最近: {pin.lastSeenAt.slice(0, 10)}</Text>
+                  )}
+                </View>
+                <View className="pin-item__actions">
+                  <Text className="pin-item__copy" onClick={() => copyCode(pin.pin)}>
+                    复制
+                  </Text>
+                  <Text
+                    className="pin-item__edit"
+                    onClick={() => {
+                      setEditingPinId(pin.pin)
+                      setNicknameInput(pin.nickname || '')
+                    }}
+                  >
+                    昵称
+                  </Text>
+                </View>
               </View>
-              <View className='pin-item__actions'>
-                <Text className='pin-item__copy' onClick={() => copyCode(pin.pin)}>复制</Text>
-                <Text className='pin-item__edit' onClick={() => { setEditingPinId(pin.pin); setNicknameInput(pin.nickname || '') }}>昵称</Text>
-              </View>
-            </View>
-          ))}
-        </View>
+            ))}
+          </View>
+        )
       )}
 
-      <View className='profile-page__sync'>
-        <View className='profile-sync-info'>
-          <Text className='profile-sync-info__label'>同步状态</Text>
-          <Text className='profile-sync-info__count'>{unsyncedCount} 条待同步</Text>
+      <View className="profile-page__sync">
+        <View className="profile-sync-info">
+          <Text className="profile-sync-info__label">同步状态</Text>
+          <Text className="profile-sync-info__count">{unsyncedCount} 条待同步</Text>
         </View>
-        <Button className='profile-sync-btn' onClick={handleSync} loading={syncing} disabled={syncing || unsyncedCount === 0}>
+        <Button
+          className="profile-sync-btn"
+          onClick={handleSync}
+          loading={syncing}
+          disabled={syncing || unsyncedCount === 0}
+        >
           立即同步
         </Button>
       </View>
 
-      <TabBar current='profile' />
+      <TabBar current="profile" />
     </View>
   )
 }

@@ -1,24 +1,52 @@
 const METRIC_ALIASES: Record<string, string> = {
-  hr: 'heart_rate', heartrate: 'heart_rate', heart: 'heart_rate',
-  spo2: 'spo2', spO2: 'spo2', oxygen: 'spo2', o2: 'spo2',
-  temp: 'temperature', body_temp: 'temperature', bodytemp: 'temperature',
-  systolic: 'systolic_bp', sbp: 'systolic_bp', bp_sys: 'systolic_bp',
-  diastolic: 'diastolic_bp', dbp: 'diastolic_bp', bp_dia: 'diastolic_bp',
+  hr: 'heart_rate',
+  heartrate: 'heart_rate',
+  heart: 'heart_rate',
+  spo2: 'spo2',
+  spO2: 'spo2',
+  oxygen: 'spo2',
+  o2: 'spo2',
+  temp: 'temperature',
+  body_temp: 'temperature',
+  bodytemp: 'temperature',
+  systolic: 'systolic_bp',
+  sbp: 'systolic_bp',
+  bp_sys: 'systolic_bp',
+  diastolic: 'diastolic_bp',
+  dbp: 'diastolic_bp',
+  bp_dia: 'diastolic_bp',
   bloodpressure: 'systolic_bp',
-  glucose: 'glucose', blood_glucose: 'glucose', blood_sugar: 'glucose', bg: 'glucose',
-  resp: 'resp_rate', respiration: 'resp_rate', rr: 'resp_rate',
-  posture: 'posture', position: 'posture',
-  bed: 'bed_status', bed_status: 'bed_status', bedstatus: 'bed_status',
-  motion: 'motion_index', activity: 'motion_index', movement: 'motion_index',
-  medication: 'medication', med: 'medication',
-  period: 'period', menstrual: 'period',
-  weight: 'weight', body_weight: 'weight',
+  glucose: 'glucose',
+  blood_glucose: 'glucose',
+  blood_sugar: 'glucose',
+  bg: 'glucose',
+  resp: 'resp_rate',
+  respiration: 'resp_rate',
+  rr: 'resp_rate',
+  posture: 'posture',
+  position: 'posture',
+  bed: 'bed_status',
+  bed_status: 'bed_status',
+  bedstatus: 'bed_status',
+  motion: 'motion_index',
+  activity: 'motion_index',
+  movement: 'motion_index',
+  medication: 'medication',
+  med: 'medication',
+  period: 'period',
+  menstrual: 'period',
+  weight: 'weight',
+  body_weight: 'weight',
 }
 
 const METRIC_UNITS: Record<string, string> = {
-  heart_rate: 'bpm', spo2: '%', temperature: '°C',
-  systolic_bp: 'mmHg', diastolic_bp: 'mmHg',
-  glucose: 'mmol/L', resp_rate: 'rpm',
+  heart_rate: 'bpm',
+  spo2: '%',
+  temperature: '°C',
+  systolic_bp: 'mmHg',
+  diastolic_bp: 'mmHg',
+  glucose: 'mmol/L',
+  resp_rate: 'rpm',
   weight: 'kg',
 }
 
@@ -35,7 +63,11 @@ const METRIC_RANGES: Record<string, { min: number; max: number }> = {
 }
 
 export function normalizeMetric(raw: string): string {
-  const normalized = raw.toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '')
+  const normalized = raw
+    .toLowerCase()
+    .replace(/[^a-z0-9_]/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_|_$/g, '')
   return METRIC_ALIASES[normalized] || normalized
 }
 

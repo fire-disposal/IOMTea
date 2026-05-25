@@ -40,20 +40,27 @@ export default function PressureRecord() {
   }, [systolic, diastolic, heartRate])
 
   return (
-    <FormShell title='记录血压' unit='mmHg' onSave={handleSave} saving={saving} saved={saved} recentData={trendData}>
-      <View className='pressure-grid'>
-        <View className='pressure-field'>
-          <NumberInput value={systolic} onChange={setSystolic} placeholder='120' />
-          <Text className='pressure-label'>收缩压</Text>
+    <FormShell
+      title="记录血压"
+      unit="mmHg"
+      onSave={handleSave}
+      saving={saving}
+      saved={saved}
+      recentData={trendData}
+    >
+      <View className="pressure-grid">
+        <View className="pressure-field">
+          <NumberInput value={systolic} onChange={setSystolic} placeholder="120" />
+          <Text className="pressure-label">收缩压</Text>
         </View>
-        <View className='pressure-field'>
-          <NumberInput value={diastolic} onChange={setDiastolic} placeholder='80' />
-          <Text className='pressure-label'>舒张压</Text>
+        <View className="pressure-field">
+          <NumberInput value={diastolic} onChange={setDiastolic} placeholder="80" />
+          <Text className="pressure-label">舒张压</Text>
         </View>
       </View>
-      <View className='pressure-hr'>
-        <NumberInput value={heartRate} onChange={setHeartRate} placeholder='72' />
-        <Text className='pressure-label'>心率 (bpm)</Text>
+      <View className="pressure-hr">
+        <NumberInput value={heartRate} onChange={setHeartRate} placeholder="72" />
+        <Text className="pressure-label">心率 (bpm)</Text>
       </View>
     </FormShell>
   )

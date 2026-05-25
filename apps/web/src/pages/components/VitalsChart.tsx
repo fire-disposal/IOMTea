@@ -1,6 +1,15 @@
 import { ActionIcon, Box, Button, Group, Paper, SegmentedControl, Text } from '@mantine/core'
 import { IconChevronDown, IconChevronUp } from '@tabler/icons-react'
-import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import {
+  CartesianGrid,
+  Legend,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts'
 
 interface ChartDataPoint {
   ts: number
@@ -18,7 +27,13 @@ interface VitalsChartProps {
   onToggle: () => void
 }
 
-export function VitalsChart({ data, timeRange, onTimeRangeChange, visible, onToggle }: VitalsChartProps) {
+export function VitalsChart({
+  data,
+  timeRange,
+  onTimeRangeChange,
+  visible,
+  onToggle,
+}: VitalsChartProps) {
   if (!visible) {
     return (
       <Button
@@ -57,7 +72,9 @@ export function VitalsChart({ data, timeRange, onTimeRangeChange, visible, onTog
 
       <Box h={260}>
         {data.length === 0 ? (
-          <Text c="dimmed" size="sm" ta="center" mt="xl">暂无数据</Text>
+          <Text c="dimmed" size="sm" ta="center" mt="xl">
+            暂无数据
+          </Text>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data}>
@@ -73,12 +90,52 @@ export function VitalsChart({ data, timeRange, onTimeRangeChange, visible, onTog
               />
               <YAxis yAxisId="vitals" domain={[40, 200]} tick={{ fontSize: 11 }} />
               <YAxis yAxisId="pct" orientation="right" domain={[35, 100]} tick={{ fontSize: 11 }} />
-              <Tooltip labelFormatter={(ts) => new Date(ts).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })} />
+              <Tooltip
+                labelFormatter={(ts) =>
+                  new Date(ts).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+                }
+              />
               <Legend />
-              <Line yAxisId="vitals" type="monotone" dataKey="hr" stroke="#e03131" strokeWidth={2} dot={false} name="心率 (bpm)" connectNulls />
-              <Line yAxisId="vitals" type="monotone" dataKey="systolic_bp" stroke="#f08c00" strokeWidth={2} dot={false} name="收缩压 (mmHg)" connectNulls />
-              <Line yAxisId="pct" type="monotone" dataKey="spo2" stroke="#1971c2" strokeWidth={2} dot={false} name="血氧 (%)" connectNulls />
-              <Line yAxisId="pct" type="monotone" dataKey="temp" stroke="#2f9e44" strokeWidth={1.5} dot={false} name="体温 (°C)" connectNulls />
+              <Line
+                yAxisId="vitals"
+                type="monotone"
+                dataKey="hr"
+                stroke="#e03131"
+                strokeWidth={2}
+                dot={false}
+                name="心率 (bpm)"
+                connectNulls
+              />
+              <Line
+                yAxisId="vitals"
+                type="monotone"
+                dataKey="systolic_bp"
+                stroke="#f08c00"
+                strokeWidth={2}
+                dot={false}
+                name="收缩压 (mmHg)"
+                connectNulls
+              />
+              <Line
+                yAxisId="pct"
+                type="monotone"
+                dataKey="spo2"
+                stroke="#1971c2"
+                strokeWidth={2}
+                dot={false}
+                name="血氧 (%)"
+                connectNulls
+              />
+              <Line
+                yAxisId="pct"
+                type="monotone"
+                dataKey="temp"
+                stroke="#2f9e44"
+                strokeWidth={1.5}
+                dot={false}
+                name="体温 (°C)"
+                connectNulls
+              />
             </LineChart>
           </ResponsiveContainer>
         )}

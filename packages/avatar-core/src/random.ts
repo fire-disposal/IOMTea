@@ -19,7 +19,7 @@ const mulberry32 = (seed: number) => {
   }
 }
 
-const pick = <T,>(arr: readonly T[], rand: () => number): T => arr[Math.floor(rand() * arr.length)]
+const pick = <T>(arr: readonly T[], rand: () => number): T => arr[Math.floor(rand() * arr.length)]
 const range = (min: number, max: number, rand: () => number) => min + rand() * (max - min)
 const int = (min: number, max: number, rand: () => number) => Math.floor(range(min, max + 1, rand))
 

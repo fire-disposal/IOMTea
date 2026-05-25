@@ -63,7 +63,15 @@ export function PatientWall() {
   })
 
   const form = useForm({
-    defaultValues: { name: '', gender: '', birthDate: '', heightCm: undefined as number | undefined, weightKg: undefined as number | undefined, phone: '', address: '' },
+    defaultValues: {
+      name: '',
+      gender: '',
+      birthDate: '',
+      heightCm: undefined as number | undefined,
+      weightKg: undefined as number | undefined,
+      phone: '',
+      address: '',
+    },
     onSubmit: ({ value }) => {
       const clean = Object.fromEntries(
         Object.entries(value).filter(([_, val]) => val !== '' && val !== undefined && val !== null),
@@ -76,7 +84,11 @@ export function PatientWall() {
 
   const filtered = (patients.data || []).filter((p: any) => {
     if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false
-    if (filterTagIds.length > 0 && (!p.tagIds || !filterTagIds.some((tid: string) => p.tagIds.includes(tid)))) return false
+    if (
+      filterTagIds.length > 0 &&
+      (!p.tagIds || !filterTagIds.some((tid: string) => p.tagIds.includes(tid)))
+    )
+      return false
     return true
   })
 
@@ -100,7 +112,11 @@ export function PatientWall() {
       <Group justify="space-between" mb="lg">
         <Title order={2}>患者监护</Title>
         <Group>
-          <Button leftSection={<IconUpload size={16} />} variant="light" onClick={() => setImportOpen(true)}>
+          <Button
+            leftSection={<IconUpload size={16} />}
+            variant="light"
+            onClick={() => setImportOpen(true)}
+          >
             批量导入
           </Button>
           <Button leftSection={<IconPlus size={16} />} onClick={() => setCreateOpen(true)}>
@@ -128,15 +144,21 @@ export function PatientWall() {
 
       {tags && tags.length > 0 && (
         <Box mb="md">
-        <Chip.Group multiple value={filterTagIds} onChange={setFilterTagIds}>
-          <Group gap="xs">
-            {tags.map((tag: any) => (
-              <Chip key={tag.id} value={tag.id} color={tag.color?.replace('#', '') || 'teal'} variant="light" size="xs">
-                {tag.name}
-              </Chip>
-            ))}
-          </Group>
-        </Chip.Group>
+          <Chip.Group multiple value={filterTagIds} onChange={setFilterTagIds}>
+            <Group gap="xs">
+              {tags.map((tag: any) => (
+                <Chip
+                  key={tag.id}
+                  value={tag.id}
+                  color={tag.color?.replace('#', '') || 'teal'}
+                  variant="light"
+                  size="xs"
+                >
+                  {tag.name}
+                </Chip>
+              ))}
+            </Group>
+          </Chip.Group>
         </Box>
       )}
 
@@ -156,7 +178,11 @@ export function PatientWall() {
       {!patients.isLoading && !patients.isError && filtered.length > 0 && (
         <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="lg">
           {filtered.map((p: any, index: number) => (
-            <div key={p.id} className="anim-stagger-item" style={{ animationDelay: `${index * 60}ms` }}>
+            <div
+              key={p.id}
+              className="anim-stagger-item"
+              style={{ animationDelay: `${index * 60}ms` }}
+            >
               <PatientCard
                 patient={p}
                 alertCount={
@@ -171,58 +197,114 @@ export function PatientWall() {
       )}
 
       <Modal opened={createOpen} onClose={() => setCreateOpen(false)} title="添加患者" size="md">
-        <form onSubmit={(e) => { e.preventDefault(); form.handleSubmit() }}>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault()
+            form.handleSubmit()
+          }}
+        >
           <Stack>
             <SimpleGrid cols={2}>
               <form.Field name="name" validators={{ onChange: nameRequired }}>
                 {(field) => (
-                  <TextInput label="姓名" required value={field.state.value} onChange={(e) => field.handleChange(e.currentTarget.value)} error={field.state.meta.errors?.[0]} />
+                  <TextInput
+                    label="姓名"
+                    required
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.currentTarget.value)}
+                    error={field.state.meta.errors?.[0]}
+                  />
                 )}
               </form.Field>
               <form.Field name="gender">
                 {(field) => (
-                  <Select label="性别" data={[{ value: 'male', label: '男' }, { value: 'female', label: '女' }, { value: 'other', label: '其他' }]} value={field.state.value ?? ''} onChange={(v) => field.handleChange(v ?? '')} />
+                  <Select
+                    label="性别"
+                    data={[
+                      { value: 'male', label: '男' },
+                      { value: 'female', label: '女' },
+                      { value: 'other', label: '其他' },
+                    ]}
+                    value={field.state.value ?? ''}
+                    onChange={(v) => field.handleChange(v ?? '')}
+                  />
                 )}
               </form.Field>
             </SimpleGrid>
             <SimpleGrid cols={2}>
               <form.Field name="birthDate">
                 {(field) => (
-                  <TextInput label="出生日期" type="date" value={field.state.value} onChange={(e) => field.handleChange(e.currentTarget.value)} />
+                  <TextInput
+                    label="出生日期"
+                    type="date"
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.currentTarget.value)}
+                  />
                 )}
               </form.Field>
               <form.Field name="heightCm">
                 {(field) => (
-                  <NumberInput label="身高 (cm)" min={0} max={250} value={field.state.value ?? ''} onChange={(v) => field.handleChange(typeof v === 'number' ? v : undefined)} />
+                  <NumberInput
+                    label="身高 (cm)"
+                    min={0}
+                    max={250}
+                    value={field.state.value ?? ''}
+                    onChange={(v) => field.handleChange(typeof v === 'number' ? v : undefined)}
+                  />
                 )}
               </form.Field>
             </SimpleGrid>
             <SimpleGrid cols={2}>
               <form.Field name="weightKg">
                 {(field) => (
-                  <NumberInput label="体重 (kg)" min={0} max={300} value={field.state.value ?? ''} onChange={(v) => field.handleChange(typeof v === 'number' ? v : undefined)} />
+                  <NumberInput
+                    label="体重 (kg)"
+                    min={0}
+                    max={300}
+                    value={field.state.value ?? ''}
+                    onChange={(v) => field.handleChange(typeof v === 'number' ? v : undefined)}
+                  />
                 )}
               </form.Field>
               <form.Field name="phone">
                 {(field) => (
-                  <TextInput label="电话" value={field.state.value} onChange={(e) => field.handleChange(e.currentTarget.value)} />
+                  <TextInput
+                    label="电话"
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.currentTarget.value)}
+                  />
                 )}
               </form.Field>
             </SimpleGrid>
             <form.Field name="address">
               {(field) => (
-                <TextInput label="地址" value={field.state.value} onChange={(e) => field.handleChange(e.currentTarget.value)} />
+                <TextInput
+                  label="地址"
+                  value={field.state.value}
+                  onChange={(e) => field.handleChange(e.currentTarget.value)}
+                />
               )}
             </form.Field>
             <form.Subscribe selector={(state) => state.isSubmitting}>
               {(isSubmitting) => (
-                <Button type="submit" loading={isSubmitting || createPatient.isPending} fullWidth mt="md">创建患者</Button>
+                <Button
+                  type="submit"
+                  loading={isSubmitting || createPatient.isPending}
+                  fullWidth
+                  mt="md"
+                >
+                  创建患者
+                </Button>
               )}
             </form.Subscribe>
           </Stack>
         </form>
       </Modal>
-      <PatientImport opened={importOpen} onClose={() => setImportOpen(false)} onImported={() => utils.patient.list.invalidate()} />
+      <PatientImport
+        opened={importOpen}
+        onClose={() => setImportOpen(false)}
+        onImported={() => utils.patient.list.invalidate()}
+      />
       <Modal
         opened={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}

@@ -50,17 +50,24 @@ export default function GlucoseRecord() {
   }, [value, context, mealTag])
 
   return (
-    <FormShell title='记录血糖' unit='mmol/L' onSave={handleSave} saving={saving} saved={saved} recentData={trendData}>
-      <NumberInput value={value} onChange={setValue} decimal placeholder='0.0' />
+    <FormShell
+      title="记录血糖"
+      unit="mmol/L"
+      onSave={handleSave}
+      saving={saving}
+      saved={saved}
+      recentData={trendData}
+    >
+      <NumberInput value={value} onChange={setValue} decimal placeholder="0.0" />
 
-      <View className='glucose-section'>
-        <Text className='glucose-label'>测量时段</Text>
+      <View className="glucose-section">
+        <Text className="glucose-label">测量时段</Text>
         <SegmentPicker options={CONTEXT_OPTIONS} value={context} onChange={setContext} />
       </View>
 
       {context === 'postprandial' && (
-        <View className='glucose-section'>
-          <Text className='glucose-label'>餐别</Text>
+        <View className="glucose-section">
+          <Text className="glucose-label">餐别</Text>
           <SegmentPicker options={MEAL_OPTIONS} value={mealTag} onChange={setMealTag} />
         </View>
       )}

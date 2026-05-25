@@ -24,7 +24,9 @@ export function Calendar({ year, month, activityData, onDayClick, onMonthChange 
       result.push({
         day: d,
         date: dateStr,
-        isToday: dateStr === `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`,
+        isToday:
+          dateStr ===
+          `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`,
         records: activityData.get(dateStr) || [],
       })
     }
@@ -43,25 +45,44 @@ export function Calendar({ year, month, activityData, onDayClick, onMonthChange 
   }
 
   return (
-    <View className='calendar'>
-      <View className='calendar__header'>
-        <Text className='calendar__nav' onClick={prevMonth}>◀</Text>
-        <Text className='calendar__title'>{year}年{month}月</Text>
-        <Text className='calendar__nav' onClick={nextMonth}>▶</Text>
+    <View className="calendar">
+      <View className="calendar__header">
+        <Text className="calendar__nav" onClick={prevMonth}>
+          ◀
+        </Text>
+        <Text className="calendar__title">
+          {year}年{month}月
+        </Text>
+        <Text className="calendar__nav" onClick={nextMonth}>
+          ▶
+        </Text>
       </View>
-      <View className='calendar__weekdays'>
-        {WEEKDAYS.map(w => <Text key={w} className='calendar__weekday'>{w}</Text>)}
+      <View className="calendar__weekdays">
+        {WEEKDAYS.map((w) => (
+          <Text key={w} className="calendar__weekday">
+            {w}
+          </Text>
+        ))}
       </View>
-      <View className='calendar__grid'>
-        {Array.from({ length: firstDay }).map((_, i) => <View key={`empty-${i}`} className='calendar__day calendar__day--empty' />)}
-        {days.map(d => (
-          <View key={d.date} className={`calendar__day ${d.isToday ? 'calendar__day--today' : ''}`}
-            onClick={() => onDayClick?.(d.date)}>
-            <Text className='calendar__day-num'>{d.day}</Text>
+      <View className="calendar__grid">
+        {Array.from({ length: firstDay }).map((_, i) => (
+          <View key={`empty-${i}`} className="calendar__day calendar__day--empty" />
+        ))}
+        {days.map((d) => (
+          <View
+            key={d.date}
+            className={`calendar__day ${d.isToday ? 'calendar__day--today' : ''}`}
+            onClick={() => onDayClick?.(d.date)}
+          >
+            <Text className="calendar__day-num">{d.day}</Text>
             {d.records.length > 0 && (
-              <View className='calendar__dots'>
-                {d.records.slice(0, 3).map((r, i) => <View key={i} className='calendar__dot' />)}
-                {d.records.length > 3 && <Text className='calendar__dot-more'>+{d.records.length - 3}</Text>}
+              <View className="calendar__dots">
+                {d.records.slice(0, 3).map((r, i) => (
+                  <View key={i} className="calendar__dot" />
+                ))}
+                {d.records.length > 3 && (
+                  <Text className="calendar__dot-more">+{d.records.length - 3}</Text>
+                )}
               </View>
             )}
           </View>

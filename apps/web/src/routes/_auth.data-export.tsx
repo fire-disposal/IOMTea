@@ -1,16 +1,68 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { Container, Title, Paper, Group, Select, Text, Table, Checkbox, Button, SegmentedControl, Badge, Box } from '@mantine/core'
+import {
+  Container,
+  Title,
+  Paper,
+  Group,
+  Select,
+  Text,
+  Table,
+  Checkbox,
+  Button,
+  SegmentedControl,
+  Badge,
+  Box,
+} from '@mantine/core'
 import { useState } from 'react'
 import { trpc } from '../trpc'
 
 const FIELD_OPTIONS: Record<string, string[]> = {
-  patients: ['id', 'name', 'gender', 'birth_date', 'phone', 'height_cm', 'weight_kg', 'blood_type', 'address', 'status', 'created_at'],
-  events: ['id', 'patient_id', 'kind', 'metric', 'value', 'unit', 'source', 'severity', 'status', 'pin_code', 'recorded_at', 'created_at'],
-  medications: ['id', 'patient_id', 'drug_name', 'dosage', 'dosage_unit', 'frequency', 'route', 'start_date', 'end_date', 'status', 'created_at'],
+  patients: [
+    'id',
+    'name',
+    'gender',
+    'birth_date',
+    'phone',
+    'height_cm',
+    'weight_kg',
+    'blood_type',
+    'address',
+    'status',
+    'created_at',
+  ],
+  events: [
+    'id',
+    'patient_id',
+    'kind',
+    'metric',
+    'value',
+    'unit',
+    'source',
+    'severity',
+    'status',
+    'pin_code',
+    'recorded_at',
+    'created_at',
+  ],
+  medications: [
+    'id',
+    'patient_id',
+    'drug_name',
+    'dosage',
+    'dosage_unit',
+    'frequency',
+    'route',
+    'start_date',
+    'end_date',
+    'status',
+    'created_at',
+  ],
 }
 
 const ENTITY_LABELS: Record<string, string> = {
-  patients: '患者', events: '事件', medications: '用药',
+  patients: '患者',
+  events: '事件',
+  medications: '用药',
 }
 
 function DataExportPage() {
@@ -19,7 +71,10 @@ function DataExportPage() {
   const [format, setFormat] = useState<'csv' | 'xlsx'>('csv')
 
   const { data: preview, isLoading } = trpc.export.preview.useQuery(
-    { entity: entity as any, fields: selectedFields.length > 0 ? selectedFields : ['id'] },
+    {
+      entity: entity as 'patients' | 'events' | 'medications',
+      fields: selectedFields.length > 0 ? selectedFields : ['id'],
+    },
     { enabled: true },
   )
 
@@ -42,7 +97,11 @@ function DataExportPage() {
 
   const handleExport = () => {
     if (selectedFields.length === 0) return
-    downloadMutation.mutate({ entity: entity as any, fields: selectedFields, format })
+    downloadMutation.mutate({
+      entity: entity as 'patients' | 'events' | 'medications',
+      fields: selectedFields,
+      format,
+    })
   }
 
   const selectAll = () => setSelectedFields([...FIELD_OPTIONS[entity]])
@@ -50,15 +109,23 @@ function DataExportPage() {
 
   return (
     <Container size="xl" py="md">
-      <Title order={2} mb="md">数据导出</Title>
+      <Title order={2} mb="md">
+        数据导出
+      </Title>
 
       <Paper p="md" withBorder mb="md">
         <Group align="end">
           <Select
             label="导出实体"
-            data={Object.entries(FIELD_OPTIONS).map(([k, v]) => ({ value: k, label: `${ENTITY_LABELS[k]} (${v.length}字段)` }))}
+            data={Object.entries(FIELD_OPTIONS).map(([k, v]) => ({
+              value: k,
+              label: `${ENTITY_LABELS[k]} (${v.length}字段)`,
+            }))}
             value={entity}
-            onChange={(v) => { setEntity(v!); setSelectedFields([]) }}
+            onChange={(v) => {
+              setEntity(v!)
+              setSelectedFields([])
+            }}
           />
           <SegmentedControl
             data={[
@@ -66,15 +133,21 @@ function DataExportPage() {
               { value: 'xlsx', label: 'Excel' },
             ]}
             value={format}
-            onChange={(v) => setFormat(v as any)}
+            onChange={(v) => setFormat(v as 'csv' | 'xlsx')}
           />
         </Group>
 
         <Group mt="md" justify="space-between">
-          <Text size="sm" fw={500}>选择导出字段</Text>
+          <Text size="sm" fw={500}>
+            选择导出字段
+          </Text>
           <Group gap="xs">
-            <Button size="compact-xs" variant="subtle" onClick={selectAll}>全选</Button>
-            <Button size="compact-xs" variant="subtle" color="gray" onClick={clearAll}>清空</Button>
+            <Button size="compact-xs" variant="subtle" onClick={selectAll}>
+              全选
+            </Button>
+            <Button size="compact-xs" variant="subtle" color="gray" onClick={clearAll}>
+              清空
+            </Button>
           </Group>
         </Group>
 
@@ -86,7 +159,12 @@ function DataExportPage() {
           </Group>
         </Checkbox.Group>
 
-        <Button mt="lg" onClick={handleExport} loading={downloadMutation.isPending} disabled={selectedFields.length === 0}>
+        <Button
+          mt="lg"
+          onClick={handleExport}
+          loading={downloadMutation.isPending}
+          disabled={selectedFields.length === 0}
+        >
           导出 {format.toUpperCase()} ({selectedFields.length} 字段)
         </Button>
       </Paper>
@@ -97,10 +175,16 @@ function DataExportPage() {
           {preview && <Badge variant="light">{preview.total} 条记录</Badge>}
         </Group>
 
-        {isLoading && <Text c="dimmed" ta="center" py="xl">加载中...</Text>}
+        {isLoading && (
+          <Text c="dimmed" ta="center" py="xl">
+            加载中...
+          </Text>
+        )}
 
         {!isLoading && (!preview || preview.rows.length === 0) && (
-          <Text c="dimmed" ta="center" py="xl">选择字段后预览数据</Text>
+          <Text c="dimmed" ta="center" py="xl">
+            选择字段后预览数据
+          </Text>
         )}
 
         {preview && preview.rows.length > 0 && (
@@ -109,7 +193,9 @@ function DataExportPage() {
               <Table.Thead>
                 <Table.Tr>
                   {preview.columns.map((c: string) => (
-                    <Table.Th key={c} style={{ whiteSpace: 'nowrap' }}>{c}</Table.Th>
+                    <Table.Th key={c} style={{ whiteSpace: 'nowrap' }}>
+                      {c}
+                    </Table.Th>
                   ))}
                 </Table.Tr>
               </Table.Thead>
@@ -118,7 +204,9 @@ function DataExportPage() {
                   <Table.Tr key={i}>
                     {preview.columns.map((c: string) => (
                       <Table.Td key={c} style={{ whiteSpace: 'nowrap', fontSize: 13 }}>
-                        {row[c] === null || row[c] === undefined ? '-' : String(row[c]).slice(0, 60)}
+                        {row[c] === null || row[c] === undefined
+                          ? '-'
+                          : String(row[c]).slice(0, 60)}
                       </Table.Td>
                     ))}
                   </Table.Tr>

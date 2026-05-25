@@ -14,8 +14,8 @@ interface SegmentPickerProps {
 
 export function SegmentPicker({ options, value, onChange }: SegmentPickerProps) {
   return (
-    <View className='segment-picker'>
-      {options.map(opt => (
+    <View className="segment-picker">
+      {options.map((opt) => (
         <View
           key={opt.value}
           className={`segment-picker__item ${value === opt.value ? 'segment-picker__item--active' : ''}`}

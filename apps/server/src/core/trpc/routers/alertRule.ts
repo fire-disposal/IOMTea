@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { patients } from '../../db/schema.js'
+import { requirePermission } from '../middleware/rbac'
 import { protectedProcedure, router } from '../index'
 import { DEFAULT_THRESHOLDS } from './thresholds'
 
@@ -15,6 +16,7 @@ const ruleSchema = z.object({
 
 export const alertRuleRouter = router({
   byPatient: protectedProcedure
+    .use(requirePermission('alert:read'))
     .input(z.object({ patientId: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
       const [patient] = await ctx.db
@@ -43,6 +45,7 @@ export const alertRuleRouter = router({
     }),
 
   upsert: protectedProcedure
+    .use(requirePermission('alert:manage'))
     .input(
       z.object({
         patientId: z.string().uuid(),

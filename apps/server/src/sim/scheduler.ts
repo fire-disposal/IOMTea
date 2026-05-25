@@ -4,19 +4,25 @@ export class MetricScheduler {
   private timers = new Map<string, ReturnType<typeof setTimeout>>()
   private speed = 1
 
-  setSpeed(speed: number) { this.speed = speed }
+  setSpeed(speed: number) {
+    this.speed = speed
+  }
 
   schedule(patientId: string, metric: any, callback: (metric: string) => Promise<void>) {
     const key = `${patientId}:${metric.metric ?? metric.name}`
     const mName = metric.metric ?? metric.name
     const run = () => {
-      const baseInterval = metric.interval.min + Math.random() * (metric.interval.max - metric.interval.min)
+      const baseInterval =
+        metric.interval.min + Math.random() * (metric.interval.max - metric.interval.min)
       const jitteredInterval = baseInterval * (1 + (Math.random() - 0.5) * 2 * metric.jitter)
       const interval = Math.max(100, jitteredInterval / this.speed)
-      this.timers.set(key, setTimeout(async () => {
-        await callback(mName)
-        if (this.timers.has(key)) run()
-      }, interval))
+      this.timers.set(
+        key,
+        setTimeout(async () => {
+          await callback(mName)
+          if (this.timers.has(key)) run()
+        }, interval),
+      )
     }
     run()
   }

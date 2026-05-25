@@ -45,9 +45,15 @@ export const authRouter = router({
       .returning()
 
     const pin = String(Math.floor(100000 + Math.random() * 900000))
-    await ctx.db.insert(usersPin).values({
-      pin, userId: user.id, type: 'user', label: user.displayName,
-    }).catch(() => {})
+    await ctx.db
+      .insert(usersPin)
+      .values({
+        pin,
+        userId: user.id,
+        type: 'user',
+        label: user.displayName,
+      })
+      .catch(() => {})
 
     const jwtPayload = { sub: user.id, role: user.role }
     const accessToken = await signAccessToken(jwtPayload)

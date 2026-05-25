@@ -1,4 +1,18 @@
-import { Badge, Button, Group, Modal, NumberInput, Paper, Select, Skeleton, Stack, Table, Text, TextInput, Title } from '@mantine/core'
+import {
+  Badge,
+  Button,
+  Group,
+  Modal,
+  NumberInput,
+  Paper,
+  Select,
+  Skeleton,
+  Stack,
+  Table,
+  Text,
+  TextInput,
+  Title,
+} from '@mantine/core'
 import { notifications } from '@mantine/notifications'
 import { useState } from 'react'
 import { useForm } from '@tanstack/react-form'
@@ -20,7 +34,7 @@ function genderLabel(g: string) {
 }
 
 export function PatientProfile() {
-  const { id } = (useParams as any)({ from: '/_auth/patients/$id' })
+  const { id } = useParams({ from: '/_auth/patients/$id' })
   const navigate = useNavigate()
   const [editing, setEditing] = useState(false)
   const [editKey, setEditKey] = useState(0)
@@ -47,7 +61,10 @@ export function PatientProfile() {
     onError: (err) => notifications.show({ title: '失败', message: err.message, color: 'red' }),
   })
 
-  const startEdit = () => { setEditKey((k) => k + 1); setEditing(true) }
+  const startEdit = () => {
+    setEditKey((k) => k + 1)
+    setEditing(true)
+  }
 
   if (patient.isLoading) {
     return (
@@ -59,77 +76,184 @@ export function PatientProfile() {
     )
   }
 
-  if (patient.isError) return (
-    <Stack align="center" py="xl">
-      <Text c="red">加载患者信息失败</Text>
-      <Button variant="light" onClick={() => navigate({ to: '/patients' })}>返回列表</Button>
-    </Stack>
-  )
-  if (!patient.data) return (
-    <Stack align="center" py="xl">
-      <Text c="dimmed">患者不存在</Text>
-      <Button variant="light" onClick={() => navigate({ to: '/patients' })}>返回列表</Button>
-    </Stack>
-  )
+  if (patient.isError)
+    return (
+      <Stack align="center" py="xl">
+        <Text c="red">加载患者信息失败</Text>
+        <Button variant="light" onClick={() => navigate({ to: '/patients' })}>
+          返回列表
+        </Button>
+      </Stack>
+    )
+  if (!patient.data)
+    return (
+      <Stack align="center" py="xl">
+        <Text c="dimmed">患者不存在</Text>
+        <Button variant="light" onClick={() => navigate({ to: '/patients' })}>
+          返回列表
+        </Button>
+      </Stack>
+    )
 
   const p = patient.data as any
 
   if (editing) {
-    return <EditPatientForm key={editKey} patient={p} updateMutation={updateMutation} onCancel={() => setEditing(false)} patientId={id!} utils={utils} />
+    return (
+      <EditPatientForm
+        key={editKey}
+        patient={p}
+        updateMutation={updateMutation}
+        onCancel={() => setEditing(false)}
+        patientId={id!}
+        utils={utils}
+      />
+    )
   }
 
   return (
     <Stack gap="md">
       <Group justify="flex-end">
-        <Button size="sm" color="red" variant="light" onClick={() => setDeleteConfirm(true)}>删除患者</Button>
+        <Button size="sm" color="red" variant="light" onClick={() => setDeleteConfirm(true)}>
+          删除患者
+        </Button>
       </Group>
 
       <Paper p="lg" radius="md" withBorder>
         <Group justify="space-between" mb="md">
           <Title order={4}>基本信息</Title>
-          <Button size="sm" variant="light" onClick={startEdit}>编辑</Button>
+          <Button size="sm" variant="light" onClick={startEdit}>
+            编辑
+          </Button>
         </Group>
         <Group gap="xl">
-          <div><Text size="xs" c="dimmed">姓名</Text><Text>{p.name}</Text></div>
-          <div><Text size="xs" c="dimmed">性别</Text><Text>{genderLabel(p.gender)}</Text></div>
-          <div><Text size="xs" c="dimmed">出生日期</Text><Text>{p.birthDate || '未设置'}</Text></div>
-          <div><Text size="xs" c="dimmed">身高</Text><Text>{p.heightCm ? `${p.heightCm} cm` : '未设置'}</Text></div>
-          <div><Text size="xs" c="dimmed">体重</Text><Text>{p.weightKg ? `${p.weightKg} kg` : '未设置'}</Text></div>
-          <div><Text size="xs" c="dimmed">血型</Text><Text>{p.bloodType || '未设置'}</Text></div>
+          <div>
+            <Text size="xs" c="dimmed">
+              姓名
+            </Text>
+            <Text>{p.name}</Text>
+          </div>
+          <div>
+            <Text size="xs" c="dimmed">
+              性别
+            </Text>
+            <Text>{genderLabel(p.gender)}</Text>
+          </div>
+          <div>
+            <Text size="xs" c="dimmed">
+              出生日期
+            </Text>
+            <Text>{p.birthDate || '未设置'}</Text>
+          </div>
+          <div>
+            <Text size="xs" c="dimmed">
+              身高
+            </Text>
+            <Text>{p.heightCm ? `${p.heightCm} cm` : '未设置'}</Text>
+          </div>
+          <div>
+            <Text size="xs" c="dimmed">
+              体重
+            </Text>
+            <Text>{p.weightKg ? `${p.weightKg} kg` : '未设置'}</Text>
+          </div>
+          <div>
+            <Text size="xs" c="dimmed">
+              血型
+            </Text>
+            <Text>{p.bloodType || '未设置'}</Text>
+          </div>
         </Group>
       </Paper>
 
       <Paper p="lg" radius="md" withBorder>
-        <Title order={4} mb="md">联系信息</Title>
+        <Title order={4} mb="md">
+          联系信息
+        </Title>
         <Group gap="xl">
-          <div><Text size="xs" c="dimmed">电话</Text><Text>{p.phone || '未设置'}</Text></div>
-          <div><Text size="xs" c="dimmed">地址</Text><Text>{p.address || '未设置'}</Text></div>
-          <div><Text size="xs" c="dimmed">紧急联系人</Text><Text>{p.emergencyContact || '未设置'}</Text></div>
-          <div><Text size="xs" c="dimmed">紧急电话</Text><Text>{p.emergencyPhone || '未设置'}</Text></div>
+          <div>
+            <Text size="xs" c="dimmed">
+              电话
+            </Text>
+            <Text>{p.phone || '未设置'}</Text>
+          </div>
+          <div>
+            <Text size="xs" c="dimmed">
+              地址
+            </Text>
+            <Text>{p.address || '未设置'}</Text>
+          </div>
+          <div>
+            <Text size="xs" c="dimmed">
+              紧急联系人
+            </Text>
+            <Text>{p.emergencyContact || '未设置'}</Text>
+          </div>
+          <div>
+            <Text size="xs" c="dimmed">
+              紧急电话
+            </Text>
+            <Text>{p.emergencyPhone || '未设置'}</Text>
+          </div>
         </Group>
       </Paper>
 
       <Paper p="lg" radius="md" withBorder>
-        <Title order={4} mb="md">病史</Title>
+        <Title order={4} mb="md">
+          病史
+        </Title>
         <Group>
-          {p.tags?.conditions?.map((c: string) => <Badge key={c} color="matchaGreen">{c}</Badge>)}
-          {(!p.tags?.conditions || p.tags.conditions.length === 0) && <Text c="dimmed">无记录</Text>}
+          {p.tags?.conditions?.map((c: string) => (
+            <Badge key={c} color="matchaGreen">
+              {c}
+            </Badge>
+          ))}
+          {(!p.tags?.conditions || p.tags.conditions.length === 0) && (
+            <Text c="dimmed">无记录</Text>
+          )}
         </Group>
       </Paper>
 
       <Paper p="lg" radius="md" withBorder>
-        <Title order={4} mb="md">关联设备</Title>
+        <Title order={4} mb="md">
+          关联设备
+        </Title>
         {pins.isLoading ? (
           <Skeleton height={100} />
         ) : (
           <Table striped highlightOnHover>
-            <Table.Thead><Table.Tr><Table.Th>PIN</Table.Th><Table.Th>类型</Table.Th><Table.Th>标签</Table.Th><Table.Th>最后活跃</Table.Th></Table.Tr></Table.Thead>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>PIN</Table.Th>
+                <Table.Th>类型</Table.Th>
+                <Table.Th>标签</Table.Th>
+                <Table.Th>最后活跃</Table.Th>
+              </Table.Tr>
+            </Table.Thead>
             <Table.Tbody>
               {pins.data?.length === 0 ? (
-                <Table.Tr><Table.Td colSpan={4}><Text c="dimmed" ta="center" py="sm">暂无关联设备</Text></Table.Td></Table.Tr>
+                <Table.Tr>
+                  <Table.Td colSpan={4}>
+                    <Text c="dimmed" ta="center" py="sm">
+                      暂无关联设备
+                    </Text>
+                  </Table.Td>
+                </Table.Tr>
               ) : (
                 pins.data?.map((d: any) => (
-                  <Table.Tr key={d.pin}><Table.Td><Text ff="monospace" size="sm">{d.pin}</Text></Table.Td><Table.Td><Badge variant="light">{d.type}</Badge></Table.Td><Table.Td>{d.label || '-'}</Table.Td><Table.Td>{d.lastSeenAt ? new Date(d.lastSeenAt).toLocaleString() : '—'}</Table.Td></Table.Tr>
+                  <Table.Tr key={d.pin}>
+                    <Table.Td>
+                      <Text ff="monospace" size="sm">
+                        {d.pin}
+                      </Text>
+                    </Table.Td>
+                    <Table.Td>
+                      <Badge variant="light">{d.type}</Badge>
+                    </Table.Td>
+                    <Table.Td>{d.label || '-'}</Table.Td>
+                    <Table.Td>
+                      {d.lastSeenAt ? new Date(d.lastSeenAt).toLocaleString() : '—'}
+                    </Table.Td>
+                  </Table.Tr>
                 ))
               )}
             </Table.Tbody>
@@ -137,25 +261,44 @@ export function PatientProfile() {
         )}
       </Paper>
 
-      <Modal opened={deleteConfirm} onClose={() => setDeleteConfirm(false)} title="确认删除" size="sm">
+      <Modal
+        opened={deleteConfirm}
+        onClose={() => setDeleteConfirm(false)}
+        title="确认删除"
+        size="sm"
+      >
         <Text mb="lg">确定要删除此患者吗？此操作不可撤销。</Text>
         <Group justify="flex-end">
-          <Button variant="subtle" onClick={() => setDeleteConfirm(false)}>取消</Button>
-          <Button color="red" loading={deleteMutation.isPending} onClick={() => deleteMutation.mutate({ id: id! })}>确认删除</Button>
+          <Button variant="subtle" onClick={() => setDeleteConfirm(false)}>
+            取消
+          </Button>
+          <Button
+            color="red"
+            loading={deleteMutation.isPending}
+            onClick={() => deleteMutation.mutate({ id: id! })}
+          >
+            确认删除
+          </Button>
         </Group>
       </Modal>
     </Stack>
   )
 }
 
-function EditPatientForm({ patient, updateMutation, onCancel, patientId, utils }: { patient: any; updateMutation: any; onCancel: () => void; patientId: string; utils: any }) {
+function EditPatientForm({
+  patient,
+  updateMutation,
+  onCancel,
+  patientId,
+  utils,
+}: { patient: any; updateMutation: any; onCancel: () => void; patientId: string; utils: any }) {
   const form = useForm({
     defaultValues: {
       name: patient.name || '',
       gender: patient.gender || '',
       birthDate: patient.birthDate ? patient.birthDate.slice(0, 10) : '',
-      heightCm: patient.heightCm ?? undefined as number | undefined,
-      weightKg: patient.weightKg ?? undefined as number | undefined,
+      heightCm: patient.heightCm ?? (undefined as number | undefined),
+      weightKg: patient.weightKg ?? (undefined as number | undefined),
       bloodType: patient.bloodType || '',
       phone: patient.phone || '',
       address: patient.address || '',
@@ -163,15 +306,24 @@ function EditPatientForm({ patient, updateMutation, onCancel, patientId, utils }
       emergencyPhone: patient.emergencyPhone || '',
     },
     onSubmit: ({ value }) => {
-      const clean = Object.fromEntries(Object.entries(value).filter(([_, v]) => v !== '' && v !== undefined && v !== null))
+      const clean = Object.fromEntries(
+        Object.entries(value).filter(([_, v]) => v !== '' && v !== undefined && v !== null),
+      )
       updateMutation.mutate({ id: patientId, data: clean } as any)
     },
   })
 
   return (
     <Paper p="lg" radius="md" withBorder>
-      <Title order={4} mb="md">编辑信息</Title>
-      <form onSubmit={(e) => { e.preventDefault(); form.handleSubmit() }}>
+      <Title order={4} mb="md">
+        编辑信息
+      </Title>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault()
+          form.handleSubmit()
+        }}
+      >
         <Stack gap="md">
           <Group gap="md">
             <FormField form={form} name="name" label="姓名" required />
@@ -192,8 +344,12 @@ function EditPatientForm({ patient, updateMutation, onCancel, patientId, utils }
             <FormField form={form} name="emergencyPhone" label="紧急电话" />
           </Group>
           <Group>
-            <Button type="submit" loading={updateMutation.isPending}>保存</Button>
-            <Button variant="subtle" onClick={onCancel}>取消</Button>
+            <Button type="submit" loading={updateMutation.isPending}>
+              保存
+            </Button>
+            <Button variant="subtle" onClick={onCancel}>
+              取消
+            </Button>
           </Group>
         </Stack>
       </form>
@@ -201,27 +357,73 @@ function EditPatientForm({ patient, updateMutation, onCancel, patientId, utils }
   )
 }
 
-function FormField({ form, name, label, required, type }: { form: any; name: string; label: string; required?: boolean; type?: string }) {
+function FormField({
+  form,
+  name,
+  label,
+  required,
+  type,
+}: { form: any; name: string; label: string; required?: boolean; type?: string }) {
   return (
     <form.Field name={name}>
-      {(f: any) => <TextInput label={label} required={required} type={type} value={f.state.value ?? ''} onChange={(e: any) => f.handleChange(e.currentTarget.value)} />}
+      {(f: any) => (
+        <TextInput
+          label={label}
+          required={required}
+          type={type}
+          value={f.state.value ?? ''}
+          onChange={(e: any) => f.handleChange(e.currentTarget.value)}
+        />
+      )}
     </form.Field>
   )
 }
 
-function SelectField({ form, name, label, data }: { form: any; name: string; label: string; data: { value: string; label: string }[] | string[] }) {
-  const options = typeof data[0] === 'string' ? data.map((v) => ({ value: v as string, label: v as string })) : data as { value: string; label: string }[]
+function SelectField({
+  form,
+  name,
+  label,
+  data,
+}: {
+  form: any
+  name: string
+  label: string
+  data: { value: string; label: string }[] | string[]
+}) {
+  const options =
+    typeof data[0] === 'string'
+      ? data.map((v) => ({ value: v as string, label: v as string }))
+      : (data as { value: string; label: string }[])
   return (
     <form.Field name={name}>
-      {(f: any) => <Select label={label} data={options} value={f.state.value ?? ''} onChange={(v: any) => f.handleChange(v ?? '')} />}
+      {(f: any) => (
+        <Select
+          label={label}
+          data={options}
+          value={f.state.value ?? ''}
+          onChange={(v: any) => f.handleChange(v ?? '')}
+        />
+      )}
     </form.Field>
   )
 }
 
-function NumberField({ form, name, label, min }: { form: any; name: string; label: string; min?: number }) {
+function NumberField({
+  form,
+  name,
+  label,
+  min,
+}: { form: any; name: string; label: string; min?: number }) {
   return (
     <form.Field name={name}>
-      {(f: any) => <NumberInput label={label} min={min} value={f.state.value ?? ''} onChange={(v: any) => f.handleChange(typeof v === 'number' ? v : undefined)} />}
+      {(f: any) => (
+        <NumberInput
+          label={label}
+          min={min}
+          value={f.state.value ?? ''}
+          onChange={(v: any) => f.handleChange(typeof v === 'number' ? v : undefined)}
+        />
+      )}
     </form.Field>
   )
 }

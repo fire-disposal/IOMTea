@@ -15,7 +15,10 @@ const envSchema = z.object({
   MQTT_PASSWORD: z.string().optional(),
   MQTT_ENABLED: z.coerce.boolean().default(false),
   SUPER_ADMIN_USERNAME: z.string().optional(),
-  SUPER_ADMIN_PASSWORD: z.string().min(8, 'SUPER_ADMIN_PASSWORD must be at least 8 characters').optional(),
+  SUPER_ADMIN_PASSWORD: z
+    .string()
+    .min(8, 'SUPER_ADMIN_PASSWORD must be at least 8 characters')
+    .optional(),
   SUPER_ADMIN_DISPLAY_NAME: z.string().default('超级管理员'),
   TCP_INGEST_PORT: z.coerce.number().optional(),
   TCP_INGEST_TOKEN: z.string().optional(),

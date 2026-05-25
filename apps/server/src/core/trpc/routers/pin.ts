@@ -52,7 +52,6 @@ export const pinRouter = router({
         pin: z.string().length(6),
         label: z.string().max(64).optional(),
         nickname: z.string().max(32).optional(),
-
       }),
     )
     .mutation(async ({ ctx, input }) => {

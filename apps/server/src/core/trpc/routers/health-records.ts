@@ -382,7 +382,11 @@ export const healthRecordsRouter = router({
     const userId = ctx.userId!
     const patientId = await resolvePatientIdForInput(ctx.db, userId, input.patientId)
 
-    const [userPin] = await ctx.db.select({ pin: usersPin.pin }).from(usersPin).where(eq(usersPin.userId, userId)).limit(1)
+    const [userPin] = await ctx.db
+      .select({ pin: usersPin.pin })
+      .from(usersPin)
+      .where(eq(usersPin.userId, userId))
+      .limit(1)
     const pinCode = userPin?.pin
 
     if (input.records.length === 0) {
@@ -402,7 +406,9 @@ export const healthRecordsRouter = router({
       }
     }
 
-    const allEvents = unsyncedRecords.flatMap((record) => mapRecordToEvents(record, patientId, pinCode))
+    const allEvents = unsyncedRecords.flatMap((record) =>
+      mapRecordToEvents(record, patientId, pinCode),
+    )
 
     const insertedEvents = await ctx.db
       .insert(events)

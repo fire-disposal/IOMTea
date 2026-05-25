@@ -5,9 +5,19 @@ import { requirePermission } from '../core/trpc/middleware/rbac'
 import { db } from '../core/db'
 import { patients, events } from '../core/db/schema'
 import {
-  createSim, updateSim, toggleSim, toggleSimMetric, deleteSim, updateSimMetric, renameSim,
-  addPatientsToSim, removePatientsFromSim,
-  setGlobalSpeed, getStatus, getSimulations, getProfileConfig,
+  createSim,
+  updateSim,
+  toggleSim,
+  toggleSimMetric,
+  deleteSim,
+  updateSimMetric,
+  renameSim,
+  addPatientsToSim,
+  removePatientsFromSim,
+  setGlobalSpeed,
+  getStatus,
+  getSimulations,
+  getProfileConfig,
 } from './factory'
 import { profiles } from './profiles'
 
@@ -20,7 +30,13 @@ const overrideSchema = z.object({
 export const simRouter = router({
   create: protectedProcedure
     .use(requirePermission('patient:write'))
-    .input(z.object({ profile: z.string(), name: z.string().optional(), overrides: z.record(z.string(), overrideSchema).optional() }))
+    .input(
+      z.object({
+        profile: z.string(),
+        name: z.string().optional(),
+        overrides: z.record(z.string(), overrideSchema).optional(),
+      }),
+    )
     .mutation(({ ctx, input }) => createSim(ctx.db, input.profile, input.overrides, input.name)),
 
   update: protectedProcedure
@@ -52,7 +68,8 @@ export const simRouter = router({
     .use(requirePermission('patient:write'))
     .input(z.object({ id: z.string(), patientIds: z.array(z.string().uuid()) }))
     .mutation(async ({ input }) => {
-      const rows = await db.select({ id: patients.id, name: patients.name })
+      const rows = await db
+        .select({ id: patients.id, name: patients.name })
         .from(patients)
         .where(inArray(patients.id, input.patientIds))
       return addPatientsToSim(db, input.id, rows)
@@ -66,32 +83,36 @@ export const simRouter = router({
   setSpeed: protectedProcedure
     .use(requirePermission('patient:write'))
     .input(z.object({ speed: z.number().min(0.1).max(10) }))
-    .mutation(({ input }) => { setGlobalSpeed(input.speed); return { ok: true } }),
+    .mutation(({ input }) => {
+      setGlobalSpeed(input.speed)
+      return { ok: true }
+    }),
 
   simulations: protectedProcedure
     .use(requirePermission('patient:read'))
     .query(() => getSimulations()),
 
-  status: protectedProcedure
-    .use(requirePermission('patient:read'))
-    .query(() => getStatus()),
+  status: protectedProcedure.use(requirePermission('patient:read')).query(() => getStatus()),
 
   profileConfig: protectedProcedure
     .use(requirePermission('patient:read'))
     .input(z.string())
     .query(({ input }) => getProfileConfig(input)),
 
-  profiles: protectedProcedure
-    .use(requirePermission('patient:read'))
-    .query(() => {
-      return Object.entries(profiles).map(([key, p]) => ({
-        name: p.name,
-        label: p.label,
-        baselines: p.baselines,
-        conditions: p.conditions,
-        metrics: p.metrics.map((m) => ({ metric: m.metric, unit: m.unit, interval: m.interval, jitter: m.jitter })),
-      }))
-    }),
+  profiles: protectedProcedure.use(requirePermission('patient:read')).query(() => {
+    return Object.entries(profiles).map(([key, p]) => ({
+      name: p.name,
+      label: p.label,
+      baselines: p.baselines,
+      conditions: p.conditions,
+      metrics: p.metrics.map((m) => ({
+        metric: m.metric,
+        unit: m.unit,
+        interval: m.interval,
+        jitter: m.jitter,
+      })),
+    }))
+  }),
 
   getSimulation: protectedProcedure
     .use(requirePermission('patient:read'))
@@ -103,28 +124,50 @@ export const simRouter = router({
 
   updateMetric: protectedProcedure
     .use(requirePermission('patient:write'))
-    .input(z.object({
-      id: z.string(),
-      metric: z.string(),
-      config: z.object({
-        intervalMin: z.number().min(100).max(600000).optional(),
-        intervalMax: z.number().min(100).max(600000).optional(),
-        jitter: z.number().min(0).max(1).optional(),
-      }).optional(),
-    }))
+    .input(
+      z.object({
+        id: z.string(),
+        metric: z.string(),
+        config: z
+          .object({
+            intervalMin: z.number().min(100).max(600000).optional(),
+            intervalMax: z.number().min(100).max(600000).optional(),
+            jitter: z.number().min(0).max(1).optional(),
+          })
+          .optional(),
+      }),
+    )
     .mutation(({ input }) => updateSimMetric(input.id, input.metric, input.config ?? {})),
 
   events: protectedProcedure
     .use(requirePermission('patient:read'))
-    .input(z.object({ patientId: z.string().uuid(), minutes: z.number().min(1).max(120).default(10) }))
+    .input(
+      z.object({ patientId: z.string().uuid(), minutes: z.number().min(1).max(120).default(10) }),
+    )
     .query(async ({ input }) => {
       const since = new Date(Date.now() - input.minutes * 60 * 1000)
       const rows = await db
-        .select({ metric: events.metric, value: events.value, unit: events.unit, recordedAt: events.recordedAt })
+        .select({
+          metric: events.metric,
+          value: events.value,
+          unit: events.unit,
+          recordedAt: events.recordedAt,
+        })
         .from(events)
-        .where(and(eq(events.patientId, input.patientId), eq(events.source, 'simulator'), gte(events.recordedAt, since)))
+        .where(
+          and(
+            eq(events.patientId, input.patientId),
+            eq(events.source, 'simulator'),
+            gte(events.recordedAt, since),
+          ),
+        )
         .orderBy(desc(events.recordedAt))
         .limit(500)
-      return rows.map((r) => ({ metric: r.metric, value: r.value, unit: r.unit, recordedAt: r.recordedAt.getTime() }))
+      return rows.map((r) => ({
+        metric: r.metric,
+        value: r.value,
+        unit: r.unit,
+        recordedAt: r.recordedAt.getTime(),
+      }))
     }),
 })

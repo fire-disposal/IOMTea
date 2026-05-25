@@ -9,10 +9,13 @@ export default function MessagesPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    trpc.alert.list.query({ pageSize: 50 }).then((r: any) => {
-      setAlerts(r || [])
-      setLoading(false)
-    }).catch(() => setLoading(false))
+    trpc.alert.list
+      .query({ pageSize: 50 })
+      .then((r: any) => {
+        setAlerts(r || [])
+        setLoading(false)
+      })
+      .catch(() => setLoading(false))
   }, [])
 
   const severityColor: Record<string, string> = {
@@ -40,48 +43,43 @@ export default function MessagesPage() {
   }
 
   return (
-    <View className='messages-page'>
-      <Text className='messages-page__title'>消息</Text>
+    <View className="messages-page">
+      <Text className="messages-page__title">消息</Text>
 
-      {loading && <Text className='empty'>加载中...</Text>}
+      {loading && <Text className="empty">加载中...</Text>}
 
       {!loading && alerts.length === 0 && (
-        <View className='messages-page__empty'>
-          <View className='messages-page__empty-icon'>
-            <Text className='messages-page__empty-icon-text'>✓</Text>
+        <View className="messages-page__empty">
+          <View className="messages-page__empty-icon">
+            <Text className="messages-page__empty-icon-text">✓</Text>
           </View>
-          <Text className='messages-page__empty-title'>暂无告警</Text>
-          <Text className='messages-page__empty-hint'>健康提醒和通知将显示在这里</Text>
+          <Text className="messages-page__empty-title">暂无告警</Text>
+          <Text className="messages-page__empty-hint">健康提醒和通知将显示在这里</Text>
         </View>
       )}
 
       {alerts.map((a) => (
         <View
           key={a.id}
-          className='alert-item'
+          className="alert-item"
           style={{ borderLeft: `3px solid ${severityColor[a.severity] || '#999'}` }}
         >
-          <View className='alert-item__header'>
-            <Text className='alert-item__metric'>{a.metric}</Text>
-            <Text
-              className='alert-item__severity'
-              style={{ color: severityColor[a.severity] }}
-            >
+          <View className="alert-item__header">
+            <Text className="alert-item__metric">{a.metric}</Text>
+            <Text className="alert-item__severity" style={{ color: severityColor[a.severity] }}>
               {severityLabel[a.severity] || a.severity}
             </Text>
           </View>
-          <View className='alert-item__footer'>
-            <Text className='alert-item__time'>
-              {new Date(a.recordedAt).toLocaleString()}
-            </Text>
-            <Text className='alert-item__status'>
+          <View className="alert-item__footer">
+            <Text className="alert-item__time">{new Date(a.recordedAt).toLocaleString()}</Text>
+            <Text className="alert-item__status">
               {statusDot[a.status] || '●'} {statusLabel[a.status] || a.status}
             </Text>
           </View>
         </View>
       ))}
 
-      <TabBar current='messages' />
+      <TabBar current="messages" />
     </View>
   )
 }

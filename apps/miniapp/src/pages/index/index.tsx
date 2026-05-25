@@ -24,7 +24,10 @@ export default function Index() {
 
   useEffect(() => {
     const token = Taro.getStorageSync(STORAGE_KEYS.TOKEN)
-    if (!token) { Taro.redirectTo({ url: '/pages/login/index' }); return }
+    if (!token) {
+      Taro.redirectTo({ url: '/pages/login/index' })
+      return
+    }
 
     loadData()
   }, [])
@@ -43,10 +46,10 @@ export default function Index() {
   }
 
   return (
-    <View className='home-page'>
+    <View className="home-page">
       <TopBar displayName={userName} credit={credit} />
 
-      <View className='home-checklist anim-stagger'>
+      <View className="home-checklist anim-stagger">
         {checklist.map((item) => {
           const meta = HEALTH_MODULE_META[item.moduleKey as HealthModuleKey]
           return (
@@ -62,28 +65,37 @@ export default function Index() {
         })}
 
         {checklist.length === 0 && (
-          <View className='home-checklist__empty'>
-            <Text className='home-checklist__empty-icon'>📋</Text>
-            <Text className='home-checklist__empty-text'>暂无计划</Text>
-            <Text className='home-checklist__empty-hint' onClick={() => Taro.navigateTo({ url: '/pages/plan/index' })}>
+          <View className="home-checklist__empty">
+            <Text className="home-checklist__empty-icon">📋</Text>
+            <Text className="home-checklist__empty-text">暂无计划</Text>
+            <Text
+              className="home-checklist__empty-hint"
+              onClick={() => Taro.navigateTo({ url: '/pages/plan/index' })}
+            >
               去制定健康计划 →
             </Text>
           </View>
         )}
       </View>
 
-      <View className='home-actions'>
-        <View className='home-action-btn' onClick={() => Taro.navigateTo({ url: '/pages/plan/index' })}>
-          <Text className='home-action-btn__icon'>📋</Text>
-          <Text className='home-action-btn__label'>管理计划</Text>
+      <View className="home-actions">
+        <View
+          className="home-action-btn"
+          onClick={() => Taro.navigateTo({ url: '/pages/plan/index' })}
+        >
+          <Text className="home-action-btn__icon">📋</Text>
+          <Text className="home-action-btn__label">管理计划</Text>
         </View>
-        <View className='home-action-btn' onClick={() => Taro.navigateTo({ url: '/pages/health/index' })}>
-          <Text className='home-action-btn__icon'>📊</Text>
-          <Text className='home-action-btn__label'>历史记录</Text>
+        <View
+          className="home-action-btn"
+          onClick={() => Taro.navigateTo({ url: '/pages/health/index' })}
+        >
+          <Text className="home-action-btn__icon">📊</Text>
+          <Text className="home-action-btn__label">历史记录</Text>
         </View>
       </View>
 
-      <TabBar current='index' />
+      <TabBar current="index" />
     </View>
   )
 }

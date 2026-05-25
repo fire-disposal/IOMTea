@@ -13,8 +13,12 @@ export const simConfigs = pgTable('sim_configs', {
 export const simPatients = pgTable(
   'sim_patients',
   {
-    simId: varchar('sim_id', { length: 64 }).references(() => simConfigs.id, { onDelete: 'cascade' }).notNull(),
-    patientId: uuid('patient_id').references(() => patients.id, { onDelete: 'cascade' }).notNull(),
+    simId: varchar('sim_id', { length: 64 })
+      .references(() => simConfigs.id, { onDelete: 'cascade' })
+      .notNull(),
+    patientId: uuid('patient_id')
+      .references(() => patients.id, { onDelete: 'cascade' })
+      .notNull(),
   },
   (t) => ({ pk: primaryKey({ columns: [t.simId, t.patientId] }) }),
 )

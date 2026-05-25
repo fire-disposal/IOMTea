@@ -50,12 +50,12 @@ export const simulationRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        const engine = await createEngine(ctx.db as any, {
+        const engine = await createEngine(ctx.db, {
           profileId: input.profileId,
           name: input.name,
           speed: input.speed,
         })
-        await startEngine(ctx.db as any, engine.patientId)
+        await startEngine(ctx.db, engine.patientId)
         return getEngineStatus(engine.patientId)
       } catch (e: any) {
         throw new TRPCError({ code: 'BAD_REQUEST', message: e?.message || '创建失败' })

@@ -44,17 +44,24 @@ export default function WeightRecord() {
   }, [weight, showFat, bodyFat])
 
   return (
-    <FormShell title='记录体重' unit='kg' onSave={handleSave} saving={saving} saved={saved} recentData={trendData}>
-      <NumberInput value={weight} onChange={setWeight} decimal placeholder='65.0' />
+    <FormShell
+      title="记录体重"
+      unit="kg"
+      onSave={handleSave}
+      saving={saving}
+      saved={saved}
+      recentData={trendData}
+    >
+      <NumberInput value={weight} onChange={setWeight} decimal placeholder="65.0" />
 
-      <View className='weight-section'>
+      <View className="weight-section">
         <SegmentPicker options={TOGGLE_OPTIONS} value={showFat} onChange={setShowFat} />
       </View>
 
       {showFat === 'yes' && (
-        <View className='weight-section'>
-          <NumberInput value={bodyFat} onChange={setBodyFat} decimal placeholder='20.0' />
-          <Text className='weight-label'>体脂率 (%)</Text>
+        <View className="weight-section">
+          <NumberInput value={bodyFat} onChange={setBodyFat} decimal placeholder="20.0" />
+          <Text className="weight-label">体脂率 (%)</Text>
         </View>
       )}
     </FormShell>

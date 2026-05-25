@@ -28,6 +28,7 @@ export function QueryGate<T>({
 }: QueryGateProps<T>) {
   if (isLoading) return <StateSkeleton count={skeletonCount} />
   if (isError) return <StateError message={errorMessage} onRetry={onRetry} />
-  if (!data || data.length === 0) return <StateEmpty message={emptyMessage} action={emptyAction} actionLabel={emptyActionLabel} />
+  if (!data || data.length === 0)
+    return <StateEmpty message={emptyMessage} action={emptyAction} actionLabel={emptyActionLabel} />
   return <>{children(data)}</>
 }

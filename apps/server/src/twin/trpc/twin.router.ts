@@ -25,7 +25,7 @@ export const twinRouter = router({
       .use(requirePermission('twin:manage'))
       .input(z.object({ patientId: z.string().uuid() }))
       .mutation(async ({ ctx, input }) => {
-        await startEngine(ctx.db as any, input.patientId)
+        await startEngine(ctx.db, input.patientId)
         return { success: true }
       }),
 
@@ -51,7 +51,7 @@ export const twinRouter = router({
       .use(requirePermission('twin:manage'))
       .input(z.object({ patientId: z.string().uuid(), type: z.enum(SCENARIO_TYPES) }))
       .mutation(async ({ ctx, input }) => {
-        const ok = await injectScenario(ctx.db as any, input.patientId, input.type)
+        const ok = await injectScenario(ctx.db, input.patientId, input.type)
         return { success: ok }
       }),
   }),

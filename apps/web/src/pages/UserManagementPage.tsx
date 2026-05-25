@@ -13,13 +13,23 @@ const ROLE_OPTIONS: { value: UserRole; label: string }[] = [
   { value: 'user', label: '用户' },
 ]
 
-const ROLE_LABELS: Record<string, string> = Object.fromEntries(ROLE_OPTIONS.map((r) => [r.value, r.label]))
+const ROLE_LABELS: Record<string, string> = Object.fromEntries(
+  ROLE_OPTIONS.map((r) => [r.value, r.label]),
+)
 
 function ActivationBadge({ lastLoginAt }: { lastLoginAt?: number | null }) {
   if (lastLoginAt) {
-    return <Badge size="sm" color="teal" variant="dot">已激活 {new Date(lastLoginAt).toLocaleDateString('zh-CN')}</Badge>
+    return (
+      <Badge size="sm" color="teal" variant="dot">
+        已激活 {new Date(lastLoginAt).toLocaleDateString('zh-CN')}
+      </Badge>
+    )
   }
-  return <Badge size="sm" color="gray" variant="dot">未激活</Badge>
+  return (
+    <Badge size="sm" color="gray" variant="dot">
+      未激活
+    </Badge>
+  )
 }
 
 export function UserManagementPage() {
@@ -34,21 +44,50 @@ export function UserManagementPage() {
     onError: (err) => notifications.show({ title: '更新失败', message: err.message, color: 'red' }),
   })
 
-  const [editUser, setEditUser] = useState<{ id: string; displayName: string; role: UserRole } | null>(null)
+  const [editUser, setEditUser] = useState<{
+    id: string
+    displayName: string
+    role: UserRole
+  } | null>(null)
 
   const columnHelper = createColumnHelper<any>()
   const columns = [
-    columnHelper.accessor('username', { header: '用户名', cell: (info) => <Text fw={500}>{info.getValue()}</Text> }),
+    columnHelper.accessor('username', {
+      header: '用户名',
+      cell: (info) => <Text fw={500}>{info.getValue()}</Text>,
+    }),
     columnHelper.accessor('displayName', { header: '显示名', cell: (info) => info.getValue() }),
-    columnHelper.accessor('role', { header: '角色', cell: (info) => <Badge variant="light">{ROLE_LABELS[info.getValue()] || info.getValue()}</Badge> }),
+    columnHelper.accessor('role', {
+      header: '角色',
+      cell: (info) => (
+        <Badge variant="light">{ROLE_LABELS[info.getValue()] || info.getValue()}</Badge>
+      ),
+    }),
     columnHelper.accessor('lastLoginAt', {
       header: '激活状态',
       cell: (info) => <ActivationBadge lastLoginAt={info.getValue() as number | null} />,
     }),
-    columnHelper.accessor('createdAt', { header: '创建时间', cell: (info) => <Text size="sm">{new Date(info.getValue() as number).toLocaleDateString('zh-CN')}</Text> }),
-    columnHelper.display({ id: 'actions', header: '操作',
+    columnHelper.accessor('createdAt', {
+      header: '创建时间',
       cell: (info) => (
-        <Button size="xs" variant="light" onClick={() => setEditUser({ id: info.row.original.id, displayName: info.row.original.displayName, role: info.row.original.role })}>
+        <Text size="sm">{new Date(info.getValue() as number).toLocaleDateString('zh-CN')}</Text>
+      ),
+    }),
+    columnHelper.display({
+      id: 'actions',
+      header: '操作',
+      cell: (info) => (
+        <Button
+          size="xs"
+          variant="light"
+          onClick={() =>
+            setEditUser({
+              id: info.row.original.id,
+              displayName: info.row.original.displayName,
+              role: info.row.original.role,
+            })
+          }
+        >
           编辑
         </Button>
       ),
@@ -59,13 +98,17 @@ export function UserManagementPage() {
     <Container size="xl" py="xl">
       <Group justify="space-between" mb="lg">
         <Title order={2}>用户管理</Title>
-        <Text size="sm" c="dimmed">仅管理员可管理用户角色</Text>
+        <Text size="sm" c="dimmed">
+          仅管理员可管理用户角色
+        </Text>
       </Group>
 
       <Paper p="lg" radius="md" withBorder>
         {users.isLoading && <StateSkeleton variant="table" count={5} />}
         {users.isError && <StateError message="加载用户列表失败" onRetry={() => users.refetch()} />}
-        {!users.isLoading && !users.isError && (users.data ?? []).length === 0 && <StateEmpty message="暂无用户" />}
+        {!users.isLoading && !users.isError && (users.data ?? []).length === 0 && (
+          <StateEmpty message="暂无用户" />
+        )}
         {!users.isLoading && !users.isError && (users.data ?? []).length > 0 && (
           <DataTable data={users.data ?? []} columns={columns} />
         )}
@@ -82,7 +125,13 @@ export function UserManagementPage() {
               onChange={(v) => v && setEditUser({ ...editUser, role: v as UserRole })}
               mb="lg"
             />
-            <Button fullWidth onClick={() => updateMutation.mutate({ id: editUser.id, data: { role: editUser.role } })} loading={updateMutation.isPending}>
+            <Button
+              fullWidth
+              onClick={() =>
+                updateMutation.mutate({ id: editUser.id, data: { role: editUser.role } })
+              }
+              loading={updateMutation.isPending}
+            >
               保存
             </Button>
           </>

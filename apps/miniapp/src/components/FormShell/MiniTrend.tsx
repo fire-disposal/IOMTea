@@ -10,7 +10,13 @@ interface MiniTrendProps {
   unitLabel?: string
 }
 
-export function MiniTrend({ data, width = 280, height = 60, formatValue, unitLabel }: MiniTrendProps) {
+export function MiniTrend({
+  data,
+  width = 280,
+  height = 60,
+  formatValue,
+  unitLabel,
+}: MiniTrendProps) {
   const canvasRef = useRef<any>(null)
 
   useEffect(() => {
@@ -24,7 +30,7 @@ export function MiniTrend({ data, width = 280, height = 60, formatValue, unitLab
     canvas.height = height * dpr
     ctx.scale(dpr, dpr)
 
-    const values = data.map(d => d.value)
+    const values = data.map((d) => d.value)
     const min = Math.min(...values)
     const max = Math.max(...values)
     const range = max - min || 1
@@ -52,22 +58,18 @@ export function MiniTrend({ data, width = 280, height = 60, formatValue, unitLab
     })
   }, [data, width, height])
 
-  if (data.length < 2) return <Text className='mini-trend__empty'>最近7天暂无数据</Text>
+  if (data.length < 2) return <Text className="mini-trend__empty">最近7天暂无数据</Text>
 
   const latest = data[data.length - 1]
   const displayValue = formatValue ? formatValue(latest.value) : String(latest.value)
 
   return (
-    <View className='mini-trend-wrapper'>
-      <View className='mini-trend-label'>
-        <Text className='mini-trend-value'>{displayValue}</Text>
-        {unitLabel && <Text className='mini-trend-unit'>{unitLabel}</Text>}
+    <View className="mini-trend-wrapper">
+      <View className="mini-trend-label">
+        <Text className="mini-trend-value">{displayValue}</Text>
+        {unitLabel && <Text className="mini-trend-unit">{unitLabel}</Text>}
       </View>
-      <Canvas
-        ref={canvasRef}
-        style={{ width, height }}
-        className='mini-trend'
-      />
+      <Canvas ref={canvasRef} style={{ width, height }} className="mini-trend" />
     </View>
   )
 }

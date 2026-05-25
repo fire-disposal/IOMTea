@@ -28,7 +28,7 @@ export function StoreProvider() {
   useEffect(() => {
     const data = wardStatus.data
     if (data && Array.isArray(data)) {
-      const wards = data.filter(Boolean) as any[]
+      const wards = data.filter(Boolean) as NonNullable<(typeof data)[number]>[]
       if (!wardId && wards.length > 0) {
         setWardId(wards[0].id)
       }

@@ -111,16 +111,19 @@ export function MiiEditor({ initialSpec, size = 280, onChange }: MiiEditorProps)
 
   const validation = AvatarSpecSchema.safeParse(spec)
 
-  const applySpec = useCallback((next: AvatarSpec, trackHistory = true) => {
-    setSpec((prev) => {
-      if (trackHistory) {
-        setHistory((h) => [...h.slice(-29), prev])
-        setFuture([])
-      }
-      onChange?.(next)
-      return next
-    })
-  }, [onChange])
+  const applySpec = useCallback(
+    (next: AvatarSpec, trackHistory = true) => {
+      setSpec((prev) => {
+        if (trackHistory) {
+          setHistory((h) => [...h.slice(-29), prev])
+          setFuture([])
+        }
+        onChange?.(next)
+        return next
+      })
+    },
+    [onChange],
+  )
 
   const undo = useCallback(() => {
     setHistory((h) => {
@@ -144,21 +147,30 @@ export function MiiEditor({ initialSpec, size = 280, onChange }: MiiEditorProps)
     })
   }, [onChange, spec])
 
-  const updateField = useCallback((path: string, value: unknown) => {
-    const next = setValue(spec, path, value)
-    const parsed = AvatarSpecSchema.safeParse(next)
-    if (!parsed.success) {
-      notifications.show({ title: '参数无效', message: parsed.error.issues[0]?.message ?? '未知错误', color: 'red' })
-      return
-    }
-    applySpec(parsed.data)
-  }, [applySpec, spec])
+  const updateField = useCallback(
+    (path: string, value: unknown) => {
+      const next = setValue(spec, path, value)
+      const parsed = AvatarSpecSchema.safeParse(next)
+      if (!parsed.success) {
+        notifications.show({
+          title: '参数无效',
+          message: parsed.error.issues[0]?.message ?? '未知错误',
+          color: 'red',
+        })
+        return
+      }
+      applySpec(parsed.data)
+    },
+    [applySpec, spec],
+  )
 
   const svg = useMemo(() => renderAvatarSvg(spec, { size }), [size, spec])
   const json = useMemo(() => JSON.stringify(spec, null, 2), [spec])
 
   const exportSvg = useCallback(() => {
-    const blob = new Blob([renderAvatarSvg(spec, { includeXmlHeader: true })], { type: 'image/svg+xml' })
+    const blob = new Blob([renderAvatarSvg(spec, { includeXmlHeader: true })], {
+      type: 'image/svg+xml',
+    })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
@@ -181,11 +193,14 @@ export function MiiEditor({ initialSpec, size = 280, onChange }: MiiEditorProps)
     applySpec(next)
   }, [applySpec, seedInput])
 
-  const applyPreset = useCallback((value: string) => {
-    setPreset(value)
-    const found = PRESETS.find((item) => item.value === value)
-    if (found) applySpec(found.spec)
-  }, [applySpec])
+  const applyPreset = useCallback(
+    (value: string) => {
+      setPreset(value)
+      const found = PRESETS.find((item) => item.value === value)
+      if (found) applySpec(found.spec)
+    },
+    [applySpec],
+  )
 
   const resetFromV1 = useCallback(() => {
     applySpec(migrateMiiParamsToAvatarSpec())
@@ -204,29 +219,57 @@ export function MiiEditor({ initialSpec, size = 280, onChange }: MiiEditorProps)
   return (
     <Paper p="xl" radius="md" withBorder>
       <Title order={3}>Avatar Spec v2 编辑器</Title>
-      <Text size="sm" c="dimmed" mb="md">SVG-based 前脸渲染 + schema-driven 控件</Text>
+      <Text size="sm" c="dimmed" mb="md">
+        SVG-based 前脸渲染 + schema-driven 控件
+      </Text>
 
       <Group align="flex-start" wrap="wrap" gap="lg">
         <Stack gap="sm" style={{ minWidth: 300, flex: '0 0 320px' }}>
-          <Paper withBorder p="xs" radius="md" ref={previewRef} style={{ width: size, height: size }}>
+          <Paper
+            withBorder
+            p="xs"
+            radius="md"
+            ref={previewRef}
+            style={{ width: size, height: size }}
+          >
             <Box dangerouslySetInnerHTML={{ __html: svg }} />
           </Paper>
 
           <Group gap={6}>
-            <Button size="xs" variant="light" onClick={() => applySpec(randomAvatarSpec())}>随机</Button>
-            <Button size="xs" variant="light" onClick={applySeed}>按种子</Button>
-            <Button size="xs" variant="light" onClick={exportSvg}>导出 SVG</Button>
-            <Button size="xs" variant="light" onClick={() => void exportPng()}>导出 PNG</Button>
+            <Button size="xs" variant="light" onClick={() => applySpec(randomAvatarSpec())}>
+              随机
+            </Button>
+            <Button size="xs" variant="light" onClick={applySeed}>
+              按种子
+            </Button>
+            <Button size="xs" variant="light" onClick={exportSvg}>
+              导出 SVG
+            </Button>
+            <Button size="xs" variant="light" onClick={() => void exportPng()}>
+              导出 PNG
+            </Button>
           </Group>
 
           <Group gap={6}>
-            <ActionIcon onClick={undo} disabled={history.length === 0} variant="light" aria-label="undo">
+            <ActionIcon
+              onClick={undo}
+              disabled={history.length === 0}
+              variant="light"
+              aria-label="undo"
+            >
               <IconArrowBackUp size={16} />
             </ActionIcon>
-            <ActionIcon onClick={redo} disabled={future.length === 0} variant="light" aria-label="redo">
+            <ActionIcon
+              onClick={redo}
+              disabled={future.length === 0}
+              variant="light"
+              aria-label="redo"
+            >
               <IconArrowForwardUp size={16} />
             </ActionIcon>
-            <Button size="xs" variant="subtle" onClick={resetFromV1}>迁移 v1 默认值</Button>
+            <Button size="xs" variant="subtle" onClick={resetFromV1}>
+              迁移 v1 默认值
+            </Button>
           </Group>
 
           <TextInput
@@ -252,8 +295,14 @@ export function MiiEditor({ initialSpec, size = 280, onChange }: MiiEditorProps)
             )}
           </CopyButton>
 
-          <Paper withBorder p="xs" style={{ maxHeight: 230, overflow: 'auto', background: '#f8f9fa' }}>
-            <Text component="pre" size="xs" style={{ margin: 0 }}>{json}</Text>
+          <Paper
+            withBorder
+            p="xs"
+            style={{ maxHeight: 230, overflow: 'auto', background: '#f8f9fa' }}
+          >
+            <Text component="pre" size="xs" style={{ margin: 0 }}>
+              {json}
+            </Text>
           </Paper>
         </Stack>
 
@@ -263,13 +312,17 @@ export function MiiEditor({ initialSpec, size = 280, onChange }: MiiEditorProps)
               {validation.success ? '参数合法' : '参数校验失败'}
             </Badge>
             {!validation.success && (
-              <Text c="red" size="xs">{validation.error.issues[0]?.message}</Text>
+              <Text c="red" size="xs">
+                {validation.error.issues[0]?.message}
+              </Text>
             )}
           </Group>
 
           {sections.map(([name, fields]) => (
             <Paper key={name} withBorder p="sm" radius="md">
-              <Text fw={600} mb={8}>{name}</Text>
+              <Text fw={600} mb={8}>
+                {name}
+              </Text>
               <Stack gap="xs">
                 {fields.map((field) => {
                   const raw = getValue(spec, field.key)
@@ -278,12 +331,16 @@ export function MiiEditor({ initialSpec, size = 280, onChange }: MiiEditorProps)
                     return (
                       <Box key={field.key}>
                         <Group justify="space-between" mb={4}>
-                          <Text size="xs" c="dimmed">{field.label}</Text>
+                          <Text size="xs" c="dimmed">
+                            {field.label}
+                          </Text>
                           <NumberInput
                             size="xs"
                             hideControls
                             value={typeof raw === 'number' ? Number(raw.toFixed(2)) : 0}
-                            onChange={(value) => updateField(field.key, typeof value === 'number' ? value : 0)}
+                            onChange={(value) =>
+                              updateField(field.key, typeof value === 'number' ? value : 0)
+                            }
                             w={72}
                           />
                         </Group>

@@ -92,15 +92,26 @@ export const alertRouter = router({
     .use(requirePermission('alert:manage'))
     .input(z.object({ alertId: z.string().uuid(), assigneeId: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
+      const [alert] = await ctx.db
+        .select({ tags: events.tags })
+        .from(events)
+        .where(and(eq(events.id, input.alertId), eq(events.kind, 'alert')))
+        .limit(1)
+
+      if (!alert) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Alert not found' })
+      }
+
+      const tags = { ...((alert.tags as Record<string, unknown>) || {}) }
+      tags.assigned_to = input.assigneeId
+      tags.assigned_at = new Date().toISOString()
+
       const [updated] = await ctx.db
         .update(events)
-        .set({ status: 'assigned' })
+        .set({ status: 'assigned', tags })
         .where(and(eq(events.id, input.alertId), eq(events.kind, 'alert')))
         .returning()
 
-      if (!updated) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Alert not found' })
-      }
       return alertSchema
         .pick({ id: true, status: true })
         .parse({ id: updated.id, status: updated.status })

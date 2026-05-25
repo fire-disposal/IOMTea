@@ -183,12 +183,8 @@
           "name": "events_patient_id_patients_id_fk",
           "tableFrom": "events",
           "tableTo": "patients",
-          "columnsFrom": [
-            "patient_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["patient_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -196,12 +192,8 @@
           "name": "events_pin_code_users_pin_pin_fk",
           "tableFrom": "events",
           "tableTo": "users_pin",
-          "columnsFrom": [
-            "pin_code"
-          ],
-          "columnsTo": [
-            "pin"
-          ],
+          "columnsFrom": ["pin_code"],
+          "columnsTo": ["pin"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -397,12 +389,8 @@
           "name": "refresh_tokens_user_id_users_id_fk",
           "tableFrom": "refresh_tokens",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -412,9 +400,7 @@
         "refresh_tokens_token_hash_unique": {
           "name": "refresh_tokens_token_hash_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "token_hash"
-          ]
+          "columns": ["token_hash"]
         }
       },
       "policies": {},
@@ -519,23 +505,17 @@
         "users_username_unique": {
           "name": "users_username_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "username"
-          ]
+          "columns": ["username"]
         },
         "users_phone_unique": {
           "name": "users_phone_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "phone"
-          ]
+          "columns": ["phone"]
         },
         "users_email_unique": {
           "name": "users_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -585,9 +565,7 @@
         "permissions_code_unique": {
           "name": "permissions_code_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "code"
-          ]
+          "columns": ["code"]
         }
       },
       "policies": {},
@@ -647,12 +625,8 @@
           "name": "role_permissions_permission_code_permissions_code_fk",
           "tableFrom": "role_permissions",
           "tableTo": "permissions",
-          "columnsFrom": [
-            "permission_code"
-          ],
-          "columnsTo": [
-            "code"
-          ],
+          "columnsFrom": ["permission_code"],
+          "columnsTo": ["code"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -725,12 +699,8 @@
           "name": "wechat_accounts_user_id_users_id_fk",
           "tableFrom": "wechat_accounts",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -740,16 +710,12 @@
         "wechat_accounts_user_id_unique": {
           "name": "wechat_accounts_user_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "user_id"
-          ]
+          "columns": ["user_id"]
         },
         "wechat_accounts_open_id_unique": {
           "name": "wechat_accounts_open_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "open_id"
-          ]
+          "columns": ["open_id"]
         }
       },
       "policies": {},
@@ -855,12 +821,8 @@
           "name": "medication_adherence_schedule_id_medication_schedules_id_fk",
           "tableFrom": "medication_adherence",
           "tableTo": "medication_schedules",
-          "columnsFrom": [
-            "schedule_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["schedule_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -914,12 +876,8 @@
           "name": "medication_schedules_medication_id_medications_id_fk",
           "tableFrom": "medication_schedules",
           "tableTo": "medications",
-          "columnsFrom": [
-            "medication_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["medication_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1038,12 +996,8 @@
           "name": "medications_patient_id_patients_id_fk",
           "tableFrom": "medications",
           "tableTo": "patients",
-          "columnsFrom": [
-            "patient_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["patient_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1051,12 +1005,8 @@
           "name": "medications_prescribed_by_id_users_id_fk",
           "tableFrom": "medications",
           "tableTo": "users",
-          "columnsFrom": [
-            "prescribed_by_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["prescribed_by_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -1152,12 +1102,8 @@
           "name": "users_pin_user_id_users_id_fk",
           "tableFrom": "users_pin",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1250,12 +1196,8 @@
           "name": "credit_transactions_user_id_users_id_fk",
           "tableFrom": "credit_transactions",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1263,12 +1205,8 @@
           "name": "credit_transactions_checklist_id_daily_checklists_id_fk",
           "tableFrom": "credit_transactions",
           "tableTo": "daily_checklists",
-          "columnsFrom": [
-            "checklist_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["checklist_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -1276,12 +1214,8 @@
           "name": "credit_transactions_event_id_events_id_fk",
           "tableFrom": "credit_transactions",
           "tableTo": "events",
-          "columnsFrom": [
-            "event_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["event_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -1410,12 +1344,8 @@
           "name": "daily_checklists_user_id_users_id_fk",
           "tableFrom": "daily_checklists",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1423,12 +1353,8 @@
           "name": "daily_checklists_plan_item_id_plan_items_id_fk",
           "tableFrom": "daily_checklists",
           "tableTo": "plan_items",
-          "columnsFrom": [
-            "plan_item_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["plan_item_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -1436,12 +1362,8 @@
           "name": "daily_checklists_record_id_events_id_fk",
           "tableFrom": "daily_checklists",
           "tableTo": "events",
-          "columnsFrom": [
-            "record_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["record_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -1553,12 +1475,8 @@
           "name": "plan_items_plan_id_plans_id_fk",
           "tableFrom": "plan_items",
           "tableTo": "plans",
-          "columnsFrom": [
-            "plan_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["plan_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1621,12 +1539,8 @@
           "name": "plans_user_id_users_id_fk",
           "tableFrom": "plans",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1716,12 +1630,8 @@
           "name": "streaks_user_id_users_id_fk",
           "tableFrom": "streaks",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1755,12 +1665,8 @@
           "name": "patient_tag_links_patient_id_patients_id_fk",
           "tableFrom": "patient_tag_links",
           "tableTo": "patients",
-          "columnsFrom": [
-            "patient_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["patient_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1768,12 +1674,8 @@
           "name": "patient_tag_links_tag_id_patient_tags_id_fk",
           "tableFrom": "patient_tag_links",
           "tableTo": "patient_tags",
-          "columnsFrom": [
-            "tag_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tag_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1781,10 +1683,7 @@
       "compositePrimaryKeys": {
         "patient_tag_links_patient_id_tag_id_pk": {
           "name": "patient_tag_links_patient_id_tag_id_pk",
-          "columns": [
-            "patient_id",
-            "tag_id"
-          ]
+          "columns": ["patient_id", "tag_id"]
         }
       },
       "uniqueConstraints": {},
@@ -1831,9 +1730,7 @@
         "patient_tags_name_unique": {
           "name": "patient_tags_name_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "name"
-          ]
+          "columns": ["name"]
         }
       },
       "policies": {},
@@ -1914,12 +1811,8 @@
           "name": "sim_patients_sim_id_sim_configs_id_fk",
           "tableFrom": "sim_patients",
           "tableTo": "sim_configs",
-          "columnsFrom": [
-            "sim_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["sim_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1927,12 +1820,8 @@
           "name": "sim_patients_patient_id_patients_id_fk",
           "tableFrom": "sim_patients",
           "tableTo": "patients",
-          "columnsFrom": [
-            "patient_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["patient_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1940,10 +1829,7 @@
       "compositePrimaryKeys": {
         "sim_patients_sim_id_patient_id_pk": {
           "name": "sim_patients_sim_id_patient_id_pk",
-          "columns": [
-            "sim_id",
-            "patient_id"
-          ]
+          "columns": ["sim_id", "patient_id"]
         }
       },
       "uniqueConstraints": {},
@@ -1988,12 +1874,8 @@
           "name": "user_patient_links_user_id_users_id_fk",
           "tableFrom": "user_patient_links",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2001,12 +1883,8 @@
           "name": "user_patient_links_patient_id_patients_id_fk",
           "tableFrom": "user_patient_links",
           "tableTo": "patients",
-          "columnsFrom": [
-            "patient_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["patient_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2014,10 +1892,7 @@
       "compositePrimaryKeys": {
         "user_patient_links_user_id_patient_id_pk": {
           "name": "user_patient_links_user_id_patient_id_pk",
-          "columns": [
-            "user_id",
-            "patient_id"
-          ]
+          "columns": ["user_id", "patient_id"]
         }
       },
       "uniqueConstraints": {},
@@ -2030,21 +1905,12 @@
     "public.adherence_status": {
       "name": "adherence_status",
       "schema": "public",
-      "values": [
-        "taken",
-        "missed",
-        "skipped",
-        "delayed"
-      ]
+      "values": ["taken", "missed", "skipped", "delayed"]
     },
     "public.alert_severity": {
       "name": "alert_severity",
       "schema": "public",
-      "values": [
-        "critical",
-        "warning",
-        "info"
-      ]
+      "values": ["critical", "warning", "info"]
     },
     "public.alert_status": {
       "name": "alert_status",
@@ -2063,149 +1929,77 @@
     "public.blood_type": {
       "name": "blood_type",
       "schema": "public",
-      "values": [
-        "A",
-        "B",
-        "AB",
-        "O"
-      ]
+      "values": ["A", "B", "AB", "O"]
     },
     "public.checklist_status": {
       "name": "checklist_status",
       "schema": "public",
-      "values": [
-        "pending",
-        "done",
-        "skipped"
-      ]
+      "values": ["pending", "done", "skipped"]
     },
     "public.confirmation_method": {
       "name": "confirmation_method",
       "schema": "public",
-      "values": [
-        "self",
-        "family",
-        "auto",
-        "unknown"
-      ]
+      "values": ["self", "family", "auto", "unknown"]
     },
     "public.device_status": {
       "name": "device_status",
       "schema": "public",
-      "values": [
-        "active",
-        "inactive",
-        "maintenance",
-        "error"
-      ]
+      "values": ["active", "inactive", "maintenance", "error"]
     },
     "public.device_type": {
       "name": "device_type",
       "schema": "public",
-      "values": [
-        "mattress",
-        "vision",
-        "imu",
-        "generic",
-        "simulator",
-        "custom"
-      ]
+      "values": ["mattress", "vision", "imu", "generic", "simulator", "custom"]
     },
     "public.event_source": {
       "name": "event_source",
       "schema": "public",
-      "values": [
-        "iot",
-        "cv",
-        "simulator",
-        "manual"
-      ]
+      "values": ["iot", "cv", "simulator", "manual"]
     },
     "public.gender": {
       "name": "gender",
       "schema": "public",
-      "values": [
-        "male",
-        "female",
-        "other"
-      ]
+      "values": ["male", "female", "other"]
     },
     "public.kind": {
       "name": "kind",
       "schema": "public",
-      "values": [
-        "observation",
-        "alert",
-        "behavior",
-        "location"
-      ]
+      "values": ["observation", "alert", "behavior", "location"]
     },
     "public.medication_route": {
       "name": "medication_route",
       "schema": "public",
-      "values": [
-        "oral",
-        "injection",
-        "topical",
-        "inhalation",
-        "other"
-      ]
+      "values": ["oral", "injection", "topical", "inhalation", "other"]
     },
     "public.medication_status": {
       "name": "medication_status",
       "schema": "public",
-      "values": [
-        "active",
-        "completed",
-        "paused",
-        "cancelled"
-      ]
+      "values": ["active", "completed", "paused", "cancelled"]
     },
     "public.patient_status": {
       "name": "patient_status",
       "schema": "public",
-      "values": [
-        "active",
-        "discharged",
-        "archived"
-      ]
+      "values": ["active", "discharged", "archived"]
     },
     "public.pin_type": {
       "name": "pin_type",
       "schema": "public",
-      "values": [
-        "device",
-        "virtual",
-        "user",
-        "simulator"
-      ]
+      "values": ["device", "virtual", "user", "simulator"]
     },
     "public.role": {
       "name": "role",
       "schema": "public",
-      "values": [
-        "super_admin",
-        "admin",
-        "user"
-      ]
+      "values": ["super_admin", "admin", "user"]
     },
     "public.transaction_type": {
       "name": "transaction_type",
       "schema": "public",
-      "values": [
-        "earn",
-        "spend",
-        "adjust"
-      ]
+      "values": ["earn", "spend", "adjust"]
     },
     "public.user_status": {
       "name": "user_status",
       "schema": "public",
-      "values": [
-        "active",
-        "disabled",
-        "pending"
-      ]
+      "values": ["active", "disabled", "pending"]
     }
   },
   "schemas": {},

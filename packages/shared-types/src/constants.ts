@@ -4,7 +4,16 @@ export type UserRole = (typeof USER_ROLES)[number]
 export const ALERT_SEVERITIES = ['critical', 'warning', 'info'] as const
 export type AlertSeverity = (typeof ALERT_SEVERITIES)[number]
 
-export const ALERT_STATUSES = ['active', 'acknowledged', 'resolved', 'expired', 'new', 'assigned', 'handled', 'closed'] as const
+export const ALERT_STATUSES = [
+  'active',
+  'acknowledged',
+  'resolved',
+  'expired',
+  'new',
+  'assigned',
+  'handled',
+  'closed',
+] as const
 export type AlertStatus = (typeof ALERT_STATUSES)[number]
 
 export const PATIENT_STATUSES = ['active', 'discharged', 'archived'] as const
@@ -26,13 +35,30 @@ export const HEALTH_MODULE_KEYS = [
 
 export type HealthModuleKey = (typeof HEALTH_MODULE_KEYS)[number]
 
-export const HEALTH_MODULE_META: Record<HealthModuleKey, { label: string; unit: string; icon: string }> = {
-  blood_glucose:  { label: '血糖', unit: 'mmol/L', icon: '🩸' },
-  blood_pressure: { label: '血压', unit: 'mmHg',  icon: '❤️' },
-  weight:         { label: '体重', unit: 'kg',     icon: '⚖️' },
-  heart_rate:     { label: '心率', unit: 'bpm',    icon: '💓' },
-  temperature:    { label: '体温', unit: '°C',     icon: '🌡️' },
-  spo2:           { label: '血氧', unit: '%',      icon: '🫁' },
-  medication:     { label: '用药', unit: '',        icon: '💊' },
-  period:         { label: '生理期', unit: '',       icon: '🌸' },
+export const HEALTH_MODULE_META: Record<
+  HealthModuleKey,
+  { label: string; unit: string; icon: string }
+> = {
+  blood_glucose: { label: '血糖', unit: 'mmol/L', icon: '🩸' },
+  blood_pressure: { label: '血压', unit: 'mmHg', icon: '❤️' },
+  weight: { label: '体重', unit: 'kg', icon: '⚖️' },
+  heart_rate: { label: '心率', unit: 'bpm', icon: '💓' },
+  temperature: { label: '体温', unit: '°C', icon: '🌡️' },
+  spo2: { label: '血氧', unit: '%', icon: '🫁' },
+  medication: { label: '用药', unit: '', icon: '💊' },
+  period: { label: '生理期', unit: '', icon: '🌸' },
 }
+
+export const PATIENT_RELATIONS = [
+  'primary',
+  'spouse',
+  'child',
+  'parent',
+  'sibling',
+  'caregiver',
+  'doctor',
+  'nurse',
+  'admin',
+  'other',
+] as const
+export type PatientRelation = (typeof PATIENT_RELATIONS)[number]

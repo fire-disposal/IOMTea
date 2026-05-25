@@ -36,10 +36,16 @@ export function ScenarioModal({ opened, onClose, onInject, pending }: ScenarioMo
             color="orange"
             onClick={() => onInject(s.key)}
             loading={pending}
-            styles={{ root: { height: 'auto', padding: '12px 8px', flexDirection: 'column', gap: 4 } }}
+            styles={{
+              root: { height: 'auto', padding: '12px 8px', flexDirection: 'column', gap: 4 },
+            }}
           >
-            <Text size="sm" fw={600}>{s.label}</Text>
-            <Text size="xs" c="dimmed">{s.desc}</Text>
+            <Text size="sm" fw={600}>
+              {s.label}
+            </Text>
+            <Text size="xs" c="dimmed">
+              {s.desc}
+            </Text>
           </Button>
         ))}
       </SimpleGrid>

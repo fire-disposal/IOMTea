@@ -33,8 +33,15 @@ export default function Spo2Record() {
   }, [value])
 
   return (
-    <FormShell title='记录血氧' unit='%' onSave={handleSave} saving={saving} saved={saved} recentData={trendData}>
-      <NumberInput value={value} onChange={setValue} placeholder='98' />
+    <FormShell
+      title="记录血氧"
+      unit="%"
+      onSave={handleSave}
+      saving={saving}
+      saved={saved}
+      recentData={trendData}
+    >
+      <NumberInput value={value} onChange={setValue} placeholder="98" />
     </FormShell>
   )
 }

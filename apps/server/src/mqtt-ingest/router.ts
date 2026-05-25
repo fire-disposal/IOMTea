@@ -23,7 +23,12 @@ async function handleDeviceEvent(topicId: string, body: Record<string, unknown>)
     return
   }
 
-  const [patient] = await db.select({ id: patients.id }).from(patients).innerJoin(userPatientLinks, eq(userPatientLinks.patientId, patients.id)).where(eq(userPatientLinks.userId, pinRecord.userId)).limit(1)
+  const [patient] = await db
+    .select({ id: patients.id })
+    .from(patients)
+    .innerJoin(userPatientLinks, eq(userPatientLinks.patientId, patients.id))
+    .where(eq(userPatientLinks.userId, pinRecord.userId))
+    .limit(1)
   if (!patient) {
     logger.debug({ pin, userId: pinRecord.userId }, 'PIN 未关联患者，跳过')
     return
@@ -41,38 +46,54 @@ async function handleDeviceEvent(topicId: string, body: Record<string, unknown>)
     if (isNaN(numValue)) return
 
     const kind = event === 'healthAlert' ? 'alert' : 'observation'
-    await db.insert(events).values({
-      patientId: patient.id,
-      pinCode: pin,
-      kind,
-      metric: normalizedMetric,
-      value: numValue,
-      unit: (body.unit as string) || getMetricUnit(normalizedMetric),
-      source: 'iot',
-      severity: event === 'healthAlert' ? ((body.severity as any) || 'warning') : undefined,
-      status: event === 'healthAlert' ? 'active' : undefined,
-      tags: { deviceId: body.deviceId, ...(body.metadata as any || {}) },
-      recordedAt: new Date(),
-    } as any).catch((err) => { logger.warn({ err, metric }, '设备事件写入失败') })
+    await db
+      .insert(events)
+      .values({
+        patientId: patient.id,
+        pinCode: pin,
+        kind,
+        metric: normalizedMetric,
+        value: numValue,
+        unit: (body.unit as string) || getMetricUnit(normalizedMetric),
+        source: 'iot' as const,
+        severity: event === 'healthAlert' ? (body.severity as string) || 'warning' : undefined,
+        status: event === 'healthAlert' ? ('active' as const) : undefined,
+        tags: { deviceId: body.deviceId, ...((body.metadata as any) || {}) },
+        recordedAt: new Date(),
+      } as any)
+      .catch((err) => {
+        logger.warn({ err, metric }, '设备事件写入失败')
+      })
 
-    broadcastManager.broadcastVitals(patient.id, [{
-      metric,
-      value: numValue,
-      unit: body.unit as string | null ?? null,
-    }])
+    broadcastManager.broadcastVitals(patient.id, [
+      {
+        metric,
+        value: numValue,
+        unit: (body.unit as string | null) ?? null,
+      },
+    ])
   } else if (event === 'fallDetected') {
-    await db.insert(events).values({
-      patientId: patient.id,
-      pinCode: pin,
-      kind: 'alert',
-      metric: 'fall_detected',
-      value: null,
-      severity: 'critical',
-      status: 'active',
-      source: 'iot',
-      tags: { deviceId: body.deviceId, confidence: body.confidence, ...(body.metadata as any || {}) },
-      recordedAt: new Date(),
-    } as any).catch((err) => { logger.warn({ err }, 'fall_detected 事件写入失败') })
+    await db
+      .insert(events)
+      .values({
+        patientId: patient.id,
+        pinCode: pin,
+        kind: 'alert' as const,
+        metric: 'fall_detected',
+        value: null,
+        severity: 'critical' as const,
+        status: 'active' as const,
+        source: 'iot' as const,
+        tags: {
+          deviceId: body.deviceId,
+          confidence: body.confidence,
+          ...((body.metadata as any) || {}),
+        },
+        recordedAt: new Date(),
+      } as any)
+      .catch((err) => {
+        logger.warn({ err }, 'fall_detected 事件写入失败')
+      })
   }
 
   await db.update(usersPin).set({ lastSeenAt: new Date() }).where(eq(usersPin.pin, pin))
@@ -94,24 +115,45 @@ const CANONICAL_METRICS = [
 type CanonicalMetric = (typeof CANONICAL_METRICS)[number]
 
 const METRIC_ALIASES: Record<string, CanonicalMetric> = {
-  hr: 'heart_rate', pulse: 'heart_rate', heartrate: 'heart_rate', heartbeat: 'heart_rate',
-  glucose: 'glucose', blood_glucose: 'glucose', blood_sugar: 'glucose', bg: 'glucose',
-  spo2: 'spo2', blood_oxygen: 'spo2',
-  temp: 'temperature', body_temperature: 'temperature', body_temp: 'temperature',
-  weight: 'weight', body_weight: 'weight',
-  systolic_bp: 'systolic_bp', sbp: 'systolic_bp',
-  diastolic_bp: 'diastolic_bp', dbp: 'diastolic_bp',
+  hr: 'heart_rate',
+  pulse: 'heart_rate',
+  heartrate: 'heart_rate',
+  heartbeat: 'heart_rate',
+  glucose: 'glucose',
+  blood_glucose: 'glucose',
+  blood_sugar: 'glucose',
+  bg: 'glucose',
+  spo2: 'spo2',
+  blood_oxygen: 'spo2',
+  temp: 'temperature',
+  body_temperature: 'temperature',
+  body_temp: 'temperature',
+  weight: 'weight',
+  body_weight: 'weight',
+  systolic_bp: 'systolic_bp',
+  sbp: 'systolic_bp',
+  diastolic_bp: 'diastolic_bp',
+  dbp: 'diastolic_bp',
 }
 
 const DEFAULT_UNITS: Record<CanonicalMetric, string> = {
-  heart_rate: 'bpm', glucose: 'mmol/L', spo2: '%',
-  temperature: '°C', weight: 'kg', systolic_bp: 'mmHg', diastolic_bp: 'mmHg',
+  heart_rate: 'bpm',
+  glucose: 'mmol/L',
+  spo2: '%',
+  temperature: '°C',
+  weight: 'kg',
+  systolic_bp: 'mmHg',
+  diastolic_bp: 'mmHg',
 }
 
 const METRIC_RANGES: Partial<Record<CanonicalMetric, { min: number; max: number }>> = {
-  heart_rate: { min: 20, max: 260 }, glucose: { min: 0.5, max: 35 },
-  spo2: { min: 40, max: 100 }, temperature: { min: 30, max: 45 },
-  weight: { min: 1, max: 500 }, systolic_bp: { min: 40, max: 280 }, diastolic_bp: { min: 20, max: 180 },
+  heart_rate: { min: 20, max: 260 },
+  glucose: { min: 0.5, max: 35 },
+  spo2: { min: 40, max: 100 },
+  temperature: { min: 30, max: 45 },
+  weight: { min: 1, max: 500 },
+  systolic_bp: { min: 40, max: 280 },
+  diastolic_bp: { min: 20, max: 180 },
 }
 
 function isCanonicalMetric(metric: string): metric is CanonicalMetric {
@@ -288,7 +330,12 @@ export async function routeMessage(
 ): Promise<void> {
   const parts = topic.split('/')
 
-  if (parts[0] === 'iomtea' && parts[1] === 'device' && parts.length >= 4 && parts[3] === 'events') {
+  if (
+    parts[0] === 'iomtea' &&
+    parts[1] === 'device' &&
+    parts.length >= 4 &&
+    parts[3] === 'events'
+  ) {
     const topicId = parts[2]
     const body = parsePayloadObject(payload)
     if (!body) return

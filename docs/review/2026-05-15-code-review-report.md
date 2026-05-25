@@ -2,7 +2,7 @@
 
 > 日期：2026-05-15
 > 站位：统筹/审核/设计/项目经理
-> 最后更新：2026-05-16 — 多项问题已解决（见第 7 节 ✅ 标记）
+> 最后更新：2026-05-25 — 大量问题已解决，详见第 7 节
 > 审阅范围：apps/server（后端）、apps/web（Web前端）、packages/shared-types（共享类型）
 > 总代码量：约 8,600 行（后端）+ 3,200 行（前端）+ 1,300 行（共享类型）
 
@@ -295,50 +295,58 @@ index.ts:137                — 非法 WebSocket 消息静默丢弃
 ### 阶段 A：安全底座（第 1-2 周）
 
 ```
-A-01 [P0] requirePermission 接入所有路由 ✅
+A-01 [P0] requirePermission 接入所有路由 🔶
       场景：16 个 permission code 全覆盖
       文件：所有 routers/*.ts + rbac.ts
-      状态：已接入 device.ts 和 patient.ts 路由
+      状态 (2026-05-25)：已接入 alert, alertRule, dashboard, data, export, medication, patient, node-graph, home-graph (~9 个核心路由)
+      尚缺：user, pin, tag, checklist, credit, streak, plan, thresholds, health-records, virtual-pin (~9 个辅助路由)
 
-A-02 [P0] WebSocket JWT 认证
-     场景：连接时校验 token，订阅范围受 role 限制
-     文件：index.ts, broadcast.ts, useRealtime.ts
+A-02 [P0] WebSocket JWT 认证 ✅
+      场景：连接时校验 token，订阅范围受 role 限制
+      文件：index.ts, broadcast.ts, useRealtime.ts
+      状态 (2026-05-25)：已完成 /ws 查询参数 token → verifyToken，无效 token 连接被拒
 
-A-03 [P0] 修复实时通道 key 不匹配
-     场景：验证/统一 tRPC query key 格式
-     文件：useRealtime.ts
+A-03 [P0] 修复实时通道 key 不匹配 🔶 (2026-05-25 需验证)
+      场景：验证/统一 tRPC query key 格式
+      文件：useRealtime.ts
 
 A-04 [P0] Error Boundary 层级
-     场景：全局 ErrorBoundary + 页面级 fallback
-     文件：main.tsx, App.tsx, 新增 ErrorBoundary.tsx
+      场景：全局 ErrorBoundary + 页面级 fallback
+      文件：main.tsx, App.tsx, 新增 ErrorBoundary.tsx
+      状态 (2026-05-25)：未发现 ErrorBoundary 组件
 
-A-05 [P1] 修复所有 silent catch
-     场景：6 处 .catch(() => {}) → 结构化日志 + 可观测
-     文件：engine.ts, medication.ts, mattress/index.ts, index.ts
+A-05 [P1] 修复所有 silent catch 🔶 (2026-05-25 需验证)
+      场景：6 处 .catch(() => {}) → 结构化日志 + 可观测
+      文件：engine.ts, medication.ts, mattress/index.ts, index.ts
 ```
 
 ### 阶段 B：领域模型强化（第 3-5 周）
 
 ```
-B-01 [P0] 家庭/监护关系模型
-     场景：households + household_members + caregiver_assignments 表
-     文件：schema 新增 3 表 + migration + shared-types schemas
+B-01 [P0] 家庭/监护关系模型 🔶
+      场景：households + household_members + caregiver_assignments 表
+      文件：schema 新增 3 表 + migration + shared-types schemas
+      状态 (2026-05-25)：`user_patient_links` 桥接表已落地 (userId + patientId + relation)，替代原 patients.userId/primaryDoctorId；缺 Household 组表
 
 B-02 [P1] 患者模型居家适配
-     场景：home_id、building、floor、unit；补全残缺字段
-     文件：schema.ts, schemas/patient.ts
+      场景：home_id、building、floor、unit；补全残缺字段
+      文件：schema.ts, schemas/patient.ts
+      状态 (2026-05-25)：未落地
 
-B-03 [P1] 设备模型 IoT 适配
-     场景：batteryLevel、signalStrength、firmwareVersion、installLocation
-     文件：schema.ts, schemas/device.ts
+B-03 [P1] 设备模型 IoT 适配 🔶
+      场景：batteryLevel、signalStrength、firmwareVersion、installLocation
+      文件：schema.ts, schemas/device.ts
+      状态 (2026-05-25)：devices 表已删除，PIN 充当设备/虚拟传感器标识；IoT 字段未添加
 
-B-04 [P1] 告警闭环状态机
-     场景：new→assigned→acknowledged→resolved→reviewed
-     文件：schemas/events.ts, routers/alert.ts, services/alert.ts
+B-04 [P1] 告警闭环状态机 ✅
+      场景：new→assigned→acknowledged→resolved→reviewed
+      文件：schemas/events.ts, routers/alert.ts, services/alert.ts
+      状态 (2026-05-25)：告警状态已扩展为 new/assigned/acknowledged/handled/resolved/closed；alert router 含 list/acknowledge/assign/resolve/close
 
-B-05 [P2] 常量提取与去碎片化
-     场景：8+ 内联枚举移至 constants.ts
-     文件：constants.ts, 所有 schema 文件
+B-05 [P2] 常量提取与去碎片化 🔶
+      场景：8+ 内联枚举移至 constants.ts
+      文件：constants.ts, 所有 schema 文件
+      状态 (2026-05-25)：部分完成，enums.ts 已成为单一来源
 ```
 
 ### 阶段 C：前端信息架构重构（第 5-8 周）
@@ -385,10 +393,10 @@ D-04 [P1] 健康日报
      场景：每日摘要、异常汇总、趋势解读（家庭成员友好）
      文件：新增聚合接口 + 日报页面
 
-D-05 [P2] 数字孪生抽象重设计 ✅
+D-05 [P2] 数字孪生抽象重设计 ✅ (2026-05-25)
       场景：图论抽象房间为节点，路径查找算法独立
       文件：shared-types/src/map/ 重构
-      状态：旧 map/ 模块已移除，替换为 home-map/；寻路/行为/导航网格已移至 twin/
+      状态：旧 map/ 和 home-map/ 模块已从 shared-types 移除；twin3d/ + home-graph/node-graph routers 承载新设计；sim/ 引擎为新代仿真提供独立模块
 ```
 
 ### 阶段 E：Taro 小程序重构 + Flutter 传感器（第 8-12 周）
@@ -414,10 +422,10 @@ E-03 [P2] 数字孪生算法模块化 ✅
 
 以下 5 项改动共约 50 行，可显著降低安全风险和数据丢失风险：
 
-| 操作 | 位置 | 改动量 | 效果 |
-|------|------|--------|------|
-| WebSocket 加 JWT 验证 | `index.ts:111-124` | ~10 行 | 阻止未授权实时数据访问 |
-| 修复 PatientDetailShell 空白屏 | `PatientDetailShell.tsx:34-35` | ~5 行 | 显示 loading skeleton |
-| patient.delete 加 requirePermission ✅ | `routers/patient.ts:93` | ~3 行 | 阻止非授权删除 |
-| 验证/修复 useRealtime query key | `useRealtime.ts:97` | ~5 行 | 确保实时数据到达 UI |
-| silent catch 加日志 | `engine.ts:319,323` | ~10 行 | engine 错误可观测 |
+| 操作 | 位置 | 改动量 | 效果 | 状态 (2026-05-25) |
+|------|------|--------|------|------|
+| WebSocket 加 JWT 验证 | `index.ts:111-124` | ~10 行 | 阻止未授权实时数据访问 | ✅ 已完成 |
+| 修复 PatientDetailShell 空白屏 | `PatientDetailShell.tsx:34-35` | ~5 行 | 显示 loading skeleton | 🔶 StateComponents 已提供统一状态 |
+| patient.delete 加 requirePermission ✅ | `routers/patient.ts:93` | ~3 行 | 阻止非授权删除 | ✅ 已完成 (全 patient router) |
+| 验证/修复 useRealtime query key | `useRealtime.ts:97` | ~5 行 | 确保实时数据到达 UI | 🔶 需验证 |
+| silent catch 加日志 | `engine.ts:319,323` | ~10 行 | engine 错误可观测 | 🔶 需验证 |

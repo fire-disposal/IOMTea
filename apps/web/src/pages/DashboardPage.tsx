@@ -1,17 +1,6 @@
-import {
-  Badge,
-  Container,
-  Group,
-  Paper,
-  Stack,
-  Text,
-  Title,
-} from '@mantine/core'
+import { Badge, Container, Group, Paper, Stack, Text, Title } from '@mantine/core'
 import { AccentPaper } from '../components/shared/AccentPaper'
-import {
-  IconAlertTriangle,
-  IconUsers,
-} from '@tabler/icons-react'
+import { IconAlertTriangle, IconUsers } from '@tabler/icons-react'
 import { useNavigate } from '@tanstack/react-router'
 import { QueryGate } from '../components/shared/QueryGate'
 import { StatsBar, type StatsBarItem } from '../components/shared/StatsBar'
@@ -25,8 +14,18 @@ export function DashboardPage() {
   const activeAlerts = (alerts.data ?? []).filter((a: any) => a.status === 'active').length
 
   const statsItems: StatsBarItem[] = [
-    { label: '患者总数', value: patients.isError ? '加载失败' : patients.data?.length ?? 0, icon: <IconUsers size={20} />, color: 'matchaGreen' },
-    { label: '活跃告警', value: alerts.isError ? '加载失败' : activeAlerts, icon: <IconAlertTriangle size={20} />, color: 'red' },
+    {
+      label: '患者总数',
+      value: patients.isError ? '加载失败' : (patients.data?.length ?? 0),
+      icon: <IconUsers size={20} />,
+      color: 'matchaGreen',
+    },
+    {
+      label: '活跃告警',
+      value: alerts.isError ? '加载失败' : activeAlerts,
+      icon: <IconAlertTriangle size={20} />,
+      color: 'red',
+    },
   ]
 
   return (
@@ -52,16 +51,37 @@ export function DashboardPage() {
           {(data) => (
             <Stack gap="xs">
               {data.slice(0, 10).map((alert) => (
-                <AccentPaper key={alert.id} p="xs" withBorder radius="sm" color={alert.severity === 'critical' ? 'red' : alert.severity === 'warning' ? 'yellow' : 'blue'}>
+                <AccentPaper
+                  key={alert.id}
+                  p="xs"
+                  withBorder
+                  radius="sm"
+                  color={
+                    alert.severity === 'critical'
+                      ? 'red'
+                      : alert.severity === 'warning'
+                        ? 'yellow'
+                        : 'blue'
+                  }
+                >
                   <Group justify="space-between">
                     <div>
-                      <Text size="sm" fw={500}>{alert.metric}</Text>
+                      <Text size="sm" fw={500}>
+                        {alert.metric}
+                      </Text>
                       <Text size="xs" c="dimmed">
-                        {alert.value} {alert.unit} — {new Date(alert.recordedAt).toLocaleString('zh-CN')}
+                        {alert.value} {alert.unit} —{' '}
+                        {new Date(alert.recordedAt).toLocaleString('zh-CN')}
                       </Text>
                     </div>
                     <Badge
-                      color={alert.severity === 'critical' ? 'red' : alert.severity === 'warning' ? 'yellow' : 'blue'}
+                      color={
+                        alert.severity === 'critical'
+                          ? 'red'
+                          : alert.severity === 'warning'
+                            ? 'yellow'
+                            : 'blue'
+                      }
                       size="sm"
                     >
                       {alert.severity}

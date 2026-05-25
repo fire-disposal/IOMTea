@@ -41,11 +41,18 @@ export default function HeartRateRecord() {
   }, [value, context])
 
   return (
-    <FormShell title='记录心率' unit='bpm' onSave={handleSave} saving={saving} saved={saved} recentData={trendData}>
-      <NumberInput value={value} onChange={setValue} placeholder='72' />
+    <FormShell
+      title="记录心率"
+      unit="bpm"
+      onSave={handleSave}
+      saving={saving}
+      saved={saved}
+      recentData={trendData}
+    >
+      <NumberInput value={value} onChange={setValue} placeholder="72" />
 
-      <View className='hr-section'>
-        <Text className='hr-label'>测量情境</Text>
+      <View className="hr-section">
+        <Text className="hr-label">测量情境</Text>
         <SegmentPicker options={CONTEXT_OPTIONS} value={context} onChange={setContext} />
       </View>
     </FormShell>

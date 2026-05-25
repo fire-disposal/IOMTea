@@ -8,8 +8,10 @@ const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(ma
 
 const facePath = (shape: AvatarSpec['face']['shape'], jawRoundness: number) => {
   const jaw = 28 + (1 - jawRoundness) * 18
-  if (shape === 'round') return `M128 56c42 0 68 26 68 72 0 ${jaw} -31 70 -68 70s-68-${jaw} -68-70c0-46 26-72 68-72z`
-  if (shape === 'square') return `M70 64h116a22 22 0 0 1 22 22v68c0 37-28 66-62 66h-36c-34 0-62-29-62-66V86a22 22 0 0 1 22-22z`
+  if (shape === 'round')
+    return `M128 56c42 0 68 26 68 72 0 ${jaw} -31 70 -68 70s-68-${jaw} -68-70c0-46 26-72 68-72z`
+  if (shape === 'square')
+    return `M70 64h116a22 22 0 0 1 22 22v68c0 37-28 66-62 66h-36c-34 0-62-29-62-66V86a22 22 0 0 1 22-22z`
   return `M128 58c45 0 72 28 72 78 0 48-31 78-72 78s-72-30-72-78c0-50 27-78 72-78z`
 }
 
@@ -26,7 +28,13 @@ const hairPath = (style: AvatarSpec['hair']['style']) => {
   }
 }
 
-const eyeShape = (style: AvatarSpec['eyes']['style'], x: number, y: number, rx: number, ry: number): SvgNode => {
+const eyeShape = (
+  style: AvatarSpec['eyes']['style'],
+  x: number,
+  y: number,
+  rx: number,
+  ry: number,
+): SvgNode => {
   if (style === 'smile') {
     return {
       tag: 'path',
@@ -58,7 +66,13 @@ const eyeShape = (style: AvatarSpec['eyes']['style'], x: number, y: number, rx: 
   }
 }
 
-const browPath = (style: AvatarSpec['brows']['style'], x: number, y: number, width: number, angle: number) => {
+const browPath = (
+  style: AvatarSpec['brows']['style'],
+  x: number,
+  y: number,
+  width: number,
+  angle: number,
+) => {
   const y2 = y - angle * 8
   if (style === 'flat') return `M${x - width} ${y} L ${x + width} ${y}`
   if (style === 'sharp') return `M${x - width} ${y + 2} L ${x} ${y2 - 2} L ${x + width} ${y2}`
@@ -144,16 +158,52 @@ const glassesNodes = (style: AvatarSpec['accessory']['glasses']): SvgNode[] => {
 
   if (style === 'square') {
     return [
-      { tag: 'rect', attrs: { x: 86, y: 112, width: 28, height: 20, rx: 5, fill: 'none', stroke: '#3A3A3A', 'stroke-width': 3 } },
-      { tag: 'rect', attrs: { x: 142, y: 112, width: 28, height: 20, rx: 5, fill: 'none', stroke: '#3A3A3A', 'stroke-width': 3 } },
-      { tag: 'line', attrs: { x1: 114, y1: 122, x2: 142, y2: 122, stroke: '#3A3A3A', 'stroke-width': 3 } },
+      {
+        tag: 'rect',
+        attrs: {
+          x: 86,
+          y: 112,
+          width: 28,
+          height: 20,
+          rx: 5,
+          fill: 'none',
+          stroke: '#3A3A3A',
+          'stroke-width': 3,
+        },
+      },
+      {
+        tag: 'rect',
+        attrs: {
+          x: 142,
+          y: 112,
+          width: 28,
+          height: 20,
+          rx: 5,
+          fill: 'none',
+          stroke: '#3A3A3A',
+          'stroke-width': 3,
+        },
+      },
+      {
+        tag: 'line',
+        attrs: { x1: 114, y1: 122, x2: 142, y2: 122, stroke: '#3A3A3A', 'stroke-width': 3 },
+      },
     ]
   }
 
   return [
-    { tag: 'circle', attrs: { cx: 100, cy: 122, r: 11, fill: 'none', stroke: '#3A3A3A', 'stroke-width': 3 } },
-    { tag: 'circle', attrs: { cx: 156, cy: 122, r: 11, fill: 'none', stroke: '#3A3A3A', 'stroke-width': 3 } },
-    { tag: 'line', attrs: { x1: 111, y1: 122, x2: 145, y2: 122, stroke: '#3A3A3A', 'stroke-width': 3 } },
+    {
+      tag: 'circle',
+      attrs: { cx: 100, cy: 122, r: 11, fill: 'none', stroke: '#3A3A3A', 'stroke-width': 3 },
+    },
+    {
+      tag: 'circle',
+      attrs: { cx: 156, cy: 122, r: 11, fill: 'none', stroke: '#3A3A3A', 'stroke-width': 3 },
+    },
+    {
+      tag: 'line',
+      attrs: { x1: 111, y1: 122, x2: 145, y2: 122, stroke: '#3A3A3A', 'stroke-width': 3 },
+    },
   ]
 }
 
@@ -161,7 +211,10 @@ const hatNodes = (spec: AvatarSpec): SvgNode[] => {
   if (spec.accessory.hat !== 'beanie') return []
   const color = CLOTHING_TONES[spec.palette.clothing]
   return [
-    { tag: 'path', attrs: { d: 'M66 96c8-36 36-56 62-56 30 0 58 20 66 56l-14 2H80z', fill: color } },
+    {
+      tag: 'path',
+      attrs: { d: 'M66 96c8-36 36-56 62-56 30 0 58 20 66 56l-14 2H80z', fill: color },
+    },
     { tag: 'rect', attrs: { x: 74, y: 96, width: 108, height: 14, rx: 7, fill: '#2D2D2D' } },
   ]
 }
@@ -185,24 +238,34 @@ export function renderAvatarSvgAst(input: AvatarSpec): SvgNode {
   const gradientId = `grad-${spec.seed ?? 0}`
 
   const defs: SvgNode[] = spec.effects.gradient
-    ? [{
-      tag: 'defs',
-      children: [{
-        tag: 'linearGradient',
-        attrs: { id: gradientId, x1: 0, y1: 0, x2: 1, y2: 1 },
-        children: [
-          { tag: 'stop', attrs: { offset: '0%', 'stop-color': bgColor } },
-          { tag: 'stop', attrs: { offset: '100%', 'stop-color': '#FFFFFF' } },
-        ],
-      }],
-    }]
+    ? [
+        {
+          tag: 'defs',
+          children: [
+            {
+              tag: 'linearGradient',
+              attrs: { id: gradientId, x1: 0, y1: 0, x2: 1, y2: 1 },
+              children: [
+                { tag: 'stop', attrs: { offset: '0%', 'stop-color': bgColor } },
+                { tag: 'stop', attrs: { offset: '100%', 'stop-color': '#FFFFFF' } },
+              ],
+            },
+          ],
+        },
+      ]
     : []
 
   const blushNodes = spec.effects.blush
     ? [
-      { tag: 'ellipse', attrs: { cx: 88, cy: centerY + 36, rx: 12, ry: 7, fill: '#F2A8A8', opacity: 0.35 } },
-      { tag: 'ellipse', attrs: { cx: 168, cy: centerY + 36, rx: 12, ry: 7, fill: '#F2A8A8', opacity: 0.35 } },
-    ]
+        {
+          tag: 'ellipse',
+          attrs: { cx: 88, cy: centerY + 36, rx: 12, ry: 7, fill: '#F2A8A8', opacity: 0.35 },
+        },
+        {
+          tag: 'ellipse',
+          attrs: { cx: 168, cy: centerY + 36, rx: 12, ry: 7, fill: '#F2A8A8', opacity: 0.35 },
+        },
+      ]
     : []
 
   return {
@@ -231,12 +294,19 @@ export function renderAvatarSvgAst(input: AvatarSpec): SvgNode {
       ...hatNodes(spec),
       {
         tag: 'g',
-        attrs: { transform: `translate(128 ${centerY}) scale(${headScale}) translate(-128 -${centerY})` },
+        attrs: {
+          transform: `translate(128 ${centerY}) scale(${headScale}) translate(-128 -${centerY})`,
+        },
         children: [
           { tag: 'path', attrs: { d: hairPath(spec.hair.style), fill: hair } },
           {
             tag: 'path',
-            attrs: { d: facePath(spec.face.shape, spec.face.jawRoundness), fill: skin, stroke: '#AA7A5C', 'stroke-width': 1.2 },
+            attrs: {
+              d: facePath(spec.face.shape, spec.face.jawRoundness),
+              fill: skin,
+              stroke: '#AA7A5C',
+              'stroke-width': 1.2,
+            },
           },
           ...blushNodes,
           eyeShape(spec.eyes.style, 128 - eyeOffsetX, eyeY, eyeRx, eyeRy),
@@ -244,13 +314,35 @@ export function renderAvatarSvgAst(input: AvatarSpec): SvgNode {
           ...(spec.eyes.style === 'smile'
             ? []
             : [
-              { tag: 'circle', attrs: { cx: 128 - eyeOffsetX, cy: eyeY, r: clamp(3.4 * spec.eyes.size, 2, 5), fill: eyeColor } },
-              { tag: 'circle', attrs: { cx: 128 + eyeOffsetX, cy: eyeY, r: clamp(3.4 * spec.eyes.size, 2, 5), fill: eyeColor } },
-            ]),
+                {
+                  tag: 'circle',
+                  attrs: {
+                    cx: 128 - eyeOffsetX,
+                    cy: eyeY,
+                    r: clamp(3.4 * spec.eyes.size, 2, 5),
+                    fill: eyeColor,
+                  },
+                },
+                {
+                  tag: 'circle',
+                  attrs: {
+                    cx: 128 + eyeOffsetX,
+                    cy: eyeY,
+                    r: clamp(3.4 * spec.eyes.size, 2, 5),
+                    fill: eyeColor,
+                  },
+                },
+              ]),
           {
             tag: 'path',
             attrs: {
-              d: browPath(spec.brows.style, 128 - eyeOffsetX, eyeY - 17, 10 * spec.brows.thickness, spec.brows.angle),
+              d: browPath(
+                spec.brows.style,
+                128 - eyeOffsetX,
+                eyeY - 17,
+                10 * spec.brows.thickness,
+                spec.brows.angle,
+              ),
               fill: 'none',
               stroke: '#3C2B1D',
               'stroke-width': 3,
@@ -260,7 +352,13 @@ export function renderAvatarSvgAst(input: AvatarSpec): SvgNode {
           {
             tag: 'path',
             attrs: {
-              d: browPath(spec.brows.style, 128 + eyeOffsetX, eyeY - 17, 10 * spec.brows.thickness, -spec.brows.angle),
+              d: browPath(
+                spec.brows.style,
+                128 + eyeOffsetX,
+                eyeY - 17,
+                10 * spec.brows.thickness,
+                -spec.brows.angle,
+              ),
               fill: 'none',
               stroke: '#3C2B1D',
               'stroke-width': 3,

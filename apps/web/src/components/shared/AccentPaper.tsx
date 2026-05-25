@@ -12,7 +12,13 @@ export function AccentPaper({
   [key: string]: any
 }) {
   return (
-    <Paper {...props} style={{ borderLeft: `3px solid var(--mantine-color-${color}-5)`, ...(style as any) }}>
+    <Paper
+      {...props}
+      style={{
+        borderLeft: `3px solid var(--mantine-color-${color}-5)`,
+        ...(style as React.CSSProperties),
+      }}
+    >
       {children}
     </Paper>
   )
