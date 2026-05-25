@@ -11,9 +11,9 @@ import {
 } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
 import { IconAlertTriangle, IconBell, IconCheck, IconInfoCircle } from '@tabler/icons-react'
-import { useState } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams } from '@tanstack/react-router'
-import { trpc } from '../../../trpc'
+import { api } from '../../../api/client'
 import { StateEmpty, StateError } from '../../../components/shared/StateComponents'
 
 const severityColor: Record<string, string> = { critical: 'red', warning: 'orange', info: 'blue' }
@@ -57,37 +57,65 @@ export function PatientAlerts() {
   const { id } = useParams({ from: '/_auth/patients/$id' })
   const [severityFilter, setSeverityFilter] = useState<string>('all')
   const [statusFilter, setStatusFilter] = useState<string>('all')
-  const utils = trpc.useUtils()
+  const [alerts, setAlerts] = useState<any[]>([])
+  const [aLoading, setALoading] = useState(true)
+  const [aError, setAError] = useState(false)
+  const [ackLoadingId, setAckLoadingId] = useState<string | null>(null)
+  const [resolveLoadingId, setResolveLoadingId] = useState<string | null>(null)
+  const intervalRef = useRef<ReturnType<typeof setInterval>>(undefined)
 
-  const alerts = trpc.alert.list.useQuery(
-    {
-      patientId: id!,
-      pageSize: 50,
-      ...(severityFilter !== 'all'
-        ? { severity: severityFilter as 'critical' | 'warning' | 'info' }
-        : {}),
-      ...(statusFilter !== 'all'
-        ? { status: statusFilter as 'active' | 'acknowledged' | 'resolved' }
-        : {}),
-    },
-    { enabled: !!id, refetchInterval: 15000 },
-  )
+  const fetchAlerts = useCallback(async () => {
+    if (!id) return
+    try {
+      const params: Record<string, string | number | undefined> = {
+        patientId: id,
+        pageSize: 50,
+      }
+      if (severityFilter !== 'all') params.severity = severityFilter
+      if (statusFilter !== 'all') params.status = statusFilter
+      const data = await api.get<any[]>('/alerts', params)
+      setAlerts(data)
+      setAError(false)
+    } catch {
+      setAError(true)
+    } finally {
+      setALoading(false)
+    }
+  }, [id, severityFilter, statusFilter])
 
-  const acknowledge = trpc.alert.acknowledge.useMutation({
-    onSuccess: () => {
-      utils.alert.list.invalidate()
+  useEffect(() => { fetchAlerts() }, [fetchAlerts])
+  useEffect(() => {
+    intervalRef.current = setInterval(fetchAlerts, 15000)
+    return () => clearInterval(intervalRef.current)
+  }, [fetchAlerts])
+
+  const acknowledge = async (alertId: string) => {
+    setAckLoadingId(alertId)
+    try {
+      await api.patch(`/alerts/${alertId}`, { action: 'acknowledge' })
       notifications.show({ title: '已确认告警', message: '', color: 'blue' })
-    },
-  })
+      fetchAlerts()
+    } catch (err: any) {
+      notifications.show({ title: '操作失败', message: err.message, color: 'red' })
+    } finally {
+      setAckLoadingId(null)
+    }
+  }
 
-  const resolve = trpc.alert.resolve.useMutation({
-    onSuccess: () => {
-      utils.alert.list.invalidate()
+  const resolve = async (alertId: string) => {
+    setResolveLoadingId(alertId)
+    try {
+      await api.patch(`/alerts/${alertId}`, { action: 'resolve' })
       notifications.show({ title: '已解决告警', message: '', color: 'green' })
-    },
-  })
+      fetchAlerts()
+    } catch (err: any) {
+      notifications.show({ title: '操作失败', message: err.message, color: 'red' })
+    } finally {
+      setResolveLoadingId(null)
+    }
+  }
 
-  if (alerts.isLoading) {
+  if (aLoading) {
     return (
       <Paper p="lg" radius="md" withBorder>
         <Skeleton height={28} width={200} mb="md" />
@@ -97,7 +125,7 @@ export function PatientAlerts() {
     )
   }
 
-  if (alerts.isError) {
+  if (aError) {
     return (
       <Paper p="lg" radius="md" withBorder>
         <StateError message="加载告警数据失败" />
@@ -105,7 +133,7 @@ export function PatientAlerts() {
     )
   }
 
-  if (!alerts.data || alerts.data.length === 0) {
+  if (!alerts || alerts.length === 0) {
     return (
       <Paper p="lg" radius="md" withBorder>
         <StateEmpty message="暂无告警记录" />
@@ -113,7 +141,7 @@ export function PatientAlerts() {
     )
   }
 
-  const items = alerts.data as any[]
+  const items = alerts as any[]
 
   const counts: Record<string, number> = { critical: 0, warning: 0, info: 0 }
   for (const a of items) {
@@ -215,8 +243,8 @@ export function PatientAlerts() {
                       variant="light"
                       color="blue"
                       leftSection={<IconCheck size={12} />}
-                      onClick={() => acknowledge.mutate({ id: a.id })}
-                      loading={acknowledge.variables?.id === a.id}
+                      onClick={() => acknowledge(a.id)}
+                      loading={ackLoadingId === a.id}
                     >
                       确认
                     </Button>
@@ -227,8 +255,8 @@ export function PatientAlerts() {
                       variant="light"
                       color="green"
                       leftSection={<IconCheck size={12} />}
-                      onClick={() => resolve.mutate({ id: a.id })}
-                      loading={resolve.variables?.id === a.id}
+                      onClick={() => resolve(a.id)}
+                      loading={resolveLoadingId === a.id}
                     >
                       解决
                     </Button>

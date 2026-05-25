@@ -14,10 +14,10 @@ import {
   Title,
 } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useForm } from '@tanstack/react-form'
 import { useParams, useNavigate } from '@tanstack/react-router'
-import { trpc } from '../../../trpc'
+import { api } from '../../../api/client'
 
 const genderOptions = [
   { value: 'male', label: '男' },
@@ -39,34 +39,74 @@ export function PatientProfile() {
   const [editing, setEditing] = useState(false)
   const [editKey, setEditKey] = useState(0)
   const [deleteConfirm, setDeleteConfirm] = useState(false)
-  const utils = trpc.useUtils()
+  const [patient, setPatient] = useState<any>(null)
+  const [pLoading, setPLoading] = useState(true)
+  const [pError, setPError] = useState(false)
+  const [pins, setPins] = useState<any[]>([])
+  const [pinsLoading, setPinsLoading] = useState(true)
+  const [updateLoading, setUpdateLoading] = useState(false)
+  const [deleteLoading, setDeleteLoading] = useState(false)
 
-  const patient = trpc.patient.byId.useQuery({ id: id! }, { enabled: !!id })
-  const pins = trpc.pin.list.useQuery(undefined, { enabled: !!id })
+  const fetchPatient = useCallback(async () => {
+    if (!id) return
+    setPLoading(true)
+    try {
+      const data = await api.get<any>(`/patients/${id}`)
+      setPatient(data)
+      setPError(false)
+    } catch {
+      setPError(true)
+    } finally {
+      setPLoading(false)
+    }
+  }, [id])
 
-  const updateMutation = trpc.patient.update.useMutation({
-    onSuccess: () => {
-      utils.patient.byId.invalidate({ id: id! })
+  const fetchPins = useCallback(async () => {
+    if (!id) return
+    setPinsLoading(true)
+    try {
+      const data = await api.get<any[]>('/pins')
+      setPins(data)
+    } finally {
+      setPinsLoading(false)
+    }
+  }, [id])
+
+  useEffect(() => { fetchPatient(); fetchPins() }, [fetchPatient, fetchPins])
+
+  const handleUpdate = async (data: any) => {
+    setUpdateLoading(true)
+    try {
+      await api.patch(`/patients/${id}`, data)
+      fetchPatient()
       setEditing(false)
       notifications.show({ title: '保存成功', message: '', color: 'green' })
-    },
-    onError: (err) => notifications.show({ title: '保存失败', message: err.message, color: 'red' }),
-  })
+    } catch (err: any) {
+      notifications.show({ title: '保存失败', message: err.message, color: 'red' })
+    } finally {
+      setUpdateLoading(false)
+    }
+  }
 
-  const deleteMutation = trpc.patient.delete.useMutation({
-    onSuccess: () => {
+  const handleDelete = async () => {
+    setDeleteLoading(true)
+    try {
+      await api.delete(`/patients/${id!}`)
       notifications.show({ title: '成功', message: '患者已删除', color: 'green' })
       navigate({ to: '/patients' })
-    },
-    onError: (err) => notifications.show({ title: '失败', message: err.message, color: 'red' }),
-  })
+    } catch (err: any) {
+      notifications.show({ title: '失败', message: err.message, color: 'red' })
+    } finally {
+      setDeleteLoading(false)
+    }
+  }
 
   const startEdit = () => {
     setEditKey((k) => k + 1)
     setEditing(true)
   }
 
-  if (patient.isLoading) {
+  if (pLoading) {
     return (
       <Stack gap="md">
         <Skeleton height={28} width={200} />
@@ -76,7 +116,7 @@ export function PatientProfile() {
     )
   }
 
-  if (patient.isError)
+  if (pError)
     return (
       <Stack align="center" py="xl">
         <Text c="red">加载患者信息失败</Text>
@@ -85,7 +125,7 @@ export function PatientProfile() {
         </Button>
       </Stack>
     )
-  if (!patient.data)
+  if (!patient)
     return (
       <Stack align="center" py="xl">
         <Text c="dimmed">患者不存在</Text>
@@ -95,17 +135,16 @@ export function PatientProfile() {
       </Stack>
     )
 
-  const p = patient.data as any
+  const p = patient as any
 
   if (editing) {
     return (
       <EditPatientForm
         key={editKey}
         patient={p}
-        updateMutation={updateMutation}
+        onUpdate={handleUpdate}
+        updateLoading={updateLoading}
         onCancel={() => setEditing(false)}
-        patientId={id!}
-        utils={utils}
       />
     )
   }
@@ -217,7 +256,7 @@ export function PatientProfile() {
         <Title order={4} mb="md">
           关联设备
         </Title>
-        {pins.isLoading ? (
+        {pinsLoading ? (
           <Skeleton height={100} />
         ) : (
           <Table striped highlightOnHover>
@@ -230,7 +269,7 @@ export function PatientProfile() {
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
-              {pins.data?.length === 0 ? (
+              {pins.length === 0 ? (
                 <Table.Tr>
                   <Table.Td colSpan={4}>
                     <Text c="dimmed" ta="center" py="sm">
@@ -239,7 +278,7 @@ export function PatientProfile() {
                   </Table.Td>
                 </Table.Tr>
               ) : (
-                pins.data?.map((d: any) => (
+                pins.map((d: any) => (
                   <Table.Tr key={d.pin}>
                     <Table.Td>
                       <Text ff="monospace" size="sm">
@@ -274,8 +313,8 @@ export function PatientProfile() {
           </Button>
           <Button
             color="red"
-            loading={deleteMutation.isPending}
-            onClick={() => deleteMutation.mutate({ id: id! })}
+            loading={deleteLoading}
+            onClick={handleDelete}
           >
             确认删除
           </Button>
@@ -287,11 +326,10 @@ export function PatientProfile() {
 
 function EditPatientForm({
   patient,
-  updateMutation,
+  onUpdate,
+  updateLoading,
   onCancel,
-  patientId,
-  utils,
-}: { patient: any; updateMutation: any; onCancel: () => void; patientId: string; utils: any }) {
+}: { patient: any; onUpdate: (data: any) => Promise<void>; updateLoading: boolean; onCancel: () => void }) {
   const form = useForm({
     defaultValues: {
       name: patient.name || '',
@@ -309,7 +347,7 @@ function EditPatientForm({
       const clean = Object.fromEntries(
         Object.entries(value).filter(([_, v]) => v !== '' && v !== undefined && v !== null),
       )
-      updateMutation.mutate({ id: patientId, data: clean } as any)
+      onUpdate(clean)
     },
   })
 
@@ -344,7 +382,7 @@ function EditPatientForm({
             <FormField form={form} name="emergencyPhone" label="紧急电话" />
           </Group>
           <Group>
-            <Button type="submit" loading={updateMutation.isPending}>
+            <Button type="submit" loading={updateLoading}>
               保存
             </Button>
             <Button variant="subtle" onClick={onCancel}>

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   Container,
   Title,
@@ -15,7 +15,7 @@ import {
 import { AccentPaper } from '../../../components/shared/AccentPaper'
 import { useDisclosure } from '@mantine/hooks'
 import { notifications } from '@mantine/notifications'
-import { trpc } from '../../../trpc'
+import { api } from '../../../api/client'
 import { StateSkeleton, StateError } from '../../../components/shared/StateComponents'
 
 interface AlertItem {
@@ -40,37 +40,64 @@ const STATUS_LABELS: Record<string, string> = {
 }
 
 export function AlertBoard() {
-  const { data: alerts, refetch, isLoading, isError } = trpc.alert.list.useQuery({ pageSize: 100 })
-  const handleMutation = trpc.alert.handle.useMutation({
-    onError: (err) => notifications.show({ title: '操作失败', message: err.message, color: 'red' }),
-  })
-  const closeMutation = trpc.alert.close.useMutation({
-    onError: (err) => notifications.show({ title: '操作失败', message: err.message, color: 'red' }),
-  })
+  const [alerts, setAlerts] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [isError, setIsError] = useState(false)
+  const [handleLoading, setHandleLoading] = useState(false)
+  const [closeLoading, setCloseLoading] = useState(false)
+
+  const fetchAlerts = useCallback(async () => {
+    setIsLoading(true)
+    try {
+      const data = await api.get<any[]>('/alerts', { pageSize: 100 })
+      setAlerts(data)
+      setIsError(false)
+    } catch {
+      setIsError(true)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { fetchAlerts() }, [fetchAlerts])
 
   const [selected, setSelected] = useState<AlertItem | null>(null)
   const [note, setNote] = useState('')
   const [resolution, setResolution] = useState('')
   const [opened, { open, close }] = useDisclosure(false)
 
-  const newAlerts = alerts?.filter((a) => a.status === 'new' || a.status === 'active') ?? []
-  const handled = alerts?.filter((a) => a.status === 'handled' || a.status === 'acknowledged') ?? []
-  const completed = alerts?.filter((a) => a.status === 'closed' || a.status === 'resolved') ?? []
+  const newAlerts = alerts.filter((a) => a.status === 'new' || a.status === 'active')
+  const handled = alerts.filter((a) => a.status === 'handled' || a.status === 'acknowledged')
+  const completed = alerts.filter((a) => a.status === 'closed' || a.status === 'resolved')
 
   const handleMarkHandled = async () => {
     if (!selected) return
-    await handleMutation.mutateAsync({ alertId: selected.id, note })
-    setNote('')
-    close()
-    refetch()
+    setHandleLoading(true)
+    try {
+      await api.patch(`/alerts/${selected.id}`, { action: 'acknowledge' })
+      setNote('')
+      close()
+      fetchAlerts()
+    } catch (err: any) {
+      notifications.show({ title: '操作失败', message: err.message, color: 'red' })
+    } finally {
+      setHandleLoading(false)
+    }
   }
 
   const handleClose = async () => {
     if (!selected) return
-    await closeMutation.mutateAsync({ alertId: selected.id, resolution })
-    setResolution('')
-    close()
-    refetch()
+    setCloseLoading(true)
+    try {
+      await api.post(`/alerts/${selected.id}/close`)
+      setResolution('')
+      close()
+      fetchAlerts()
+    } catch (err: any) {
+      notifications.show({ title: '操作失败', message: err.message, color: 'red' })
+    } finally {
+      setCloseLoading(false)
+    }
   }
 
   const openDetail = (a: AlertItem) => {
@@ -95,7 +122,7 @@ export function AlertBoard() {
         <Title order={2} mb="lg">
           告警管理
         </Title>
-        <StateError message="加载告警失败" onRetry={refetch} />
+        <StateError message="加载告警失败" onRetry={fetchAlerts} />
       </Container>
     )
 
@@ -263,7 +290,7 @@ export function AlertBoard() {
                 />
                 <Button
                   onClick={handleMarkHandled}
-                  loading={handleMutation.isPending}
+                  loading={handleLoading}
                   color="yellow"
                 >
                   标记已处理
@@ -277,7 +304,7 @@ export function AlertBoard() {
                   placeholder="结案备注"
                   onChange={(e) => setResolution(e.target.value)}
                 />
-                <Button onClick={handleClose} loading={closeMutation.isPending} color="green">
+                <Button onClick={handleClose} loading={closeLoading} color="green">
                   结案
                 </Button>
               </>

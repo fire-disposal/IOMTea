@@ -1,8 +1,8 @@
 import { Badge, Button, Container, Group, Modal, Paper, Select, Text, Title } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { createColumnHelper } from '@tanstack/react-table'
-import { trpc } from '../trpc'
+import { api } from '../api/client'
 import { DataTable } from '../components/shared/DataTable'
 import { StateSkeleton, StateError, StateEmpty } from '../components/shared/StateComponents'
 import type { UserRole } from '@iomtea/shared-types'
@@ -33,22 +33,45 @@ function ActivationBadge({ lastLoginAt }: { lastLoginAt?: number | null }) {
 }
 
 export function UserManagementPage() {
-  const utils = trpc.useUtils()
-  const users = trpc.user.list.useQuery({ page: 1, pageSize: 100 })
-  const updateMutation = trpc.user.update.useMutation({
-    onSuccess: () => {
-      notifications.show({ title: '已更新', message: '', color: 'green' })
-      utils.user.list.invalidate()
-      setEditUser(null)
-    },
-    onError: (err) => notifications.show({ title: '更新失败', message: err.message, color: 'red' }),
-  })
-
+  const [users, setUsers] = useState<any[]>([])
+  const [uLoading, setULoading] = useState(true)
+  const [uError, setUError] = useState(false)
+  const [updateLoading, setUpdateLoading] = useState(false)
   const [editUser, setEditUser] = useState<{
     id: string
     displayName: string
     role: UserRole
   } | null>(null)
+
+  const fetchUsers = useCallback(async () => {
+    setULoading(true)
+    try {
+      const data = await api.get<any[]>('/users')
+      setUsers(data)
+      setUError(false)
+    } catch {
+      setUError(true)
+    } finally {
+      setULoading(false)
+    }
+  }, [])
+
+  useEffect(() => { fetchUsers() }, [fetchUsers])
+
+  const handleUpdate = async () => {
+    if (!editUser) return
+    setUpdateLoading(true)
+    try {
+      await api.patch(`/users/${editUser.id}`, { role: editUser.role })
+      notifications.show({ title: '已更新', message: '', color: 'green' })
+      setEditUser(null)
+      fetchUsers()
+    } catch (err: any) {
+      notifications.show({ title: '更新失败', message: err.message, color: 'red' })
+    } finally {
+      setUpdateLoading(false)
+    }
+  }
 
   const columnHelper = createColumnHelper<any>()
   const columns = [
@@ -104,13 +127,13 @@ export function UserManagementPage() {
       </Group>
 
       <Paper p="lg" radius="md" withBorder>
-        {users.isLoading && <StateSkeleton variant="table" count={5} />}
-        {users.isError && <StateError message="加载用户列表失败" onRetry={() => users.refetch()} />}
-        {!users.isLoading && !users.isError && (users.data ?? []).length === 0 && (
+        {uLoading && <StateSkeleton variant="table" count={5} />}
+        {uError && <StateError message="加载用户列表失败" onRetry={fetchUsers} />}
+        {!uLoading && !uError && users.length === 0 && (
           <StateEmpty message="暂无用户" />
         )}
-        {!users.isLoading && !users.isError && (users.data ?? []).length > 0 && (
-          <DataTable data={users.data ?? []} columns={columns} />
+        {!uLoading && !uError && users.length > 0 && (
+          <DataTable data={users} columns={columns} />
         )}
       </Paper>
 
@@ -127,10 +150,8 @@ export function UserManagementPage() {
             />
             <Button
               fullWidth
-              onClick={() =>
-                updateMutation.mutate({ id: editUser.id, data: { role: editUser.role } })
-              }
-              loading={updateMutation.isPending}
+              onClick={handleUpdate}
+              loading={updateLoading}
             >
               保存
             </Button>

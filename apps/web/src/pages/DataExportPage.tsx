@@ -3,82 +3,39 @@ import {
   Title,
   Paper,
   Group,
-  Select,
   Text,
   Table,
-  Checkbox,
-  Button,
-  SegmentedControl,
   Badge,
   Box,
+  Button,
 } from '@mantine/core'
-import { useState } from 'react'
-import { trpc } from '../trpc'
-
-const FIELD_OPTIONS: Record<string, string[]> = {
-  patients: [
-    'id',
-    'name',
-    'gender',
-    'birth_date',
-    'phone',
-    'height_cm',
-    'weight_kg',
-    'blood_type',
-    'address',
-    'status',
-    'created_at',
-  ],
-  events: [
-    'id',
-    'patient_id',
-    'kind',
-    'metric',
-    'value',
-    'unit',
-    'source',
-    'severity',
-    'status',
-    'pin_code',
-    'recorded_at',
-    'created_at',
-  ],
-  medications: [
-    'id',
-    'patient_id',
-    'drug_name',
-    'dosage',
-    'dosage_unit',
-    'frequency',
-    'route',
-    'start_date',
-    'end_date',
-    'status',
-    'created_at',
-  ],
-}
-
-const ENTITY_LABELS: Record<string, string> = {
-  patients: '患者',
-  events: '事件',
-  medications: '用药',
-}
+import { useState, useEffect, useCallback } from 'react'
+import { api } from '../api/client'
 
 export function DataExportPage() {
-  const [entity, setEntity] = useState<string>('patients')
-  const [selectedFields, setSelectedFields] = useState<string[]>([])
-  const [format, setFormat] = useState<'csv' | 'xlsx'>('csv')
+  const [preview, setPreview] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [downloadLoading, setDownloadLoading] = useState(false)
+  const [format, setFormat] = useState<string>('csv')
 
-  const { data: preview, isLoading } = trpc.export.preview.useQuery(
-    {
-      entity: entity as 'patients' | 'events' | 'medications',
-      fields: selectedFields.length > 0 ? selectedFields : ['id'],
-    },
-    { enabled: true },
-  )
+  const fetchPreview = useCallback(async () => {
+    setIsLoading(true)
+    try {
+      const data = await api.get<any>('/export/preview', { limit: 50 })
+      setPreview(data)
+    } catch {
+      setPreview(null)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
 
-  const downloadMutation = trpc.export.download.useMutation({
-    onSuccess: (result) => {
+  useEffect(() => { fetchPreview() }, [fetchPreview])
+
+  const handleExport = async () => {
+    setDownloadLoading(true)
+    try {
+      const result = await api.post<any>('/export/download', { format } as any)
       if (result.data) {
         const binary = Uint8Array.from(atob(result.data), (c) => c.charCodeAt(0))
         const blob = new Blob([binary], { type: result.mime })
@@ -91,20 +48,10 @@ export function DataExportPage() {
         document.body.removeChild(a)
         URL.revokeObjectURL(url)
       }
-    },
-  })
-
-  const handleExport = () => {
-    if (selectedFields.length === 0) return
-    downloadMutation.mutate({
-      entity: entity as 'patients' | 'events' | 'medications',
-      fields: selectedFields,
-      format,
-    })
+    } finally {
+      setDownloadLoading(false)
+    }
   }
-
-  const selectAll = () => setSelectedFields([...FIELD_OPTIONS[entity]])
-  const clearAll = () => setSelectedFields([])
 
   return (
     <Container size="xl" py="md">
@@ -113,64 +60,24 @@ export function DataExportPage() {
       </Title>
 
       <Paper p="md" withBorder mb="md">
-        <Group align="end">
-          <Select
-            label="导出实体"
-            data={Object.entries(FIELD_OPTIONS).map(([k, v]) => ({
-              value: k,
-              label: `${ENTITY_LABELS[k]} (${v.length}字段)`,
-            }))}
-            value={entity}
-            onChange={(v) => {
-              setEntity(v!)
-              setSelectedFields([])
-            }}
-          />
-          <SegmentedControl
-            data={[
-              { value: 'csv', label: 'CSV' },
-              { value: 'xlsx', label: 'Excel' },
-            ]}
-            value={format}
-            onChange={(v) => setFormat(v as 'csv' | 'xlsx')}
-          />
-        </Group>
-
-        <Group mt="md" justify="space-between">
+        <Group align="end" mb="md">
           <Text size="sm" fw={500}>
-            选择导出字段
+            导出格式: {format.toUpperCase()}
           </Text>
-          <Group gap="xs">
-            <Button size="compact-xs" variant="subtle" onClick={selectAll}>
-              全选
-            </Button>
-            <Button size="compact-xs" variant="subtle" color="gray" onClick={clearAll}>
-              清空
-            </Button>
-          </Group>
         </Group>
-
-        <Checkbox.Group value={selectedFields} onChange={setSelectedFields} mt="xs">
-          <Group>
-            {FIELD_OPTIONS[entity]?.map((f: string) => (
-              <Checkbox key={f} value={f} label={f} size="sm" />
-            ))}
-          </Group>
-        </Checkbox.Group>
 
         <Button
           mt="lg"
           onClick={handleExport}
-          loading={downloadMutation.isPending}
-          disabled={selectedFields.length === 0}
+          loading={downloadLoading}
         >
-          导出 {format.toUpperCase()} ({selectedFields.length} 字段)
+          导出数据
         </Button>
       </Paper>
 
       <Paper p="md" withBorder>
         <Group justify="space-between" mb="sm">
-          <Text fw={600}>在线预览</Text>
+          <Text fw={600}>数据预览</Text>
           {preview && <Badge variant="light">{preview.total} 条记录</Badge>}
         </Group>
 
@@ -182,7 +89,7 @@ export function DataExportPage() {
 
         {!isLoading && (!preview || preview.rows.length === 0) && (
           <Text c="dimmed" ta="center" py="xl">
-            选择字段后预览数据
+            暂无数据
           </Text>
         )}
 

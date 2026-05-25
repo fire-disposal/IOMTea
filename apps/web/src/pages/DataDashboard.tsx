@@ -1,9 +1,9 @@
 import { Badge, Box, Group, Paper, Select, SimpleGrid, Text, ThemeIcon, Title } from '@mantine/core'
 import { AccentPaper } from '../components/shared/AccentPaper'
 import { IconAlertTriangle, IconUsers, IconChartLine } from '@tabler/icons-react'
-import { trpc } from '../trpc'
+import { api } from '../api/client'
 import { StateSkeleton, StateError } from '../components/shared/StateComponents'
-import { useState } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 
 function StatCard({
   label,
@@ -29,26 +29,82 @@ function StatCard({
 }
 
 export function DataDashboard() {
-  const patients = trpc.patient.list.useQuery({ pageSize: 100, status: 'active' })
-  const alerts = trpc.alert.list.useQuery({ pageSize: 50 }, { refetchInterval: 10000 })
-  const { data: metrics } = trpc.data.metrics.useQuery({})
+  const [patients, setPatients] = useState<any[]>([])
+  const [alerts, setAlerts] = useState<any[]>([])
+  const [pLoading, setPLoading] = useState(true)
+  const [pError, setPError] = useState(false)
+  const [aLoading, setALoading] = useState(true)
+  const [aError, setAError] = useState(false)
+  const [metrics, setMetrics] = useState<any[]>([])
+  const [mLoading, setMLoading] = useState(true)
+  const [trendData, setTrendData] = useState<any>(null)
+  const [trendLoading, setTrendLoading] = useState(false)
   const [selectedMetric, setSelectedMetric] = useState<string>('heart_rate')
+  const alertIntervalRef = useRef<ReturnType<typeof setInterval>>(undefined)
 
-  const { data: trendData, isLoading: trendLoading } = trpc.data.aggregate.useQuery(
-    {
-      patientId: (patients.data?.[0] as any)?.id ?? '',
-      metric: selectedMetric,
-      interval: 'day' as const,
-      fn: 'avg' as const,
-      from: new Date(Date.now() - 7 * 86400000).toISOString(),
-    },
-    { enabled: !!patients.data?.length },
-  )
+  const fetchPatients = useCallback(async () => {
+    setPLoading(true)
+    try {
+      const data = await api.get<any[]>('/patients', { pageSize: 100, status: 'active' })
+      setPatients(data)
+      setPError(false)
+    } catch {
+      setPError(true)
+    } finally {
+      setPLoading(false)
+    }
+  }, [])
 
-  const selectedDef = metrics?.find((m: any) => m.metric === selectedMetric)
+  const fetchAlerts = useCallback(async () => {
+    try {
+      const data = await api.get<any[]>('/alerts', { pageSize: 50 })
+      setAlerts(data)
+      setAError(false)
+    } catch {
+      setAError(true)
+    } finally {
+      setALoading(false)
+    }
+  }, [])
 
-  const isLoading = patients.isLoading || alerts.isLoading
-  const isError = patients.isError || alerts.isError
+  const fetchMetrics = useCallback(async () => {
+    setMLoading(true)
+    try {
+      const data = await api.get<any[]>('/data/metrics')
+      setMetrics(data)
+    } finally {
+      setMLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { fetchPatients(); fetchAlerts(); fetchMetrics() }, [fetchPatients, fetchAlerts, fetchMetrics])
+  useEffect(() => {
+    alertIntervalRef.current = setInterval(fetchAlerts, 10000)
+    return () => clearInterval(alertIntervalRef.current)
+  }, [fetchAlerts])
+
+  useEffect(() => {
+    if (!patients.length) return
+    setTrendLoading(true)
+    api
+      .get<any>('/data/aggregate', {
+        patientId: patients[0]?.id ?? '',
+        metric: selectedMetric,
+        interval: 'day',
+        fn: 'avg',
+        from: new Date(Date.now() - 7 * 86400000).toISOString(),
+      })
+      .then((data) => {
+        setTrendData(data)
+        setTrendLoading(false)
+      })
+      .catch(() => setTrendLoading(false))
+  }, [patients, selectedMetric])
+
+  const selectedDef = metrics.find((m: any) => m.metric === selectedMetric)
+
+  const isLoading = pLoading || aLoading || mLoading
+  const isError = pError || aError
 
   if (isLoading)
     return (
@@ -62,17 +118,17 @@ export function DataDashboard() {
         <StateError
           message="加载数据失败"
           onRetry={() => {
-            patients.refetch()
-            alerts.refetch()
+            fetchPatients()
+            fetchAlerts()
           }}
         />
       </Box>
     )
 
-  const activeAlerts = (alerts.data ?? []).filter(
+  const activeAlerts = alerts.filter(
     (a: any) => a.status !== 'closed' && a.status !== 'resolved',
   )
-  const patientCount = patients.data?.length ?? 0
+  const patientCount = patients.length
   const criticalCount = activeAlerts.filter((a: any) => a.severity === 'critical').length
 
   return (
@@ -117,7 +173,7 @@ export function DataDashboard() {
           </Group>
           <Select
             size="xs"
-            data={(metrics ?? []).map((m: any) => ({
+            data={metrics.map((m: any) => ({
               value: m.metric,
               label: `${m.displayName} (${m.unit})`,
             }))}
@@ -206,7 +262,7 @@ export function DataDashboard() {
             患者概览
           </Text>
           <SimpleGrid cols={2} spacing="xs">
-            {(patients.data ?? []).slice(0, 10).map((p: any) => (
+            {(patients ?? []).slice(0, 10).map((p: any) => (
               <Paper key={p.id} p="xs" withBorder>
                 <Group gap={4}>
                   <Text size="xs" fw={500}>

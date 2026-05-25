@@ -23,41 +23,89 @@ import {
   IconUsers,
   IconX,
 } from '@tabler/icons-react'
-import { useState } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useForm } from '@tanstack/react-form'
 import { PatientCard } from '../../../components/patients/PatientCard'
 import { StateEmpty, StateError, StateSkeleton } from '../../../components/shared/StateComponents'
 import { StatsBar, type StatsBarItem } from '../../../components/shared/StatsBar'
-import { trpc } from '../../../trpc'
+import { api } from '../../../api/client'
 
 export function PatientWall() {
   const [search, setSearch] = useState('')
   const [createOpen, setCreateOpen] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
-  const utils = trpc.useUtils()
-
-  const patients = trpc.patient.list.useQuery({ pageSize: 100, status: 'active' })
-  const alerts = trpc.alert.list.useQuery({ pageSize: 100 }, { refetchInterval: 30000 })
-  const { data: tags } = trpc.tag.list.useQuery()
+  const [patients, setPatients] = useState<any[]>([])
+  const [pLoading, setPLoading] = useState(true)
+  const [pError, setPError] = useState(false)
+  const [alerts, setAlerts] = useState<any[]>([])
+  const [tags, setTags] = useState<any[]>([])
   const [filterTagIds, setFilterTagIds] = useState<string[]>([])
-  const createPatient = trpc.patient.create.useMutation({
-    onSuccess: () => {
+  const [createLoading, setCreateLoading] = useState(false)
+  const [deleteLoading, setDeleteLoading] = useState(false)
+  const alertIntervalRef = useRef<ReturnType<typeof setInterval>>(undefined)
+
+  const fetchPatients = useCallback(async () => {
+    setPLoading(true)
+    try {
+      const data = await api.get<any[]>('/patients', { pageSize: 100, status: 'active' })
+      setPatients(data)
+      setPError(false)
+    } catch {
+      setPError(true)
+    } finally {
+      setPLoading(false)
+    }
+  }, [])
+
+  const fetchAlerts = useCallback(async () => {
+    try {
+      const data = await api.get<any[]>('/alerts', { pageSize: 100 })
+      setAlerts(data)
+    } catch { /* silent */ }
+  }, [])
+
+  const fetchTags = useCallback(async () => {
+    try {
+      const data = await api.get<any[]>('/tags')
+      setTags(data)
+    } catch { /* silent */ }
+  }, [])
+
+  useEffect(() => { fetchPatients(); fetchAlerts(); fetchTags() }, [fetchPatients, fetchAlerts, fetchTags])
+  useEffect(() => {
+    alertIntervalRef.current = setInterval(fetchAlerts, 30000)
+    return () => clearInterval(alertIntervalRef.current)
+  }, [fetchAlerts])
+
+  const handleCreate = async (value: any) => {
+    setCreateLoading(true)
+    try {
+      await api.post('/patients', value)
       notifications.show({ title: '成功', message: '患者已创建', color: 'green' })
       setCreateOpen(false)
       form.reset()
-      utils.patient.list.invalidate()
-    },
-    onError: (err) => notifications.show({ title: '失败', message: err.message, color: 'red' }),
-  })
+      fetchPatients()
+    } catch (err: any) {
+      notifications.show({ title: '失败', message: err.message, color: 'red' })
+    } finally {
+      setCreateLoading(false)
+    }
+  }
 
-  const deletePatient = trpc.patient.delete.useMutation({
-    onSuccess: () => {
+  const handleDelete = async () => {
+    if (!deleteTarget) return
+    setDeleteLoading(true)
+    try {
+      await api.delete(`/patients/${deleteTarget}`)
       notifications.show({ title: '成功', message: '患者已删除', color: 'green' })
       setDeleteTarget(null)
-      utils.patient.list.invalidate()
-    },
-    onError: (err) => notifications.show({ title: '失败', message: err.message, color: 'red' }),
-  })
+      fetchPatients()
+    } catch (err: any) {
+      notifications.show({ title: '失败', message: err.message, color: 'red' })
+    } finally {
+      setDeleteLoading(false)
+    }
+  }
 
   const form = useForm({
     defaultValues: {
@@ -73,13 +121,13 @@ export function PatientWall() {
       const clean = Object.fromEntries(
         Object.entries(value).filter(([_, val]) => val !== '' && val !== undefined && val !== null),
       )
-      createPatient.mutate(clean as any)
+      handleCreate(clean)
     },
   })
 
   const nameRequired = ({ value }: { value: unknown }) => (!value ? '请输入姓名' : undefined)
 
-  const filtered = (patients.data || []).filter((p: any) => {
+  const filtered = patients.filter((p: any) => {
     if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false
     if (
       filterTagIds.length > 0 &&
@@ -92,13 +140,13 @@ export function PatientWall() {
   const statsItems: StatsBarItem[] = [
     {
       label: '患者总数',
-      value: patients.data?.length ?? 0,
+      value: patients.length,
       icon: <IconUsers size={20} />,
       color: 'matchaGreen',
     },
     {
       label: '活跃告警',
-      value: alerts.data?.filter((a: any) => a.status === 'active').length ?? 0,
+      value: alerts.filter((a: any) => a.status === 'active').length,
       icon: <IconAlertTriangle size={20} />,
       color: 'red',
     },
@@ -115,7 +163,7 @@ export function PatientWall() {
         </Group>
       </Group>
 
-      <StatsBar items={statsItems} loading={patients.isLoading} />
+      <StatsBar items={statsItems} loading={pLoading} />
 
       <TextInput
         placeholder="搜索患者..."
@@ -152,20 +200,20 @@ export function PatientWall() {
         </Box>
       )}
 
-      {patients.isLoading && (
+      {pLoading && (
         <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
           <StateSkeleton count={6} />
         </SimpleGrid>
       )}
-      {patients.isError && <StateError message="加载患者列表失败" />}
-      {!patients.isLoading && !patients.isError && filtered.length === 0 && (
+      {pError && <StateError message="加载患者列表失败" />}
+      {!pLoading && !pError && filtered.length === 0 && (
         <StateEmpty
           message="暂无患者"
           action={() => setCreateOpen(true)}
           actionLabel="添加第一位患者"
         />
       )}
-      {!patients.isLoading && !patients.isError && filtered.length > 0 && (
+      {!pLoading && !pError && filtered.length > 0 && (
         <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="lg">
           {filtered.map((p: any, index: number) => (
             <div
@@ -176,7 +224,7 @@ export function PatientWall() {
               <PatientCard
                 patient={p}
                 alertCount={
-                  alerts.data?.filter((a: any) => a.patientId === p.id && a.status === 'active')
+                  alerts.filter((a: any) => a.patientId === p.id && a.status === 'active')
                     .length
                 }
                 onDelete={(id) => setDeleteTarget(id)}
@@ -279,7 +327,7 @@ export function PatientWall() {
               {(isSubmitting) => (
                 <Button
                   type="submit"
-                  loading={isSubmitting || createPatient.isPending}
+                  loading={isSubmitting || createLoading}
                   fullWidth
                   mt="md"
                 >
@@ -303,8 +351,8 @@ export function PatientWall() {
           </Button>
           <Button
             color="red"
-            loading={deletePatient.isPending}
-            onClick={() => deletePatient.mutate({ id: deleteTarget! })}
+            loading={deleteLoading}
+            onClick={handleDelete}
           >
             确认删除
           </Button>

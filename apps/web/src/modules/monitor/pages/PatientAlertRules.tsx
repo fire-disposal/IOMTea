@@ -1,7 +1,8 @@
 import { Button, Group, NumberInput, Paper, Switch, Text, Title } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
+import { useState, useEffect, useCallback } from 'react'
 import { useForm } from '@tanstack/react-form'
-import { trpc } from '../../../trpc'
+import { api } from '../../../api/client'
 import { StateSkeleton, StateError } from '../../../components/shared/StateComponents'
 
 interface RuleItem {
@@ -14,20 +15,44 @@ interface RuleItem {
 }
 
 export function PatientAlertRules({ patientId }: { patientId: string }) {
-  const utils = trpc.useUtils()
-  const rules = trpc.alertRule.byPatient.useQuery({ patientId }, { enabled: !!patientId })
-  const upsert = trpc.alertRule.upsert.useMutation({
-    onSuccess: () => {
+  const [rules, setRules] = useState<any[]>([])
+  const [rLoading, setRLoading] = useState(true)
+  const [rError, setRError] = useState(false)
+  const [upsertLoading, setUpsertLoading] = useState(false)
+
+  const fetchRules = useCallback(async () => {
+    if (!patientId) return
+    setRLoading(true)
+    try {
+      const data = await api.get<any[]>(`/alert-rules/patients/${patientId}/alert-rules`)
+      setRules(data)
+      setRError(false)
+    } catch {
+      setRError(true)
+    } finally {
+      setRLoading(false)
+    }
+  }, [patientId])
+
+  useEffect(() => { fetchRules() }, [fetchRules])
+
+  const upsert = async (updatedRules: any[]) => {
+    setUpsertLoading(true)
+    try {
+      await api.put(`/alert-rules/patients/${patientId}/alert-rules`, { rules: updatedRules })
       notifications.show({ title: '已保存', message: '告警规则已更新', color: 'green' })
-      utils.alertRule.byPatient.invalidate({ patientId })
-    },
-    onError: (err) => notifications.show({ title: '保存失败', message: err.message, color: 'red' }),
-  })
+      fetchRules()
+    } catch (err: any) {
+      notifications.show({ title: '保存失败', message: err.message, color: 'red' })
+    } finally {
+      setUpsertLoading(false)
+    }
+  }
 
   const form = useForm({
     defaultValues: {} as Record<string, { min?: number; max?: number; enabled: boolean }>,
     onSubmit: ({ value }) => {
-      const updatedRules = (rules.data ?? []).map((r: any) => ({
+      const updatedRules = (rules ?? []).map((r: any) => ({
         metric: r.metric,
         label: r.label,
         unit: r.unit,
@@ -35,20 +60,20 @@ export function PatientAlertRules({ patientId }: { patientId: string }) {
         max: value[r.metric]?.max,
         enabled: value[r.metric]?.enabled ?? r.enabled ?? true,
       }))
-      upsert.mutate({ patientId, rules: updatedRules })
+      upsert(updatedRules)
     },
   })
 
-  if (rules.isLoading) return <StateSkeleton variant="table" count={8} />
-  if (rules.isError) return <StateError message="加载告警规则失败" />
+  if (rLoading) return <StateSkeleton variant="table" count={8} />
+  if (rError) return <StateError message="加载告警规则失败" />
 
-  const data = rules.data ?? []
+  const data = rules ?? []
 
   return (
     <div>
       <Group justify="space-between" mb="md">
         <Title order={4}>告警规则配置</Title>
-        <Button size="sm" onClick={() => form.handleSubmit()} loading={upsert.isPending}>
+        <Button size="sm" onClick={() => form.handleSubmit()} loading={upsertLoading}>
           保存
         </Button>
       </Group>

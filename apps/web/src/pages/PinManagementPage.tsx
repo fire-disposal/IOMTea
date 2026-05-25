@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   Container,
   Title,
@@ -12,7 +12,7 @@ import {
   Stack,
 } from '@mantine/core'
 import { IconEye, IconRefresh } from '@tabler/icons-react'
-import { trpc } from '../trpc'
+import { api } from '../api/client'
 import { StateSkeleton, StateEmpty, StateError } from '../components/shared/StateComponents'
 
 const TYPE_LABELS: Record<string, string> = {
@@ -29,12 +29,29 @@ const TYPE_COLORS: Record<string, string> = {
 }
 
 export function PinManagementPage() {
-  const { data: pins, refetch, isLoading, isError } = trpc.pin.list.useQuery()
+  const [pins, setPins] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [isError, setIsError] = useState(false)
   const [typeFilter, setTypeFilter] = useState<string>('all')
   const [detailPin, setDetailPin] = useState<any>(null)
   const [timelineMinutes, setTimelineMinutes] = useState(30)
 
-  const filtered = (pins ?? []).filter((p: any) => typeFilter === 'all' || p.type === typeFilter)
+  const fetchPins = useCallback(async () => {
+    setIsLoading(true)
+    try {
+      const data = await api.get<any[]>('/pins')
+      setPins(data)
+      setIsError(false)
+    } catch {
+      setIsError(true)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { fetchPins() }, [fetchPins])
+
+  const filtered = pins.filter((p: any) => typeFilter === 'all' || p.type === typeFilter)
 
   if (isLoading)
     return (
@@ -51,7 +68,7 @@ export function PinManagementPage() {
         <Title order={2} mb="lg">
           PIN 管理
         </Title>
-        <StateError message="加载失败" onRetry={refetch} />
+        <StateError message="加载失败" onRetry={fetchPins} />
       </Container>
     )
 
@@ -59,7 +76,7 @@ export function PinManagementPage() {
     <Container size="xl" py="md">
       <Group justify="space-between" mb="md">
         <Title order={2}>PIN 管理</Title>
-        <ActionIcon variant="subtle" onClick={() => refetch()}>
+        <ActionIcon variant="subtle" onClick={fetchPins}>
           <IconRefresh size={16} />
         </ActionIcon>
       </Group>

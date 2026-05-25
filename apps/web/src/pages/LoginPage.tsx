@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useForm } from '@tanstack/react-form'
 import { z } from 'zod'
 import { useAuthStore } from '../store/auth'
-import { trpc } from '../trpc'
+import { api } from '../api/client'
 import { useNavigate } from '@tanstack/react-router'
 import classes from './LoginPage.module.css'
 
@@ -32,15 +32,13 @@ const particles = Array.from({ length: 32 }, (_, i) => ({
 
 export function LoginPage() {
   const [isRegister, setIsRegister] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
   const setTokens = useAuthStore((s) => s.setTokens)
   const navigate = useNavigate()
 
-  const handleAuthSuccess = (data: {
-    accessToken: string
-    refreshToken: string
-    expiresAt: number
-  }) => {
-    setTokens(data.accessToken, data.refreshToken, data.expiresAt)
+  const handleAuthSuccess = (data: { accessToken: string; refreshToken: string }) => {
+    setTokens(data.accessToken, data.refreshToken, Date.now() + 3600000)
     notifications.show({ title: '登录成功', message: '欢迎使用 IOMTea', color: 'green' })
     const params = new URLSearchParams(window.location.search)
     const redirect = params.get('redirect') || '/'
@@ -49,22 +47,27 @@ export function LoginPage() {
 
   const form = useForm({
     defaultValues: { username: '', password: '' },
-    onSubmit: ({ value }) => {
-      if (isRegister) register.mutate({ ...value, displayName: value.username })
-      else login.mutate(value)
+    onSubmit: async ({ value }) => {
+      setLoading(true)
+      setError('')
+      try {
+        const endpoint = isRegister ? '/auth/register' : '/auth/login'
+        const data = await api.post<{
+          accessToken: string
+          refreshToken: string
+          error?: string
+        }>(endpoint, value)
+        if (data.error) {
+          setError(data.error)
+        } else {
+          handleAuthSuccess(data)
+        }
+      } catch (err) {
+        setError((err as Error).message)
+      } finally {
+        setLoading(false)
+      }
     },
-  })
-
-  const login = trpc.auth.login.useMutation({
-    onSuccess: handleAuthSuccess,
-    onError: (err) =>
-      form.setFieldMeta('username', (prev) => ({ ...prev, errorMap: { onServer: err.message } })),
-  })
-
-  const register = trpc.auth.register.useMutation({
-    onSuccess: handleAuthSuccess,
-    onError: (err) =>
-      form.setFieldMeta('username', (prev) => ({ ...prev, errorMap: { onServer: err.message } })),
   })
 
   return (
@@ -90,13 +93,7 @@ export function LoginPage() {
       <div className={classes.shapeTriangle} />
 
       <Container size={420} style={{ position: 'relative', zIndex: 1 }}>
-        <Title
-          ta="center"
-          fz={36}
-          fw={800}
-          className={classes.title}
-          style={{ textTransform: 'uppercase' }}
-        >
+        <Title ta="center" fz={36} fw={800} className={classes.title} style={{ textTransform: 'uppercase' }}>
           IOMTea
         </Title>
         <Title ta="center" order={6} fw={400} mt={4} className={classes.subtitle}>
@@ -110,10 +107,7 @@ export function LoginPage() {
               form.handleSubmit()
             }}
           >
-            <form.Field
-              name="username"
-              validators={{ onChange: zodCheck(loginSchema.shape.username) }}
-            >
+            <form.Field name="username" validators={{ onChange: zodCheck(loginSchema.shape.username) }}>
               {(field) => (
                 <TextInput
                   label="用户名"
@@ -121,10 +115,8 @@ export function LoginPage() {
                   required
                   autoComplete="username"
                   value={field.state.value}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    field.handleChange(e.currentTarget.value)
-                  }
-                  error={field.state.meta.errors?.[0]}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => field.handleChange(e.currentTarget.value)}
+                  error={field.state.meta.errors?.[0] || error}
                   styles={{
                     input: {
                       background: 'rgba(255,255,255,0.07)',
@@ -137,10 +129,7 @@ export function LoginPage() {
                 />
               )}
             </form.Field>
-            <form.Field
-              name="password"
-              validators={{ onChange: zodCheck(loginSchema.shape.password) }}
-            >
+            <form.Field name="password" validators={{ onChange: zodCheck(loginSchema.shape.password) }}>
               {(field) => (
                 <PasswordInput
                   label="密码"
@@ -149,13 +138,8 @@ export function LoginPage() {
                   mt="md"
                   autoComplete={isRegister ? 'new-password' : 'current-password'}
                   value={field.state.value}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    field.handleChange(e.currentTarget.value)
-                  }
-                  error={
-                    field.state.meta.errors?.[0] ||
-                    (field.state.meta.errorMap as Record<string, string> | undefined)?.onServer
-                  }
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => field.handleChange(e.currentTarget.value)}
+                  error={field.state.meta.errors?.[0]}
                   styles={{
                     input: {
                       background: 'rgba(255,255,255,0.07)',
@@ -175,7 +159,7 @@ export function LoginPage() {
               size="md"
               radius="md"
               type="submit"
-              loading={login.isPending || register.isPending}
+              loading={loading}
               styles={{
                 root: {
                   background: 'linear-gradient(135deg, #38b2ac, #48bb78)',
@@ -195,6 +179,7 @@ export function LoginPage() {
               onClick={() => {
                 setIsRegister(!isRegister)
                 form.reset()
+                setError('')
               }}
             >
               {isRegister ? '已有账号？登录' : '没有账号？注册'}

@@ -20,7 +20,8 @@ import {
 } from '@tabler/icons-react'
 import { useNavigate, useParams, useRouterState } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
-import { trpc } from '../../../trpc'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { api } from '../../../api/client'
 
 function genderLabel(g: string) {
   if (g === 'male') return '男'
@@ -32,18 +33,47 @@ export function PatientDetailShell({ children }: { children: ReactNode }) {
   const { id } = useParams({ from: '/_auth/patients/$id' })
   const navigate = useNavigate()
   const pathname = useRouterState({ select: (s) => s.location.pathname })
-  const patient = trpc.patient.byId.useQuery({ id: id! }, { enabled: !!id })
-  const latestVitals = trpc.data.latest.useQuery(
-    { patientId: id! },
-    { enabled: !!id, refetchInterval: 15000 },
-  )
+  const [patient, setPatient] = useState<any>(null)
+  const [pLoading, setPLoading] = useState(true)
+  const [pError, setPError] = useState(false)
+  const [latestVitals, setLatestVitals] = useState<any[]>([])
+  const intervalRef = useRef<ReturnType<typeof setInterval>>(undefined)
 
-  const hr = latestVitals.data?.find((v: any) => v.metric === 'heart_rate')?.value
-  const spo2 = latestVitals.data?.find((v: any) => v.metric === 'spo2')?.value
-  const systolic = latestVitals.data?.find((v: any) => v.metric === 'systolic_bp')?.value
-  const diastolic = latestVitals.data?.find((v: any) => v.metric === 'diastolic_bp')?.value
-  const temp = latestVitals.data?.find((v: any) => v.metric === 'temperature')?.value
-  const isOnline = (latestVitals.data?.length ?? 0) > 0
+  const fetchPatient = useCallback(async () => {
+    if (!id) return
+    setPLoading(true)
+    try {
+      const data = await api.get<any>(`/patients/${id}`)
+      setPatient(data)
+      setPError(false)
+    } catch {
+      setPError(true)
+    } finally {
+      setPLoading(false)
+    }
+  }, [id])
+
+  const fetchLatest = useCallback(async () => {
+    if (!id) return
+    try {
+      const data = await api.get<any[]>('/data/latest', { patientId: id })
+      setLatestVitals(data)
+    } catch { /* silent */ }
+  }, [id])
+
+  useEffect(() => { fetchPatient() }, [fetchPatient])
+  useEffect(() => {
+    fetchLatest()
+    intervalRef.current = setInterval(fetchLatest, 15000)
+    return () => clearInterval(intervalRef.current)
+  }, [fetchLatest])
+
+  const hr = latestVitals.find((v: any) => v.metric === 'heart_rate')?.value
+  const spo2 = latestVitals.find((v: any) => v.metric === 'spo2')?.value
+  const systolic = latestVitals.find((v: any) => v.metric === 'systolic_bp')?.value
+  const diastolic = latestVitals.find((v: any) => v.metric === 'diastolic_bp')?.value
+  const temp = latestVitals.find((v: any) => v.metric === 'temperature')?.value
+  const isOnline = latestVitals.length > 0
 
   const tabValue = pathname.includes('/health-timeline')
     ? 'health-timeline'
@@ -57,7 +87,7 @@ export function PatientDetailShell({ children }: { children: ReactNode }) {
             ? 'profile'
             : 'overview'
 
-  if (patient.isLoading) {
+  if (pLoading) {
     return (
       <Stack h="calc(100vh - 56px)" gap={0}>
         <Group px="lg" py="sm" bg="matchaGreen.1">
@@ -69,7 +99,7 @@ export function PatientDetailShell({ children }: { children: ReactNode }) {
       </Stack>
     )
   }
-  if (patient.isError) {
+  if (pError) {
     return (
       <Stack h="calc(100vh - 56px)" align="center" justify="center">
         <Alert color="red" title="加载失败">
@@ -81,7 +111,7 @@ export function PatientDetailShell({ children }: { children: ReactNode }) {
       </Stack>
     )
   }
-  if (!patient.data) {
+  if (!patient) {
     return (
       <Stack h="calc(100vh - 56px)" align="center" justify="center">
         <Alert color="red" title="患者不存在">
@@ -94,7 +124,7 @@ export function PatientDetailShell({ children }: { children: ReactNode }) {
     )
   }
 
-  const p = patient.data as any
+  const p = patient as any
   const age = p.birthDate
     ? Math.floor((Date.now() - new Date(p.birthDate).getTime()) / 31557600000)
     : null

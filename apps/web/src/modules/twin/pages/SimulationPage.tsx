@@ -19,7 +19,7 @@ import {
   TextInput,
 } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import {
   IconRefresh,
   IconChartBar,
@@ -29,7 +29,7 @@ import {
   IconCheck,
   IconX,
 } from '@tabler/icons-react'
-import { trpc } from '../../../trpc'
+import { api } from '../../../api/client'
 import { SimTimeline } from '../components/SimTimeline'
 
 const PROFILES = [
@@ -54,10 +54,9 @@ const METRIC_LABELS: Record<string, string> = {
 }
 
 export function SimPage() {
-  const { data: patientList } = trpc.patient.list.useQuery({ page: 1, pageSize: 200 })
-  const { data: simulations, refetch: refreshSims } = trpc.sim.simulations.useQuery()
-  const { data: simStatus, refetch: refreshStatus } = trpc.sim.status.useQuery()
-
+  const [patientList, setPatientList] = useState<any[]>([])
+  const [simulations, setSimulations] = useState<any[]>([])
+  const [simStatus, setSimStatus] = useState<any[]>([])
   const [selectedSimId, setSelectedSimId] = useState<string | null>(null)
   const [detailPatient, setDetailPatient] = useState<any>(null)
   const [timelineMinutes, setTimelineMinutes] = useState(10)
@@ -67,76 +66,125 @@ export function SimPage() {
   const [editingName, setEditingName] = useState<string | null>(null)
   const [editNameValue, setEditNameValue] = useState('')
   const pollRef = useRef<ReturnType<typeof setInterval>>(undefined)
+  const [createLoading, setCreateLoading] = useState(false)
 
-  const createSim = trpc.sim.create.useMutation({
-    onSuccess: (d) => {
-      refreshSims()
+  const fetchPatients = useCallback(async () => {
+    try {
+      const data = await api.get<any[]>('/patients', { page: 1, pageSize: 200 })
+      setPatientList(data)
+    } catch { /* silent */ }
+  }, [])
+
+  const fetchSims = useCallback(async () => {
+    try {
+      const data = await api.get<any[]>('/twin/simulations')
+      setSimulations(data)
+    } catch { /* silent */ }
+  }, [])
+
+  const fetchStatus = useCallback(async () => {
+    try {
+      const data = await api.get<any[]>('/twin/simulations')
+      const statusData: any[] = []
+      for (const sim of data ?? []) {
+        if (sim.patients) {
+          for (const p of sim.patients) {
+            statusData.push({ ...p, simId: sim.id, profile: sim.profileName })
+          }
+        }
+      }
+      setSimStatus(statusData)
+    } catch { /* silent */ }
+  }, [])
+
+  useEffect(() => { fetchPatients(); fetchSims(); fetchStatus() }, [fetchPatients, fetchSims, fetchStatus])
+  useEffect(() => {
+    pollRef.current = setInterval(() => {
+      fetchSims()
+      fetchStatus()
+    }, 2000)
+    return () => clearInterval(pollRef.current)
+  }, [fetchSims, fetchStatus])
+
+  const handleCreate = async () => {
+    setCreateLoading(true)
+    try {
+      const d = await api.post<any>('/twin/simulations', { profile: newProfile })
+      fetchSims()
       setSelectedSimId(d?.id ?? null)
       setCreating(false)
       notifications.show({ title: '已创建', message: '', color: 'green' })
-    },
-  })
-  const toggleSim = trpc.sim.toggle.useMutation({ onSuccess: () => refreshSims() })
-  const deleteSim = trpc.sim.delete.useMutation({
-    onSuccess: () => {
-      refreshSims()
+    } catch (err: any) {
+      notifications.show({ title: '创建失败', message: err.message, color: 'red' })
+    } finally {
+      setCreateLoading(false)
+    }
+  }
+
+  const handleToggle = async (id: string, running: boolean) => {
+    try {
+      await api.post(`/twin/simulations/${id}/toggle`, { running })
+      fetchSims()
+    } catch { /* silent */ }
+  }
+
+  const handleDelete = async (id: string) => {
+    try {
+      await api.delete(`/twin/simulations/${id}`)
+      fetchSims()
       setSelectedSimId(null)
-    },
-  })
-  const renameSim = trpc.sim.rename.useMutation({
-    onSuccess: () => {
-      refreshSims()
-      setEditingName(null)
-    },
-  })
-  const toggleMetric = trpc.sim.toggleMetric.useMutation({ onSuccess: () => refreshSims() })
-  const updateMetric = trpc.sim.updateMetric.useMutation()
-  const addPatients = trpc.sim.addPatients.useMutation({
-    onSuccess: () => {
-      refreshSims()
-      refreshStatus()
-      setAddPatientId(null)
-    },
-  })
-  const removePatients = trpc.sim.removePatients.useMutation({
-    onSuccess: () => {
-      refreshSims()
-      refreshStatus()
-    },
-  })
-  const setSpeed = trpc.sim.setSpeed.useMutation()
-
-  useEffect(() => {
-    pollRef.current = setInterval(() => {
-      refreshSims()
-      refreshStatus()
-    }, 2000)
-    return () => clearInterval(pollRef.current)
-  }, [refreshSims, refreshStatus])
-
-  const selected = simulations?.find((s: any) => s.id === selectedSimId)
-  const selectedPatients = (simStatus ?? []).filter((s: any) => s.simId === selectedSimId)
-  const assignedPatientIds = new Set(selectedPatients.map((s: any) => s.patientId))
-  const unassignedOptions = (patientList ?? [])
-    .filter((p: any) => !assignedPatientIds.has(p.id))
-    .map((p: any) => ({ value: p.id, label: p.name }))
-
-  const handleMetricChange = (metric: string, field: string, value: number) => {
-    if (!selectedSimId) return
-    updateMetric.mutate({ id: selectedSimId, metric, config: { [field]: value } })
+    } catch { /* silent */ }
   }
 
-  const startRename = (id: string, name: string) => {
-    setEditingName(id)
-    setEditNameValue(name)
-  }
-
-  const confirmRename = () => {
+  const handleRename = async () => {
     if (editingName && editNameValue.trim()) {
-      renameSim.mutate({ id: editingName, name: editNameValue.trim() })
+      try {
+        await api.patch(`/twin/simulations/${editingName}/rename`, { name: editNameValue.trim() })
+        fetchSims()
+        setEditingName(null)
+      } catch { /* silent */ }
     } else {
       setEditingName(null)
     }
+  }
+
+  const handleToggleMetric = async (id: string, metric: string, enabled: boolean) => {
+    try {
+      await api.post(`/twin/simulations/${id}/metrics/${metric}/toggle`, { enabled })
+      fetchSims()
+    } catch { /* silent */ }
+  }
+
+  const handleMetricChange = async (metric: string, field: string, value: number) => {
+    if (!selectedSimId) return
+    try {
+      await api.patch(`/twin/simulations/${selectedSimId}/metrics/${metric}`, { [field]: value } as any)
+    } catch { /* silent */ }
+  }
+
+  const handleAddPatient = async () => {
+    if (!selectedSimId || !addPatientId) return
+    try {
+      await api.post(`/twin/simulations/${selectedSimId}/patients`, { patientId: addPatientId })
+      fetchSims()
+      fetchStatus()
+      setAddPatientId(null)
+    } catch { /* silent */ }
+  }
+
+  const handleRemovePatient = async (patientId: string) => {
+    if (!selectedSimId) return
+    try {
+      await api.delete(`/twin/simulations/${selectedSimId}/patients/${patientId}`)
+      fetchSims()
+      fetchStatus()
+    } catch { /* silent */ }
+  }
+
+  const handleSetSpeed = async (speed: number) => {
+    try {
+      await api.patch('/twin/speed', { speed })
+    } catch { /* silent */ }
   }
 
   return (
