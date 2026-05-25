@@ -4,13 +4,14 @@ import { eq } from 'drizzle-orm'
 import { db } from '../core/db'
 import { users } from '../core/db/schema'
 import { jwtAuth } from '../middleware/auth'
+import { requirePermission } from '../middleware/rbac'
 
 const usersApp = new OpenAPIHono()
-usersApp.use('*', jwtAuth)
 
 const listRoute = createRoute({
   method: 'get',
   path: '/',
+  middleware: [jwtAuth, requirePermission('/users', 'read')] as const,
   responses: {
     200: {
       content: { 'application/json': { schema: z.array(userResponseSchema) } },
@@ -28,6 +29,7 @@ usersApp.openapi(listRoute, async (c) => {
 const meRoute = createRoute({
   method: 'get',
   path: '/me',
+  middleware: [jwtAuth, requirePermission('/users', 'read')] as const,
   responses: {
     200: {
       content: { 'application/json': { schema: userResponseSchema } },
@@ -48,6 +50,7 @@ usersApp.openapi(meRoute, async (c) => {
 const updateRoute = createRoute({
   method: 'patch',
   path: '/:id',
+  middleware: [jwtAuth, requirePermission('/users', 'write')] as const,
   request: {
     body: {
       content: {
