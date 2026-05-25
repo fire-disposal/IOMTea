@@ -72,4 +72,48 @@ pinsApp.openapi(revokePinRoute, async (c) => {
   return c.json({ success: true })
 })
 
+const getPinRoute = createRoute({
+  method: 'get',
+  path: '/:code',
+  middleware: [jwtAuth, requirePermission('/pins', 'read')] as const,
+  responses: { 200: { description: 'PIN detail' }, 404: { description: 'Not found' } },
+})
+
+pinsApp.openapi(getPinRoute, async (c) => {
+  const code = c.req.param('code')
+  const [pin] = await db.select().from(usersPin).where(eq(usersPin.pin, code)).limit(1)
+  if (!pin) return c.json({ error: 'Not found' }, 404 as any)
+  return c.json(pin)
+})
+
+const updatePinRoute = createRoute({
+  method: 'patch',
+  path: '/:code',
+  middleware: [jwtAuth, requirePermission('/pins', 'write')] as const,
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: z.object({
+            label: z.string().max(100).optional(),
+            pinType: z.enum(['device', 'virtual', 'user', 'simulator']).optional(),
+          }),
+        },
+      },
+    },
+  },
+  responses: { 200: { description: 'Updated' }, 404: { description: 'Not found' } },
+})
+
+pinsApp.openapi(updatePinRoute, async (c) => {
+  const code = c.req.param('code')
+  const body = c.req.valid('json')
+  const updateData: Record<string, unknown> = {}
+  if (body.label !== undefined) updateData.label = body.label
+  if (body.pinType !== undefined) updateData.type = body.pinType
+  const [pin] = await db.update(usersPin).set(updateData as any).where(eq(usersPin.pin, code)).returning()
+  if (!pin) return c.json({ error: 'Not found' }, 404 as any)
+  return c.json(pin)
+})
+
 export { pinsApp }
