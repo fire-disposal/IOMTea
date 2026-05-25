@@ -307,7 +307,12 @@ bootstrap().then(() => {
   // OpenAPI JSON 导出（写入项目目录供代码生成使用）
   // ============================================================
   try {
-    const doc = (app as any).getOpenAPIDocument()
+    const partialDoc = (app as any).getOpenAPIDocument()
+    const doc = {
+      openapi: '3.0.0',
+      info: { title: 'IOMTea API', version: '2.0.0', description: 'Home health IoT monitoring' },
+      ...partialDoc,
+    }
     const outPath = path.resolve(import.meta.dirname, '..', 'openapi.json')
     fs.writeFileSync(outPath, JSON.stringify(doc, null, 2), 'utf-8')
     logger.info(`√ OpenAPI 文档已写入: ${outPath}`)
