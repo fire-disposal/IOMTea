@@ -4,13 +4,14 @@ import { and, desc, eq } from 'drizzle-orm'
 import { db } from '../core/db'
 import { events } from '../core/db/schema'
 import { jwtAuth } from '../middleware/auth'
+import { requirePermission } from '../middleware/rbac'
 
 const alertsApp = new OpenAPIHono()
-alertsApp.use('*', jwtAuth)
 
 const listAlertsRoute = createRoute({
   method: 'get',
   path: '/',
+  middleware: [jwtAuth, requirePermission('/alerts', 'read')] as const,
   request: {
     query: z.object({
       page: z.coerce.number().min(1).default(1),
@@ -49,6 +50,7 @@ alertsApp.openapi(listAlertsRoute, async (c) => {
 const getAlertRoute = createRoute({
   method: 'get',
   path: '/:id',
+  middleware: [jwtAuth, requirePermission('/alerts', 'read')] as const,
   responses: {
     200: {
       content: { 'application/json': { schema: alertResponseSchema } },
@@ -72,6 +74,7 @@ alertsApp.openapi(getAlertRoute, async (c) => {
 const updateAlertRoute = createRoute({
   method: 'patch',
   path: '/:id',
+  middleware: [jwtAuth, requirePermission('/alerts', 'write')] as const,
   request: {
     body: {
       content: {
@@ -129,6 +132,7 @@ alertsApp.openapi(updateAlertRoute, async (c) => {
 const closeAlertRoute = createRoute({
   method: 'post',
   path: '/:id/close',
+  middleware: [jwtAuth, requirePermission('/alerts', 'write')] as const,
   responses: {
     200: { content: { 'application/json': { schema: successSchema } }, description: 'Closed' },
     404: { description: 'Not found' },
