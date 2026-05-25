@@ -22,13 +22,7 @@ import {
   IconKey,
   IconUsersGroup,
 } from '@tabler/icons-react'
-import {
-  Outlet,
-  createFileRoute,
-  redirect,
-  useNavigate,
-  useRouterState,
-} from '@tanstack/react-router'
+import { Outlet, redirect, useNavigate, useRouterState } from '@tanstack/react-router'
 import { useAuthStore } from '../store/auth'
 import { StoreProvider } from '../StoreProvider'
 
@@ -87,7 +81,7 @@ const pageStyles = [
   '@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}',
 ].join('')
 
-function DashboardLayout() {
+export function AuthLayout() {
   const [opened, { toggle }] = useDisclosure()
   const [logoutModal, { open: openLogoutModal, close: closeLogoutModal }] = useDisclosure()
   const navigate = useNavigate()
@@ -182,30 +176,27 @@ function DashboardLayout() {
   )
 }
 
-export const Route = createFileRoute('/_auth')({
-  beforeLoad: ({ location }: { location: { href: string } }) => {
-    const state = useAuthStore.getState()
-    if (!state.token) throw redirect({ to: '/login', search: { redirect: location.href } })
+export const authBeforeLoad = ({ location }: { location: { href: string } }) => {
+  const state = useAuthStore.getState()
+  if (!state.token) throw redirect({ to: '/login', search: { redirect: location.href } })
 
-    const adminRoutes = [
-      '/patients',
-      '/medications',
-      '/data-export',
-      '/simulation',
-      '/settings',
-      '/iot/pins',
-    ]
-    const superAdminRoutes = ['/settings/users']
-    const pathname = location.href || ''
+  const adminRoutes = [
+    '/patients',
+    '/medications',
+    '/data-export',
+    '/simulation',
+    '/settings',
+    '/iot/pins',
+  ]
+  const superAdminRoutes = ['/settings/users']
+  const pathname = location.href || ''
 
-    if (superAdminRoutes.some((r) => pathname.startsWith(r)) && state.role !== 'super_admin') {
+  if (superAdminRoutes.some((r) => pathname.startsWith(r)) && state.role !== 'super_admin') {
+    throw redirect({ to: '/' })
+  }
+  if (adminRoutes.some((r) => pathname.startsWith(r))) {
+    if (state.role !== 'admin' && state.role !== 'super_admin') {
       throw redirect({ to: '/' })
     }
-    if (adminRoutes.some((r) => pathname.startsWith(r))) {
-      if (state.role !== 'admin' && state.role !== 'super_admin') {
-        throw redirect({ to: '/' })
-      }
-    }
-  },
-  component: DashboardLayout,
-})
+  }
+}

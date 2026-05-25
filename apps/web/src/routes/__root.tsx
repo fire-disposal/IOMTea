@@ -1,4 +1,4 @@
-import { Outlet, createRootRoute } from '@tanstack/react-router'
+import { Outlet } from '@tanstack/react-router'
 import { MantineProvider } from '@mantine/core'
 import { ModalsProvider } from '@mantine/modals'
 import { Notifications } from '@mantine/notifications'
@@ -19,8 +19,8 @@ const queryClient = new QueryClient({
 })
 const trpcClient = getTrpcClient()
 
-export const Route = createRootRoute({
-  component: () => (
+export function RootLayout() {
+  return (
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
         <MantineProvider theme={theme}>
@@ -31,5 +31,5 @@ export const Route = createRootRoute({
         </MantineProvider>
       </QueryClientProvider>
     </trpc.Provider>
-  ),
-})
+  )
+}

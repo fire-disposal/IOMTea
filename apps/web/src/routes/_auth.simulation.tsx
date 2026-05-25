@@ -1,4 +1,3 @@
-import { createFileRoute } from '@tanstack/react-router'
 import {
   Container,
   Title,
@@ -54,7 +53,7 @@ const METRIC_LABELS: Record<string, string> = {
   motion_index: '活动指数',
 }
 
-function SimulationPage() {
+export function SimPage() {
   const { data: patientList } = trpc.patient.list.useQuery({ page: 1, pageSize: 200 })
   const { data: simulations, refetch: refreshSims } = trpc.sim.simulations.useQuery()
   const { data: simStatus, refetch: refreshStatus } = trpc.sim.status.useQuery()
@@ -535,4 +534,3 @@ function SimulationPage() {
   )
 }
 
-export const Route = createFileRoute('/_auth/simulation')({ component: SimulationPage })

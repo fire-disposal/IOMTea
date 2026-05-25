@@ -1,4 +1,3 @@
-import { createFileRoute } from '@tanstack/react-router'
 import {
   Container,
   Title,
@@ -65,7 +64,7 @@ const ENTITY_LABELS: Record<string, string> = {
   medications: '用药',
 }
 
-function DataExportPage() {
+export function DataExportPage() {
   const [entity, setEntity] = useState<string>('patients')
   const [selectedFields, setSelectedFields] = useState<string[]>([])
   const [format, setFormat] = useState<'csv' | 'xlsx'>('csv')
@@ -220,6 +219,3 @@ function DataExportPage() {
   )
 }
 
-export const Route = createFileRoute('/_auth/data-export')({
-  component: DataExportPage,
-})
