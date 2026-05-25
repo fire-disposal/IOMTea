@@ -1,5 +1,6 @@
-import { Container, Skeleton, Table, Title } from '@mantine/core'
-import { useGet } from '../api/hooks'
+import { Container, Select, Skeleton, Table, Title } from '@mantine/core'
+import { notifications } from '@mantine/notifications'
+import { useGet, usePatch } from '../api/hooks'
 
 interface User {
   id: string
@@ -13,6 +14,17 @@ interface User {
 
 export function UserManagementPage() {
   const { data: users, isLoading } = useGet<User[]>('/users')
+  const patchRole = usePatch<unknown, { role: string }>('/users/:id/role')
+
+  const handleRoleChange = (userId: string, newRole: string) => {
+    patchRole.mutate(
+      { id: userId, role: newRole },
+      {
+        onSuccess: () => notifications.show({ title: '角色已更新', message: `用户角色已更新为 ${newRole}`, color: 'green' }),
+        onError: () => notifications.show({ title: '更新失败', message: '角色更新失败', color: 'red' }),
+      }
+    )
+  }
 
   if (isLoading)
     return (
@@ -42,7 +54,19 @@ export function UserManagementPage() {
             <Table.Tr key={u.id}>
               <Table.Td>{u.username}</Table.Td>
               <Table.Td>{u.displayName ?? '-'}</Table.Td>
-              <Table.Td>{u.role}</Table.Td>
+              <Table.Td>
+                <Select
+                  size="xs"
+                  data={[
+                    { value: 'super_admin', label: '超级管理员' },
+                    { value: 'admin', label: '管理员' },
+                    { value: 'user', label: '普通用户' },
+                  ]}
+                  value={u.role}
+                  onChange={(v) => v && handleRoleChange(u.id, v)}
+                  w={140}
+                />
+              </Table.Td>
               <Table.Td>{u.status}</Table.Td>
             </Table.Tr>
           ))}
