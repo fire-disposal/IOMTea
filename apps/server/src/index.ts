@@ -197,14 +197,20 @@ async function bootstrap() {
 
 bootstrap().then(() => {
   // ---- MQTT ----
-  if (env.MQTT_ENABLED) {
+  if (env.MQTT_ENABLED && env.MQTT_BROKER) {
     logger.info({ broker: env.MQTT_BROKER }, '→ 正在连接 MQTT Broker ...')
-    startMqttListener(env.MQTT_BROKER, {
-      username: env.MQTT_USERNAME,
-      password: env.MQTT_PASSWORD,
-    })
+    try {
+      startMqttListener(env.MQTT_BROKER, {
+        username: env.MQTT_USERNAME,
+        password: env.MQTT_PASSWORD,
+      })
+    } catch (err) {
+      logger.warn({ err }, 'MQTT 启动失败，服务将继续运行')
+    }
+  } else if (env.MQTT_ENABLED) {
+    logger.warn('MQTT 已启用但未配置 MQTT_BROKER，跳过')
   } else {
-    logger.info('⊙ MQTT 未启用 (设置 MQTT_ENABLED=true 以启用)')
+    logger.info('MQTT 未启用')
   }
 
   // ---- HTTP 服务器 ----
@@ -325,4 +331,16 @@ bootstrap().then(() => {
   logger.info('══════════════════════════════════════════════')
   logger.info('  使用 Ctrl+C 停止服务')
   logger.info('')
+
+  // ── Graceful shutdown ──
+  const shutdown = () => {
+    logger.info('正在关闭服务 ...')
+    import('./mqtt-ingest').then((m) => m.stopMqttListener?.()).catch(() => {})
+    wss.close()
+    server.close()
+    process.exit(0)
+  }
+  process.on('SIGINT', shutdown)
+  process.on('SIGTERM', shutdown)
+  process.on('SIGHUP', shutdown)
 })
