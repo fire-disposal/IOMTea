@@ -17,6 +17,7 @@ import { PatientDetailShell } from './pages/PatientDetailShell'
 import { PatientProfile } from './pages/PatientProfile'
 import { PatientWall } from './pages/PatientWall'
 import { PinManagementPage } from './pages/PinManagementPage'
+import { PlanManagementPage } from './pages/PlanManagementPage'
 import { SimulationPage } from './pages/SimulationPage'
 import { NodeGraph } from './components/NodeGraph'
 import { UserManagementPage } from './pages/UserManagementPage'
@@ -127,6 +128,12 @@ const nodeGraphRoute = createRoute({
   component: NodeGraph,
 })
 
+const plansRoute = createRoute({
+  getParentRoute: () => authRoute,
+  path: '/plans',
+  component: PlanManagementPage,
+})
+
 const routeTree = rootRoute.addChildren([
   loginRoute,
   authRoute.addChildren([
@@ -146,6 +153,7 @@ const routeTree = rootRoute.addChildren([
     simRoute,
     usersRoute,
     nodeGraphRoute,
+    plansRoute,
   ]),
 ])
 

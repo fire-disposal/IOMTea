@@ -51,7 +51,8 @@ const navGroups: NavGroup[] = [
     label: '管理',
     items: [
       { label: '患者管理', icon: IconUsers, path: '/patients' },
-      { label: '关系图谱', icon: IconFlask, path: '/node-graph' },
+      { label: '计划管理', icon: IconFileExport, path: '/plans' },
+      { label: '关系图谱', icon: IconFileExport, path: '/node-graph' },
       { label: '数据导出', icon: IconFileExport, path: '/data-export' },
       { label: '模拟工厂', icon: IconFlask, path: '/simulation' },
     ],
