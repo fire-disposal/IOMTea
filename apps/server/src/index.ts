@@ -185,7 +185,7 @@ async function bootstrap() {
 
   // ---- 权限系统 ----
   try {
-    await seedPermissions(db)
+    await seedPermissions()
     logger.info('√ RBAC 权限已就绪')
   } catch (err) {
     logger.warn({ err }, '权限种子失败 (请先执行 db:migrate)')
