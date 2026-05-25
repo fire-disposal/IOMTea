@@ -22,7 +22,6 @@ const singleRoute = createRoute({
               .string()
               .uuid()
               .openapi({ example: '00000000-0000-0000-0000-000000000001' }),
-            sessionId: z.string().uuid().optional(),
             pinCode: z.string().optional(),
             kind: z.string().openapi({ example: 'observation' }),
             source: z.string().openapi({ example: 'device' }),
@@ -53,7 +52,6 @@ ingestApp.openapi(singleRoute, async (c) => {
     .insert(events)
     .values({
       patientId: input.patientId,
-      sessionId: (input as any).sessionId ?? null,
       pinCode: (input as any).pinCode ?? null,
       kind: input.kind,
       source: input.source,
@@ -82,7 +80,6 @@ const batchRoute = createRoute({
               .array(
                 z.object({
                   patientId: z.string().uuid(),
-                  sessionId: z.string().uuid().optional(),
                   pinCode: z.string().optional(),
                   kind: z.string(),
                   source: z.string(),
@@ -120,7 +117,6 @@ ingestApp.openapi(batchRoute, async (c) => {
 
       await db.insert(events).values({
         patientId: event.patientId,
-        sessionId: event.sessionId ?? null,
         pinCode: event.pinCode ?? null,
         kind: event.kind,
         source: event.source,

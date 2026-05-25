@@ -75,28 +75,6 @@ export const patients = pgTable('patients', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 })
 
-export const sessions = pgTable(
-  'sessions',
-  {
-    id: uuid('id').defaultRandom().primaryKey(),
-    patientId: uuid('patient_id')
-      .notNull()
-      .references(() => patients.id, { onDelete: 'cascade' }),
-    source: text('source').notNull(),
-    type: text('type'),
-    status: text('status').default('active'),
-    startedAt: timestamp('started_at', { withTimezone: true }).notNull().defaultNow(),
-    endedAt: timestamp('ended_at', { withTimezone: true }),
-    tags: jsonb('tags').default(sql`'{}'::jsonb`).notNull(),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-  },
-  (t) => ({
-    patientIdx: index('sessions_patient_id_idx').on(t.patientId),
-    statusIdx: index('sessions_status_idx').on(t.status),
-    startedIdx: index('sessions_started_at_idx').on(t.startedAt),
-  }),
-)
-
 export const events = pgTable(
   'events',
   {
@@ -115,7 +93,6 @@ export const events = pgTable(
     source: eventSourceEnum('source').default('manual'),
     severity: alertSeverityEnum('severity'),
     status: alertStatusEnum('status'),
-    sessionId: uuid('session_id').references(() => sessions.id, { onDelete: 'set null' }),
     tags: jsonb('tags').default(sql`'{}'::jsonb`).notNull(),
     recordedAt: timestamp('recorded_at', { withTimezone: true }).notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
@@ -132,6 +109,5 @@ export const events = pgTable(
       t.recordedAt.desc(),
     ),
     patientSourceIdx: index('events_patient_source_idx').on(t.patientId, t.source),
-    sessionIdx: index('events_session_id_idx').on(t.sessionId),
   }),
 )
