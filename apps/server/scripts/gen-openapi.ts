@@ -14,8 +14,6 @@ import { ingestApp } from '../src/routes/ingest'
 import { dataApp } from '../src/routes/data'
 import { exportApp } from '../src/routes/export'
 import { twinApp } from '../src/routes/twin'
-import { homeGraphApp } from '../src/routes/homeGraph'
-import { nodeGraphApp } from '../src/routes/nodeGraph'
 
 const app = new OpenAPIHono()
 
@@ -31,8 +29,6 @@ app.route('/ingest', ingestApp)
 app.route('/data', dataApp)
 app.route('/export', exportApp)
 app.route('/twin', twinApp)
-app.route('/home-graph', homeGraphApp)
-app.route('/node-graph', nodeGraphApp)
 
 const partialDoc = (app as any).getOpenAPIDocument()
 const doc = {
