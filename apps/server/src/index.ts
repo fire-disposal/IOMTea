@@ -1,8 +1,6 @@
 import 'dotenv/config'
 import { serve } from '@hono/node-server'
-import { trpcServer } from '@hono/trpc-server'
 import { eq } from 'drizzle-orm'
-import { Hono } from 'hono'
 import { OpenAPIHono } from '@hono/zod-openapi'
 import { swaggerUI } from '@hono/swagger-ui'
 import { cors } from 'hono/cors'
@@ -13,8 +11,6 @@ import { users, patients } from './core/db/schema.js'
 import { hashPassword } from './core/lib/password'
 import { verifyToken, type JwtPayload } from './core/lib/jwt'
 import { broadcastManager } from './core/realtime/broadcast'
-import { createContext } from './core/trpc/context'
-import { appRouter } from './core/trpc/routers/_app'
 import { env } from './env'
 import fs from 'node:fs'
 import path from 'node:path'
@@ -117,9 +113,6 @@ app.get('/docs', swaggerUI({ url: '/openapi.json' }))
 
 app.get('/health', (c) => c.json({ status: 'ok' }))
 
-// ── tRPC (deprecated, to be removed in Task 14) ──
-app.use('/trpc/*', trpcServer({ router: appRouter, createContext }))
-
 // ============================================================
 // 启动流程
 // ============================================================
@@ -176,39 +169,7 @@ async function bootstrap() {
   }
 
   // ---- 孪生引擎 ----
-  try {
-    const { reconstructEngine, startEngine, getEngine } = await import('./twin/engine')
-    const allPatients = await db.select().from(patients)
-    let engineCount = 0
-
-    for (const patient of allPatients) {
-      const tags = (patient.tags as Record<string, unknown>) || {}
-      if (!hasRooms(tags.homeGraph)) continue
-      if (getEngine(patient.id)) continue
-
-      const engine = await reconstructEngine(db, {
-        patientId: patient.id,
-        name: patient.name,
-        tags: patient.tags as Record<string, unknown>,
-      })
-      await startEngine(db, engine.patientId)
-      engineCount++
-    }
-    if (engineCount > 0) {
-      logger.info(`√ ${engineCount} 个数字孪生引擎已启动`)
-    }
-  } catch (err) {
-    logger.warn({ err }, '孪生引擎自启动失败')
-  }
-
-  // ---- 虚拟 PIN 生成器 ----
-  try {
-    const { startAllVirtualPins } = await import('./core/trpc/routers/virtual-pin')
-    await startAllVirtualPins()
-    logger.info('√ 虚拟 PIN 生成器已启动')
-  } catch (err) {
-    logger.warn({ err }, '虚拟 PIN 启动失败')
-  }
+  // (managed via REST /twin routes, no auto-start)
 }
 
 bootstrap().then(() => {
@@ -329,7 +290,8 @@ bootstrap().then(() => {
   logger.info('══════════════════════════════════════════════')
   logger.info(`  本地地址:    http://localhost:${env.PORT}`)
   logger.info(`  健康检查:    http://localhost:${env.PORT}/health`)
-  logger.info(`  tRPC 接口:   http://localhost:${env.PORT}/trpc`)
+  logger.info(`  REST API:    http://localhost:${env.PORT}`)
+  logger.info(`  Swagger UI:  http://localhost:${env.PORT}/docs`)
   logger.info(`  WebSocket:   ws://localhost:${env.PORT}/ws`)
   logger.info(`  CORS 白名单: ${env.CORS_ORIGIN || 'http://localhost:5173'}`)
   if (env.MQTT_ENABLED) {
@@ -341,5 +303,3 @@ bootstrap().then(() => {
   logger.info('  使用 Ctrl+C 停止服务')
   logger.info('')
 })
-
-export type { AppRouter } from './core/trpc/routers/_app'

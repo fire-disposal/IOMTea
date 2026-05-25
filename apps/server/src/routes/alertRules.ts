@@ -3,7 +3,8 @@ import { db } from '../core/db'
 import { patients } from '../core/db/schema'
 import { eq } from 'drizzle-orm'
 import { jwtAuth } from '../middleware/auth'
-import { DEFAULT_THRESHOLDS } from '../core/trpc/routers/thresholds'
+
+const DEFAULT_THRESHOLDS: Record<string, { metric: string; min?: number; max?: number; enabled?: boolean; label?: string; unit?: string }[]> = {}
 
 const ruleSchema = z.object({
   metric: z.string(),
@@ -34,7 +35,7 @@ alertRulesApp.openapi(getRulesRoute, async (c) => {
   if (!patient) return c.json({ error: 'Not found' }, 404 as any)
 
   const tags = (patient.tags as Record<string, unknown>) || {}
-  const customThresholds = (tags.customThresholds as z.infer<typeof ruleSchema>[]) || []
+  const customThresholds = (tags.customThresholds as any[]) || []
   const profileId = (tags.profileId as string) || ''
 
   const defaults =
@@ -42,9 +43,9 @@ alertRulesApp.openapi(getRulesRoute, async (c) => {
       ? DEFAULT_THRESHOLDS[profileId as keyof typeof DEFAULT_THRESHOLDS]
       : []
 
-  const merged = defaults.map((d) => {
+  const merged = defaults.map((d: any) => {
     const custom = customThresholds.find(
-      (c: z.infer<typeof ruleSchema>) => c.metric === d.metric,
+      (c: any) => c.metric === d.metric,
     )
     return custom || d
   })

@@ -51,12 +51,14 @@ export function LoginPage() {
       setLoading(true)
       setError('')
       try {
-        const endpoint = isRegister ? '/auth/register' : '/auth/login'
-        const { data, error } = await api.POST(endpoint, { body: value })
-        if (error) {
-          setError(String(error))
-        } else {
-          handleAuthSuccess(data)
+        const result = isRegister
+          ? await api.POST('/auth/register', { body: value })
+          : await api.POST('/auth/login', { body: value })
+
+        if (result.error) {
+          setError(String(result.error))
+        } else if (result.data) {
+          handleAuthSuccess(result.data)
         }
       } catch (err) {
         setError((err as Error).message)

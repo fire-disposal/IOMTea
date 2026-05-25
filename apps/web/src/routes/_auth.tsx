@@ -24,7 +24,6 @@ import {
 } from '@tabler/icons-react'
 import { Outlet, redirect, useNavigate, useRouterState } from '@tanstack/react-router'
 import { useAuthStore } from '../store/auth'
-import { StoreProvider } from '../StoreProvider'
 
 interface NavItem {
   label: string
@@ -150,7 +149,6 @@ export function AuthLayout() {
       </AppShell.Navbar>
       <AppShell.Main>
         <style>{pageStyles}</style>
-        <StoreProvider />
         <div className="page-fade-in" style={{ minHeight: 'calc(100vh - 112px)' }}>
           <Outlet />
         </div>
