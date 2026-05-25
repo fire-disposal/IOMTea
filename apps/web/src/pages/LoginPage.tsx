@@ -52,13 +52,9 @@ export function LoginPage() {
       setError('')
       try {
         const endpoint = isRegister ? '/auth/register' : '/auth/login'
-        const data = await api.post<{
-          accessToken: string
-          refreshToken: string
-          error?: string
-        }>(endpoint, value)
-        if (data.error) {
-          setError(data.error)
+        const { data, error } = await api.POST(endpoint, { body: value })
+        if (error) {
+          setError(String(error))
         } else {
           handleAuthSuccess(data)
         }
