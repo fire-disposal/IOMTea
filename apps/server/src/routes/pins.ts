@@ -1,0 +1,64 @@
+import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+import { db } from '../core/db'
+import { usersPin } from '../core/db/schema/pin'
+import { eq } from 'drizzle-orm'
+import { jwtAuth } from '../middleware/auth'
+
+const pinsApp = new OpenAPIHono()
+pinsApp.use('*', jwtAuth)
+
+const listRoute = createRoute({
+  method: 'get',
+  path: '/',
+  responses: { 200: { description: 'PIN list' } },
+})
+
+pinsApp.openapi(listRoute, async (c) => {
+  const rows = await db.select().from(usersPin).orderBy(usersPin.createdAt)
+  return c.json(rows)
+})
+
+const createPinRoute = createRoute({
+  method: 'post',
+  path: '/',
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: z.object({
+            pin: z.string().length(6).optional().openapi({ example: '123456' }),
+            userId: z.string().uuid(),
+            type: z.enum(['device', 'virtual', 'user', 'simulator']).default('device'),
+            label: z.string().optional(),
+          }),
+        },
+      },
+    },
+  },
+  responses: { 201: { description: 'Created' } },
+})
+
+pinsApp.openapi(createPinRoute, async (c) => {
+  const body = c.req.valid('json')
+  const pin = body.pin || String(Math.floor(100000 + Math.random() * 900000))
+  const [row] = await db
+    .insert(usersPin)
+    .values({ pin, userId: body.userId, type: body.type, label: body.label ?? null } as any)
+    .returning()
+  return c.json(row, 201 as any)
+})
+
+const revokePinRoute = createRoute({
+  method: 'delete',
+  path: '/:code',
+  responses: { 200: { description: 'Revoked' }, 404: { description: 'Not found' } },
+})
+
+pinsApp.openapi(revokePinRoute, async (c) => {
+  const code = c.req.param('code')
+  const [row] = await db.delete(usersPin).where(eq(usersPin.pin, code)).returning()
+  if (!row) return c.json({ error: 'Not found' }, 404 as any)
+  return c.json({ success: true })
+})
+
+export { pinsApp }
