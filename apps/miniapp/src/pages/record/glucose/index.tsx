@@ -33,7 +33,7 @@ export default function GlucoseRecord() {
 
   const handleSave = useCallback(() => {
     if (!value || Number(value) <= 0) {
-      Taro.showToast({ title: '请输入血糖值', icon: 'none' })
+      Taro.showToast({ title: '请输入血糖�?, icon: 'none' })
       return
     }
     setSaving(true)
@@ -51,7 +51,7 @@ export default function GlucoseRecord() {
 
   return (
     <FormShell
-      title="记录血糖"
+      title="记录血�?
       unit="mmol/L"
       onSave={handleSave}
       saving={saving}

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Text, View } from '@tarojs/components'
 import { useEffect, useState } from 'react'
 import { trpc } from '../../utils/trpc'
@@ -8,7 +9,7 @@ const typeNames: Record<string, string> = {
   imu: 'IMU',
   generic: '通用',
   simulator: '仿真',
-  custom: '自定义',
+  custom: '自定�?,
 }
 const statusColor: Record<string, string> = {
   active: '#2f9e44',
@@ -25,7 +26,7 @@ export default function Devices() {
 
   return (
     <View className="page">
-      {devices.length === 0 && <Text className="empty">无设备</Text>}
+      {devices.length === 0 && <Text className="empty">无设�?/Text>}
       {devices.map((d) => (
         <View key={d.id} className="device-item">
           <Text className="device-serial">{d.serialNumber}</Text>

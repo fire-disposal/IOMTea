@@ -16,7 +16,7 @@ export default function TemperatureRecord() {
 
   const handleSave = useCallback(() => {
     if (!value || Number(value) <= 0) {
-      Taro.showToast({ title: '请输入体温', icon: 'none' })
+      Taro.showToast({ title: '请输入体�?, icon: 'none' })
       return
     }
     setSaving(true)

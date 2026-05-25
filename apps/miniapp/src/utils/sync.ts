@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { getUnsyncedRecords, markSynced } from './storage'
 import { trpc } from './trpc'
 

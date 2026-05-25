@@ -6,9 +6,9 @@ import { addLocalRecord, getTrendData } from '../../../utils/storage'
 import './index.scss'
 
 const FLOW_OPTIONS = [
-  { value: 'light', label: '轻' },
-  { value: 'medium', label: '中' },
-  { value: 'heavy', label: '重' },
+  { value: 'light', label: '�? },
+  { value: 'medium', label: '�? },
+  { value: 'heavy', label: '�? },
 ]
 
 const SYMPTOM_OPTIONS = ['腹痛', '头痛', '乏力', '腰酸', '情绪波动']
@@ -52,7 +52,7 @@ export default function PeriodRecord() {
 
   return (
     <FormShell
-      title="记录生理期"
+      title="记录生理�?
       unit=""
       onSave={handleSave}
       saving={saving}

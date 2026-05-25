@@ -41,7 +41,7 @@ export default function PressureRecord() {
 
   return (
     <FormShell
-      title="记录血压"
+      title="记录血�?
       unit="mmHg"
       onSave={handleSave}
       saving={saving}
@@ -51,11 +51,11 @@ export default function PressureRecord() {
       <View className="pressure-grid">
         <View className="pressure-field">
           <NumberInput value={systolic} onChange={setSystolic} placeholder="120" />
-          <Text className="pressure-label">收缩压</Text>
+          <Text className="pressure-label">收缩�?/Text>
         </View>
         <View className="pressure-field">
           <NumberInput value={diastolic} onChange={setDiastolic} placeholder="80" />
-          <Text className="pressure-label">舒张压</Text>
+          <Text className="pressure-label">舒张�?/Text>
         </View>
       </View>
       <View className="pressure-hr">

@@ -7,20 +7,23 @@ import { TopBar } from '../../components/TopBar'
 import { HEALTH_MODULE_META, type HealthModuleKey } from '../../constants/modules'
 import { getRecordPage } from '../../constants/modules'
 import { STORAGE_KEYS } from '../../constants/storage-keys'
-import { trpc } from '../../utils/trpc'
+import { api } from '../../utils/api'
 import './index.scss'
 
-interface ChecklistItem {
+interface PlanItem {
   id: string
-  moduleKey: string
-  status: 'pending' | 'done' | 'skipped'
+  code: string
+  title: string
+  fields: Record<string, unknown>[]
+  rewardCredits: number
 }
 
 export default function Index() {
-  const [checklist, setChecklist] = useState<ChecklistItem[]>([])
+  const [plans, setPlans] = useState<PlanItem[]>([])
   const [credit, setCredit] = useState(0)
 
   const userName = Taro.getStorageSync(STORAGE_KEYS.USER_NAME) || '用户'
+  const patientId = Taro.getStorageSync(STORAGE_KEYS.PATIENT_ID) || ''
 
   useEffect(() => {
     const token = Taro.getStorageSync(STORAGE_KEYS.TOKEN)
@@ -28,18 +31,17 @@ export default function Index() {
       Taro.redirectTo({ url: '/pages/login/index' })
       return
     }
-
     loadData()
   }, [])
 
   const loadData = async () => {
     try {
-      const [list, bal] = await Promise.all([
-        trpc.checklist.today.query(),
-        trpc.credit.balance.query(),
+      const [today, me] = await Promise.all([
+        api.get<PlanItem[]>('/plans/today', { patientId }),
+        api.get<{ credit: number }>('/users/me'),
       ])
-      if (list) setChecklist(list)
-      if (bal) setCredit(bal.balance)
+      if (today) setPlans(today)
+      if (me) setCredit(me.credit ?? 0)
     } catch {
       // offline fallback
     }
@@ -50,21 +52,18 @@ export default function Index() {
       <TopBar displayName={userName} credit={credit} />
 
       <View className="home-checklist anim-stagger">
-        {checklist.map((item) => {
-          const meta = HEALTH_MODULE_META[item.moduleKey as HealthModuleKey]
-          return (
-            <ChecklistCard
-              key={item.id}
-              moduleKey={item.moduleKey}
-              label={meta?.label ?? item.moduleKey}
-              icon={meta?.icon ?? '📋'}
-              status={item.status}
-              recordPage={getRecordPage(item.moduleKey)}
-            />
-          )
-        })}
+        {plans.map((item) => (
+          <ChecklistCard
+            key={item.id}
+            moduleKey={item.code}
+            label={item.title}
+            icon="📋"
+            status="pending"
+            recordPage={`/pages/record/${item.code}/index`}
+          />
+        ))}
 
-        {checklist.length === 0 && (
+        {plans.length === 0 && (
           <View className="home-checklist__empty">
             <Text className="home-checklist__empty-icon">📋</Text>
             <Text className="home-checklist__empty-text">暂无计划</Text>
@@ -72,24 +71,17 @@ export default function Index() {
               className="home-checklist__empty-hint"
               onClick={() => Taro.navigateTo({ url: '/pages/plan/index' })}
             >
-              去制定健康计划 →
-            </Text>
+              去制定健康计�?�?            </Text>
           </View>
         )}
       </View>
 
       <View className="home-actions">
-        <View
-          className="home-action-btn"
-          onClick={() => Taro.navigateTo({ url: '/pages/plan/index' })}
-        >
+        <View className="home-action-btn" onClick={() => Taro.navigateTo({ url: '/pages/plan/index' })}>
           <Text className="home-action-btn__icon">📋</Text>
           <Text className="home-action-btn__label">管理计划</Text>
         </View>
-        <View
-          className="home-action-btn"
-          onClick={() => Taro.navigateTo({ url: '/pages/health/index' })}
-        >
+        <View className="home-action-btn" onClick={() => Taro.navigateTo({ url: '/pages/health/index' })}>
           <Text className="home-action-btn__icon">📊</Text>
           <Text className="home-action-btn__label">历史记录</Text>
         </View>

@@ -1,24 +1,33 @@
-import { Button } from '@nutui/nutui-react'
-import { Text, View } from '@tarojs/components'
+import { Button, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useState } from 'react'
-import { trpc } from '../../utils/trpc'
+import { api } from '../../utils/api'
+import { STORAGE_KEYS } from '../../constants/storage-keys'
 import './index.scss'
 
 export default function Login() {
   const [loading, setLoading] = useState(false)
 
-  async function handleWechatLogin() {
+  const handleWechatLogin = async () => {
     setLoading(true)
     try {
-      const { code } = await Taro.login()
-      const result = await trpc.auth.wechatLogin.mutate({ code })
-      Taro.setStorageSync('token', result.accessToken)
-      Taro.setStorageSync('refreshToken', result.refreshToken)
-      if (result.displayName) Taro.setStorageSync('user_name', result.displayName)
-      Taro.redirectTo({ url: '/pages/pin-overview/index' })
-    } catch (err: any) {
-      Taro.showToast({ title: err?.message || '登录失败', icon: 'none' })
+      const res = await Taro.login()
+      if (!res.code) throw new Error('wx.login failed')
+
+      const data = await api.post<{
+        accessToken: string
+        refreshToken: string
+        user: { id: string; username: string; displayName: string | null; role: string }
+      }>('/auth/wechat-login', { code: res.code })
+
+      Taro.setStorageSync(STORAGE_KEYS.TOKEN, data.accessToken)
+      Taro.setStorageSync(STORAGE_KEYS.REFRESH_TOKEN, data.refreshToken)
+      Taro.setStorageSync(STORAGE_KEYS.USER_NAME, data.user.displayName || data.user.username)
+      Taro.setStorageSync(STORAGE_KEYS.USER_ID, data.user.id)
+
+      Taro.redirectTo({ url: '/pages/index/index' })
+    } catch (e: any) {
+      console.error('Login failed:', e.message)
     } finally {
       setLoading(false)
     }
@@ -26,17 +35,10 @@ export default function Login() {
 
   return (
     <View className="login-page">
-      <View className="login-hero anim-fade-up">
-        <Text className="login-brand anim-pulse">IOMTea</Text>
-        <Text className="login-desc">居家健康管理</Text>
-      </View>
-
-      <View className="login-actions anim-fade-up" style="animation-delay:200ms">
-        <Button type="primary" size="large" block loading={loading} onClick={handleWechatLogin}>
-          微信登录
-        </Button>
-        <Text className="login-hint">登录后同步健康数据</Text>
-      </View>
+      <View className="login-logo">🍵 IOMTea</View>
+      <View className="login-desc">健康数据监护平台</View>
+      <Button className="login-btn" loading={loading} onClick={handleWechatLogin}>
+        微信一键登�?      </Button>
     </View>
   )
 }

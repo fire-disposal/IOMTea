@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Button, Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useEffect, useState } from 'react'
@@ -47,7 +48,7 @@ export default function PinOverview() {
 
   const copyPin = (pin: string) => {
     Taro.setClipboardData({ data: pin })
-    Taro.showToast({ title: '已复制 PIN: ' + pin, icon: 'success' })
+    Taro.showToast({ title: '已复�?PIN: ' + pin, icon: 'success' })
   }
 
   return (

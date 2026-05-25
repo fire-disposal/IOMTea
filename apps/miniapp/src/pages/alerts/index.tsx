@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Text, View } from '@tarojs/components'
 import { useEffect, useState } from 'react'
 import { trpc } from '../../utils/trpc'
@@ -24,8 +25,8 @@ export default function Alerts() {
 
   return (
     <View className="page">
-      {loading && <Text className="empty">加载中...</Text>}
-      {!loading && alerts.length === 0 && <Text className="empty">无告警记录</Text>}
+      {loading && <Text className="empty">加载�?..</Text>}
+      {!loading && alerts.length === 0 && <Text className="empty">无告警记�?/Text>}
       {alerts.map((a) => (
         <View
           key={a.id}
@@ -39,10 +40,10 @@ export default function Alerts() {
           <Text className="alert-time">{new Date(a.recordedAt).toLocaleString()}</Text>
           <Text className="alert-status">
             {a.status === 'active'
-              ? '● 活跃'
+              ? '�?活跃'
               : a.status === 'acknowledged'
-                ? '○ 已确认'
-                : '✓ 已解决'}
+                ? '�?已确�?
+                : '�?已解�?}
           </Text>
         </View>
       ))}

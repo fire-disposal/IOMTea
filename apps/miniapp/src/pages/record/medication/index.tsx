@@ -33,7 +33,7 @@ export default function MedicationRecord() {
         })
       }
       Taro.vibrateShort()
-      Taro.showToast({ title: '已记录', icon: 'success' })
+      Taro.showToast({ title: '已记�?, icon: 'success' })
     },
     [meds],
   )
@@ -54,7 +54,7 @@ export default function MedicationRecord() {
           recordedAt: new Date().toISOString(),
         })
       }
-      Taro.showToast({ title: '已跳过', icon: 'none' })
+      Taro.showToast({ title: '已跳�?, icon: 'none' })
     },
     [meds],
   )
@@ -68,7 +68,7 @@ export default function MedicationRecord() {
         {meds.length === 0 && (
           <View className="med-empty">
             <Text>暂无用药计划</Text>
-            <Text className="med-empty-hint">请通过 Web 端添加用药方案</Text>
+            <Text className="med-empty-hint">请通过 Web 端添加用药方�?/Text>
           </View>
         )}
         {meds.map((med) => (
@@ -85,15 +85,15 @@ export default function MedicationRecord() {
               {!med.taken && !med.skipped && (
                 <>
                   <View className="med-btn med-btn--take" onClick={() => handleTake(med.id)}>
-                    <Text>已服用</Text>
+                    <Text>已服�?/Text>
                   </View>
                   <View className="med-btn med-btn--skip" onClick={() => handleSkip(med.id)}>
                     <Text>跳过</Text>
                   </View>
                 </>
               )}
-              {med.taken && <Text className="med-status med-status--taken">已服用</Text>}
-              {med.skipped && <Text className="med-status med-status--skipped">已跳过</Text>}
+              {med.taken && <Text className="med-status med-status--taken">已服�?/Text>}
+              {med.skipped && <Text className="med-status med-status--skipped">已跳�?/Text>}
             </View>
           </View>
         ))}

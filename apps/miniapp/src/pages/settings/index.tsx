@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Button, Input, Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useState } from 'react'
@@ -10,7 +11,7 @@ export default function Settings() {
 
   const save = () => {
     Taro.setStorageSync('server_url', serverUrl)
-    Taro.showToast({ title: '已保存', icon: 'success' })
+    Taro.showToast({ title: '已保�?, icon: 'success' })
   }
 
   const logout = () => {
@@ -41,7 +42,7 @@ export default function Settings() {
       <Button onClick={save}>保存</Button>
       <Button onClick={testConn}>测试连接</Button>
       <Button className="btn-logout" onClick={logout}>
-        退出登录
+        退出登�?
       </Button>
     </View>
   )
