@@ -1,7 +1,7 @@
-import { Outlet } from '@tanstack/react-router'
 import { MantineProvider } from '@mantine/core'
 import { ModalsProvider } from '@mantine/modals'
 import { Notifications } from '@mantine/notifications'
+import { Outlet } from '@tanstack/react-router'
 import { theme } from '../theme'
 import '@mantine/core/styles.css'
 import '@mantine/notifications/styles.css'

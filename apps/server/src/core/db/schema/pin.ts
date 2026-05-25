@@ -1,4 +1,4 @@
-import { boolean, jsonb, pgTable, timestamp, uuid, varchar, text } from 'drizzle-orm/pg-core'
+import { boolean, jsonb, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core'
 import { users } from '../schema.js'
 import { pinTypeEnum } from './enums'
 

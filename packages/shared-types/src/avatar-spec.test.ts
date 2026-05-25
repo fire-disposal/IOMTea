@@ -1,10 +1,10 @@
-import { DEFAULT_MII_PARAMS } from './mii-params'
 import {
   AVATAR_VERSION,
   AvatarSpecSchema,
   migrateMiiParamsToAvatarSpec,
   parseAvatarSpec,
 } from './avatar-spec'
+import { DEFAULT_MII_PARAMS } from './mii-params'
 
 describe('AvatarSpec v2', () => {
   it('parses default migrated spec', () => {

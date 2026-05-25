@@ -1,7 +1,7 @@
-import { View, Text } from '@tarojs/components'
+import { Text, View } from '@tarojs/components'
 import { useEffect, useState } from 'react'
-import { trpc } from '../../utils/trpc'
 import { TabBar } from '../../components/TabBar/TabBar'
+import { trpc } from '../../utils/trpc'
 import './index.scss'
 
 export default function MessagesPage() {

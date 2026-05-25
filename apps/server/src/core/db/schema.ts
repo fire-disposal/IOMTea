@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm'
 import {
   date,
   index,
@@ -10,7 +11,6 @@ import {
   uuid,
   varchar,
 } from 'drizzle-orm/pg-core'
-import { sql } from 'drizzle-orm'
 import {
   alertSeverityEnum,
   alertStatusEnum,

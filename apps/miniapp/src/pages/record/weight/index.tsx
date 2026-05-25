@@ -1,6 +1,6 @@
-import { View, Text } from '@tarojs/components'
-import { useState, useCallback, useEffect } from 'react'
+import { Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
+import { useCallback, useEffect, useState } from 'react'
 import { FormShell, NumberInput, SegmentPicker } from '../../../components/FormShell'
 import { addLocalRecord, getTrendData } from '../../../utils/storage'
 import './index.scss'

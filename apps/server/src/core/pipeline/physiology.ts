@@ -44,45 +44,30 @@ export function generateHeartRate(
   return clamp(raw, 30, 220)
 }
 
-export function generateSpO2(
-  baseline: { mean: number; std: number },
-  _hour: number,
-): number {
+export function generateSpO2(baseline: { mean: number; std: number }, _hour: number): number {
   const raw = gaussian(baseline.mean, baseline.std)
   return clamp(raw, 70, 100)
 }
 
-export function generateTemperature(
-  baseline: { mean: number; std: number },
-  hour: number,
-): number {
+export function generateTemperature(baseline: { mean: number; std: number }, hour: number): number {
   const circadian = circadianFactor(hour) * 0.5
   const raw = gaussian(baseline.mean + circadian, baseline.std)
   return clampFloat(raw, 34, 42)
 }
 
-export function generateSystolicBp(
-  baseline: { mean: number; std: number },
-  hour: number,
-): number {
+export function generateSystolicBp(baseline: { mean: number; std: number }, hour: number): number {
   const circadian = circadianFactor(hour) * 5
   const raw = gaussian(baseline.mean + circadian, baseline.std)
   return clamp(raw, 70, 220)
 }
 
-export function generateDiastolicBp(
-  baseline: { mean: number; std: number },
-  hour: number,
-): number {
+export function generateDiastolicBp(baseline: { mean: number; std: number }, hour: number): number {
   const circadian = circadianFactor(hour) * 3
   const raw = gaussian(baseline.mean + circadian, baseline.std)
   return clamp(raw, 40, 130)
 }
 
-export function generateGlucose(
-  baseline: { mean: number; std: number },
-  _hour: number,
-): number {
+export function generateGlucose(baseline: { mean: number; std: number }, _hour: number): number {
   const raw = gaussian(baseline.mean, baseline.std)
   return clampFloat(raw, 2.0, 25.0)
 }

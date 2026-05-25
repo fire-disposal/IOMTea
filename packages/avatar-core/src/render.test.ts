@@ -1,4 +1,4 @@
-import { DEFAULT_AVATAR_SPEC, type AvatarSpec } from '@iomtea/shared-types'
+import { type AvatarSpec, DEFAULT_AVATAR_SPEC } from '@iomtea/shared-types'
 import { randomAvatarSpec } from './random'
 import { renderAvatarSvg } from './render'
 

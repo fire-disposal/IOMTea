@@ -1,5 +1,5 @@
-import { useState, useCallback, useEffect } from 'react'
 import Taro from '@tarojs/taro'
+import { useCallback, useEffect, useState } from 'react'
 import { FormShell, NumberInput } from '../../../components/FormShell'
 import { addLocalRecord, getTrendData } from '../../../utils/storage'
 import './index.scss'

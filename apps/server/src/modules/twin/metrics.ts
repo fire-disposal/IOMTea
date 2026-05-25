@@ -1,5 +1,5 @@
-import { registerMetric } from '../../core/pipeline/registry'
 import { z } from 'zod'
+import { registerMetric } from '../../core/pipeline/registry'
 
 registerMetric({
   metric: 'heart_rate',

@@ -1,5 +1,5 @@
-import { View, Text } from '@tarojs/components'
 import { Button } from '@nutui/nutui-react'
+import { Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useState } from 'react'
 import { trpc } from '../../utils/trpc'

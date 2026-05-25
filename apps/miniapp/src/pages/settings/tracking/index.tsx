@@ -1,6 +1,6 @@
-import { View, Text, Switch } from '@tarojs/components'
-import { useState, useEffect } from 'react'
+import { Switch, Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
+import { useEffect, useState } from 'react'
 import './index.scss'
 
 const ALL_MODULES = [

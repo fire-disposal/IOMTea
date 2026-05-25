@@ -1,19 +1,19 @@
-import { OpenAPIHono } from '@hono/zod-openapi'
 import fs from 'node:fs'
 import path from 'node:path'
+import { OpenAPIHono } from '@hono/zod-openapi'
 
-import { auth } from '../src/routes/auth'
-import { usersApp } from '../src/routes/users'
-import { dashboard } from '../src/routes/dashboard'
-import { pinsApp } from '../src/routes/pins'
-import { tagsApp } from '../src/routes/tags'
-import { patientsApp } from '../src/routes/patients'
-import { alertsApp } from '../src/routes/alerts'
 import { alertRulesApp } from '../src/routes/alertRules'
-import { ingestApp } from '../src/routes/ingest'
+import { alertsApp } from '../src/routes/alerts'
+import { auth } from '../src/routes/auth'
+import { dashboard } from '../src/routes/dashboard'
 import { dataApp } from '../src/routes/data'
 import { exportApp } from '../src/routes/export'
+import { ingestApp } from '../src/routes/ingest'
+import { patientsApp } from '../src/routes/patients'
+import { pinsApp } from '../src/routes/pins'
+import { tagsApp } from '../src/routes/tags'
 import { twinApp } from '../src/routes/twin'
+import { usersApp } from '../src/routes/users'
 
 const app = new OpenAPIHono()
 

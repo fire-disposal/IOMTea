@@ -48,7 +48,7 @@ export function getUnsyncedRecords(): HealthRecord[] {
   return getLocalRecords().filter((r) => !r.synced)
 }
 
-export function getTrendData(type: string, days: number = 7): { value: number; date: string }[] {
+export function getTrendData(type: string, days = 7): { value: number; date: string }[] {
   const records = getLocalRecords(type)
   const cutoff = Date.now() - days * 24 * 60 * 60 * 1000
   const filtered = records

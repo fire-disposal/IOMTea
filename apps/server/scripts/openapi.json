@@ -34,10 +34,7 @@
                     "example": "研究员"
                   }
                 },
-                "required": [
-                  "username",
-                  "password"
-                ]
+                "required": ["username", "password"]
               }
             }
           }
@@ -69,10 +66,7 @@
                     "example": "admin123"
                   }
                 },
-                "required": [
-                  "username",
-                  "password"
-                ]
+                "required": ["username", "password"]
               }
             }
           }
@@ -100,9 +94,7 @@
                     "example": "..."
                   }
                 },
-                "required": [
-                  "refreshToken"
-                ]
+                "required": ["refreshToken"]
               }
             }
           }
@@ -203,21 +195,14 @@
                   },
                   "type": {
                     "type": "string",
-                    "enum": [
-                      "device",
-                      "virtual",
-                      "user",
-                      "simulator"
-                    ],
+                    "enum": ["device", "virtual", "user", "simulator"],
                     "default": "device"
                   },
                   "label": {
                     "type": "string"
                   }
                 },
-                "required": [
-                  "userId"
-                ]
+                "required": ["userId"]
               }
             }
           }
@@ -267,9 +252,7 @@
                     "example": "#ff6b6b"
                   }
                 },
-                "required": [
-                  "name"
-                ]
+                "required": ["name"]
               }
             }
           }
@@ -383,9 +366,7 @@
                     }
                   }
                 },
-                "required": [
-                  "name"
-                ]
+                "required": ["name"]
               }
             }
           }
@@ -481,9 +462,7 @@
                     "example": "caregiver"
                   }
                 },
-                "required": [
-                  "userId"
-                ]
+                "required": ["userId"]
               }
             }
           }
@@ -581,20 +560,14 @@
                 "properties": {
                   "action": {
                     "type": "string",
-                    "enum": [
-                      "acknowledge",
-                      "resolve",
-                      "assign"
-                    ]
+                    "enum": ["acknowledge", "resolve", "assign"]
                   },
                   "assigneeId": {
                     "type": "string",
                     "format": "uuid"
                   }
                 },
-                "required": [
-                  "action"
-                ]
+                "required": ["action"]
               }
             }
           }
@@ -664,15 +637,11 @@
                           "type": "string"
                         }
                       },
-                      "required": [
-                        "metric"
-                      ]
+                      "required": ["metric"]
                     }
                   }
                 },
-                "required": [
-                  "rules"
-                ]
+                "required": ["rules"]
               }
             }
           }
@@ -740,12 +709,7 @@
                     "format": "date-time"
                   }
                 },
-                "required": [
-                  "patientId",
-                  "kind",
-                  "source",
-                  "metric"
-                ]
+                "required": ["patientId", "kind", "source", "metric"]
               }
             }
           }
@@ -814,20 +778,13 @@
                           "format": "date-time"
                         }
                       },
-                      "required": [
-                        "patientId",
-                        "kind",
-                        "source",
-                        "metric"
-                      ]
+                      "required": ["patientId", "kind", "source", "metric"]
                     },
                     "minItems": 1,
                     "maxItems": 5000
                   }
                 },
-                "required": [
-                  "events"
-                ]
+                "required": ["events"]
               }
             }
           }
@@ -975,12 +932,7 @@
           {
             "schema": {
               "type": "string",
-              "enum": [
-                "minute",
-                "hour",
-                "day",
-                "week"
-              ],
+              "enum": ["minute", "hour", "day", "week"],
               "default": "day"
             },
             "required": false,
@@ -990,12 +942,7 @@
           {
             "schema": {
               "type": "string",
-              "enum": [
-                "avg",
-                "min",
-                "max",
-                "count"
-              ],
+              "enum": ["avg", "min", "max", "count"],
               "default": "avg"
             },
             "required": false,
@@ -1106,16 +1053,10 @@
                   },
                   "format": {
                     "type": "string",
-                    "enum": [
-                      "csv",
-                      "long",
-                      "wide"
-                    ]
+                    "enum": ["csv", "long", "wide"]
                   }
                 },
-                "required": [
-                  "format"
-                ]
+                "required": ["format"]
               }
             }
           }
@@ -1168,9 +1109,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "profile"
-                ]
+                "required": ["profile"]
               }
             }
           }
@@ -1210,9 +1149,7 @@
                     "type": "boolean"
                   }
                 },
-                "required": [
-                  "running"
-                ]
+                "required": ["running"]
               }
             }
           }
@@ -1236,9 +1173,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "name"
-                ]
+                "required": ["name"]
               }
             }
           }
@@ -1262,9 +1197,7 @@
                     "type": "boolean"
                   }
                 },
-                "required": [
-                  "enabled"
-                ]
+                "required": ["enabled"]
               }
             }
           }
@@ -1318,9 +1251,7 @@
                     "format": "uuid"
                   }
                 },
-                "required": [
-                  "patientId"
-                ]
+                "required": ["patientId"]
               }
             }
           }
@@ -1355,9 +1286,7 @@
                     "maximum": 100
                   }
                 },
-                "required": [
-                  "speed"
-                ]
+                "required": ["speed"]
               }
             }
           }
@@ -1382,9 +1311,7 @@
                     "example": "tachycardia"
                   }
                 },
-                "required": [
-                  "type"
-                ]
+                "required": ["type"]
               }
             }
           }

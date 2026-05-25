@@ -1,5 +1,5 @@
-import { View, Text } from '@tarojs/components'
-import { useState, useMemo } from 'react'
+import { Text, View } from '@tarojs/components'
+import { useMemo, useState } from 'react'
 import './Calendar.scss'
 
 interface CalendarProps {

@@ -1,5 +1,14 @@
-import { pgTable, uuid, text, jsonb, timestamp, boolean, real, primaryKey } from 'drizzle-orm/pg-core'
 import { sql } from 'drizzle-orm'
+import {
+  boolean,
+  jsonb,
+  pgTable,
+  primaryKey,
+  real,
+  text,
+  timestamp,
+  uuid,
+} from 'drizzle-orm/pg-core'
 import { patients } from '../../core/db/schema.js'
 
 export const simConfigs = pgTable('sim_configs', {

@@ -8,6 +8,8 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "typecheck": "tsc --noEmit",
+    "lint": "biome check src/",
+    "format": "biome check --write src/",
     "check": "pnpm typecheck && pnpm check:imports",
     "check:imports": "node scripts/check-imports.mjs",
     "db:generate": "tsx node_modules/drizzle-kit/bin.cjs generate",

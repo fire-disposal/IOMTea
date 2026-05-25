@@ -1,11 +1,11 @@
+import { loginSchema } from '@iomtea/shared-types'
 import { Button, Container, Paper, PasswordInput, TextInput, Title } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
-import { useState } from 'react'
 import { useForm } from '@tanstack/react-form'
-import { loginSchema } from '@iomtea/shared-types'
-import { useAuthStore } from '../store/auth'
-import { http } from '../api/client'
 import { useNavigate } from '@tanstack/react-router'
+import { useState } from 'react'
+import { http } from '../api/client'
+import { useAuthStore } from '../store/auth'
 import classes from './LoginPage.module.css'
 
 function zodCheck(schema: any) {
@@ -32,7 +32,11 @@ export function LoginPage() {
   const setTokens = useAuthStore((s) => s.setTokens)
   const navigate = useNavigate()
 
-  const handleAuthSuccess = (data: { accessToken: string; refreshToken: string; user: unknown }) => {
+  const handleAuthSuccess = (data: {
+    accessToken: string
+    refreshToken: string
+    user: unknown
+  }) => {
     setTokens(data.accessToken, data.refreshToken, Date.now() + 3600000)
     notifications.show({ title: '登录成功', message: '欢迎使用 IOMTea', color: 'green' })
     const params = new URLSearchParams(window.location.search)
@@ -84,7 +88,13 @@ export function LoginPage() {
       <div className={classes.shapeTriangle} />
 
       <Container size={420} style={{ position: 'relative', zIndex: 1 }}>
-        <Title ta="center" fz={36} fw={800} className={classes.title} style={{ textTransform: 'uppercase' }}>
+        <Title
+          ta="center"
+          fz={36}
+          fw={800}
+          className={classes.title}
+          style={{ textTransform: 'uppercase' }}
+        >
           IOMTea
         </Title>
         <Title ta="center" order={6} fw={400} mt={4} className={classes.subtitle}>
@@ -98,7 +108,10 @@ export function LoginPage() {
               form.handleSubmit()
             }}
           >
-            <form.Field name="username" validators={{ onChange: zodCheck(loginSchema.shape.username) }}>
+            <form.Field
+              name="username"
+              validators={{ onChange: zodCheck(loginSchema.shape.username) }}
+            >
               {(field) => (
                 <TextInput
                   label="用户名"
@@ -106,7 +119,9 @@ export function LoginPage() {
                   required
                   autoComplete="username"
                   value={field.state.value}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => field.handleChange(e.currentTarget.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    field.handleChange(e.currentTarget.value)
+                  }
                   error={field.state.meta.errors?.[0] || error}
                   styles={{
                     input: {
@@ -120,7 +135,10 @@ export function LoginPage() {
                 />
               )}
             </form.Field>
-            <form.Field name="password" validators={{ onChange: zodCheck(loginSchema.shape.password) }}>
+            <form.Field
+              name="password"
+              validators={{ onChange: zodCheck(loginSchema.shape.password) }}
+            >
               {(field) => (
                 <PasswordInput
                   label="密码"
@@ -129,7 +147,9 @@ export function LoginPage() {
                   mt="md"
                   autoComplete={isRegister ? 'new-password' : 'current-password'}
                   value={field.state.value}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => field.handleChange(e.currentTarget.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    field.handleChange(e.currentTarget.value)
+                  }
                   error={field.state.meta.errors?.[0]}
                   styles={{
                     input: {

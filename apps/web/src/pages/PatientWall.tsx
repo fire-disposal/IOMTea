@@ -1,12 +1,16 @@
-import { Container, Title, Table, Badge, Group, Text, ActionIcon } from '@mantine/core'
+import { ActionIcon, Badge, Container, Group, Table, Text, Title } from '@mantine/core'
 import { IconEye } from '@tabler/icons-react'
+import { useNavigate } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { http } from '../api/client'
-import { useNavigate } from '@tanstack/react-router'
 
 interface Patient {
-  id: string; name: string; gender: string | null; status: string
-  phone: string | null; birthDate: string | null
+  id: string
+  name: string
+  gender: string | null
+  status: string
+  phone: string | null
+  birthDate: string | null
 }
 
 export function PatientWall() {
@@ -15,24 +19,43 @@ export function PatientWall() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    http.get('/patients').then((res) => { setPatients(res.data as Patient[]); setLoading(false) })
+    http.get('/patients').then((res) => {
+      setPatients(res.data as Patient[])
+      setLoading(false)
+    })
   }, [])
 
-  if (loading) return <Container py="md"><Title order={2}>患者管理</Title><p>Loading...</p></Container>
+  if (loading)
+    return (
+      <Container py="md">
+        <Title order={2}>患者管理</Title>
+        <p>Loading...</p>
+      </Container>
+    )
 
   return (
     <Container py="md">
-      <Title order={2} mb="md">患者管理</Title>
+      <Title order={2} mb="md">
+        患者管理
+      </Title>
       <Table striped>
-        <Table.Thead><Table.Tr>
-          <Table.Th>姓名</Table.Th><Table.Th>性别</Table.Th><Table.Th>状态</Table.Th><Table.Th>电话</Table.Th><Table.Th>操作</Table.Th>
-        </Table.Tr></Table.Thead>
+        <Table.Thead>
+          <Table.Tr>
+            <Table.Th>姓名</Table.Th>
+            <Table.Th>性别</Table.Th>
+            <Table.Th>状态</Table.Th>
+            <Table.Th>电话</Table.Th>
+            <Table.Th>操作</Table.Th>
+          </Table.Tr>
+        </Table.Thead>
         <Table.Tbody>
           {patients.map((p) => (
             <Table.Tr key={p.id}>
               <Table.Td>{p.name}</Table.Td>
               <Table.Td>{p.gender ?? '-'}</Table.Td>
-              <Table.Td><Badge size="xs">{p.status}</Badge></Table.Td>
+              <Table.Td>
+                <Badge size="xs">{p.status}</Badge>
+              </Table.Td>
               <Table.Td>{p.phone ?? '-'}</Table.Td>
               <Table.Td>
                 <ActionIcon variant="light" onClick={() => navigate({ to: '/patients/' + p.id })}>

@@ -1,17 +1,7 @@
-import {
-  date,
-  jsonb,
-  pgTable,
-  text,
-  timestamp,
-  uuid,
-} from 'drizzle-orm/pg-core'
 import { sql } from 'drizzle-orm'
-import {
-  medicationStatusEnum,
-  medicationRouteEnum,
-} from './enums'
-import { users, patients } from '../schema.js'
+import { date, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
+import { patients, users } from '../schema.js'
+import { medicationRouteEnum, medicationStatusEnum } from './enums'
 
 export const medications = pgTable('medications', {
   id: uuid('id').defaultRandom().primaryKey(),

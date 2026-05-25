@@ -34,10 +34,7 @@
                     "example": "研究员"
                   }
                 },
-                "required": [
-                  "username",
-                  "password"
-                ]
+                "required": ["username", "password"]
               }
             }
           }
@@ -73,19 +70,10 @@
                           "nullable": true
                         }
                       },
-                      "required": [
-                        "id",
-                        "username",
-                        "role",
-                        "displayName"
-                      ]
+                      "required": ["id", "username", "role", "displayName"]
                     }
                   },
-                  "required": [
-                    "accessToken",
-                    "refreshToken",
-                    "user"
-                  ]
+                  "required": ["accessToken", "refreshToken", "user"]
                 }
               }
             }
@@ -113,10 +101,7 @@
                     "example": "admin123"
                   }
                 },
-                "required": [
-                  "username",
-                  "password"
-                ]
+                "required": ["username", "password"]
               }
             }
           }
@@ -152,19 +137,10 @@
                           "nullable": true
                         }
                       },
-                      "required": [
-                        "id",
-                        "username",
-                        "role",
-                        "displayName"
-                      ]
+                      "required": ["id", "username", "role", "displayName"]
                     }
                   },
-                  "required": [
-                    "accessToken",
-                    "refreshToken",
-                    "user"
-                  ]
+                  "required": ["accessToken", "refreshToken", "user"]
                 }
               }
             }
@@ -188,9 +164,7 @@
                     "example": "..."
                   }
                 },
-                "required": [
-                  "refreshToken"
-                ]
+                "required": ["refreshToken"]
               }
             }
           }
@@ -226,19 +200,10 @@
                           "nullable": true
                         }
                       },
-                      "required": [
-                        "id",
-                        "username",
-                        "role",
-                        "displayName"
-                      ]
+                      "required": ["id", "username", "role", "displayName"]
                     }
                   },
-                  "required": [
-                    "accessToken",
-                    "refreshToken",
-                    "user"
-                  ]
+                  "required": ["accessToken", "refreshToken", "user"]
                 }
               }
             }
@@ -469,11 +434,7 @@
                       "type": "number"
                     }
                   },
-                  "required": [
-                    "patientCount",
-                    "activeAlerts24h",
-                    "criticalAlerts"
-                  ]
+                  "required": ["patientCount", "activeAlerts24h", "criticalAlerts"]
                 }
               }
             }
@@ -515,14 +476,7 @@
                         "nullable": true
                       }
                     },
-                    "required": [
-                      "pin",
-                      "userId",
-                      "type",
-                      "label",
-                      "isVirtual",
-                      "createdAt"
-                    ]
+                    "required": ["pin", "userId", "type", "label", "isVirtual", "createdAt"]
                   }
                 }
               }
@@ -549,21 +503,14 @@
                   },
                   "type": {
                     "type": "string",
-                    "enum": [
-                      "device",
-                      "virtual",
-                      "user",
-                      "simulator"
-                    ],
+                    "enum": ["device", "virtual", "user", "simulator"],
                     "default": "device"
                   },
                   "label": {
                     "type": "string"
                   }
                 },
-                "required": [
-                  "userId"
-                ]
+                "required": ["userId"]
               }
             }
           }
@@ -598,14 +545,7 @@
                       "nullable": true
                     }
                   },
-                  "required": [
-                    "pin",
-                    "userId",
-                    "type",
-                    "label",
-                    "isVirtual",
-                    "createdAt"
-                  ]
+                  "required": ["pin", "userId", "type", "label", "isVirtual", "createdAt"]
                 }
               }
             }
@@ -627,9 +567,7 @@
                       "type": "boolean"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -667,12 +605,7 @@
                         "nullable": true
                       }
                     },
-                    "required": [
-                      "id",
-                      "name",
-                      "color",
-                      "createdAt"
-                    ]
+                    "required": ["id", "name", "color", "createdAt"]
                   }
                 }
               }
@@ -698,9 +631,7 @@
                     "example": "#ff6b6b"
                   }
                 },
-                "required": [
-                  "name"
-                ]
+                "required": ["name"]
               }
             }
           }
@@ -728,12 +659,7 @@
                       "nullable": true
                     }
                   },
-                  "required": [
-                    "id",
-                    "name",
-                    "color",
-                    "createdAt"
-                  ]
+                  "required": ["id", "name", "color", "createdAt"]
                 }
               }
             }
@@ -755,9 +681,7 @@
                       "type": "boolean"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -927,9 +851,7 @@
                     }
                   }
                 },
-                "required": [
-                  "name"
-                ]
+                "required": ["name"]
               }
             }
           }
@@ -1211,9 +1133,7 @@
                       "type": "boolean"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -1238,9 +1158,7 @@
                     "example": "caregiver"
                   }
                 },
-                "required": [
-                  "userId"
-                ]
+                "required": ["userId"]
               }
             }
           }
@@ -1257,9 +1175,7 @@
                       "type": "boolean"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -1281,9 +1197,7 @@
                       "type": "boolean"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -1497,20 +1411,14 @@
                 "properties": {
                   "action": {
                     "type": "string",
-                    "enum": [
-                      "acknowledge",
-                      "resolve",
-                      "assign"
-                    ]
+                    "enum": ["acknowledge", "resolve", "assign"]
                   },
                   "assigneeId": {
                     "type": "string",
                     "format": "uuid"
                   }
                 },
-                "required": [
-                  "action"
-                ]
+                "required": ["action"]
               }
             }
           }
@@ -1527,9 +1435,7 @@
                       "type": "boolean"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -1554,9 +1460,7 @@
                       "type": "boolean"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -1620,15 +1524,11 @@
                           "type": "string"
                         }
                       },
-                      "required": [
-                        "metric"
-                      ]
+                      "required": ["metric"]
                     }
                   }
                 },
-                "required": [
-                  "rules"
-                ]
+                "required": ["rules"]
               }
             }
           }
@@ -1645,9 +1545,7 @@
                       "type": "boolean"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -1711,12 +1609,7 @@
                     "format": "date-time"
                   }
                 },
-                "required": [
-                  "patientId",
-                  "kind",
-                  "source",
-                  "metric"
-                ]
+                "required": ["patientId", "kind", "source", "metric"]
               }
             }
           }
@@ -1785,20 +1678,13 @@
                           "format": "date-time"
                         }
                       },
-                      "required": [
-                        "patientId",
-                        "kind",
-                        "source",
-                        "metric"
-                      ]
+                      "required": ["patientId", "kind", "source", "metric"]
                     },
                     "minItems": 1,
                     "maxItems": 5000
                   }
                 },
-                "required": [
-                  "events"
-                ]
+                "required": ["events"]
               }
             }
           }
@@ -1849,11 +1735,7 @@
                               "type": "string"
                             }
                           },
-                          "required": [
-                            "path",
-                            "label",
-                            "type"
-                          ]
+                          "required": ["path", "label", "type"]
                         }
                       },
                       "defaultChart": {
@@ -1873,10 +1755,7 @@
                             "type": "number"
                           }
                         },
-                        "required": [
-                          "min",
-                          "max"
-                        ]
+                        "required": ["min", "max"]
                       }
                     },
                     "required": [
@@ -1983,10 +1862,7 @@
                       }
                     }
                   },
-                  "required": [
-                    "metric",
-                    "rows"
-                  ]
+                  "required": ["metric", "rows"]
                 }
               }
             }
@@ -2044,12 +1920,7 @@
           {
             "schema": {
               "type": "string",
-              "enum": [
-                "minute",
-                "hour",
-                "day",
-                "week"
-              ],
+              "enum": ["minute", "hour", "day", "week"],
               "default": "day"
             },
             "required": false,
@@ -2059,12 +1930,7 @@
           {
             "schema": {
               "type": "string",
-              "enum": [
-                "avg",
-                "min",
-                "max",
-                "count"
-              ],
+              "enum": ["avg", "min", "max", "count"],
               "default": "avg"
             },
             "required": false,
@@ -2090,10 +1956,7 @@
                       }
                     }
                   },
-                  "required": [
-                    "metric",
-                    "rows"
-                  ]
+                  "required": ["metric", "rows"]
                 }
               }
             }
@@ -2207,16 +2070,10 @@
                   },
                   "format": {
                     "type": "string",
-                    "enum": [
-                      "csv",
-                      "long",
-                      "wide"
-                    ]
+                    "enum": ["csv", "long", "wide"]
                   }
                 },
-                "required": [
-                  "format"
-                ]
+                "required": ["format"]
               }
             }
           }
@@ -2262,10 +2119,7 @@
                         }
                       }
                     },
-                    "required": [
-                      "name",
-                      "displayName"
-                    ]
+                    "required": ["name", "displayName"]
                   }
                 }
               }
@@ -2306,10 +2160,7 @@
                       }
                     }
                   },
-                  "required": [
-                    "name",
-                    "displayName"
-                  ]
+                  "required": ["name", "displayName"]
                 }
               }
             }
@@ -2354,14 +2205,7 @@
                         "type": "number"
                       }
                     },
-                    "required": [
-                      "id",
-                      "name",
-                      "profileName",
-                      "running",
-                      "metrics",
-                      "patientCount"
-                    ]
+                    "required": ["id", "name", "profileName", "running", "metrics", "patientCount"]
                   }
                 }
               }
@@ -2384,9 +2228,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "profile"
-                ]
+                "required": ["profile"]
               }
             }
           }
@@ -2421,14 +2263,7 @@
                       "type": "number"
                     }
                   },
-                  "required": [
-                    "id",
-                    "name",
-                    "profileName",
-                    "running",
-                    "metrics",
-                    "patientCount"
-                  ]
+                  "required": ["id", "name", "profileName", "running", "metrics", "patientCount"]
                 }
               }
             }
@@ -2471,14 +2306,7 @@
                       "type": "number"
                     }
                   },
-                  "required": [
-                    "id",
-                    "name",
-                    "profileName",
-                    "running",
-                    "metrics",
-                    "patientCount"
-                  ]
+                  "required": ["id", "name", "profileName", "running", "metrics", "patientCount"]
                 }
               }
             }
@@ -2501,9 +2329,7 @@
                       "type": "boolean"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -2523,9 +2349,7 @@
                     "type": "boolean"
                   }
                 },
-                "required": [
-                  "running"
-                ]
+                "required": ["running"]
               }
             }
           }
@@ -2542,9 +2366,7 @@
                       "type": "boolean"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -2564,9 +2386,7 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "name"
-                ]
+                "required": ["name"]
               }
             }
           }
@@ -2583,9 +2403,7 @@
                       "type": "boolean"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -2605,9 +2423,7 @@
                     "type": "boolean"
                   }
                 },
-                "required": [
-                  "enabled"
-                ]
+                "required": ["enabled"]
               }
             }
           }
@@ -2624,9 +2440,7 @@
                       "type": "boolean"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -2668,9 +2482,7 @@
                       "type": "boolean"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -2691,9 +2503,7 @@
                     "format": "uuid"
                   }
                 },
-                "required": [
-                  "patientId"
-                ]
+                "required": ["patientId"]
               }
             }
           }
@@ -2710,9 +2520,7 @@
                       "type": "boolean"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -2734,9 +2542,7 @@
                       "type": "boolean"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -2758,9 +2564,7 @@
                     "maximum": 100
                   }
                 },
-                "required": [
-                  "speed"
-                ]
+                "required": ["speed"]
               }
             }
           }
@@ -2777,9 +2581,7 @@
                       "type": "number"
                     }
                   },
-                  "required": [
-                    "speed"
-                  ]
+                  "required": ["speed"]
                 }
               }
             }
@@ -2800,9 +2602,7 @@
                     "example": "tachycardia"
                   }
                 },
-                "required": [
-                  "type"
-                ]
+                "required": ["type"]
               }
             }
           }
@@ -2819,9 +2619,7 @@
                       "type": "boolean"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -2894,9 +2692,7 @@
                       "type": "boolean"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }
@@ -2930,10 +2726,7 @@
                       }
                     }
                   },
-                  "required": [
-                    "nodes",
-                    "edges"
-                  ]
+                  "required": ["nodes", "edges"]
                 }
               }
             }
@@ -2976,9 +2769,7 @@
                       "type": "boolean"
                     }
                   },
-                  "required": [
-                    "success"
-                  ]
+                  "required": ["success"]
                 }
               }
             }

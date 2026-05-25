@@ -28,7 +28,14 @@ export const alertStatusEnum = pgEnum('alert_status', [
   'handled',
   'closed',
 ])
-export const kindEnum = pgEnum('kind', ['observation', 'alert', 'behavior', 'location', 'ema_response', 'batch_record'])
+export const kindEnum = pgEnum('kind', [
+  'observation',
+  'alert',
+  'behavior',
+  'location',
+  'ema_response',
+  'batch_record',
+])
 
 export const userStatusEnum = pgEnum('user_status', ['active', 'disabled', 'pending'])
 export const genderEnum = pgEnum('gender', ['male', 'female', 'other'])
@@ -81,7 +88,13 @@ export type AlertStatus =
   | 'assigned'
   | 'handled'
   | 'closed'
-export type EventKind = 'observation' | 'alert' | 'behavior' | 'location' | 'ema_response' | 'batch_record'
+export type EventKind =
+  | 'observation'
+  | 'alert'
+  | 'behavior'
+  | 'location'
+  | 'ema_response'
+  | 'batch_record'
 
 export type UserStatus = 'active' | 'disabled' | 'pending'
 export type Gender = 'male' | 'female' | 'other'

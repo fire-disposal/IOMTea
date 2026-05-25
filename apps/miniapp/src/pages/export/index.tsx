@@ -1,6 +1,6 @@
-import { useState, useCallback } from 'react'
-import { View, Text } from '@tarojs/components'
+import { Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
+import { useCallback, useState } from 'react'
 import { getLocalRecords } from '../../utils/storage'
 import './index.scss'
 

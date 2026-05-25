@@ -1,7 +1,7 @@
-import { View, Text } from '@tarojs/components'
+import { Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
-import { useState, useEffect } from 'react'
-import { getLocalRecords, HealthRecord } from '../../utils/storage'
+import { useEffect, useState } from 'react'
+import { type HealthRecord, getLocalRecords } from '../../utils/storage'
 import './index.scss'
 
 const TYPE_LABELS: Record<string, string> = {

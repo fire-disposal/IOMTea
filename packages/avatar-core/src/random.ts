@@ -1,4 +1,4 @@
-import { DEFAULT_AVATAR_SPEC, type AvatarSpec } from '@iomtea/shared-types'
+import { type AvatarSpec, DEFAULT_AVATAR_SPEC } from '@iomtea/shared-types'
 
 const hashSeed = (seed: string | number) => {
   const text = String(seed)

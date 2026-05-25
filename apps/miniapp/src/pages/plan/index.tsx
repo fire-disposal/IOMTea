@@ -1,8 +1,8 @@
-import { View, Text, Checkbox } from '@tarojs/components'
 import { Button } from '@nutui/nutui-react'
+import { Checkbox, Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
-import { useState, useEffect } from 'react'
-import { HEALTH_MODULE_META, HEALTH_MODULE_KEYS } from '../../constants/modules'
+import { useEffect, useState } from 'react'
+import { HEALTH_MODULE_KEYS, HEALTH_MODULE_META } from '../../constants/modules'
 import { trpc } from '../../utils/trpc'
 import './index.scss'
 

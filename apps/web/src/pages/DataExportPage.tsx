@@ -1,11 +1,15 @@
-import { Container, Title, Group, Select, Button, Table, Text, Paper } from '@mantine/core'
+import { Button, Container, Group, Paper, Select, Table, Text, Title } from '@mantine/core'
+import { notifications } from '@mantine/notifications'
 import { useState } from 'react'
 import { http } from '../api/client'
-import { notifications } from '@mantine/notifications'
 
 export function DataExportPage() {
   const [format, setFormat] = useState<'csv' | 'long' | 'wide'>('csv')
-  const [preview, setPreview] = useState<{ columns: string[]; rows: Record<string, unknown>[]; total: number } | null>(null)
+  const [preview, setPreview] = useState<{
+    columns: string[]
+    rows: Record<string, unknown>[]
+    total: number
+  } | null>(null)
   const [exporting, setExporting] = useState(false)
 
   const loadPreview = async () => {
@@ -22,15 +26,21 @@ export function DataExportPage() {
       const blob = new Blob([binary], { type: mime })
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
-      a.href = url; a.download = filename; a.click()
+      a.href = url
+      a.download = filename
+      a.click()
       URL.revokeObjectURL(url)
       notifications.show({ title: '导出成功', message: filename, color: 'green' })
-    } finally { setExporting(false) }
+    } finally {
+      setExporting(false)
+    }
   }
 
   return (
     <Container py="md">
-      <Title order={2} mb="md">数据导出</Title>
+      <Title order={2} mb="md">
+        数据导出
+      </Title>
       <Paper p="md" withBorder mb="md">
         <Group mb="md">
           <Select
@@ -45,22 +55,34 @@ export function DataExportPage() {
           />
         </Group>
         <Group>
-          <Button variant="light" onClick={loadPreview}>预览</Button>
-          <Button loading={exporting} onClick={handleExport}>导出 {format.toUpperCase()}</Button>
+          <Button variant="light" onClick={loadPreview}>
+            预览
+          </Button>
+          <Button loading={exporting} onClick={handleExport}>
+            导出 {format.toUpperCase()}
+          </Button>
         </Group>
       </Paper>
 
       {preview && (
         <Paper p="md" withBorder>
-          <Text size="sm" mb="sm">预览 ({preview.total} 条记录)</Text>
+          <Text size="sm" mb="sm">
+            预览 ({preview.total} 条记录)
+          </Text>
           <Table striped stickyHeader>
             <Table.Thead>
-              <Table.Tr>{preview.columns.map((c) => <Table.Th key={c}>{c}</Table.Th>)}</Table.Tr>
+              <Table.Tr>
+                {preview.columns.map((c) => (
+                  <Table.Th key={c}>{c}</Table.Th>
+                ))}
+              </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
               {preview.rows.map((row, i) => (
                 <Table.Tr key={i}>
-                  {preview.columns.map((c) => <Table.Td key={c}>{String(row[c] ?? '-')}</Table.Td>)}
+                  {preview.columns.map((c) => (
+                    <Table.Td key={c}>{String(row[c] ?? '-')}</Table.Td>
+                  ))}
                 </Table.Tr>
               ))}
             </Table.Tbody>

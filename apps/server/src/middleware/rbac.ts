@@ -1,6 +1,6 @@
+import { eq } from 'drizzle-orm'
 import { createMiddleware } from 'hono/factory'
 import { db } from '../core/db'
-import { eq } from 'drizzle-orm'
 import { rolePermissions } from '../core/db/schema/auth-ext'
 
 const rolePermCache = new Map<string, Set<string>>()

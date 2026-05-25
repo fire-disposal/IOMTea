@@ -1,6 +1,6 @@
 import mqtt from 'mqtt'
-import { routeMessage } from './router'
 import { createChildLogger } from '../core/lib/logger'
+import { routeMessage } from './router'
 
 const logger = createChildLogger('mqtt')
 

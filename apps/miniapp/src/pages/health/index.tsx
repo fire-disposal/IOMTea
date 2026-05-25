@@ -1,16 +1,16 @@
-import { View, Text, ScrollView } from '@tarojs/components'
-import { Cell, CellGroup, Tag, Skeleton } from '@nutui/nutui-react'
+import { Cell, CellGroup, Skeleton, Tag } from '@nutui/nutui-react'
+import { ScrollView, Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
-import { useState, useEffect } from 'react'
-import { getLocalRecords } from '../../utils/storage'
+import { useEffect, useState } from 'react'
 import { Calendar } from '../../components/Calendar'
 import { TabBar } from '../../components/TabBar'
 import {
-  HEALTH_MODULE_META,
   HEALTH_MODULE_KEYS,
+  HEALTH_MODULE_META,
   type HealthModuleKey,
   getRecordPage,
 } from '../../constants/modules'
+import { getLocalRecords } from '../../utils/storage'
 import './index.scss'
 
 export default function HealthPage() {

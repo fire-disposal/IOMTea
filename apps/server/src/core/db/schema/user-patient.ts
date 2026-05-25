@@ -1,4 +1,4 @@
-import { pgTable, timestamp, uuid, varchar, primaryKey } from 'drizzle-orm/pg-core'
+import { pgTable, primaryKey, timestamp, uuid, varchar } from 'drizzle-orm/pg-core'
 import { users } from '../schema.js'
 import { patients } from '../schema.js'
 

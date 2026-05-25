@@ -1,7 +1,7 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+import { and, asc, desc, eq, gte, lte, sql } from 'drizzle-orm'
 import { db } from '../core/db'
 import { events, patients } from '../core/db/schema'
-import { eq, and, gte, lte, asc, desc, sql } from 'drizzle-orm'
 import { jwtAuth } from '../middleware/auth'
 
 const exportApp = new OpenAPIHono()
@@ -100,7 +100,8 @@ exportApp.openapi(downloadRoute, async (c) => {
         Object.keys(row.value as object).forEach((k) => allFields.add(k))
       }
     }
-    csvContent = ['recorded_at', 'patient_id', 'metric', 'source', 'value', ...allFields].join(',') + '\n'
+    csvContent =
+      ['recorded_at', 'patient_id', 'metric', 'source', 'value', ...allFields].join(',') + '\n'
     for (const row of rows) {
       const vals = [
         row.recordedAt?.toISOString() ?? '',
@@ -119,17 +120,19 @@ exportApp.openapi(downloadRoute, async (c) => {
   } else if (input.format === 'long') {
     csvContent = 'recorded_at,patient_id,metric,value,unit,source\n'
     for (const row of rows) {
-      const v = typeof row.value === 'object' && row.value
-        ? JSON.stringify(row.value)
-        : String(row.value ?? '')
-      csvContent += [
-        row.recordedAt?.toISOString() ?? '',
-        row.patientId,
-        row.metric,
-        `"${v.replace(/"/g, '""')}"`,
-        row.unit ?? '',
-        row.source ?? '',
-      ].join(',') + '\n'
+      const v =
+        typeof row.value === 'object' && row.value
+          ? JSON.stringify(row.value)
+          : String(row.value ?? '')
+      csvContent +=
+        [
+          row.recordedAt?.toISOString() ?? '',
+          row.patientId,
+          row.metric,
+          `"${v.replace(/"/g, '""')}"`,
+          row.unit ?? '',
+          row.source ?? '',
+        ].join(',') + '\n'
     }
   } else if (input.format === 'wide') {
     const patientIds = [...new Set(rows.map((r) => r.patientId))]

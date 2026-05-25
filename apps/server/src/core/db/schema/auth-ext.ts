@@ -1,6 +1,6 @@
 import { pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core'
-import { roleEnum } from './enums'
 import { users } from '../schema.js'
+import { roleEnum } from './enums'
 
 export const wechatAccounts = pgTable('wechat_accounts', {
   id: uuid('id').defaultRandom().primaryKey(),

@@ -1,4 +1,4 @@
-import { View, Text } from '@tarojs/components'
+import { Text, View } from '@tarojs/components'
 import { MiniTrend } from './MiniTrend'
 import { SubmitButton } from './SubmitButton'
 import './FormShell.scss'

@@ -1,9 +1,9 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
 import { db } from '../core/db'
 import { events } from '../core/db/schema'
+import { createChildLogger } from '../core/lib/logger'
 import { getMetricOrDefault } from '../core/pipeline/registry'
 import { jwtAuth } from '../middleware/auth'
-import { createChildLogger } from '../core/lib/logger'
 
 const logger = createChildLogger('ingest')
 const ingestApp = new OpenAPIHono()
@@ -17,7 +17,10 @@ const singleRoute = createRoute({
       content: {
         'application/json': {
           schema: z.object({
-            patientId: z.string().uuid().openapi({ example: '00000000-0000-0000-0000-000000000001' }),
+            patientId: z
+              .string()
+              .uuid()
+              .openapi({ example: '00000000-0000-0000-0000-000000000001' }),
             sessionId: z.string().uuid().optional(),
             pinCode: z.string().optional(),
             kind: z.string().openapi({ example: 'observation' }),
@@ -73,19 +76,24 @@ const batchRoute = createRoute({
       content: {
         'application/json': {
           schema: z.object({
-            events: z.array(z.object({
-              patientId: z.string().uuid(),
-              sessionId: z.string().uuid().optional(),
-              pinCode: z.string().optional(),
-              kind: z.string(),
-              source: z.string(),
-              metric: z.string().min(1),
-              value: z.unknown(),
-              unit: z.string().optional(),
-              confidence: z.number().optional(),
-              tags: z.record(z.string(), z.unknown()).optional(),
-              recordedAt: z.string().datetime().optional(),
-            })).min(1).max(5000),
+            events: z
+              .array(
+                z.object({
+                  patientId: z.string().uuid(),
+                  sessionId: z.string().uuid().optional(),
+                  pinCode: z.string().optional(),
+                  kind: z.string(),
+                  source: z.string(),
+                  metric: z.string().min(1),
+                  value: z.unknown(),
+                  unit: z.string().optional(),
+                  confidence: z.number().optional(),
+                  tags: z.record(z.string(), z.unknown()).optional(),
+                  recordedAt: z.string().datetime().optional(),
+                }),
+              )
+              .min(1)
+              .max(5000),
           }),
         },
       },

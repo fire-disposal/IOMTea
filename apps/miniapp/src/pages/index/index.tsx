@@ -1,13 +1,13 @@
-import { View, Text } from '@tarojs/components'
+import { Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
-import { useState, useEffect } from 'react'
-import { TopBar } from '../../components/TopBar'
+import { useEffect, useState } from 'react'
 import { ChecklistCard } from '../../components/ChecklistCard'
 import { TabBar } from '../../components/TabBar'
-import { STORAGE_KEYS } from '../../constants/storage-keys'
+import { TopBar } from '../../components/TopBar'
 import { HEALTH_MODULE_META, type HealthModuleKey } from '../../constants/modules'
-import { trpc } from '../../utils/trpc'
 import { getRecordPage } from '../../constants/modules'
+import { STORAGE_KEYS } from '../../constants/storage-keys'
+import { trpc } from '../../utils/trpc'
 import './index.scss'
 
 interface ChecklistItem {

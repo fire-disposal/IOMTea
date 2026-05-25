@@ -1,12 +1,12 @@
-import { db } from '../core/db'
-import { usersPin } from '../core/db/schema/pin'
-import { events, patients } from '../core/db/schema.js'
-import { userPatientLinks } from '../core/db/schema/user-patient'
 import { eq, inArray } from 'drizzle-orm'
-import mqtt from 'mqtt'
-import { broadcastManager } from '../core/realtime/broadcast'
+import type mqtt from 'mqtt'
+import { db } from '../core/db'
+import { events, patients } from '../core/db/schema.js'
+import { usersPin } from '../core/db/schema/pin'
+import { userPatientLinks } from '../core/db/schema/user-patient'
 import { createChildLogger } from '../core/lib/logger'
-import { normalizeMetric as sharedNormalize, getMetricUnit } from '../core/lib/metrics'
+import { getMetricUnit, normalizeMetric as sharedNormalize } from '../core/lib/metrics'
+import { broadcastManager } from '../core/realtime/broadcast'
 
 const logger = createChildLogger('mqtt-router')
 
@@ -42,7 +42,7 @@ async function handleDeviceEvent(topicId: string, body: Record<string, unknown>)
     if (!metric) return
     const normalizedMetric = sharedNormalize(metric)
     if (!normalizedMetric) return
-    const numValue = value !== null ? value : NaN
+    const numValue = value !== null ? value : Number.NaN
     if (isNaN(numValue)) return
 
     const kind = event === 'healthAlert' ? 'alert' : 'observation'

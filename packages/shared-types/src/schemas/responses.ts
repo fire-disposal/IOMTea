@@ -89,17 +89,24 @@ export const metricResponseSchema = z.object({
   displayName: z.string(),
   unit: z.string(),
   valueType: z.string(),
-  fields: z.array(z.object({
-    path: z.string(),
-    label: z.string(),
-    type: z.string(),
-  })).optional(),
+  fields: z
+    .array(
+      z.object({
+        path: z.string(),
+        label: z.string(),
+        type: z.string(),
+      }),
+    )
+    .optional(),
   defaultChart: z.string(),
   category: z.string(),
-  normalRange: z.object({
-    min: z.number(),
-    max: z.number(),
-  }).nullable().optional(),
+  normalRange: z
+    .object({
+      min: z.number(),
+      max: z.number(),
+    })
+    .nullable()
+    .optional(),
 })
 
 export const profileResponseSchema = z.object({

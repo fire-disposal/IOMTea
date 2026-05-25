@@ -1,8 +1,8 @@
-import { View, Text, ScrollView } from '@tarojs/components'
+import { ScrollView, Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
-import { useState, useEffect } from 'react'
-import { HEALTH_MODULE_META, type HealthModuleKey } from '../../constants/modules'
+import { useEffect, useState } from 'react'
 import { CreditIcon } from '../../components/CreditIcon'
+import { HEALTH_MODULE_META, type HealthModuleKey } from '../../constants/modules'
 import { trpc } from '../../utils/trpc'
 import './index.scss'
 

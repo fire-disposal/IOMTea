@@ -55,7 +55,6 @@ export const eventListInputSchema = z.object({
   kind: eventKindSchema.optional(),
   metric: z.string().optional(),
   patientId: z.string().uuid().optional(),
-  deviceId: z.string().uuid().optional(),
   status: z.enum(ALERT_STATUSES).optional(),
   severity: z.enum(ALERT_SEVERITIES).optional(),
   from: z.number().optional(),

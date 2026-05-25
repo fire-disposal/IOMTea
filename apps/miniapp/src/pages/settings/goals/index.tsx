@@ -1,6 +1,6 @@
-import { View, Text, Button } from '@tarojs/components'
+import { Button, Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
-import { useState, useEffect, useCallback } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { NumberInput } from '../../../components/FormShell'
 import './index.scss'
 

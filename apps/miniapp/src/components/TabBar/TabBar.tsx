@@ -1,4 +1,4 @@
-import { View, Text } from '@tarojs/components'
+import { Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import './TabBar.scss'
 

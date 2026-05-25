@@ -1,5 +1,5 @@
 import type { DbClient } from '../db'
-import { users, patients, events, medications } from '../db'
+import { events, medications, patients, users } from '../db'
 import { usersPin } from '../db/schema/pin'
 import { userPatientLinks } from '../db/schema/user-patient'
 import { hashPassword } from '../lib/password'
@@ -592,8 +592,6 @@ export async function seedDemoData(db: DbClient): Promise<void> {
           prescribedById: user,
         } as any)
         .returning({ id: medications.id })
-
-
     }
   }
 }

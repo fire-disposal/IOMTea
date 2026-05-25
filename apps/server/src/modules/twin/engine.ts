@@ -1,11 +1,11 @@
+import { eq } from 'drizzle-orm'
 import type { DbClient } from '../../core/db'
 import { events } from '../../core/db/schema.js'
-import { simConfigs, simPatients } from './schema.js'
-import { eq } from 'drizzle-orm'
-import { profiles, getProfile, listProfiles } from './profiles.js'
 import * as phys from '../../core/pipeline/physiology.js'
+import { getProfile, listProfiles, profiles } from './profiles.js'
+import type { MetricConfig, UnifiedProfile } from './profiles.js'
 import { MetricScheduler } from './scheduler.js'
-import type { UnifiedProfile, MetricConfig } from './profiles.js'
+import { simConfigs, simPatients } from './schema.js'
 
 interface PatientRunner {
   patientId: string
@@ -45,8 +45,10 @@ const generatorMap: Record<string, GeneratorFn> = {
   motionIndex: (_baseline, _hour) => phys.generateMotionIndex(),
 }
 
-function baselineKey(metric: string): keyof typeof profiles['elderly-cardiac']['baselines'] | null {
-  const map: Record<string, keyof typeof profiles['elderly-cardiac']['baselines']> = {
+function baselineKey(
+  metric: string,
+): keyof (typeof profiles)['elderly-cardiac']['baselines'] | null {
+  const map: Record<string, keyof (typeof profiles)['elderly-cardiac']['baselines']> = {
     heart_rate: 'heartRate',
     spo2: 'spo2',
     temperature: 'temperature',
@@ -58,7 +60,12 @@ function baselineKey(metric: string): keyof typeof profiles['elderly-cardiac']['
   return map[metric] ?? null
 }
 
-function startPatientRunner(dbc: DbClient, sim: Simulation, patientId: string, patientName: string) {
+function startPatientRunner(
+  dbc: DbClient,
+  sim: Simulation,
+  patientId: string,
+  patientName: string,
+) {
   const scheduler = new MetricScheduler()
   scheduler.setSpeed(sim.speed * globalSpeed)
   const runner: PatientRunner = { patientId, patientName, scheduler, lastValues: {}, tickCount: 0 }
@@ -108,10 +115,7 @@ function stopPatientRunner(patientId: string) {
   patientSimMap.delete(patientId)
 }
 
-export function createSimulation(
-  db: DbClient,
-  config: { profileName: string; name?: string },
-) {
+export function createSimulation(db: DbClient, config: { profileName: string; name?: string }) {
   const profile = profiles[config.profileName]
   if (!profile) return null
   const id = `sim-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
@@ -132,12 +136,21 @@ export function createSimulation(
     speed: 1,
   }
   simulations.set(id, sim)
-  db
-    .insert(simConfigs)
-    .values({ id, name: simName, profileName: config.profileName, running: false, speed: 1, metrics: metrics as any } as any)
+  db.insert(simConfigs)
+    .values({
+      id,
+      name: simName,
+      profileName: config.profileName,
+      running: false,
+      speed: 1,
+      metrics: metrics as any,
+    } as any)
     .execute()
     .catch((err: Error) => console.error('sim save failed', err))
-  return { id, metrics: sim.metrics.map((m) => ({ name: m.name, enabled: m.enabled, config: m.config })) }
+  return {
+    id,
+    metrics: sim.metrics.map((m) => ({ name: m.name, enabled: m.enabled, config: m.config })),
+  }
 }
 
 export function deleteSimulation(db: DbClient, id: string): boolean {
@@ -145,7 +158,10 @@ export function deleteSimulation(db: DbClient, id: string): boolean {
   if (!sim) return false
   for (const pid of sim.patients.keys()) stopPatientRunner(pid)
   simulations.delete(id)
-  db.delete(simConfigs).where(eq(simConfigs.id, id)).execute().catch(() => {})
+  db.delete(simConfigs)
+    .where(eq(simConfigs.id, id))
+    .execute()
+    .catch(() => {})
   return true
 }
 
@@ -154,7 +170,11 @@ export function toggleSimulation(db: DbClient, id: string, running: boolean): bo
   if (!sim) return false
   sim.running = running
   if (!running) for (const [, r] of sim.patients) r.scheduler.destroy()
-  db.update(simConfigs).set({ running } as any).where(eq(simConfigs.id, id)).execute().catch(() => {})
+  db.update(simConfigs)
+    .set({ running } as any)
+    .where(eq(simConfigs.id, id))
+    .execute()
+    .catch(() => {})
   return true
 }
 
@@ -174,8 +194,7 @@ export function addPatient(
   if (!sim) return 0
   if (patientSimMap.has(patient.id)) return 0
   startPatientRunner(db, sim, patient.id, patient.name)
-  db
-    .insert(simPatients)
+  db.insert(simPatients)
     .values({ simId, patientId: patient.id } as any)
     .execute()
     .catch(() => {})
@@ -185,8 +204,7 @@ export function addPatient(
 export function removePatient(db: DbClient, simId: string, patientId: string): number {
   if (patientSimMap.get(patientId) !== simId) return 0
   stopPatientRunner(patientId)
-  db
-    .delete(simPatients)
+  db.delete(simPatients)
     .where(eq(simPatients.patientId, patientId) as any)
     .execute()
     .catch(() => {})
@@ -261,7 +279,11 @@ export function renameSim(db: DbClient, simId: string, name: string): boolean {
   const sim = simulations.get(simId)
   if (!sim) return false
   sim.name = name
-  db.update(simConfigs).set({ name } as any).where(eq(simConfigs.id, simId)).execute().catch(() => {})
+  db.update(simConfigs)
+    .set({ name } as any)
+    .where(eq(simConfigs.id, simId))
+    .execute()
+    .catch(() => {})
   return true
 }
 
@@ -280,39 +302,103 @@ export function injectScenario(
   > = {
     tachycardia: {
       observation: { metric: 'heart_rate', value: 155, unit: 'bpm' },
-      alert: { metric: 'heart_rate', value: 155, unit: 'bpm', kind: 'alert', severity: 'critical', status: 'active' },
+      alert: {
+        metric: 'heart_rate',
+        value: 155,
+        unit: 'bpm',
+        kind: 'alert',
+        severity: 'critical',
+        status: 'active',
+      },
     },
     low_spo2: {
       observation: { metric: 'spo2', value: 88, unit: '%' },
-      alert: { metric: 'spo2', value: 88, unit: '%', kind: 'alert', severity: 'critical', status: 'active' },
+      alert: {
+        metric: 'spo2',
+        value: 88,
+        unit: '%',
+        kind: 'alert',
+        severity: 'critical',
+        status: 'active',
+      },
     },
     hypotension: {
       observation: { metric: 'systolic_bp', value: 85, unit: 'mmHg' },
-      alert: { metric: 'systolic_bp', value: 85, unit: 'mmHg', kind: 'alert', severity: 'warning', status: 'active' },
+      alert: {
+        metric: 'systolic_bp',
+        value: 85,
+        unit: 'mmHg',
+        kind: 'alert',
+        severity: 'warning',
+        status: 'active',
+      },
     },
     fall: {
       observation: { metric: 'posture', value: null, unit: null },
-      alert: { metric: 'fall_detected', value: null, unit: null, kind: 'alert', severity: 'critical', status: 'active', tags: { scenario: 'fall' } },
+      alert: {
+        metric: 'fall_detected',
+        value: null,
+        unit: null,
+        kind: 'alert',
+        severity: 'critical',
+        status: 'active',
+        tags: { scenario: 'fall' },
+      },
     },
     bed_exit: {
       observation: { metric: 'bed_status', value: 0, unit: null },
-      alert: { metric: 'bed_exit', value: null, unit: null, kind: 'alert', severity: 'warning', status: 'active' },
+      alert: {
+        metric: 'bed_exit',
+        value: null,
+        unit: null,
+        kind: 'alert',
+        severity: 'warning',
+        status: 'active',
+      },
     },
     hyperglycemia: {
       observation: { metric: 'glucose', value: 13.5, unit: 'mmol/L' },
-      alert: { metric: 'glucose', value: 13.5, unit: 'mmol/L', kind: 'alert', severity: 'critical', status: 'active' },
+      alert: {
+        metric: 'glucose',
+        value: 13.5,
+        unit: 'mmol/L',
+        kind: 'alert',
+        severity: 'critical',
+        status: 'active',
+      },
     },
     hypoglycemia: {
       observation: { metric: 'glucose', value: 2.8, unit: 'mmol/L' },
-      alert: { metric: 'glucose', value: 2.8, unit: 'mmol/L', kind: 'alert', severity: 'critical', status: 'active' },
+      alert: {
+        metric: 'glucose',
+        value: 2.8,
+        unit: 'mmol/L',
+        kind: 'alert',
+        severity: 'critical',
+        status: 'active',
+      },
     },
     arrhythmia: {
       observation: { metric: 'heart_rate', value: 180, unit: 'bpm' },
-      alert: { metric: 'arrhythmia', value: null, unit: null, kind: 'alert', severity: 'critical', status: 'active' },
+      alert: {
+        metric: 'arrhythmia',
+        value: null,
+        unit: null,
+        kind: 'alert',
+        severity: 'critical',
+        status: 'active',
+      },
     },
     respiratory_distress: {
       observation: { metric: 'resp_rate', value: 35, unit: 'rpm' },
-      alert: { metric: 'resp_rate', value: 35, unit: 'rpm', kind: 'alert', severity: 'critical', status: 'active' },
+      alert: {
+        metric: 'resp_rate',
+        value: 35,
+        unit: 'rpm',
+        kind: 'alert',
+        severity: 'critical',
+        status: 'active',
+      },
     },
   }
 
@@ -322,13 +408,12 @@ export function injectScenario(
   const now = new Date()
 
   if (scenario.observation) {
-    db
-      .insert(events)
+    db.insert(events)
       .values({
         patientId,
         kind: 'observation',
-        metric: scenario.observation.metric as string || 'unknown',
-        value: scenario.observation.value as any ?? null,
+        metric: (scenario.observation.metric as string) || 'unknown',
+        value: (scenario.observation.value as any) ?? null,
         unit: (scenario.observation.unit as string) || null,
         source: 'manual',
         tags: { scenario: type, injected: true },
@@ -339,18 +424,21 @@ export function injectScenario(
   }
 
   if (scenario.alert) {
-    db
-      .insert(events)
+    db.insert(events)
       .values({
         patientId,
         kind: 'alert',
         metric: (scenario.alert.metric as string) || 'unknown',
-        value: scenario.alert.value as any ?? null,
+        value: (scenario.alert.value as any) ?? null,
         unit: (scenario.alert.unit as string) || null,
         severity: (scenario.alert.severity as string) || 'warning',
         status: (scenario.alert.status as string) || 'active',
         source: 'manual',
-        tags: { scenario: type, injected: true, ...((scenario.alert.tags as Record<string, unknown>) || {}) },
+        tags: {
+          scenario: type,
+          injected: true,
+          ...((scenario.alert.tags as Record<string, unknown>) || {}),
+        },
         recordedAt: now,
       } as any)
       .execute()

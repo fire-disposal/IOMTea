@@ -1,11 +1,26 @@
-import { Container, Title, Paper, Text, Badge, Group, ActionIcon, SegmentedControl } from '@mantine/core'
+import {
+  ActionIcon,
+  Badge,
+  Container,
+  Group,
+  Paper,
+  SegmentedControl,
+  Text,
+  Title,
+} from '@mantine/core'
 import { IconCheck } from '@tabler/icons-react'
 import { useEffect, useState } from 'react'
 import { http } from '../api/client'
 
 interface Alert {
-  id: string; patientId: string; metric: string; value: unknown; unit: string | null
-  severity: string | null; status: string | null; recordedAt: string | null
+  id: string
+  patientId: string
+  metric: string
+  value: unknown
+  unit: string | null
+  severity: string | null
+  status: string | null
+  recordedAt: string | null
 }
 
 export function AlertBoard() {
@@ -19,44 +34,75 @@ export function AlertBoard() {
       setLoading(false)
     })
   }
-  useEffect(() => { fetchAlerts() }, [])
+  useEffect(() => {
+    fetchAlerts()
+  }, [])
 
-  const filtered = filter === 'all' ? alerts : alerts.filter((a) => a.status !== 'closed' && a.status !== 'resolved')
+  const filtered =
+    filter === 'all'
+      ? alerts
+      : alerts.filter((a) => a.status !== 'closed' && a.status !== 'resolved')
 
   const handleAction = async (id: string, action: string) => {
     try {
       await http.patch('/alerts/' + id, { action } as any)
       fetchAlerts()
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }
 
-  if (loading) return <Container py="md"><Title order={2}>告警看板</Title><p>Loading...</p></Container>
+  if (loading)
+    return (
+      <Container py="md">
+        <Title order={2}>告警看板</Title>
+        <p>Loading...</p>
+      </Container>
+    )
 
   return (
     <Container py="md">
       <Group justify="space-between" mb="md">
         <Title order={2}>告警看板</Title>
         <SegmentedControl
-          data={[{ value: 'active', label: '活跃' }, { value: 'all', label: '全部' }]}
-          value={filter} onChange={setFilter}
+          data={[
+            { value: 'active', label: '活跃' },
+            { value: 'all', label: '全部' },
+          ]}
+          value={filter}
+          onChange={setFilter}
         />
       </Group>
       {filtered.map((a) => (
         <Paper key={a.id} p="sm" mb="xs" withBorder>
           <Group justify="space-between">
             <Group gap="xs">
-              <Badge color={a.severity === 'critical' ? 'red' : a.severity === 'warning' ? 'yellow' : 'blue'} size="xs">
+              <Badge
+                color={
+                  a.severity === 'critical' ? 'red' : a.severity === 'warning' ? 'yellow' : 'blue'
+                }
+                size="xs"
+              >
                 {a.severity ?? 'info'}
               </Badge>
-              <Text size="sm" fw={500}>{a.metric}: {String(a.value ?? '-')} {a.unit ?? ''}</Text>
+              <Text size="sm" fw={500}>
+                {a.metric}: {String(a.value ?? '-')} {a.unit ?? ''}
+              </Text>
             </Group>
             <Group gap="xs">
               {a.status === 'new' && (
-                <ActionIcon variant="light" color="green" size="sm" onClick={() => handleAction(a.id, 'acknowledge')}>
+                <ActionIcon
+                  variant="light"
+                  color="green"
+                  size="sm"
+                  onClick={() => handleAction(a.id, 'acknowledge')}
+                >
                   <IconCheck size={14} />
                 </ActionIcon>
               )}
-              <Badge size="xs" variant="light">{a.status}</Badge>
+              <Badge size="xs" variant="light">
+                {a.status}
+              </Badge>
             </Group>
           </Group>
         </Paper>

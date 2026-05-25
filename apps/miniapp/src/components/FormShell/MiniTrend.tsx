@@ -1,5 +1,5 @@
-import { View, Text, Canvas } from '@tarojs/components'
-import { useRef, useEffect } from 'react'
+import { Canvas, Text, View } from '@tarojs/components'
+import { useEffect, useRef } from 'react'
 import './MiniTrend.scss'
 
 interface MiniTrendProps {

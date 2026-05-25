@@ -1,6 +1,6 @@
-import { View, Text } from '@tarojs/components'
-import { useEffect, useRef, useState } from 'react'
+import { Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
+import { useEffect, useRef, useState } from 'react'
 import './NumberInput.scss'
 
 interface NumberInputProps {

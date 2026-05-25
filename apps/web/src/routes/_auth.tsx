@@ -1,25 +1,25 @@
 import {
+  ActionIcon,
   AppShell,
   Burger,
+  Button,
   Divider,
   Group,
+  Modal,
   NavLink,
   Text,
   ThemeIcon,
-  ActionIcon,
-  Modal,
-  Button,
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import {
-  IconDashboard,
-  IconLogout,
-  IconUsers,
-  IconScreenShare,
   IconAlertTriangle,
+  IconDashboard,
   IconFileExport,
   IconFlask,
   IconKey,
+  IconLogout,
+  IconScreenShare,
+  IconUsers,
   IconUsersGroup,
 } from '@tabler/icons-react'
 import { Outlet, redirect, useNavigate, useRouterState } from '@tanstack/react-router'
@@ -178,13 +178,7 @@ export const authBeforeLoad = ({ location }: { location: { href: string } }) => 
   const state = useAuthStore.getState()
   if (!state.token) throw redirect({ to: '/login', search: { redirect: location.href } })
 
-  const adminRoutes = [
-    '/patients',
-    '/medications',
-    '/data-export',
-    '/simulation',
-    '/iot/pins',
-  ]
+  const adminRoutes = ['/patients', '/medications', '/data-export', '/simulation', '/iot/pins']
   const superAdminRoutes = ['/settings/users']
   const pathname = location.href || ''
 
