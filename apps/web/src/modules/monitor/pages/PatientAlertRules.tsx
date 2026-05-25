@@ -24,8 +24,8 @@ export function PatientAlertRules({ patientId }: { patientId: string }) {
     if (!patientId) return
     setRLoading(true)
     try {
-      const data = await api.get<any[]>(`/alert-rules/patients/${patientId}/alert-rules`)
-      setRules(data)
+      const { data } = await api.GET('/alert-rules/patients/{id}/alert-rules', { params: { path: { id: patientId } } })
+      setRules(data ?? [])
       setRError(false)
     } catch {
       setRError(true)
@@ -39,7 +39,7 @@ export function PatientAlertRules({ patientId }: { patientId: string }) {
   const upsert = async (updatedRules: any[]) => {
     setUpsertLoading(true)
     try {
-      await api.put(`/alert-rules/patients/${patientId}/alert-rules`, { rules: updatedRules })
+      await api.PUT('/alert-rules/patients/{id}/alert-rules', { params: { path: { id: patientId } }, body: { rules: updatedRules } })
       notifications.show({ title: '已保存', message: '告警规则已更新', color: 'green' })
       fetchRules()
     } catch (err: any) {
