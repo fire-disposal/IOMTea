@@ -86,4 +86,75 @@ usersApp.openapi(updateRoute, async (c) => {
   return c.json(safe)
 })
 
+const getUserRoute = createRoute({
+  method: 'get',
+  path: '/:id',
+  middleware: [jwtAuth, requirePermission('/users', 'read')] as const,
+  responses: { 200: { description: 'User detail' }, 404: { description: 'Not found' } },
+})
+
+usersApp.openapi(getUserRoute, async (c) => {
+  const id = c.req.param('id')
+  const [user] = await db
+    .select({
+      id: users.id,
+      username: users.username,
+      displayName: users.displayName,
+      role: users.role,
+      status: users.status,
+      credit: users.credit,
+      phone: users.phone,
+      email: users.email,
+      createdAt: users.createdAt,
+    })
+    .from(users)
+    .where(eq(users.id, id))
+    .limit(1)
+  if (!user) return c.json({ error: 'Not found' }, 404 as any)
+  return c.json(user)
+})
+
+const deleteUserRoute = createRoute({
+  method: 'delete',
+  path: '/:id',
+  middleware: [jwtAuth, requirePermission('/users', 'delete')] as const,
+  responses: { 200: { description: 'Deleted' }, 404: { description: 'Not found' } },
+})
+
+usersApp.openapi(deleteUserRoute, async (c) => {
+  const id = c.req.param('id')
+  const [existing] = await db.select({ id: users.id }).from(users).where(eq(users.id, id)).limit(1)
+  if (!existing) return c.json({ error: 'Not found' }, 404 as any)
+  await db.delete(users).where(eq(users.id, id))
+  return c.json({ success: true })
+})
+
+const updateRoleRoute = createRoute({
+  method: 'patch',
+  path: '/:id/role',
+  middleware: [jwtAuth, requirePermission('/users', 'write')] as const,
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: z.object({ role: z.enum(['super_admin', 'admin', 'user']) }),
+        },
+      },
+    },
+  },
+  responses: { 200: { description: 'Role updated' }, 404: { description: 'Not found' } },
+})
+
+usersApp.openapi(updateRoleRoute, async (c) => {
+  const id = c.req.param('id')
+  const { role } = c.req.valid('json')
+  const [user] = await db
+    .update(users)
+    .set({ role })
+    .where(eq(users.id, id))
+    .returning({ id: users.id, role: users.role })
+  if (!user) return c.json({ error: 'Not found' }, 404 as any)
+  return c.json(user)
+})
+
 export { usersApp }
