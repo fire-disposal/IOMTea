@@ -45,8 +45,8 @@ export function DataDashboard() {
   const fetchPatients = useCallback(async () => {
     setPLoading(true)
     try {
-      const data = await api.get<any[]>('/patients', { pageSize: 100, status: 'active' })
-      setPatients(data)
+      const { data } = await api.GET('/patients', { params: { query: { pageSize: 100, status: 'active' } } })
+      setPatients(data ?? [])
       setPError(false)
     } catch {
       setPError(true)
@@ -57,8 +57,8 @@ export function DataDashboard() {
 
   const fetchAlerts = useCallback(async () => {
     try {
-      const data = await api.get<any[]>('/alerts', { pageSize: 50 })
-      setAlerts(data)
+      const { data } = await api.GET('/alerts', { params: { query: { pageSize: 50 } } })
+      setAlerts(data ?? [])
       setAError(false)
     } catch {
       setAError(true)
@@ -70,8 +70,8 @@ export function DataDashboard() {
   const fetchMetrics = useCallback(async () => {
     setMLoading(true)
     try {
-      const data = await api.get<any[]>('/data/metrics')
-      setMetrics(data)
+      const { data } = await api.GET('/data/metrics')
+      setMetrics(data ?? [])
     } finally {
       setMLoading(false)
     }
@@ -87,14 +87,18 @@ export function DataDashboard() {
     if (!patients.length) return
     setTrendLoading(true)
     api
-      .get<any>('/data/aggregate', {
-        patientId: patients[0]?.id ?? '',
-        metric: selectedMetric,
-        interval: 'day',
-        fn: 'avg',
-        from: new Date(Date.now() - 7 * 86400000).toISOString(),
+      .GET('/data/aggregate', {
+        params: {
+          query: {
+            patientId: patients[0]?.id ?? '',
+            metric: selectedMetric,
+            interval: 'day',
+            fn: 'avg',
+            from: new Date(Date.now() - 7 * 86400000).toISOString(),
+          },
+        },
       })
-      .then((data) => {
+      .then(({ data }) => {
         setTrendData(data)
         setTrendLoading(false)
       })
