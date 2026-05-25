@@ -70,21 +70,21 @@ export function SimPage() {
 
   const fetchPatients = useCallback(async () => {
     try {
-      const data = await api.get<any[]>('/patients', { page: 1, pageSize: 200 })
-      setPatientList(data)
+      const { data } = await api.GET('/patients', { params: { query: { page: 1, pageSize: 200 } } })
+      setPatientList(data ?? [])
     } catch { /* silent */ }
   }, [])
 
   const fetchSims = useCallback(async () => {
     try {
-      const data = await api.get<any[]>('/twin/simulations')
-      setSimulations(data)
+      const { data } = await api.GET('/twin/simulations')
+      setSimulations(data ?? [])
     } catch { /* silent */ }
   }, [])
 
   const fetchStatus = useCallback(async () => {
     try {
-      const data = await api.get<any[]>('/twin/simulations')
+      const { data } = await api.GET('/twin/simulations')
       const statusData: any[] = []
       for (const sim of data ?? []) {
         if (sim.patients) {
@@ -109,7 +109,7 @@ export function SimPage() {
   const handleCreate = async () => {
     setCreateLoading(true)
     try {
-      const d = await api.post<any>('/twin/simulations', { profile: newProfile })
+      const { data: d } = await api.POST('/twin/simulations', { body: { profile: newProfile } })
       fetchSims()
       setSelectedSimId(d?.id ?? null)
       setCreating(false)
@@ -123,14 +123,14 @@ export function SimPage() {
 
   const handleToggle = async (id: string, running: boolean) => {
     try {
-      await api.post(`/twin/simulations/${id}/toggle`, { running })
+      await api.POST('/twin/simulations/{id}/toggle', { params: { path: { id } }, body: { running } })
       fetchSims()
     } catch { /* silent */ }
   }
 
   const handleDelete = async (id: string) => {
     try {
-      await api.delete(`/twin/simulations/${id}`)
+      await api.DELETE('/twin/simulations/{id}', { params: { path: { id } } })
       fetchSims()
       setSelectedSimId(null)
     } catch { /* silent */ }
@@ -139,7 +139,7 @@ export function SimPage() {
   const handleRename = async () => {
     if (editingName && editNameValue.trim()) {
       try {
-        await api.patch(`/twin/simulations/${editingName}/rename`, { name: editNameValue.trim() })
+        await api.PATCH('/twin/simulations/{id}/rename', { params: { path: { id: editingName } }, body: { name: editNameValue.trim() } })
         fetchSims()
         setEditingName(null)
       } catch { /* silent */ }
@@ -150,7 +150,7 @@ export function SimPage() {
 
   const handleToggleMetric = async (id: string, metric: string, enabled: boolean) => {
     try {
-      await api.post(`/twin/simulations/${id}/metrics/${metric}/toggle`, { enabled })
+      await api.POST('/twin/simulations/{id}/metrics/{metric}/toggle', { params: { path: { id, metric } }, body: { enabled } })
       fetchSims()
     } catch { /* silent */ }
   }
@@ -158,14 +158,14 @@ export function SimPage() {
   const handleMetricChange = async (metric: string, field: string, value: number) => {
     if (!selectedSimId) return
     try {
-      await api.patch(`/twin/simulations/${selectedSimId}/metrics/${metric}`, { [field]: value } as any)
+      await api.PATCH('/twin/simulations/{id}/metrics/{metric}', { params: { path: { id: selectedSimId, metric } }, body: { [field]: value } })
     } catch { /* silent */ }
   }
 
   const handleAddPatient = async () => {
     if (!selectedSimId || !addPatientId) return
     try {
-      await api.post(`/twin/simulations/${selectedSimId}/patients`, { patientId: addPatientId })
+      await api.POST('/twin/simulations/{id}/patients', { params: { path: { id: selectedSimId } }, body: { patientId: addPatientId } })
       fetchSims()
       fetchStatus()
       setAddPatientId(null)
@@ -175,7 +175,7 @@ export function SimPage() {
   const handleRemovePatient = async (patientId: string) => {
     if (!selectedSimId) return
     try {
-      await api.delete(`/twin/simulations/${selectedSimId}/patients/${patientId}`)
+      await api.DELETE('/twin/simulations/{id}/patients/{patientId}', { params: { path: { id: selectedSimId, patientId } } })
       fetchSims()
       fetchStatus()
     } catch { /* silent */ }
@@ -183,9 +183,21 @@ export function SimPage() {
 
   const handleSetSpeed = async (speed: number) => {
     try {
-      await api.patch('/twin/speed', { speed })
+      await api.PATCH('/twin/speed', { body: { speed } })
     } catch { /* silent */ }
   }
+
+  const startRename = (simId: string, name: string) => {
+    setEditingName(simId)
+    setEditNameValue(name)
+  }
+
+  const selectedSim = selectedSimId ? simulations.find((s: any) => s.id === selectedSimId) : null
+  const selectedSimPatients = simStatus.filter((s: any) => s.simId === selectedSimId)
+  const assignedPatientIds = new Set(selectedSimPatients.map((s: any) => s.patientId))
+  const unassignedPatientOptions = patientList
+    .filter((p: any) => !assignedPatientIds.has(p.id))
+    .map((p: any) => ({ value: p.id, label: p.name }))
 
   return (
     <Container size="xl" py="md">
@@ -203,9 +215,9 @@ export function SimPage() {
                 variant="light"
                 color={creating ? 'green' : undefined}
                 onClick={() =>
-                  creating ? createSim.mutate({ profile: newProfile }) : setCreating(true)
+                  creating ? handleCreate() : setCreating(true)
                 }
-                loading={createSim.isPending}
+                loading={createLoading}
                 leftSection={<IconPlus size={14} />}
               >
                 {creating ? '确认创建' : '从模板创建'}
@@ -249,7 +261,7 @@ export function SimPage() {
                     checked={sim.running}
                     onChange={(e) => {
                       e.stopPropagation()
-                      toggleSim.mutate({ id: sim.id, running: e.currentTarget.checked })
+                      handleToggle(sim.id, e.currentTarget.checked)
                     }}
                     onPointerDown={(e) => e.stopPropagation()}
                   />
@@ -260,11 +272,11 @@ export function SimPage() {
                         value={editNameValue}
                         onChange={(e) => setEditNameValue(e.currentTarget.value)}
                         onKeyDown={(e) => {
-                          if (e.key === 'Enter') confirmRename()
+                          if (e.key === 'Enter') handleRename()
                         }}
                         autoFocus
                       />
-                      <ActionIcon size="xs" variant="subtle" color="green" onClick={confirmRename}>
+                      <ActionIcon size="xs" variant="subtle" color="green" onClick={handleRename}>
                         <IconCheck size={12} />
                       </ActionIcon>
                       <ActionIcon
@@ -304,7 +316,7 @@ export function SimPage() {
                     size="xs"
                     onClick={(e) => {
                       e.stopPropagation()
-                      deleteSim.mutate({ id: sim.id })
+                      handleDelete(sim.id)
                     }}
                   >
                     <IconTrash size={12} />
@@ -319,7 +331,7 @@ export function SimPage() {
         </Grid.Col>
 
         <Grid.Col span={{ base: 12, lg: 7 }}>
-          {!selected ? (
+          {!selectedSim ? (
             <Paper p="xl" withBorder ta="center">
               <Text c="dimmed">← 选择左侧模拟配置查看详情</Text>
             </Paper>
@@ -328,14 +340,14 @@ export function SimPage() {
               <Paper p="md" withBorder>
                 <Group justify="space-between" mb="md">
                   <Group gap="xs">
-                    {editingName === selected.id ? (
+                    {editingName === selectedSim.id ? (
                       <Group gap={4}>
                         <TextInput
                           size="xs"
                           value={editNameValue}
                           onChange={(e) => setEditNameValue(e.currentTarget.value)}
                           onKeyDown={(e) => {
-                            if (e.key === 'Enter') confirmRename()
+                            if (e.key === 'Enter') handleRename()
                           }}
                           autoFocus
                         />
@@ -343,7 +355,7 @@ export function SimPage() {
                           size="xs"
                           variant="subtle"
                           color="green"
-                          onClick={confirmRename}
+                          onClick={handleRename}
                         >
                           <IconCheck size={12} />
                         </ActionIcon>
@@ -358,25 +370,25 @@ export function SimPage() {
                       </Group>
                     ) : (
                       <Group gap={4}>
-                        <Text fw={600}>{selected.name} — 指标编排</Text>
+                        <Text fw={600}>{selectedSim.name} — 指标编排</Text>
                         <ActionIcon
                           size="xs"
                           variant="subtle"
-                          onClick={() => startRename(selected.id, selected.name)}
+                          onClick={() => startRename(selectedSim.id, selectedSim.name)}
                         >
                           <IconPencil size={12} />
                         </ActionIcon>
                       </Group>
                     )}
                     <Badge size="xs" variant="outline">
-                      {PROFILES.find((p) => p.value === selected.profileName)?.label}
+                      {PROFILES.find((p) => p.value === selectedSim.profileName)?.label}
                     </Badge>
                   </Group>
                   <ActionIcon
                     variant="light"
                     color="red"
                     size="sm"
-                    onClick={() => deleteSim.mutate({ id: selectedSimId! })}
+                    onClick={() => handleDelete(selectedSimId!)}
                   >
                     <IconTrash size={14} />
                   </ActionIcon>
@@ -393,18 +405,14 @@ export function SimPage() {
                     </Table.Tr>
                   </Table.Thead>
                   <Table.Tbody>
-                    {selected.metrics.map((m: any) => (
+                    {selectedSim.metrics.map((m: any) => (
                       <Table.Tr key={m.name} opacity={m.enabled ? 1 : 0.4}>
                         <Table.Td>
                           <Switch
                             size="xs"
                             checked={m.enabled}
                             onChange={(e) =>
-                              toggleMetric.mutate({
-                                id: selected.id,
-                                metric: m.name,
-                                enabled: e.currentTarget.checked,
-                              })
+                              handleToggleMetric(selectedSim.id, m.name, e.currentTarget.checked)
                             }
                           />
                         </Table.Td>
@@ -464,7 +472,7 @@ export function SimPage() {
                 <Group mb="sm">
                   <Select
                     size="sm"
-                    data={unassignedOptions}
+                    data={unassignedPatientOptions}
                     value={addPatientId}
                     onChange={(v) => setAddPatientId(v)}
                     placeholder="搜索并选择患者..."
@@ -476,7 +484,7 @@ export function SimPage() {
                     size="sm"
                     onClick={() => {
                       if (addPatientId)
-                        addPatients.mutate({ id: selected.id, patientIds: [addPatientId] })
+                        handleAddPatient()
                     }}
                     disabled={!addPatientId}
                   >
@@ -484,7 +492,7 @@ export function SimPage() {
                   </Button>
                 </Group>
 
-                {selectedPatients.map((sp: any) => (
+                {selectedSimPatients.map((sp: any) => (
                   <Paper
                     key={sp.patientId}
                     p="sm"
@@ -510,7 +518,7 @@ export function SimPage() {
                           size="xs"
                           onClick={(e) => {
                             e.stopPropagation()
-                            removePatients.mutate({ id: selected.id, patientIds: [sp.patientId] })
+                            handleRemovePatient(sp.patientId)
                           }}
                         >
                           <IconTrash size={12} />
@@ -544,7 +552,7 @@ export function SimPage() {
                     { value: '5', label: '5x' },
                     { value: '10', label: '10x' },
                   ]}
-                  onChange={(v) => setSpeed.mutate({ speed: Number(v) })}
+                    onChange={(v) => handleSetSpeed(Number(v))}
                 />
               </Paper>
             </Stack>
