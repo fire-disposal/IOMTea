@@ -31,9 +31,7 @@ function getInitialAuth() {
   if (!token) return { token: null, refreshToken: null, expiresAt: null, role: null }
 
   if (isTokenExpired(token)) {
-    // Token expired — try to clear; refresh will be attempted by trpc.ts
-    // Don't clear tokens here — let the refresh logic in trpc.js handle it
-    // Just return the expired state, the store knows the token
+    // Token expired — axios interceptor handles 401 redirect
   }
 
   const decoded = decodeJwtPayload(token)

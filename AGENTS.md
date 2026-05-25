@@ -13,7 +13,7 @@
 
 | Layer | Technology |
 |-------|-----------|
-| **API Server** | Hono + tRPC v11 + Drizzle ORM + PostgreSQL |
+| **API Server** | Hono + Zod + OpenAPI + Drizzle ORM + PostgreSQL |
 | **Web Frontend** | React 19 + Mantine v8 + TanStack Router + Zustand |
 | **Mini Program** | Taro 4 (WeChat) |
 | **Mobile/Edge** | Flutter (MQTT console, YOLO vision, IMU sensors) |
@@ -27,11 +27,12 @@
 ## Directory Map
 
 ```
-apps/server/          Backend API (Hono + tRPC + Drizzle + WebSocket)
-  src/core/           Main bounded context: DB, auth, tRPC routers, realtime
-  src/twin/           Digital twin engine (in-memory, state lost on restart)
-  src/sim/            Next-gen simulation engine
+apps/server/          Backend API (Hono REST + OpenAPI + Drizzle + WebSocket)
+  src/core/           Core modules: DB, pipeline, auth, realtime
+  src/routes/         REST API routes (12 domain modules)
+  src/modules/twin/   Digital twin engine (merged sim/ + twin/)
   src/mqtt-ingest/    MQTT device data ingestion
+  src/middleware/      Hono middleware (JWT auth, RBAC)
 apps/web/             React 19 web dashboard (Mantine v8 + TanStack Router)
 apps/miniapp/         WeChat mini program (Taro 4)
 apps/flutter/         Flutter experimental tools
@@ -47,17 +48,18 @@ docs/                 Architecture, code map, review reports, design specs
 | Context | Path | Responsibility |
 |---------|------|---------------|
 | **Core** | `apps/server/src/core/` | Auth, users, patients, alerts, data, RBAC |
-| **Twin** | `apps/server/src/twin/` | Digital twin engine, simulation, profiles, physiology |
+| **Twin** | `apps/server/src/modules/twin/` | Digital twin engine, simulation, profiles, physiology |
 | **MQTT-Ingest** | `apps/server/src/mqtt-ingest/` | MQTT device data ingestion |
 
-**Communication rules**: Contexts communicate only via events table or tRPC calls. Never cross-import internal modules. Shared types in `@iomtea/shared-types` only.
+**Communication rules**: Contexts communicate only via events table or REST API calls. Never cross-import internal modules. Shared types in `@iomtea/shared-types` only.
 
-**tRPC API**: `_app.ts` registers 23 routers. Each router uses:
-- `protectedProcedure` + `requirePermission('resource:action')` for authenticated routes
-- `publicProcedure` only for auth endpoints (register, login, refresh) and PIN-based endpoints
-- `requirePermission` currently covers 9 core routers; ~9 auxiliary routers still pending
+**REST API**: 12 route files in `routes/` using Hono + @hono/zod-openapi. Each route uses:
+- `createRoute()` from `@hono/zod-openapi` with request/response schemas
+- `jwtAuth` middleware from `middleware/auth.ts` for authenticated routes
+- `requirePermission('resource:action')` from `middleware/rbac.ts` for RBAC
+- OpenAPI spec auto-generated from route schemas → `openapi.json` → TypeScript client types
 
-**RBAC**: Permission-based via `core/trpc/middleware/rbac.ts`. Roles: super_admin, admin, user. Permissions: `patient:read|write|delete`, `alert:read|manage`, `dashboard:view`, etc.
+**RBAC**: Permission-based via `middleware/rbac.ts`. Roles: super_admin, admin, user. Permissions: `patient:read|write|delete`, `alert:read|manage`, `dashboard:view`, etc.
 
 ## Key Conventions
 
@@ -66,7 +68,7 @@ docs/                 Architecture, code map, review reports, design specs
 - **Enums**: Defined in `apps/server/src/core/db/schema/enums.ts` with matching TS type exports
 - **Schemas**: Zod validation schemas in `packages/shared-types/src/schemas/`
 - **Imports**: No `as any` — use proper type helpers. No `any` in new code.
-- **Error handling**: Throw `TRPCError`, don't silently catch without logging
+- **Error handling**: Return proper HTTP status codes, log errors via `createChildLogger`
 - **Formatting**: Biome (2-space indent, single quotes, no semicolons, trailing commas)
 - **DB access**: Direct Drizzle queries via `ctx.db`, no Repository interfaces
 - **Git**: Chinese commit messages, feat/fix/refactor convention
