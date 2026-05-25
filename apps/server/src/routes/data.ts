@@ -6,13 +6,14 @@ import { events } from '../core/db/schema'
 import { truncExpr, valueExpression } from '../core/pipeline/query-helpers'
 import { getMetricOrDefault, listMetrics } from '../core/pipeline/registry'
 import { jwtAuth } from '../middleware/auth'
+import { requirePermission } from '../middleware/rbac'
 
 const dataApp = new OpenAPIHono()
-dataApp.use('*', jwtAuth)
 
 const metricsRoute = createRoute({
   method: 'get',
   path: '/metrics',
+  middleware: [jwtAuth, requirePermission('/data', 'read')] as const,
   responses: {
     200: {
       content: { 'application/json': { schema: z.array(metricResponseSchema) } },
@@ -39,6 +40,7 @@ dataApp.openapi(metricsRoute, async (c) => {
 const rawRoute = createRoute({
   method: 'get',
   path: '/raw',
+  middleware: [jwtAuth, requirePermission('/data', 'read')] as const,
   request: {
     query: z.object({
       patientId: z.string().uuid(),
@@ -108,6 +110,7 @@ dataApp.openapi(rawRoute, async (c) => {
 const aggregateRoute = createRoute({
   method: 'get',
   path: '/aggregate',
+  middleware: [jwtAuth, requirePermission('/data', 'read')] as const,
   request: {
     query: z.object({
       patientId: z.string().uuid(),
@@ -170,6 +173,7 @@ dataApp.openapi(aggregateRoute, async (c) => {
 const latestRoute = createRoute({
   method: 'get',
   path: '/latest',
+  middleware: [jwtAuth, requirePermission('/data', 'read')] as const,
   request: { query: z.object({ patientId: z.string().uuid() }) },
   responses: {
     200: {
