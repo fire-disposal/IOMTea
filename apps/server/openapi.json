@@ -768,6 +768,50 @@
             "description": "Not found"
           }
         }
+      },
+      "get": {
+        "responses": {
+          "200": {
+            "description": "PIN detail"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      },
+      "patch": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "type": "string",
+                    "maxLength": 100
+                  },
+                  "pinType": {
+                    "type": "string",
+                    "enum": [
+                      "device",
+                      "virtual",
+                      "user",
+                      "simulator"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
       }
     },
     "/tags": {
