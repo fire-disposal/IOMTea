@@ -14,6 +14,9 @@ export default defineConfig({
   plugins: ['@tarojs/plugin-framework-react'],
   framework: 'react',
   compiler: 'webpack5',
+  defineConstants: {
+    API_BASE_URL: JSON.stringify('http://localhost:3000'),
+  },
   mini: {
     postcss: {
       pxtransform: { enable: true },
