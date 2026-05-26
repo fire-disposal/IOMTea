@@ -19,6 +19,9 @@ export async function seedPermissions(): Promise<void> {
     ['role:user', '/data/*', 'read'],
     ['role:user', '/plans/*', 'read'],
     ['role:user', '/credits/*', 'read'],
+    ['role:user', '/forms/*', 'read'],
+    ['role:admin', '/forms/*', 'write'],
+    ['role:admin', '/forms/*', 'read'],
   ]
 
   for (const p of policies) {

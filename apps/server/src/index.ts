@@ -26,6 +26,7 @@ import { alertsApp } from './routes/alerts'
 // ── REST Route imports ──
 import { auth } from './routes/auth'
 import { creditsApp } from './routes/credits'
+import { emaApp } from './routes/ema'
 import { dashboard } from './routes/dashboard'
 import { dataApp } from './routes/data'
 import { exportApp } from './routes/export'
@@ -97,6 +98,7 @@ app.route('/export', exportApp)
 app.route('/twin', twinApp)
 app.route('/plans', plansApp)
 app.route('/credits', creditsApp)
+app.route('/forms', emaApp)
 
 // OpenAPI spec (auto-collects from all mounted OpenAPIHono sub-apps)
 app.doc('/openapi.json', {
