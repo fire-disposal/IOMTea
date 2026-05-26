@@ -107,6 +107,12 @@ export default function HealthPage() {
               />
             ))}
             <Cell
+              title="健康量表"
+              description="查看已发布的健康量表"
+              extra={<Text style={{ color: '#999', fontSize: '12px' }}>→</Text>}
+              onClick={() => Taro.navigateTo({ url: '/pages/form-list/index' })}
+            />
+            <Cell
               title="全部记录"
               description="按类型筛选历史数据"
               extra={<Text style={{ color: '#999', fontSize: '12px' }}>→</Text>}

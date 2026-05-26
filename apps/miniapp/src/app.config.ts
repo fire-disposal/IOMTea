@@ -27,6 +27,7 @@ export default defineAppConfig({
     'pages/record/period/index',
     'pages/form/index',
     'pages/patient-select/index',
+    'pages/form-list/index',
   ],
   window: {
     backgroundTextStyle: 'light',
