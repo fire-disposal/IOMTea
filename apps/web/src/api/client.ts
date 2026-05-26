@@ -1,8 +1,10 @@
 import axios from 'axios'
 import type { paths } from './types'
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+
 const http = axios.create({
-  baseURL: 'http://localhost:3000',
+  baseURL: API_BASE,
   headers: { 'Content-Type': 'application/json' },
 })
 
@@ -28,7 +30,7 @@ http.interceptors.request.use(async (config) => {
       const refreshToken = localStorage.getItem('refreshToken')
       if (refreshToken) {
         proactiveRefreshPromise = axios
-          .post('http://localhost:3000/auth/refresh', { refreshToken })
+          .post(`${API_BASE}/auth/refresh`, { refreshToken })
           .then(({ data }) => {
             localStorage.setItem('token', data.accessToken)
             if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken)
@@ -90,7 +92,7 @@ http.interceptors.response.use(
     }
 
     try {
-      const { data } = await axios.post('http://localhost:3000/auth/refresh', {
+      const { data } = await axios.post(`${API_BASE}/auth/refresh`, {
         refreshToken,
       })
       const newToken = data.accessToken
