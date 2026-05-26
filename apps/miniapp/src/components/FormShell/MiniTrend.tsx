@@ -8,6 +8,7 @@ interface MiniTrendProps {
   height?: number
   formatValue?: (value: number) => string
   unitLabel?: string
+  normalRange?: { min: number; max: number }
 }
 
 export function MiniTrend({
@@ -16,6 +17,7 @@ export function MiniTrend({
   height = 60,
   formatValue,
   unitLabel,
+  normalRange,
 }: MiniTrendProps) {
   const canvasRef = useRef<any>(null)
 
@@ -63,10 +65,16 @@ export function MiniTrend({
   const latest = data[data.length - 1]
   const displayValue = formatValue ? formatValue(latest.value) : String(latest.value)
 
+  let valueColor = 'var(--brand-500)'
+  if (normalRange) {
+    if (latest.value < normalRange.min) valueColor = 'var(--color-warning)'
+    else if (latest.value > normalRange.max) valueColor = 'var(--color-error)'
+  }
+
   return (
     <View className="mini-trend-wrapper">
       <View className="mini-trend-label">
-        <Text className="mini-trend-value">{displayValue}</Text>
+        <Text className="mini-trend-value" style={{ color: valueColor }}>{displayValue}</Text>
         {unitLabel && <Text className="mini-trend-unit">{unitLabel}</Text>}
       </View>
       <Canvas ref={canvasRef} style={{ width, height }} className="mini-trend" />
