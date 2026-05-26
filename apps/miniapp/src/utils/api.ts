@@ -1,8 +1,11 @@
 import Taro from '@tarojs/taro'
-import type { paths } from '../api/types'
 
 function getBase(): string {
-  return (Taro.getStorageSync('server_url') as string) || 'http://localhost:3000'
+  const customUrl = Taro.getStorageSync('api_base_url') as string
+  if (customUrl) return customUrl
+  // @ts-ignore — injected by Taro build
+  if (typeof API_BASE_URL !== 'undefined') return API_BASE_URL as string
+  return 'http://localhost:3000'
 }
 
 function getToken(): string | null {
@@ -16,7 +19,7 @@ async function request<T>(path: string, options: {
 } = {}): Promise<T> {
   const { method = 'GET', body, params } = options
   const base = getBase()
-  const token = getToken()
+  let token = getToken()
 
   let url = `${base}${path}`
   if (params) {
@@ -28,26 +31,49 @@ async function request<T>(path: string, options: {
     if (parts.length > 0) url += `?${parts.join('&')}`
   }
 
-  return new Promise((resolve, reject) => {
-    Taro.request({
-      url,
-      method: method as any,
-      header: token ? { Authorization: `Bearer ${token}`, 'content-type': 'application/json' } : { 'content-type': 'application/json' },
-      data: body ?? undefined,
-      success(res) {
-        if (res.statusCode === 401) {
-          Taro.removeStorageSync('token')
-          Taro.reLaunch({ url: '/pages/login/index' })
-          reject(new Error('Unauthorized'))
-          return
-        }
-        resolve(res.data as T)
-      },
-      fail(err) {
-        reject(new Error(err.errMsg || 'Network error'))
-      },
-    })
+  const headers = (t: string | null) => t
+    ? { Authorization: `Bearer ${t}`, 'content-type': 'application/json' }
+    : { 'content-type': 'application/json' }
+
+  let resp = await Taro.request({
+    url,
+    method: method as any,
+    header: headers(token),
+    data: body ?? undefined,
   })
+
+  if (resp.statusCode === 401) {
+    const refreshToken = Taro.getStorageSync('refresh_token') as string | null
+    if (refreshToken) {
+      try {
+        const refreshResp = await Taro.request({
+          url: `${base}/auth/refresh`,
+          method: 'POST',
+          data: { refreshToken },
+          header: { 'content-type': 'application/json' },
+        })
+        if (refreshResp.statusCode === 200) {
+          const data = refreshResp.data as { accessToken: string; refreshToken: string }
+          Taro.setStorageSync('token', data.accessToken)
+          if (data.refreshToken) Taro.setStorageSync('refresh_token', data.refreshToken)
+          token = data.accessToken
+          resp = await Taro.request({
+            url,
+            method: method as any,
+            header: headers(token),
+            data: body ?? undefined,
+          })
+          return resp.data as T
+        }
+      } catch {}
+    }
+    Taro.removeStorageSync('token')
+    Taro.removeStorageSync('refresh_token')
+    Taro.reLaunch({ url: '/pages/login/index' })
+    throw new Error('Unauthorized')
+  }
+
+  return resp.data as T
 }
 
 export const api = {
