@@ -345,9 +345,17 @@ bootstrap().then(() => {
   const shutdown = () => {
     logger.info('正在关闭服务 ...')
     import('./mqtt-ingest').then((m) => m.stopMqttListener?.()).catch(() => {})
-    wss.close()
-    server.close()
-    process.exit(0)
+    wss.close(() => {
+      server.close(() => {
+        logger.info('服务已关闭')
+        process.exit(0)
+      })
+    })
+    // Force exit after 10s
+    setTimeout(() => {
+      logger.warn('强制退出 (超时)')
+      process.exit(1)
+    }, 10000)
   }
   process.on('SIGINT', shutdown)
   process.on('SIGTERM', shutdown)
