@@ -13,10 +13,10 @@ import {
   Tooltip,
 } from '@mantine/core'
 import { modals } from '@mantine/modals'
-import { IconPlayerPlay, IconPlus, IconTrash } from '@tabler/icons-react'
+import { IconPlus, IconTrash } from '@tabler/icons-react'
 import { useState } from 'react'
 import { http } from '../api/client'
-import { useDelete, useGet, usePost } from '../api/hooks'
+import { useGet, usePost } from '../api/hooks'
 
 interface SimConfig {
   id: string

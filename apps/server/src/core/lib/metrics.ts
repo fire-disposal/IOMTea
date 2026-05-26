@@ -85,4 +85,3 @@ export function isValueInRange(metric: string, value: number): boolean {
   return value >= range.min && value <= range.max
 }
 
-const CANONICAL_METRICS = Object.keys(METRIC_RANGES)
