@@ -1,6 +1,8 @@
 import { ScrollView, Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import { STORAGE_KEYS } from '../../../constants/storage-keys'
+import { api } from '../../../utils/api'
 import { addLocalRecord } from '../../../utils/storage'
 import './index.scss'
 
@@ -15,6 +17,35 @@ interface MedItem {
 
 export default function MedicationRecord() {
   const [meds, setMeds] = useState<MedItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const patientId = Taro.getStorageSync(STORAGE_KEYS.PATIENT_ID) || ''
+
+  useEffect(() => {
+    if (!Taro.getStorageSync(STORAGE_KEYS.TOKEN)) return
+    api
+      .get<{ id: string; code: string; title: string; rewardCredits: number }[]>('/plans/today', {
+        patientId,
+      })
+      .then((plans) => {
+        const medPlans = (plans || []).filter(
+          (p) => p.code === 'medication' || p.code === 'medication_schedule',
+        )
+        if (medPlans.length > 0) {
+          setMeds(
+            medPlans.map((p) => ({
+              id: p.id,
+              drug: p.title,
+              dosage: '',
+              scheduled_time: '今日',
+            })),
+          )
+        }
+        setLoading(false)
+      })
+      .catch(() => {
+        setLoading(false)
+      })
+  }, [])
 
   const handleTake = useCallback(
     (id: string) => {
@@ -65,7 +96,8 @@ export default function MedicationRecord() {
         <Text className="med-title">今日用药</Text>
       </View>
       <ScrollView className="med-list" scrollY>
-        {meds.length === 0 && (
+        {loading && <Text className="empty">加载中...</Text>}
+        {!loading && meds.length === 0 && (
           <View className="med-empty">
             <Text>暂无用药计划</Text>
             <Text className="med-empty-hint">请通过 Web 端添加用药方案</Text>

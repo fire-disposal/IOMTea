@@ -5,7 +5,7 @@ import './TabBar.scss'
 const TABS = [
   { key: 'index', path: '/pages/index/index', label: '首页', icon: '🏠' },
   { key: 'health', path: '/pages/health/index', label: '健康', icon: '📊' },
-  { key: 'messages', path: '/pages/messages/index', label: '消息', icon: '⚠️' },
+  { key: 'messages', path: '/pages/messages/index', label: '告警', icon: '⚠️' },
   { key: 'profile', path: '/pages/profile/index', label: '我的', icon: '👤' },
 ]
 

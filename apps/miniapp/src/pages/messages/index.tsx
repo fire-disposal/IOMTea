@@ -45,7 +45,8 @@ export default function MessagesPage() {
 
   return (
     <View className="messages-page">
-      <Text className="messages-page__title">消息</Text>
+      <Text className="messages-page__title">告警中心</Text>
+      <Text className="messages-page__subtitle">实时健康告警与通知</Text>
 
       {loading && <Text className="empty">加载中...</Text>}
 
