@@ -1,4 +1,5 @@
 import {
+  Badge,
   Box,
   Container,
   Group,
@@ -13,6 +14,7 @@ import {
 import { IconChartLine } from '@tabler/icons-react'
 import { useState } from 'react'
 import { useGet } from '../api/hooks'
+import { useRealtime } from '../hooks/useRealtime'
 
 interface M {
   metric: string
@@ -29,6 +31,21 @@ export function DataDashboard() {
   const { data: metrics } = useGet<M[]>('/data/metrics')
   const [selectedPatient, setSelectedPatient] = useState<string | null>(null)
   const [selectedMetrics, setSelectedMetrics] = useState<string[]>(['heart_rate', 'spo2'])
+  const [liveData, setLiveData] = useState<Record<string, number>>({})
+
+  useRealtime({
+    patientId: selectedPatient || undefined,
+    onVitals: (data) => {
+      setLiveData((prev) => {
+        const next = { ...prev }
+        data.metrics.forEach((m) => {
+          next[m.metric] = m.value
+        })
+        return next
+      })
+    },
+  })
+
   const from = new Date(Date.now() - 7 * 86400000).toISOString()
   const { data: trend, isLoading } = useGet<{ rows: { bucket: string; value: number }[] }>(
     '/data/aggregate',
@@ -112,6 +129,16 @@ export function DataDashboard() {
           </Group>
         )}
       </Paper>
+      <Group mt="md">
+        <Badge color="green" variant="light">
+          {Object.keys(liveData).length > 0 ? '实时数据已连接' : '等待实时数据...'}
+        </Badge>
+        {Object.entries(liveData).map(([k, v]) => (
+          <Badge key={k} variant="outline">
+            {k}: {v}
+          </Badge>
+        ))}
+      </Group>
     </Container>
   )
 }

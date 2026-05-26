@@ -16,7 +16,9 @@ import {
   IconUser,
 } from '@tabler/icons-react'
 import { Outlet, useNavigate, useRouterState } from '@tanstack/react-router'
+import { useState } from 'react'
 import { useGet } from '../api/hooks'
+import { useRealtime } from '../hooks/useRealtime'
 import { PatientOverview } from './PatientOverview'
 import { parsePatientId } from '../lib/path'
 import { StateSkeleton } from '../components/StateComponents'
@@ -44,6 +46,33 @@ export function PatientDetailShell() {
   const pid = parsePatientId()
   const { data: patient, isLoading: pLoading } = useGet<Patient>(`/patients/${pid}`)
   const { data: latest } = useGet<LatestItem[]>('/data/latest', { patientId: pid })
+  const [liveLatest, setLiveLatest] = useState<Record<string, { value: unknown; unit: string | null }>>({})
+
+  useRealtime({
+    patientId: pid,
+    onVitals: (data) => {
+      setLiveLatest((prev) => {
+        const next = { ...prev }
+        data.metrics.forEach((m) => {
+          next[m.metric] = { value: m.value, unit: m.unit }
+        })
+        return next
+      })
+    },
+  })
+
+  const mergedLatest: LatestItem[] = (latest ?? []).map((item) => {
+    const live = liveLatest[item.metric]
+    if (live) {
+      return { ...item, value: live.value, unit: live.unit ?? item.unit }
+    }
+    return item
+  })
+  for (const [metric, live] of Object.entries(liveLatest)) {
+    if (!mergedLatest.some((m) => m.metric === metric)) {
+      mergedLatest.push({ metric, value: live.value, unit: live.unit, recordedAt: null })
+    }
+  }
   const navigate = useNavigate()
   const pathname = useRouterState({ select: (s) => s.location.pathname })
 
@@ -125,7 +154,7 @@ export function PatientDetailShell() {
         </Tabs.List>
       </Tabs>
       {tab === 'overview' ? (
-        <PatientOverview patientId={pid} latest={latest ?? null} />
+        <PatientOverview patientId={pid} latest={mergedLatest} />
       ) : (
         <Outlet />
       )}
