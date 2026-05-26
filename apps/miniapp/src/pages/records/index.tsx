@@ -1,8 +1,8 @@
 import { Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useEffect, useState } from 'react'
-import { type HealthRecord, getLocalRecords } from '../../utils/storage'
 import { HEALTH_MODULE_LABELS as TYPE_LABELS } from '../../constants/modules'
+import { type HealthRecord, getLocalRecords } from '../../utils/storage'
 import './index.scss'
 
 const GLUCOSE_CONTEXT_LABELS: Record<string, string> = {

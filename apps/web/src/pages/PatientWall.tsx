@@ -47,8 +47,7 @@ export function PatientWall() {
     )
   })
 
-  if (isLoading)
-    return <StateSkeleton lines={5} />
+  if (isLoading) return <StateSkeleton lines={5} />
 
   return (
     <Container py="md">
@@ -58,10 +57,19 @@ export function PatientWall() {
       <Group mb="md" justify="space-between">
         <TagFilter selected={selectedTags} onChange={setSelectedTags} />
         <Group gap="xs">
-          <Button size="xs" variant="light" leftSection={<IconPlus size={12} />} onClick={() => setCreateOpen(true)}>
+          <Button
+            size="xs"
+            variant="light"
+            leftSection={<IconPlus size={12} />}
+            onClick={() => setCreateOpen(true)}
+          >
             新建患者
           </Button>
-          <Button size="xs" leftSection={<IconPlus size={12} />} onClick={() => setImportOpen(true)}>
+          <Button
+            size="xs"
+            leftSection={<IconPlus size={12} />}
+            onClick={() => setImportOpen(true)}
+          >
             批量导入
           </Button>
         </Group>
@@ -117,15 +125,46 @@ export function PatientWall() {
       </Table>
       <Modal opened={createOpen} onClose={() => setCreateOpen(false)} title="新建患者" size="sm">
         <Stack>
-          <TextInput label="姓名" required value={newPatient.name} onChange={(e) => setNewPatient({ ...newPatient, name: e.currentTarget.value })} />
-          <TextInput label="性别" value={newPatient.gender} onChange={(e) => setNewPatient({ ...newPatient, gender: e.currentTarget.value })} />
-          <TextInput label="出生日期" type="date" value={newPatient.birthDate} onChange={(e) => setNewPatient({ ...newPatient, birthDate: e.currentTarget.value })} />
-          <TextInput label="电话" value={newPatient.phone} onChange={(e) => setNewPatient({ ...newPatient, phone: e.currentTarget.value })} />
+          <TextInput
+            label="姓名"
+            required
+            value={newPatient.name}
+            onChange={(e) => setNewPatient({ ...newPatient, name: e.currentTarget.value })}
+          />
+          <TextInput
+            label="性别"
+            value={newPatient.gender}
+            onChange={(e) => setNewPatient({ ...newPatient, gender: e.currentTarget.value })}
+          />
+          <TextInput
+            label="出生日期"
+            type="date"
+            value={newPatient.birthDate}
+            onChange={(e) => setNewPatient({ ...newPatient, birthDate: e.currentTarget.value })}
+          />
+          <TextInput
+            label="电话"
+            value={newPatient.phone}
+            onChange={(e) => setNewPatient({ ...newPatient, phone: e.currentTarget.value })}
+          />
           <Group justify="flex-end">
-            <Button variant="subtle" onClick={() => setCreateOpen(false)}>取消</Button>
-            <Button onClick={() => {
-              createPatient.mutate(newPatient as any, { onSuccess: () => { setCreateOpen(false); setNewPatient({ name: '', gender: '', birthDate: '', phone: '' }); refetch() } })
-            }} disabled={!newPatient.name}>创建</Button>
+            <Button variant="subtle" onClick={() => setCreateOpen(false)}>
+              取消
+            </Button>
+            <Button
+              onClick={() => {
+                createPatient.mutate(newPatient as any, {
+                  onSuccess: () => {
+                    setCreateOpen(false)
+                    setNewPatient({ name: '', gender: '', birthDate: '', phone: '' })
+                    refetch()
+                  },
+                })
+              }}
+              disabled={!newPatient.name}
+            >
+              创建
+            </Button>
           </Group>
         </Stack>
       </Modal>

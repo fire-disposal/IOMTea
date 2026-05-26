@@ -30,8 +30,7 @@ export function AlertBoard() {
     return a.status !== 'closed' && a.status !== 'resolved'
   })
 
-  if (isLoading)
-    return <StateSkeleton lines={4} />
+  if (isLoading) return <StateSkeleton lines={4} />
 
   return (
     <Container py="md">
@@ -94,7 +93,10 @@ export function AlertBoard() {
                     style={{ cursor: 'pointer' }}
                     color="blue"
                     onClick={() => {
-                      http.patch(`/alerts/${a.id}`, { action: 'resolve' }).then(() => acknowledge.reset()).catch(() => {})
+                      http
+                        .patch(`/alerts/${a.id}`, { action: 'resolve' })
+                        .then(() => acknowledge.reset())
+                        .catch(() => {})
                     }}
                   >
                     解决
@@ -104,7 +106,10 @@ export function AlertBoard() {
                     style={{ cursor: 'pointer' }}
                     color="gray"
                     onClick={() => {
-                      http.post(`/alerts/${a.id}/close`).then(() => acknowledge.reset()).catch(() => {})
+                      http
+                        .post(`/alerts/${a.id}/close`)
+                        .then(() => acknowledge.reset())
+                        .catch(() => {})
                     }}
                   >
                     关闭

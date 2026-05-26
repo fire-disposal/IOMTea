@@ -149,7 +149,9 @@ export function createSimulation(db: DbClient, config: { profileName: string; na
       metrics: metrics as any,
     } as any)
     .execute()
-    .catch((err: Error) => { logger.error({ err }, 'sim save failed') })
+    .catch((err: Error) => {
+      logger.error({ err }, 'sim save failed')
+    })
   return {
     id,
     metrics: sim.metrics.map((m) => ({ name: m.name, enabled: m.enabled, config: m.config })),
@@ -164,7 +166,9 @@ export function deleteSimulation(db: DbClient, id: string): boolean {
   db.delete(simConfigs)
     .where(eq(simConfigs.id, id))
     .execute()
-    .catch((err: Error) => { logger.error({ err, simId: id }, 'sim delete failed') })
+    .catch((err: Error) => {
+      logger.error({ err, simId: id }, 'sim delete failed')
+    })
   return true
 }
 
@@ -177,7 +181,9 @@ export function toggleSimulation(db: DbClient, id: string, running: boolean): bo
     .set({ running } as any)
     .where(eq(simConfigs.id, id))
     .execute()
-    .catch((err: Error) => { logger.error({ err, simId: id, running }, 'sim toggle failed') })
+    .catch((err: Error) => {
+      logger.error({ err, simId: id, running }, 'sim toggle failed')
+    })
   return true
 }
 
@@ -200,7 +206,9 @@ export function addPatient(
   db.insert(simPatients)
     .values({ simId, patientId: patient.id } as any)
     .execute()
-    .catch((err: Error) => { logger.error({ err, simId, patientId: patient.id }, 'sim addPatient failed') })
+    .catch((err: Error) => {
+      logger.error({ err, simId, patientId: patient.id }, 'sim addPatient failed')
+    })
   return 1
 }
 
@@ -210,7 +218,9 @@ export function removePatient(db: DbClient, simId: string, patientId: string): n
   db.delete(simPatients)
     .where(eq(simPatients.patientId, patientId) as any)
     .execute()
-    .catch((err: Error) => { logger.error({ err, simId, patientId }, 'sim removePatient failed') })
+    .catch((err: Error) => {
+      logger.error({ err, simId, patientId }, 'sim removePatient failed')
+    })
   return 1
 }
 
@@ -286,7 +296,9 @@ export function renameSim(db: DbClient, simId: string, name: string): boolean {
     .set({ name } as any)
     .where(eq(simConfigs.id, simId))
     .execute()
-    .catch((err: Error) => { logger.error({ err, simId, name }, 'sim rename failed') })
+    .catch((err: Error) => {
+      logger.error({ err, simId, name }, 'sim rename failed')
+    })
   return true
 }
 
@@ -423,7 +435,12 @@ export function injectScenario(
         recordedAt: now,
       } as any)
       .execute()
-      .catch((err: Error) => { logger.error({ err, simId, patientId, type, event: 'observation' }, 'injectScenario observation failed') })
+      .catch((err: Error) => {
+        logger.error(
+          { err, simId, patientId, type, event: 'observation' },
+          'injectScenario observation failed',
+        )
+      })
   }
 
   if (scenario.alert) {
@@ -445,7 +462,9 @@ export function injectScenario(
         recordedAt: now,
       } as any)
       .execute()
-      .catch((err: Error) => { logger.error({ err, simId, patientId, type, event: 'alert' }, 'injectScenario alert failed') })
+      .catch((err: Error) => {
+        logger.error({ err, simId, patientId, type, event: 'alert' }, 'injectScenario alert failed')
+      })
   }
 
   return true

@@ -1,4 +1,14 @@
-import { Text, View, Input, Textarea, Radio, RadioGroup, Checkbox, CheckboxGroup, Slider } from '@tarojs/components'
+import {
+  Checkbox,
+  CheckboxGroup,
+  Input,
+  Radio,
+  RadioGroup,
+  Slider,
+  Text,
+  Textarea,
+  View,
+} from '@tarojs/components'
 import Taro, { useRouter } from '@tarojs/taro'
 import { useEffect, useState } from 'react'
 import { STORAGE_KEYS } from '../../constants/storage-keys'
@@ -6,15 +16,26 @@ import { api } from '../../utils/api'
 import './index.scss'
 
 interface FormField {
-  id: string; type: string; label: string; required: boolean
+  id: string
+  type: string
+  label: string
+  required: boolean
   options?: { value: string; label: string }[]
-  labels?: string[]; min_label?: string; max_label?: string
-  min?: number; max?: number; unit?: string
-  placeholder?: string; rows?: number
+  labels?: string[]
+  min_label?: string
+  max_label?: string
+  min?: number
+  max?: number
+  unit?: string
+  placeholder?: string
+  rows?: number
 }
 
 interface FormDef {
-  code: string; title: string; description?: string; fields: FormField[]
+  code: string
+  title: string
+  description?: string
+  fields: FormField[]
 }
 
 export default function FormPage() {
@@ -27,7 +48,10 @@ export default function FormPage() {
 
   useEffect(() => {
     if (!code) return
-    api.get<FormDef>(`/forms/${code}`).then(setForm).catch(() => {})
+    api
+      .get<FormDef>(`/forms/${code}`)
+      .then(setForm)
+      .catch(() => {})
   }, [code])
 
   const setField = (fieldId: string, value: unknown) => {
@@ -35,7 +59,10 @@ export default function FormPage() {
   }
 
   const submit = async () => {
-    if (!patientId) { Taro.showToast({ title: '未绑定患者', icon: 'none' }); return }
+    if (!patientId) {
+      Taro.showToast({ title: '未绑定患者', icon: 'none' })
+      return
+    }
     for (const f of form?.fields || []) {
       if (f.required && responses[f.id] === undefined) {
         Taro.showToast({ title: `请填写: ${f.label}`, icon: 'none' })
@@ -54,7 +81,12 @@ export default function FormPage() {
     }
   }
 
-  if (!form) return <View className="page"><Text>加载中...</Text></View>
+  if (!form)
+    return (
+      <View className="page">
+        <Text>加载中...</Text>
+      </View>
+    )
 
   return (
     <View className="page form-page">
@@ -81,7 +113,11 @@ export default function FormPage() {
           {f.type === 'multi' && f.options && (
             <CheckboxGroup onChange={(e) => setField(f.id, e.detail.value)}>
               {f.options.map((o) => (
-                <Checkbox key={o.value} value={o.value} checked={(responses[f.id] as string[] || []).includes(o.value)}>
+                <Checkbox
+                  key={o.value}
+                  value={o.value}
+                  checked={((responses[f.id] as string[]) || []).includes(o.value)}
+                >
                   <Text>{o.label}</Text>
                 </Checkbox>
               ))}
@@ -104,7 +140,9 @@ export default function FormPage() {
             <View className="vas-slider">
               {f.min_label && <Text className="vas-label">{f.min_label}</Text>}
               <Slider
-                min={0} max={100} step={1}
+                min={0}
+                max={100}
+                step={1}
                 value={Number(responses[f.id]) || 50}
                 onChange={(e) => setField(f.id, e.detail.value)}
                 showValue

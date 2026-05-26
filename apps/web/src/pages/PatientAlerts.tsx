@@ -1,7 +1,7 @@
 import { Badge, Container, Group, Paper, SegmentedControl, Text } from '@mantine/core'
 import { useGet, usePatch } from '../api/hooks'
-import { parsePatientId } from '../lib/path'
 import { StateSkeleton } from '../components/StateComponents'
+import { parsePatientId } from '../lib/path'
 
 interface A {
   id: string
@@ -16,8 +16,7 @@ export function PatientAlerts() {
   const pid = parsePatientId()
   const { data: alerts, isLoading } = useGet<A[]>('/alerts', { patientId: pid, pageSize: 100 })
 
-  if (isLoading)
-    return <StateSkeleton lines={4} />
+  if (isLoading) return <StateSkeleton lines={4} />
 
   return (
     <Container py="md">

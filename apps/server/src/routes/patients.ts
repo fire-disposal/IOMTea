@@ -34,11 +34,12 @@ const listPatRoute = createRoute({
 patientsApp.openapi(listPatRoute, async (c) => {
   const q = c.req.valid('query')
   const conditions = []
-  if (q.status) conditions.push(eq(patients.status, q.status as 'active' | 'discharged' | 'archived'))
-  if (q.search) conditions.push(or(
-    ilike(patients.name, `%${q.search}%`),
-    ilike(patients.phone, `%${q.search}%`),
-  ))
+  if (q.status)
+    conditions.push(eq(patients.status, q.status as 'active' | 'discharged' | 'archived'))
+  if (q.search)
+    conditions.push(
+      or(ilike(patients.name, `%${q.search}%`), ilike(patients.phone, `%${q.search}%`)),
+    )
   const rows = await db
     .select()
     .from(patients)

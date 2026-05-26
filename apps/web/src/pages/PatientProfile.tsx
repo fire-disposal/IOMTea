@@ -11,8 +11,8 @@ import {
 } from '@mantine/core'
 import { useEffect, useState } from 'react'
 import { useGet, usePatch } from '../api/hooks'
-import { parsePatientId } from '../lib/path'
 import { StateSkeleton } from '../components/StateComponents'
+import { parsePatientId } from '../lib/path'
 
 interface P {
   id: string
@@ -33,10 +33,11 @@ export function PatientProfile() {
 
   const [form, setForm] = useState<P | null>(null)
 
-  useEffect(() => { if (p && !form) setForm({ ...p }) }, [p])
+  useEffect(() => {
+    if (p && !form) setForm({ ...p })
+  }, [p])
 
-  if (isLoading || !p || !form)
-    return <StateSkeleton lines={4} />
+  if (isLoading || !p || !form) return <StateSkeleton lines={4} />
 
   const set = (field: keyof P, value: unknown) =>
     setForm((prev) => (prev ? { ...prev, [field]: value } : prev))

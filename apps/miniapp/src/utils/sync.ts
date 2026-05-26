@@ -1,6 +1,6 @@
 import Taro from '@tarojs/taro'
-import { api } from './api'
 import { STORAGE_KEYS } from '../constants/storage-keys'
+import { api } from './api'
 
 export async function syncUnsyncedRecords(): Promise<void> {
   const records = (Taro.getStorageSync(STORAGE_KEYS.RECORDS) || []) as any[]
@@ -10,14 +10,25 @@ export async function syncUnsyncedRecords(): Promise<void> {
   const events = unsynced.map((r: any) => {
     let metric = r.type
     let value = r.data
-    if (r.type === 'blood_glucose') { metric = 'glucose'; value = r.data.value_mgdl ?? Number(r.data.value) }
-    else if (r.type === 'blood_pressure') { metric = 'systolic_bp'; value = Number(r.data.systolic) }
-    else if (r.type === 'weight') metric = 'weight'
-    else if (r.type === 'medication') { metric = 'medication'; value = r.data }
-    else if (r.type === 'period') { metric = 'period'; value = r.data }
+    if (r.type === 'blood_glucose') {
+      metric = 'glucose'
+      value = r.data.value_mgdl ?? Number(r.data.value)
+    } else if (r.type === 'blood_pressure') {
+      metric = 'systolic_bp'
+      value = Number(r.data.systolic)
+    } else if (r.type === 'weight') metric = 'weight'
+    else if (r.type === 'medication') {
+      metric = 'medication'
+      value = r.data
+    } else if (r.type === 'period') {
+      metric = 'period'
+      value = r.data
+    }
     return {
       patientId: Taro.getStorageSync(STORAGE_KEYS.PATIENT_ID) || '',
-      kind: 'observation', metric, source: 'manual',
+      kind: 'observation',
+      metric,
+      source: 'manual',
       value: typeof value === 'number' ? value : (value ?? 0),
       recordedAt: r.recordedAt || new Date().toISOString(),
     }

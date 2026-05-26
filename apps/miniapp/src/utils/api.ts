@@ -12,11 +12,14 @@ function getToken(): string | null {
   return (Taro.getStorageSync('token') as string) || null
 }
 
-async function request<T>(path: string, options: {
-  method?: string
-  body?: unknown
-  params?: Record<string, string | number | undefined>
-} = {}): Promise<T> {
+async function request<T>(
+  path: string,
+  options: {
+    method?: string
+    body?: unknown
+    params?: Record<string, string | number | undefined>
+  } = {},
+): Promise<T> {
   const { method = 'GET', body, params } = options
   const base = getBase()
   let token = getToken()
@@ -31,9 +34,10 @@ async function request<T>(path: string, options: {
     if (parts.length > 0) url += `?${parts.join('&')}`
   }
 
-  const headers = (t: string | null) => t
-    ? { Authorization: `Bearer ${t}`, 'content-type': 'application/json' }
-    : { 'content-type': 'application/json' }
+  const headers = (t: string | null) =>
+    t
+      ? { Authorization: `Bearer ${t}`, 'content-type': 'application/json' }
+      : { 'content-type': 'application/json' }
 
   let resp = await Taro.request({
     url,
@@ -79,12 +83,8 @@ async function request<T>(path: string, options: {
 export const api = {
   get: <T>(path: string, params?: Record<string, string | number | undefined>) =>
     request<T>(path, { params }),
-  post: <T>(path: string, body?: unknown) =>
-    request<T>(path, { method: 'POST', body }),
-  patch: <T>(path: string, body?: unknown) =>
-    request<T>(path, { method: 'PATCH', body }),
-  put: <T>(path: string, body?: unknown) =>
-    request<T>(path, { method: 'PUT', body }),
-  delete: <T>(path: string) =>
-    request<T>(path, { method: 'DELETE' }),
+  post: <T>(path: string, body?: unknown) => request<T>(path, { method: 'POST', body }),
+  patch: <T>(path: string, body?: unknown) => request<T>(path, { method: 'PATCH', body }),
+  put: <T>(path: string, body?: unknown) => request<T>(path, { method: 'PUT', body }),
+  delete: <T>(path: string) => request<T>(path, { method: 'DELETE' }),
 }

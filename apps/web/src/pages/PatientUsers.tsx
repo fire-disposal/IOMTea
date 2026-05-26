@@ -1,10 +1,12 @@
 import { ActionIcon, Button, Container, Group, Select, Table, Text, Title } from '@mantine/core'
-import { IconTrash, IconPlus } from '@tabler/icons-react'
+import { IconPlus, IconTrash } from '@tabler/icons-react'
 import { useState } from 'react'
 import { http } from '../api/client'
 import { useGet } from '../api/hooks'
 
-function parseId() { return window.location.pathname.split('/patients/')[1]?.split('/')[0] || '' }
+function parseId() {
+  return window.location.pathname.split('/patients/')[1]?.split('/')[0] || ''
+}
 
 export function PatientUsers() {
   const pid = parseId()
@@ -28,14 +30,32 @@ export function PatientUsers() {
     } catch {}
   }
 
-  const availableUsers = (allUsers || []).filter((u) => !(linked || []).some((l) => l.userId === u.id))
+  const availableUsers = (allUsers || []).filter(
+    (u) => !(linked || []).some((l) => l.userId === u.id),
+  )
 
   return (
     <Container py="md">
-      <Title order={3} mb="md">关联用户</Title>
+      <Title order={3} mb="md">
+        关联用户
+      </Title>
       <Group mb="md">
-        <Select size="xs" placeholder="选择用户" data={availableUsers.map((u) => ({ value: u.id, label: u.displayName || u.username }))} value={selectedUser} onChange={setSelectedUser} w={200} />
-        <Button size="xs" leftSection={<IconPlus size={12} />} onClick={addLink} disabled={!selectedUser}>关联</Button>
+        <Select
+          size="xs"
+          placeholder="选择用户"
+          data={availableUsers.map((u) => ({ value: u.id, label: u.displayName || u.username }))}
+          value={selectedUser}
+          onChange={setSelectedUser}
+          w={200}
+        />
+        <Button
+          size="xs"
+          leftSection={<IconPlus size={12} />}
+          onClick={addLink}
+          disabled={!selectedUser}
+        >
+          关联
+        </Button>
       </Group>
       <Table striped>
         <Table.Thead>

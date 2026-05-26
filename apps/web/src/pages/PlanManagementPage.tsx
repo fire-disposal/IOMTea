@@ -66,10 +66,9 @@ export function PlanManagementPage() {
   const save = () => {
     const data = { ...form, fields: JSON.parse(form.fields || '[]') }
     if (editing)
-      updatePlan.mutate(
-        { id: editing.id, ...data } as any,
-        { onSuccess: () => setModalOpen(false) },
-      )
+      updatePlan.mutate({ id: editing.id, ...data } as any, {
+        onSuccess: () => setModalOpen(false),
+      })
     else createPlan.mutate(data as any, { onSuccess: () => setModalOpen(false) })
   }
 

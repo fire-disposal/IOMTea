@@ -1,7 +1,13 @@
 import { useEffect, useRef } from 'react'
 
-type VitalsCallback = (data: { patientId: string; metrics: { metric: string; value: number; unit: string | null }[] }) => void
-type AlertCallback = (data: { patientId: string; alert: { metric: string; value: unknown; severity: string } }) => void
+type VitalsCallback = (data: {
+  patientId: string
+  metrics: { metric: string; value: number; unit: string | null }[]
+}) => void
+type AlertCallback = (data: {
+  patientId: string
+  alert: { metric: string; value: unknown; severity: string }
+}) => void
 
 interface RealtimeOptions {
   patientId?: string

@@ -20,8 +20,8 @@ import { useDisclosure } from '@mantine/hooks'
 import { notifications } from '@mantine/notifications'
 import { IconEdit, IconEye, IconPlus, IconSend, IconTrash } from '@tabler/icons-react'
 import { useState } from 'react'
-import { useDelete, useGet, usePost } from '../api/hooks'
 import { http } from '../api/client'
+import { useDelete, useGet, usePost } from '../api/hooks'
 
 interface FormDef {
   id: string
@@ -65,7 +65,11 @@ export function FormBuilderPage() {
   const [formData, setFormData] = useState<Partial<FormDef>>({ code: '', title: '', fields: [] })
   const [editing, setEditing] = useState<string | null>(null)
   const [fieldModal, setFieldModal] = useState(false)
-  const [currentField, setCurrentField] = useState<Partial<FormField>>({ type: 'text', label: '', required: true })
+  const [currentField, setCurrentField] = useState<Partial<FormField>>({
+    type: 'text',
+    label: '',
+    required: true,
+  })
   const [editingFieldIdx, setEditingFieldIdx] = useState<number | null>(null)
   const [previewCode, setPreviewCode] = useState<string | null>(null)
 
@@ -77,7 +81,13 @@ export function FormBuilderPage() {
 
   const openEdit = (f: FormDef) => {
     setEditing(f.code)
-    setFormData({ code: f.code, title: f.title, description: f.description, cron: f.cron, fields: f.fields })
+    setFormData({
+      code: f.code,
+      title: f.title,
+      description: f.description,
+      cron: f.cron,
+      fields: f.fields,
+    })
     open()
   }
 
@@ -225,7 +235,12 @@ export function FormBuilderPage() {
               <Paper key={field.id} p="sm" withBorder>
                 <Text fw={500} mb="xs">
                   {field.label}
-                  {field.required && <Text span c="red"> *</Text>}
+                  {field.required && (
+                    <Text span c="red">
+                      {' '}
+                      *
+                    </Text>
+                  )}
                 </Text>
                 {field.type === 'choice' &&
                   field.options?.map((opt) => (
@@ -239,16 +254,15 @@ export function FormBuilderPage() {
                       ☐ {opt.label}
                     </Text>
                   ))}
-                {field.type === 'likert' &&
-                  field.labels && (
-                    <Group gap="xs">
-                      {field.labels.map((l, i) => (
-                        <Badge key={i} variant="light" size="sm">
-                          {l}
-                        </Badge>
-                      ))}
-                    </Group>
-                  )}
+                {field.type === 'likert' && field.labels && (
+                  <Group gap="xs">
+                    {field.labels.map((l, i) => (
+                      <Badge key={i} variant="light" size="sm">
+                        {l}
+                      </Badge>
+                    ))}
+                  </Group>
+                )}
                 {field.type === 'vas' && (
                   <Group>
                     <Text size="xs" c="dimmed">
@@ -279,11 +293,7 @@ export function FormBuilderPage() {
                   </Group>
                 )}
                 {field.type === 'text' && (
-                  <Textarea
-                    disabled
-                    placeholder={field.placeholder || ''}
-                    rows={field.rows || 3}
-                  />
+                  <Textarea disabled placeholder={field.placeholder || ''} rows={field.rows || 3} />
                 )}
               </Paper>
             ))}
@@ -337,7 +347,10 @@ export function FormBuilderPage() {
             <Paper key={f.id} p="xs" withBorder>
               <Group justify="space-between">
                 <Text size="sm">
-                  {f.label} <Badge size="xs" variant="outline">{f.type}</Badge>
+                  {f.label}{' '}
+                  <Badge size="xs" variant="outline">
+                    {f.type}
+                  </Badge>
                 </Text>
                 <Group gap="xs">
                   <ActionIcon
@@ -386,7 +399,7 @@ export function FormBuilderPage() {
             label="类型"
             data={FIELD_TYPES}
             value={currentField.type}
-            onChange={(v) => v && setCurrentField({ ...currentField, type: v }) as any}
+            onChange={(v) => v && (setCurrentField({ ...currentField, type: v }) as any)}
           />
           {currentField.type === 'number' && (
             <Group>

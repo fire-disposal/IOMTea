@@ -23,14 +23,17 @@ export const trpc = {
   },
   alert: {
     list: {
-      query: (args?: { patientId?: string; severity?: string; status?: string; pageSize?: number }) =>
-        api.get('/alerts', args as Record<string, string | number | undefined>),
+      query: (args?: {
+        patientId?: string
+        severity?: string
+        status?: string
+        pageSize?: number
+      }) => api.get('/alerts', args as Record<string, string | number | undefined>),
     },
   },
   device: {
     list: {
-      query: (_args?: { pageSize?: number }) =>
-        api.get('/pins'),
+      query: (_args?: { pageSize?: number }) => api.get('/pins'),
     },
   },
   credit: {
@@ -39,32 +42,31 @@ export const trpc = {
         api.get('/credits/transactions', args as Record<string, string | number | undefined>),
     },
     balance: {
-      query: () =>
-        api.get<{ balance: number }>('/credits/balance'),
+      query: () => api.get<{ balance: number }>('/credits/balance'),
     },
   },
   pin: {
     list: {
-      query: () =>
-        api.get('/pins'),
+      query: () => api.get('/pins'),
     },
     getByUser: {
-      query: (_args: { userId: string }) =>
-        api.get('/pins'),
+      query: (_args: { userId: string }) => api.get('/pins'),
     },
     create: {
       mutate: (args: { userId: string; type?: string; label?: string; nickname?: string }) =>
-        api.post('/pins', { userId: args.userId, type: args.type ?? 'device', label: args.label ?? args.nickname }),
+        api.post('/pins', {
+          userId: args.userId,
+          type: args.type ?? 'device',
+          label: args.label ?? args.nickname,
+        }),
     },
     delete: {
-      mutate: (args: { code: string }) =>
-        api.delete(`/pins/${args.code}`),
+      mutate: (args: { code: string }) => api.delete(`/pins/${args.code}`),
     },
   },
   plan: {
     list: {
-      query: () =>
-        api.get('/plans'),
+      query: () => api.get('/plans'),
     },
     get: {
       query: () => {
@@ -73,8 +75,7 @@ export const trpc = {
       },
     },
     detail: {
-      query: (args: { id: string }) =>
-        api.get(`/plans/${args.id}`),
+      query: (args: { id: string }) => api.get(`/plans/${args.id}`),
     },
     today: {
       query: (args: { patientId: string }) =>
@@ -93,8 +94,7 @@ export const trpc = {
   },
   user: {
     me: {
-      query: () =>
-        api.get('/users/me'),
+      query: () => api.get('/users/me'),
     },
   },
   settings: {

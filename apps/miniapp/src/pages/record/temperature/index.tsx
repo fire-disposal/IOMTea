@@ -3,8 +3,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { FormShell, NumberInput } from '../../../components/FormShell'
 import { STORAGE_KEYS } from '../../../constants/storage-keys'
 import { api } from '../../../utils/api'
-import { syncUnsyncedRecords } from '../../../utils/sync'
 import { addLocalRecord, getTrendData } from '../../../utils/storage'
+import { syncUnsyncedRecords } from '../../../utils/sync'
 import './index.scss'
 
 export default function TemperatureRecord() {

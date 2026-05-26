@@ -1,13 +1,4 @@
-import {
-  Badge,
-  Container,
-  Group,
-  Paper,
-  SimpleGrid,
-  Tabs,
-  Text,
-  Title,
-} from '@mantine/core'
+import { Badge, Container, Group, Paper, SimpleGrid, Tabs, Text, Title } from '@mantine/core'
 import {
   IconActivity,
   IconAlertTriangle,
@@ -19,10 +10,10 @@ import {
 import { Outlet, useNavigate, useRouterState } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useGet } from '../api/hooks'
-import { useRealtime } from '../hooks/useRealtime'
-import { PatientOverview } from './PatientOverview'
-import { parsePatientId } from '../lib/path'
 import { StateSkeleton } from '../components/StateComponents'
+import { useRealtime } from '../hooks/useRealtime'
+import { parsePatientId } from '../lib/path'
+import { PatientOverview } from './PatientOverview'
 
 interface Patient {
   id: string
@@ -47,7 +38,9 @@ export function PatientDetailShell() {
   const pid = parsePatientId()
   const { data: patient, isLoading: pLoading } = useGet<Patient>(`/patients/${pid}`)
   const { data: latest } = useGet<LatestItem[]>('/data/latest', { patientId: pid })
-  const [liveLatest, setLiveLatest] = useState<Record<string, { value: unknown; unit: string | null }>>({})
+  const [liveLatest, setLiveLatest] = useState<
+    Record<string, { value: unknown; unit: string | null }>
+  >({})
 
   useRealtime({
     patientId: pid,
@@ -89,8 +82,7 @@ export function PatientDetailShell() {
             ? 'timeline'
             : 'overview'
 
-  if (pLoading || !patient)
-    return <StateSkeleton lines={5} />
+  if (pLoading || !patient) return <StateSkeleton lines={5} />
 
   return (
     <Container py="md">
@@ -160,11 +152,7 @@ export function PatientDetailShell() {
           </Tabs.Tab>
         </Tabs.List>
       </Tabs>
-      {tab === 'overview' ? (
-        <PatientOverview patientId={pid} latest={mergedLatest} />
-      ) : (
-        <Outlet />
-      )}
+      {tab === 'overview' ? <PatientOverview patientId={pid} latest={mergedLatest} /> : <Outlet />}
     </Container>
   )
 }

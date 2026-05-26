@@ -3,8 +3,8 @@ import { notifications } from '@mantine/notifications'
 import { useEffect, useState } from 'react'
 import { http } from '../api/client'
 import { useGet } from '../api/hooks'
-import { parsePatientId } from '../lib/path'
 import { StateSkeleton } from '../components/StateComponents'
+import { parsePatientId } from '../lib/path'
 
 interface R {
   metric: string
@@ -29,8 +29,7 @@ export function PatientAlertRules() {
     if (rules) setLocalRules(rules)
   }, [rules])
 
-  if (isLoading || !rules)
-    return <StateSkeleton lines={4} />
+  if (isLoading || !rules) return <StateSkeleton lines={4} />
 
   const toggle = (i: number) => {
     const n = [...localRules]

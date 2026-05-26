@@ -123,10 +123,7 @@ auth.openapi(loginRoute, async (c) => {
   const failKey = `login:${body.username}`
   const failure = loginFailures.get(failKey)
   if (failure && failure.count >= 5 && Date.now() - failure.lastAttempt < 15 * 60 * 1000) {
-    return c.json(
-      { error: 'Account temporarily locked', message: '请15分钟后重试' },
-      429 as any,
-    )
+    return c.json({ error: 'Account temporarily locked', message: '请15分钟后重试' }, 429 as any)
   }
 
   const [user] = await db.select().from(users).where(eq(users.username, body.username)).limit(1)
