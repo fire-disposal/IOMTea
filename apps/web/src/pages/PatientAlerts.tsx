@@ -1,5 +1,7 @@
-import { Badge, Container, Group, Paper, SegmentedControl, Skeleton, Text } from '@mantine/core'
+import { Badge, Container, Group, Paper, SegmentedControl, Text } from '@mantine/core'
 import { useGet, usePatch } from '../api/hooks'
+import { parsePatientId } from '../lib/path'
+import { StateSkeleton } from '../components/StateComponents'
 
 interface A {
   id: string
@@ -9,22 +11,13 @@ interface A {
   severity: string | null
   status: string | null
 }
-function parseId() {
-  return window.location.pathname.split('/patients/')[1]?.split('/')[0] || ''
-}
 
 export function PatientAlerts() {
-  const pid = parseId()
+  const pid = parsePatientId()
   const { data: alerts, isLoading } = useGet<A[]>('/alerts', { patientId: pid, pageSize: 100 })
 
   if (isLoading)
-    return (
-      <Container py="md">
-        {Array.from({ length: 4 }, (_, i) => (
-          <Skeleton key={i} height={24} mb="sm" />
-        ))}
-      </Container>
-    )
+    return <StateSkeleton lines={4} />
 
   return (
     <Container py="md">

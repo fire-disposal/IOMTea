@@ -4,7 +4,6 @@ import {
   Group,
   Paper,
   SimpleGrid,
-  Skeleton,
   Tabs,
   Text,
   Title,
@@ -19,6 +18,8 @@ import {
 import { Outlet, useNavigate, useRouterState } from '@tanstack/react-router'
 import { useGet } from '../api/hooks'
 import { PatientOverview } from './PatientOverview'
+import { parsePatientId } from '../lib/path'
+import { StateSkeleton } from '../components/StateComponents'
 
 interface Patient {
   id: string
@@ -39,12 +40,8 @@ interface LatestItem {
   recordedAt: number | null
 }
 
-function parseId() {
-  return window.location.pathname.split('/patients/')[1]?.split('/')[0] || ''
-}
-
 export function PatientDetailShell() {
-  const pid = parseId()
+  const pid = parsePatientId()
   const { data: patient, isLoading: pLoading } = useGet<Patient>(`/patients/${pid}`)
   const { data: latest } = useGet<LatestItem[]>('/data/latest', { patientId: pid })
   const navigate = useNavigate()
@@ -61,13 +58,7 @@ export function PatientDetailShell() {
           : 'overview'
 
   if (pLoading || !patient)
-    return (
-      <Container py="md">
-        {Array.from({ length: 5 }, (_, i) => (
-          <Skeleton key={i} height={24} mb="sm" />
-        ))}
-      </Container>
-    )
+    return <StateSkeleton lines={5} />
 
   return (
     <Container py="md">

@@ -5,13 +5,14 @@ import {
   NumberInput,
   Select,
   SimpleGrid,
-  Skeleton,
   TextInput,
   Textarea,
   Title,
 } from '@mantine/core'
 import { useState } from 'react'
 import { useGet, usePatch } from '../api/hooks'
+import { parsePatientId } from '../lib/path'
+import { StateSkeleton } from '../components/StateComponents'
 
 interface P {
   id: string
@@ -24,12 +25,9 @@ interface P {
   phone: string | null
   address: string | null
 }
-function parseId() {
-  return window.location.pathname.split('/patients/')[1]?.split('/')[0] || ''
-}
 
 export function PatientProfile() {
-  const pid = parseId()
+  const pid = parsePatientId()
   const { data: p, isLoading, refetch } = useGet<P>(`/patients/${pid}`)
   const update = usePatch('/patients/:id')
 
@@ -40,13 +38,7 @@ export function PatientProfile() {
   }
 
   if (isLoading || !p || !form)
-    return (
-      <Container py="md">
-        {Array.from({ length: 4 }, (_, i) => (
-          <Skeleton key={i} height={24} mb="sm" />
-        ))}
-      </Container>
-    )
+    return <StateSkeleton lines={4} />
 
   const set = (field: keyof P, value: unknown) =>
     setForm((prev) => (prev ? { ...prev, [field]: value } : prev))

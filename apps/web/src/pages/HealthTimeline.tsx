@@ -14,9 +14,7 @@ interface RawRow {
   value: unknown
 }
 
-function parseId() {
-  return window.location.pathname.split('/patients/')[1]?.split('/')[0] || ''
-}
+import { parsePatientId } from '../lib/path'
 
 const METRIC_LABELS: Record<string, string> = {
   heart_rate: '心率',
@@ -30,7 +28,7 @@ const METRIC_LABELS: Record<string, string> = {
 }
 
 export function HealthTimeline() {
-  const pid = parseId()
+  const pid = parsePatientId()
   const { data: metrics } = useGet<MetricDef[]>('/data/metrics')
   const [selected, setSelected] = useState<string[]>(['heart_rate', 'spo2', 'temperature'])
   const from = new Date(Date.now() - 24 * 3600000).toISOString()

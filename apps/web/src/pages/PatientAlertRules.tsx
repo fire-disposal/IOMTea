@@ -1,8 +1,10 @@
-import { Button, Container, Group, NumberInput, Paper, Skeleton, Switch } from '@mantine/core'
+import { Button, Container, Group, NumberInput, Paper, Switch } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
 import { useEffect, useState } from 'react'
 import { http } from '../api/client'
 import { useGet } from '../api/hooks'
+import { parsePatientId } from '../lib/path'
+import { StateSkeleton } from '../components/StateComponents'
 
 interface R {
   metric: string
@@ -12,12 +14,9 @@ interface R {
   label?: string
   unit?: string
 }
-function parseId() {
-  return window.location.pathname.split('/patients/')[1]?.split('/')[0] || ''
-}
 
 export function PatientAlertRules() {
-  const pid = parseId()
+  const pid = parsePatientId()
   const {
     data: rules,
     isLoading,
@@ -31,13 +30,7 @@ export function PatientAlertRules() {
   }, [rules])
 
   if (isLoading || !rules)
-    return (
-      <Container py="md">
-        {Array.from({ length: 4 }, (_, i) => (
-          <Skeleton key={i} height={24} mb="sm" />
-        ))}
-      </Container>
-    )
+    return <StateSkeleton lines={4} />
 
   const toggle = (i: number) => {
     const n = [...localRules]
