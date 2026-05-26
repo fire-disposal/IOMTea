@@ -1,6 +1,6 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
 import { patientListSchema, patientResponseSchema, successSchema } from '@iomtea/shared-types'
-import { and, eq } from 'drizzle-orm'
+import { and, eq, ilike, or } from 'drizzle-orm'
 import { db } from '../core/db'
 import { patients } from '../core/db/schema'
 import { userPatientLinks } from '../core/db/schema/user-patient'
@@ -31,9 +31,17 @@ const listPatRoute = createRoute({
 
 patientsApp.openapi(listPatRoute, async (c) => {
   const q = c.req.valid('query')
+  const conditions = []
+  if (q.status) conditions.push(eq(patients.status, q.status as 'active' | 'discharged' | 'archived'))
+  if (q.search) conditions.push(or(
+    ilike(patients.name, `%${q.search}%`),
+    ilike(patients.phone, `%${q.search}%`),
+  ))
   const rows = await db
     .select()
     .from(patients)
+    .where(conditions.length ? and(...conditions) : undefined)
+    .orderBy(patients.createdAt)
     .limit(q.pageSize)
     .offset((q.page - 1) * q.pageSize)
   return c.json(rows)
