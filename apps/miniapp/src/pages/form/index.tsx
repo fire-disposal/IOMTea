@@ -84,7 +84,10 @@ export default function FormPage() {
   if (!form)
     return (
       <View className="page">
-        <Text>加载中...</Text>
+        <View className="card-skeleton anim-pulse" style={{ height: 40, margin: 16, borderRadius: 8, background: 'var(--text-secondary)', opacity: 0.12 }} />
+        {Array.from({ length: 3 }).map((_, i) => (
+          <View key={i} className="card-skeleton anim-pulse" style={{ height: 60, margin: '0 16px 12px', borderRadius: 8, background: 'var(--text-secondary)', opacity: 0.1 }} />
+        ))}
       </View>
     )
 

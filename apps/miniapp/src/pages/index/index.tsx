@@ -20,6 +20,7 @@ interface PlanItem {
 export default function Index() {
   const [plans, setPlans] = useState<PlanItem[]>([])
   const [credit, setCredit] = useState(0)
+  const [loading, setLoading] = useState(true)
   const userName = Taro.getStorageSync(STORAGE_KEYS.USER_NAME) || '用户'
   const patientId = Taro.getStorageSync(STORAGE_KEYS.PATIENT_ID) || ''
 
@@ -35,15 +36,19 @@ export default function Index() {
       .then(([today, me]) => {
         if (today) setPlans(today)
         if (me) setCredit(me.credit ?? 0)
+        setLoading(false)
       })
-      .catch(() => {})
+      .catch(() => setLoading(false))
   }, [])
 
   return (
     <View className="home-page">
       <TopBar displayName={userName} credit={credit} />
       <View className="home-checklist anim-stagger">
-        {plans.map((p) => (
+        {loading && Array.from({ length: 3 }).map((_, i) => (
+          <View key={i} className="card-skeleton anim-pulse" style={{ height: 80, marginBottom: 12, borderRadius: 8, background: 'var(--text-secondary)', opacity: 0.15 }} />
+        ))}
+        {!loading && plans.map((p) => (
           <ChecklistCard
             key={p.id}
             moduleKey={p.code}
@@ -56,7 +61,7 @@ export default function Index() {
             className="anim-fade-up"
           />
         ))}
-        {plans.length === 0 && (
+        {!loading && plans.length === 0 && (
           <View className="home-checklist__empty">
             <Text className="home-checklist__empty-icon">📋</Text>
             <Text className="home-checklist__empty-text">暂无计划</Text>
