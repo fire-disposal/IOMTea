@@ -17,7 +17,11 @@ export class MetricScheduler {
       this.timers.set(
         key,
         setTimeout(async () => {
-          await callback(mName)
+          try {
+            await callback(mName)
+          } catch (err) {
+            console.error('[twin-scheduler] callback error:', err)
+          }
           if (this.timers.has(key)) run()
         }, interval),
       )
