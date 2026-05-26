@@ -1,7 +1,8 @@
-import { ActionIcon, Badge, Container, Group, Paper, Skeleton, Text, Title } from '@mantine/core'
+import { ActionIcon, Badge, Container, Group, Paper, Text, Title } from '@mantine/core'
 import { IconEye } from '@tabler/icons-react'
 import { useNavigate } from '@tanstack/react-router'
 import { useGet, usePost } from '../api/hooks'
+import { StateSkeleton } from '../components/StateComponents'
 
 interface Alert {
   id: string
@@ -21,13 +22,7 @@ export function AlertBoard() {
   const filtered = (alerts ?? []).filter((a) => a.status !== 'closed' && a.status !== 'resolved')
 
   if (isLoading)
-    return (
-      <Container py="md">
-        {Array.from({ length: 4 }, (_, i) => (
-          <Skeleton key={i} height={24} mb="sm" />
-        ))}
-      </Container>
-    )
+    return <StateSkeleton lines={4} />
 
   return (
     <Container py="md">

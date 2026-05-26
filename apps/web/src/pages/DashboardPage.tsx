@@ -1,6 +1,7 @@
-import { Group, Paper, SimpleGrid, Skeleton, Text, ThemeIcon, Title } from '@mantine/core'
+import { Group, Paper, SimpleGrid, Text, ThemeIcon, Title } from '@mantine/core'
 import { IconAlertTriangle, IconAmbulance, IconCoin, IconUsers } from '@tabler/icons-react'
 import { useGet } from '../api/hooks'
+import { StateSkeleton } from '../components/StateComponents'
 
 function StatCard({
   label,
@@ -34,13 +35,7 @@ export function DashboardPage() {
   const { data: me } = useGet<{ credit: number }>('/users/me')
 
   if (isLoading)
-    return (
-      <div style={{ padding: 24 }}>
-        {Array.from({ length: 3 }, (_, i) => (
-          <Skeleton key={i} height={60} mb="sm" />
-        ))}
-      </div>
-    )
+    return <StateSkeleton lines={3} />
 
   return (
     <div style={{ padding: 24 }}>

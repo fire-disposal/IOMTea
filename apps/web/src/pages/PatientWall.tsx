@@ -5,7 +5,6 @@ import {
   Container,
   Group,
   Modal,
-  Skeleton,
   Table,
   Title,
 } from '@mantine/core'
@@ -14,6 +13,7 @@ import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useGet } from '../api/hooks'
 import { BatchImportModal } from '../components/BatchImportModal'
+import { StateSkeleton } from '../components/StateComponents'
 import { TagFilter } from '../components/TagFilter'
 
 interface Patient {
@@ -42,13 +42,7 @@ export function PatientWall() {
   })
 
   if (isLoading)
-    return (
-      <Container py="md">
-        {Array.from({ length: 5 }, (_, i) => (
-          <Skeleton key={i} height={24} mb="sm" />
-        ))}
-      </Container>
-    )
+    return <StateSkeleton lines={5} />
 
   return (
     <Container py="md">
