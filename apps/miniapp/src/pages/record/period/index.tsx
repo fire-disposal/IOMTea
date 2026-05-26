@@ -3,6 +3,9 @@ import Taro from '@tarojs/taro'
 import { useCallback, useEffect, useState } from 'react'
 import { FormShell, SegmentPicker } from '../../../components/FormShell'
 import { addLocalRecord, getTrendData } from '../../../utils/storage'
+import { STORAGE_KEYS } from '../../../constants/storage-keys'
+import { api } from '../../../utils/api'
+import { syncUnsyncedRecords } from '../../../utils/sync'
 import './index.scss'
 
 const FLOW_OPTIONS = [
@@ -43,6 +46,13 @@ export default function PeriodRecord() {
       data: { date: formatDate(new Date()), flow, symptoms, notes: notes || null },
       recordedAt: new Date().toISOString(),
     })
+    const router = Taro.useRouter()
+    const planId = router.params.planId
+    if (planId) {
+      const patientId = Taro.getStorageSync(STORAGE_KEYS.PATIENT_ID) || ''
+      api.post(`/plans/${planId}/complete`, { patientId }).catch(() => {})
+    }
+    syncUnsyncedRecords()
     setTrendData(getTrendData('period', 30))
     Taro.vibrateShort()
     setSaving(false)

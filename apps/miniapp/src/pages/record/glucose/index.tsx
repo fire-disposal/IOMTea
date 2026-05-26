@@ -2,6 +2,9 @@ import { Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useCallback, useEffect, useState } from 'react'
 import { FormShell, NumberInput, SegmentPicker } from '../../../components/FormShell'
+import { STORAGE_KEYS } from '../../../constants/storage-keys'
+import { api } from '../../../utils/api'
+import { syncUnsyncedRecords } from '../../../utils/sync'
 import { addLocalRecord, getTrendData } from '../../../utils/storage'
 import './index.scss'
 
@@ -42,6 +45,13 @@ export default function GlucoseRecord() {
       data: { value_mgdl: Number(value), context, meal_tag: mealTag || null },
       recordedAt: new Date().toISOString(),
     })
+    const router = Taro.useRouter()
+    const planId = router.params.planId
+    if (planId) {
+      const patientId = Taro.getStorageSync(STORAGE_KEYS.PATIENT_ID) || ''
+      api.post(`/plans/${planId}/complete`, { patientId }).catch(() => {})
+    }
+    syncUnsyncedRecords()
     setTrendData(getTrendData('blood_glucose', 7))
     Taro.vibrateShort()
     setSaving(false)

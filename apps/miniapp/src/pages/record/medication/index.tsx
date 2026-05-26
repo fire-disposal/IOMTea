@@ -3,6 +3,7 @@ import Taro from '@tarojs/taro'
 import { useCallback, useEffect, useState } from 'react'
 import { STORAGE_KEYS } from '../../../constants/storage-keys'
 import { api } from '../../../utils/api'
+import { syncUnsyncedRecords } from '../../../utils/sync'
 import { addLocalRecord } from '../../../utils/storage'
 import './index.scss'
 
@@ -63,10 +64,16 @@ export default function MedicationRecord() {
           recordedAt: new Date().toISOString(),
         })
       }
+      const router = Taro.useRouter()
+      const planId = router.params.planId
+      if (planId) {
+        api.post(`/plans/${planId}/complete`, { patientId }).catch(() => {})
+      }
+      syncUnsyncedRecords()
       Taro.vibrateShort()
       Taro.showToast({ title: '已记录', icon: 'success' })
     },
-    [meds],
+    [meds, patientId],
   )
 
   const handleSkip = useCallback(
@@ -85,9 +92,15 @@ export default function MedicationRecord() {
           recordedAt: new Date().toISOString(),
         })
       }
+      const router = Taro.useRouter()
+      const planId = router.params.planId
+      if (planId) {
+        api.post(`/plans/${planId}/complete`, { patientId }).catch(() => {})
+      }
+      syncUnsyncedRecords()
       Taro.showToast({ title: '已跳过', icon: 'none' })
     },
-    [meds],
+    [meds, patientId],
   )
 
   return (
