@@ -29,6 +29,9 @@ export function AlertBoard() {
       <Title order={2} mb="md">
         告警看板
       </Title>
+      <Text size="xs" c="dimmed" mb="xs">
+        共{filtered.length}条活跃告警
+      </Text>
       {filtered.map((a) => (
         <Paper key={a.id} p="sm" mb="xs" withBorder>
           <Group justify="space-between">

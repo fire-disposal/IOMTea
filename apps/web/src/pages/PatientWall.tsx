@@ -6,6 +6,7 @@ import {
   Group,
   Modal,
   Table,
+  Text,
   Title,
 } from '@mantine/core'
 import { IconEye, IconPlus } from '@tabler/icons-react'
@@ -55,6 +56,16 @@ export function PatientWall() {
           批量导入
         </Button>
       </Group>
+      {filtered.length > 50 && (
+        <Text size="xs" c="dimmed" mb="xs">
+          显示前50条，共{filtered.length}条患者记录
+        </Text>
+      )}
+      {filtered.length <= 50 && (
+        <Text size="xs" c="dimmed" mb="xs">
+          共{filtered.length}条患者记录
+        </Text>
+      )}
       <Table striped>
         <Table.Thead>
           <Table.Tr>
