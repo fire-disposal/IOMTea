@@ -8,10 +8,12 @@ import {
   NumberInput,
   Stack,
   Table,
+  Text,
   TextInput,
   Textarea,
   Title,
 } from '@mantine/core'
+import { modals } from '@mantine/modals'
 import { IconEdit, IconPlus, IconTrash } from '@tabler/icons-react'
 import { useState } from 'react'
 import { useDelete, useGet, usePatch, usePost } from '../api/hooks'
@@ -63,9 +65,12 @@ export function PlanManagementPage() {
 
   const save = () => {
     const data = { ...form, fields: JSON.parse(form.fields || '[]') }
-    if (editing) updatePlan.mutate({ id: editing.id, ...data } as any)
-    else createPlan.mutate(data as any)
-    setModalOpen(false)
+    if (editing)
+      updatePlan.mutate(
+        { id: editing.id, ...data } as any,
+        { onSuccess: () => setModalOpen(false) },
+      )
+    else createPlan.mutate(data as any, { onSuccess: () => setModalOpen(false) })
   }
 
   if (isLoading)
@@ -121,7 +126,15 @@ export function PlanManagementPage() {
                     size="xs"
                     variant="light"
                     color="red"
-                    onClick={() => deletePlan.mutate(p.id)}
+                    onClick={() =>
+                      modals.openConfirmModal({
+                        title: '确认删除',
+                        children: <Text>确定要删除计划 "{p.title}" 吗？此操作不可撤销。</Text>,
+                        labels: { confirm: '删除', cancel: '取消' },
+                        confirmProps: { color: 'red' },
+                        onConfirm: () => deletePlan.mutate(p.id),
+                      })
+                    }
                   >
                     <IconTrash size={12} />
                   </ActionIcon>

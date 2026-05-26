@@ -6,9 +6,11 @@ import {
   Group,
   Skeleton,
   Table,
+  Text,
   TextInput,
   Title,
 } from '@mantine/core'
+import { modals } from '@mantine/modals'
 import { IconPlus, IconTrash } from '@tabler/icons-react'
 import { useState } from 'react'
 import { useDelete, useGet, usePost } from '../api/hooks'
@@ -90,7 +92,19 @@ export function PinManagementPage() {
               <Table.Td>{p.type}</Table.Td>
               <Table.Td>{p.label ?? '-'}</Table.Td>
               <Table.Td>
-                <ActionIcon variant="light" color="red" onClick={() => deletePin.mutate(p.pin)}>
+                <ActionIcon
+                  variant="light"
+                  color="red"
+                  onClick={() =>
+                    modals.openConfirmModal({
+                      title: '确认删除',
+                      children: <Text>确定要删除 PIN "{p.pin}" 吗？此操作不可撤销。</Text>,
+                      labels: { confirm: '删除', cancel: '取消' },
+                      confirmProps: { color: 'red' },
+                      onConfirm: () => deletePin.mutate(p.pin),
+                    })
+                  }
+                >
                   <IconTrash size={14} />
                 </ActionIcon>
               </Table.Td>

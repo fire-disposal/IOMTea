@@ -11,6 +11,7 @@ import {
   TextInput,
   Title,
 } from '@mantine/core'
+import { modals } from '@mantine/modals'
 import { IconPlayerPlay, IconPlus, IconTrash } from '@tabler/icons-react'
 import { useState } from 'react'
 import { http } from '../api/client'
@@ -94,7 +95,19 @@ export function SimulationPage() {
               </Badge>
               <Badge size="xs">{s.patientCount} patients</Badge>
             </Group>
-            <ActionIcon variant="light" color="red" onClick={() => deleteSim(s.id)}>
+            <ActionIcon
+              variant="light"
+              color="red"
+              onClick={() =>
+                modals.openConfirmModal({
+                  title: '确认删除',
+                  children: <Text>确定要删除模拟 "{s.name}" 吗？此操作不可撤销。</Text>,
+                  labels: { confirm: '删除', cancel: '取消' },
+                  confirmProps: { color: 'red' },
+                  onConfirm: () => deleteSim(s.id),
+                })
+              }
+            >
               <IconTrash size={14} />
             </ActionIcon>
           </Group>
