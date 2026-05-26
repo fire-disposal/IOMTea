@@ -45,11 +45,10 @@ interface NavGroup {
 
 const navGroups: NavGroup[] = [
   {
-    label: '监控',
+    label: '概览',
     items: [
-      { label: '数据大屏', icon: IconScreenShare, path: '/data-dashboard' },
       { label: '工作台', icon: IconDashboard, path: '/' },
-      { label: '告警看板', icon: IconAlertTriangle, path: '/alerts' },
+      { label: '数据大屏', icon: IconScreenShare, path: '/data-dashboard' },
     ],
     roles: ['super_admin', 'admin', 'user'],
   },
@@ -58,16 +57,29 @@ const navGroups: NavGroup[] = [
     items: [
       { label: '患者管理', icon: IconUsers, path: '/patients' },
       { label: '计划管理', icon: IconClipboardList, path: '/plans' },
-      { label: '关系图谱', icon: IconGitBranch, path: '/node-graph' },
-      { label: '数据导出', icon: IconDownload, path: '/data-export' },
-      { label: '模拟工厂', icon: IconFlask, path: '/simulation' },
       { label: '量表管理', icon: IconClipboardText, path: '/forms' },
     ],
     roles: ['super_admin', 'admin'],
   },
   {
-    label: '设备与接入',
-    items: [{ label: 'PIN 管理', icon: IconKey, path: '/iot/pins' }],
+    label: '告警',
+    items: [
+      { label: '告警看板', icon: IconAlertTriangle, path: '/alerts' },
+      { label: '关系图谱', icon: IconGitBranch, path: '/node-graph' },
+    ],
+    roles: ['super_admin', 'admin', 'user'],
+  },
+  {
+    label: '数据',
+    items: [{ label: '数据导出', icon: IconDownload, path: '/data-export' }],
+    roles: ['super_admin', 'admin'],
+  },
+  {
+    label: '设备',
+    items: [
+      { label: 'PIN 管理', icon: IconKey, path: '/iot/pins' },
+      { label: '模拟工厂', icon: IconFlask, path: '/simulation' },
+    ],
     roles: ['super_admin', 'admin'],
   },
   {
@@ -224,7 +236,6 @@ export const authBeforeLoad = ({ location }: { location: { href: string } }) => 
     '/simulation',
     '/iot/pins',
     '/plans',
-    '/node-graph',
     '/forms',
   ]
   const superAdminRoutes = ['/settings/users', '/settings/rbac']
