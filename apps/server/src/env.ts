@@ -29,3 +29,11 @@ const envSchema = z.object({
 
 export const env = envSchema.parse(process.env)
 export type Env = z.infer<typeof envSchema>
+
+if (env.JWT_SECRET === 'dev-secret-change-in-production') {
+  if (process.env.NODE_ENV === 'production' || process.env.DOCKER_ENV === 'production') {
+    console.error('FATAL: JWT_SECRET is still the dev default in production!')
+    process.exit(1)
+  }
+  console.warn('⚠ Using dev JWT_SECRET — set JWT_SECRET env var for production')
+}
