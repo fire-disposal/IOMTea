@@ -9,7 +9,7 @@ import {
   Textarea,
   Title,
 } from '@mantine/core'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useGet, usePatch } from '../api/hooks'
 import { parsePatientId } from '../lib/path'
 import { StateSkeleton } from '../components/StateComponents'
@@ -33,9 +33,7 @@ export function PatientProfile() {
 
   const [form, setForm] = useState<P | null>(null)
 
-  if (p && !form) {
-    setForm({ ...p })
-  }
+  useEffect(() => { if (p && !form) setForm({ ...p }) }, [p])
 
   if (isLoading || !p || !form)
     return <StateSkeleton lines={4} />
