@@ -6,7 +6,14 @@ import { users } from '../core/db/schema'
 import { jwtAuth } from '../middleware/auth'
 import { requirePermission } from '../middleware/rbac'
 
-const usersApp = new OpenAPIHono()
+type Env = {
+  Variables: {
+    userId: string
+    userRole: string
+  }
+}
+
+const usersApp = new OpenAPIHono<Env>()
 
 const listRoute = createRoute({
   method: 'get',
@@ -40,7 +47,7 @@ const meRoute = createRoute({
 })
 
 usersApp.openapi(meRoute, async (c) => {
-  const userId = (c as any).get('userId') as string
+  const userId = c.get('userId')
   const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1)
   if (!user) return c.json({ error: 'Not found' }, 404 as any)
   const { passwordHash, ...safe } = user
