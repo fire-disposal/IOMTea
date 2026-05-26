@@ -1,3 +1,4 @@
+import crypto from 'node:crypto'
 import { SignJWT, jwtVerify } from 'jose'
 import { env } from '../../env'
 
@@ -55,4 +56,8 @@ export async function signRefreshToken(
 export async function verifyToken(token: string): Promise<JwtPayload> {
   const { payload } = await jwtVerify(token, secret)
   return payload as unknown as JwtPayload
+}
+
+export async function hashToken(token: string): Promise<string> {
+  return crypto.createHash('sha256').update(token).digest('hex')
 }
