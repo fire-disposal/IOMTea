@@ -23,6 +23,7 @@ import { IconEdit, IconEye, IconPlus, IconSend, IconTrash } from '@tabler/icons-
 import { useState } from 'react'
 import { http } from '../api/client'
 import { useDelete, useGet, usePost } from '../api/hooks'
+import { StateEmpty } from '../components/StateComponents'
 
 interface FormDef {
   id: string
@@ -186,65 +187,69 @@ export function FormBuilderPage() {
         </Group>
       </Group>
 
-      <Table striped stickyHeader highlightOnHover>
-        <Table.Thead>
-          <Table.Tr>
-            <Table.Th>代码</Table.Th>
-            <Table.Th>标题</Table.Th>
-            <Table.Th>字段数</Table.Th>
-            <Table.Th>状态</Table.Th>
-            <Table.Th>操作</Table.Th>
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>
-          {filtered.map((f) => (
-            <Table.Tr key={f.id}>
-              <Table.Td>
-                <Badge variant="light">{f.code}</Badge>
-              </Table.Td>
-              <Table.Td>{f.title}</Table.Td>
-              <Table.Td>{f.fields?.length ?? 0}</Table.Td>
-              <Table.Td>
-                <Badge color={f.status === 'published' ? 'green' : 'gray'}>
-                  {f.status === 'published' ? '已发布' : '草稿'}
-                </Badge>
-              </Table.Td>
-              <Table.Td>
-                <Group gap="xs">
-                  <Tooltip label="编辑" withArrow>
-                    <ActionIcon variant="light" onClick={() => openEdit(f)}>
-                      <IconEdit size={14} />
-                    </ActionIcon>
-                  </Tooltip>
-                  <Tooltip label="预览" withArrow>
-                    <ActionIcon variant="light" color="blue" onClick={() => setPreviewCode(f.code)}>
-                      <IconEye size={14} />
-                    </ActionIcon>
-                  </Tooltip>
-                  {f.status === 'published' ? (
-                    <Tooltip label="取消发布" withArrow>
-                      <ActionIcon variant="light" color="yellow" onClick={() => unpublish(f.code)}>
-                        <IconSend size={14} style={{ transform: 'rotate(180deg)' }} />
-                      </ActionIcon>
-                    </Tooltip>
-                  ) : (
-                    <Tooltip label="发布" withArrow>
-                      <ActionIcon variant="light" color="green" onClick={() => publish(f.code)}>
-                        <IconSend size={14} />
-                      </ActionIcon>
-                    </Tooltip>
-                  )}
-                  <Tooltip label="删除" withArrow>
-                    <ActionIcon variant="light" color="red" onClick={() => deleteForm.mutate(f.code)}>
-                      <IconTrash size={14} />
-                    </ActionIcon>
-                  </Tooltip>
-                </Group>
-              </Table.Td>
+      {filtered.length === 0 ? (
+        <StateEmpty message={search ? '未找到匹配的量表' : '暂无量表'} />
+      ) : (
+        <Table striped stickyHeader highlightOnHover>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>代码</Table.Th>
+              <Table.Th>标题</Table.Th>
+              <Table.Th>字段数</Table.Th>
+              <Table.Th>状态</Table.Th>
+              <Table.Th>操作</Table.Th>
             </Table.Tr>
-          ))}
-        </Table.Tbody>
-      </Table>
+          </Table.Thead>
+          <Table.Tbody>
+            {filtered.map((f) => (
+              <Table.Tr key={f.id}>
+                <Table.Td>
+                  <Badge variant="light">{f.code}</Badge>
+                </Table.Td>
+                <Table.Td>{f.title}</Table.Td>
+                <Table.Td>{f.fields?.length ?? 0}</Table.Td>
+                <Table.Td>
+                  <Badge color={f.status === 'published' ? 'green' : 'gray'}>
+                    {f.status === 'published' ? '已发布' : '草稿'}
+                  </Badge>
+                </Table.Td>
+                <Table.Td>
+                  <Group gap="xs">
+                    <Tooltip label="编辑" withArrow>
+                      <ActionIcon variant="light" onClick={() => openEdit(f)}>
+                        <IconEdit size={14} />
+                      </ActionIcon>
+                    </Tooltip>
+                    <Tooltip label="预览" withArrow>
+                      <ActionIcon variant="light" color="blue" onClick={() => setPreviewCode(f.code)}>
+                        <IconEye size={14} />
+                      </ActionIcon>
+                    </Tooltip>
+                    {f.status === 'published' ? (
+                      <Tooltip label="取消发布" withArrow>
+                        <ActionIcon variant="light" color="yellow" onClick={() => unpublish(f.code)}>
+                          <IconSend size={14} style={{ transform: 'rotate(180deg)' }} />
+                        </ActionIcon>
+                      </Tooltip>
+                    ) : (
+                      <Tooltip label="发布" withArrow>
+                        <ActionIcon variant="light" color="green" onClick={() => publish(f.code)}>
+                          <IconSend size={14} />
+                        </ActionIcon>
+                      </Tooltip>
+                    )}
+                    <Tooltip label="删除" withArrow>
+                      <ActionIcon variant="light" color="red" onClick={() => deleteForm.mutate(f.code)}>
+                        <IconTrash size={14} />
+                      </ActionIcon>
+                    </Tooltip>
+                  </Group>
+                </Table.Td>
+              </Table.Tr>
+            ))}
+          </Table.Tbody>
+        </Table>
+      )}
 
       {previewForm && (
         <Paper p="lg" withBorder mt="md">

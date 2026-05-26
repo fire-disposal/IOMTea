@@ -1,4 +1,4 @@
-import { Button, Container, Group, NumberInput, Paper, Switch } from '@mantine/core'
+import { Button, Container, Group, NumberInput, Paper, Switch, Text } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
 import { useEffect, useState } from 'react'
 import { http } from '../api/client'
@@ -30,6 +30,16 @@ export function PatientAlertRules() {
   }, [rules])
 
   if (isLoading || !rules) return <StateSkeleton lines={4} />
+
+  if (rules.length === 0) {
+    return (
+      <Container py="md">
+        <Text c="dimmed" ta="center" mt="xl">
+          暂无告警规则
+        </Text>
+      </Container>
+    )
+  }
 
   const toggle = (i: number) => {
     const n = [...localRules]

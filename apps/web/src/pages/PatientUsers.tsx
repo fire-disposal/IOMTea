@@ -3,6 +3,7 @@ import { IconPlus, IconTrash } from '@tabler/icons-react'
 import { useState } from 'react'
 import { http } from '../api/client'
 import { useGet } from '../api/hooks'
+import { StateEmpty } from '../components/StateComponents'
 
 function parseId() {
   return window.location.pathname.split('/patients/')[1]?.split('/')[0] || ''
@@ -57,32 +58,36 @@ export function PatientUsers() {
           关联
         </Button>
       </Group>
-      <Table striped stickyHeader highlightOnHover>
-        <Table.Thead>
-          <Table.Tr>
-            <Table.Th>用户名</Table.Th>
-            <Table.Th>显示名</Table.Th>
-            <Table.Th>角色</Table.Th>
-            <Table.Th>操作</Table.Th>
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>
-          {(linked || []).map((l: any) => (
-            <Table.Tr key={l.userId}>
-              <Table.Td>{l.username}</Table.Td>
-              <Table.Td>{l.displayName || '-'}</Table.Td>
-              <Table.Td>{l.role}</Table.Td>
-              <Table.Td>
-                <Tooltip label="取消关联" withArrow>
-                  <ActionIcon variant="light" color="red" onClick={() => removeLink(l.userId)}>
-                    <IconTrash size={14} />
-                  </ActionIcon>
-                </Tooltip>
-              </Table.Td>
+      {!linked || linked.length === 0 ? (
+        <StateEmpty message="暂无关联用户" />
+      ) : (
+        <Table striped stickyHeader highlightOnHover>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>用户名</Table.Th>
+              <Table.Th>显示名</Table.Th>
+              <Table.Th>角色</Table.Th>
+              <Table.Th>操作</Table.Th>
             </Table.Tr>
-          ))}
-        </Table.Tbody>
-      </Table>
+          </Table.Thead>
+          <Table.Tbody>
+            {(linked || []).map((l: any) => (
+              <Table.Tr key={l.userId}>
+                <Table.Td>{l.username}</Table.Td>
+                <Table.Td>{l.displayName || '-'}</Table.Td>
+                <Table.Td>{l.role}</Table.Td>
+                <Table.Td>
+                  <Tooltip label="取消关联" withArrow>
+                    <ActionIcon variant="light" color="red" onClick={() => removeLink(l.userId)}>
+                      <IconTrash size={14} />
+                    </ActionIcon>
+                  </Tooltip>
+                </Table.Td>
+              </Table.Tr>
+            ))}
+          </Table.Tbody>
+        </Table>
+      )}
     </Container>
   )
 }

@@ -2,6 +2,7 @@ import { Badge, Container, Group, Paper, Select, Table, Text, Title } from '@man
 import { notifications } from '@mantine/notifications'
 import { IconShield } from '@tabler/icons-react'
 import { useGet, usePatch } from '../api/hooks'
+import { StateSkeleton } from '../components/StateComponents'
 
 interface User {
   id: string
@@ -31,6 +32,8 @@ export function RbacManagementPage() {
       },
     )
   }
+
+  if (isLoading) return <StateSkeleton lines={4} />
 
   return (
     <Container py="md">
