@@ -26,6 +26,7 @@ import {
   useNodesState,
 } from '@xyflow/react'
 import { useCallback, useEffect, useState } from 'react'
+import { useNavigate } from '@tanstack/react-router'
 import { http } from '../api/client'
 import { useGet } from '../api/hooks'
 
@@ -49,6 +50,7 @@ interface Relation {
 }
 
 export function NodeGraph() {
+  const navigate = useNavigate()
   const { data: patients } = useGet<PatientNode[]>('/patients', { pageSize: 200 })
   const { data: users } = useGet<UserNode[]>('/users')
   const [nodes, setNodes, onNodesChange] = useNodesState([] as Node[])
@@ -212,6 +214,15 @@ export function NodeGraph() {
             {selectedNode.type === 'patient' && (
               <>
                 <Badge>{String(selectedNode.data?.status || '')}</Badge>
+                <Button
+                  size="xs"
+                  variant="light"
+                  onClick={() =>
+                    navigate({ to: `/patients/${selectedNode.id.replace('pat-', '')}` })
+                  }
+                >
+                  查看患者
+                </Button>
                 <Text size="xs" c="dimmed">
                   关联用户:
                 </Text>
@@ -226,7 +237,16 @@ export function NodeGraph() {
               </>
             )}
             {selectedNode.type === 'user' && (
-              <Badge color="violet">{String(selectedNode.data?.role || '')}</Badge>
+              <>
+                <Badge color="violet">{String(selectedNode.data?.role || '')}</Badge>
+                <Button
+                  size="xs"
+                  variant="light"
+                  onClick={() => navigate({ to: '/settings/users' })}
+                >
+                  查看用户
+                </Button>
+              </>
             )}
             <Button size="xs" variant="light" color="red" onClick={() => setSelectedNode(null)}>
               关闭
