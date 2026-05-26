@@ -13,7 +13,14 @@ import { creditTransactions, planCompletions, plans } from '../core/db/schema/pl
 import { jwtAuth } from '../middleware/auth'
 import { requirePermission } from '../middleware/rbac'
 
-const plansApp = new OpenAPIHono()
+type Env = {
+  Variables: {
+    userId: string
+    userRole: string
+  }
+}
+
+const plansApp = new OpenAPIHono<Env>()
 
 const listRoute = createRoute({
   method: 'get',
@@ -114,14 +121,14 @@ plansApp.openapi(completeRoute, async (c) => {
       .values({
         planId,
         patientId: body.patientId,
-        userId: body.userId ?? null,
+        userId: c.get('userId') || null,
         responses: body.responses ?? null,
         creditsEarned: plan.rewardCredits,
       })
       .returning()
 
     if (plan.rewardCredits > 0) {
-      const uid = body.userId ?? row.userId ?? null
+      const uid = c.get('userId') || body.userId || null
       if (uid) {
         await tx.insert(creditTransactions).values({
           userId: uid,
