@@ -18,6 +18,7 @@ import {
 } from '@tabler/icons-react'
 import { Outlet, useNavigate, useRouterState } from '@tanstack/react-router'
 import { useGet } from '../api/hooks'
+import { PatientOverview } from './PatientOverview'
 
 interface Patient {
   id: string
@@ -100,18 +101,6 @@ export function PatientDetailShell() {
           <Text>{patient.phone ?? '-'}</Text>
         </Paper>
       </SimpleGrid>
-      <SimpleGrid cols={{ base: 2, sm: 4 }} mb="md">
-        {(latest ?? []).slice(0, 4).map((m) => (
-          <Paper key={m.metric} p="xs" withBorder>
-            <Text size="xs" c="dimmed">
-              {m.metric}
-            </Text>
-            <Text fw={600}>
-              {String(m.value ?? '-')} {m.unit ?? ''}
-            </Text>
-          </Paper>
-        ))}
-      </SimpleGrid>
       <Tabs
         value={tab}
         onChange={(v) => {
@@ -144,7 +133,11 @@ export function PatientDetailShell() {
           </Tabs.Tab>
         </Tabs.List>
       </Tabs>
-      <Outlet />
+      {tab === 'overview' ? (
+        <PatientOverview patientId={pid} latest={latest ?? null} />
+      ) : (
+        <Outlet />
+      )}
     </Container>
   )
 }
