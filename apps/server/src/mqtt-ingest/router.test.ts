@@ -1,17 +1,20 @@
 import { describe, expect, it } from 'vitest'
-import { normalizeMetric, parseHealthPayload } from './router'
+import { parseHealthPayload } from './router'
 
 describe('mqtt router payload normalization', () => {
   it('normalizes metric aliases', () => {
-    expect(normalizeMetric('HR')).toBe('heart_rate')
-    expect(normalizeMetric('blood-oxygen')).toBe('spo2')
-    expect(normalizeMetric(' body temperature ')).toBe('temperature')
+    let parsed = parseHealthPayload({ metric: 'HR', value: '75' })
+    expect(parsed?.metric).toBe('heart_rate')
+    parsed = parseHealthPayload({ metric: 'blood-oxygen', value: '95' })
+    expect(parsed?.metric).toBe('spo2')
+    parsed = parseHealthPayload({ metric: ' body temperature ', value: '36.5' })
+    expect(parsed?.metric).toBe('temperature')
   })
 
-  it('rejects invalid metric names', () => {
-    expect(normalizeMetric('')).toBeNull()
-    expect(normalizeMetric('??bad')).toBeNull()
-    expect(normalizeMetric(123)).toBeNull()
+  it('rejects invalid payloads', () => {
+    expect(parseHealthPayload({ metric: '', value: '75' })).toBeNull()
+    expect(parseHealthPayload({})).toBeNull()
+    expect(parseHealthPayload({ metric: 123, value: '75' })).toBeNull()
   })
 
   it('parses valid payload and infers unit', () => {

@@ -1,12 +1,16 @@
 const METRIC_ALIASES: Record<string, string> = {
   hr: 'heart_rate',
+  pulse: 'heart_rate',
   heartrate: 'heart_rate',
+  heartbeat: 'heart_rate',
   heart: 'heart_rate',
   spo2: 'spo2',
   spO2: 'spo2',
   oxygen: 'spo2',
+  blood_oxygen: 'spo2',
   o2: 'spo2',
   temp: 'temperature',
+  body_temperature: 'temperature',
   body_temp: 'temperature',
   bodytemp: 'temperature',
   systolic: 'systolic_bp',
@@ -81,4 +85,4 @@ export function isValueInRange(metric: string, value: number): boolean {
   return value >= range.min && value <= range.max
 }
 
-export const CANONICAL_METRICS = Object.keys(METRIC_RANGES)
+const CANONICAL_METRICS = Object.keys(METRIC_RANGES)

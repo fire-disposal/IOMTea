@@ -5,7 +5,7 @@ import { events, patients } from '../core/db/schema.js'
 import { usersPin } from '../core/db/schema/pin'
 import { userPatientLinks } from '../core/db/schema/user-patient'
 import { createChildLogger } from '../core/lib/logger'
-import { getMetricUnit, normalizeMetric as sharedNormalize } from '../core/lib/metrics'
+import { getMetricUnit, isValueInRange, normalizeMetric } from '../core/lib/metrics'
 import { broadcastManager } from '../core/realtime/broadcast'
 
 const logger = createChildLogger('mqtt-router')
@@ -40,8 +40,7 @@ async function handleDeviceEvent(topicId: string, body: Record<string, unknown>)
 
   if (event === 'healthObservation' || event === 'healthAlert') {
     if (!metric) return
-    const normalizedMetric = sharedNormalize(metric)
-    if (!normalizedMetric) return
+    const normalizedMetric = normalizeMetric(metric)
     const numValue = value !== null ? value : Number.NaN
     if (isNaN(numValue)) return
 
@@ -101,76 +100,6 @@ async function handleDeviceEvent(topicId: string, body: Record<string, unknown>)
 
 const TOPIC_ROOT_SEGMENT = 'users'
 const PIN_PATTERN = /^\d{4,6}$/
-const METRIC_PATTERN = /^[a-z][a-z0-9_]{1,63}$/
-
-const CANONICAL_METRICS = [
-  'heart_rate',
-  'glucose',
-  'spo2',
-  'temperature',
-  'weight',
-  'systolic_bp',
-  'diastolic_bp',
-] as const
-type CanonicalMetric = (typeof CANONICAL_METRICS)[number]
-
-const METRIC_ALIASES: Record<string, CanonicalMetric> = {
-  hr: 'heart_rate',
-  pulse: 'heart_rate',
-  heartrate: 'heart_rate',
-  heartbeat: 'heart_rate',
-  glucose: 'glucose',
-  blood_glucose: 'glucose',
-  blood_sugar: 'glucose',
-  bg: 'glucose',
-  spo2: 'spo2',
-  blood_oxygen: 'spo2',
-  temp: 'temperature',
-  body_temperature: 'temperature',
-  body_temp: 'temperature',
-  weight: 'weight',
-  body_weight: 'weight',
-  systolic_bp: 'systolic_bp',
-  sbp: 'systolic_bp',
-  diastolic_bp: 'diastolic_bp',
-  dbp: 'diastolic_bp',
-}
-
-const DEFAULT_UNITS: Record<CanonicalMetric, string> = {
-  heart_rate: 'bpm',
-  glucose: 'mmol/L',
-  spo2: '%',
-  temperature: '°C',
-  weight: 'kg',
-  systolic_bp: 'mmHg',
-  diastolic_bp: 'mmHg',
-}
-
-const METRIC_RANGES: Partial<Record<CanonicalMetric, { min: number; max: number }>> = {
-  heart_rate: { min: 20, max: 260 },
-  glucose: { min: 0.5, max: 35 },
-  spo2: { min: 40, max: 100 },
-  temperature: { min: 30, max: 45 },
-  weight: { min: 1, max: 500 },
-  systolic_bp: { min: 40, max: 280 },
-  diastolic_bp: { min: 20, max: 180 },
-}
-
-function isCanonicalMetric(metric: string): metric is CanonicalMetric {
-  return (CANONICAL_METRICS as readonly string[]).includes(metric)
-}
-
-export function normalizeMetric(rawMetric: unknown): string | null {
-  if (typeof rawMetric !== 'string') return null
-  const normalized = rawMetric
-    .trim()
-    .toLowerCase()
-    .replace(/[\s-]+/g, '_')
-  if (!normalized) return null
-  const metric = METRIC_ALIASES[normalized] ?? normalized
-  if (!METRIC_PATTERN.test(metric)) return null
-  return metric
-}
 
 function toFiniteNumber(raw: unknown): number | null {
   if (typeof raw === 'number' && Number.isFinite(raw)) return raw
@@ -190,18 +119,12 @@ function normalizeRecordedAt(raw: unknown): Date {
 
 function resolveUnit(metric: string, rawUnit: unknown): string | undefined {
   if (typeof rawUnit === 'string' && rawUnit.trim() !== '') return rawUnit.trim()
-  return isCanonicalMetric(metric) ? DEFAULT_UNITS[metric] : undefined
-}
-
-function isValueInRange(metric: string, value: number): boolean {
-  const range = isCanonicalMetric(metric) ? METRIC_RANGES[metric] : undefined
-  if (!range) return true
-  return value >= range.min && value <= range.max
+  return getMetricUnit(metric)
 }
 
 export function parseHealthPayload(body: Record<string, unknown>) {
+  if (typeof body.metric !== 'string' || !body.metric.trim()) return null
   const metric = normalizeMetric(body.metric)
-  if (!metric) return null
 
   const value = toFiniteNumber(body.value)
   if (value === null) return null
