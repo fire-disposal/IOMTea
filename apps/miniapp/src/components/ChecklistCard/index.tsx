@@ -8,6 +8,7 @@ interface ChecklistCardProps {
   icon: string
   status: 'pending' | 'done' | 'skipped'
   recordPage: string
+  planId?: string
   earnedCredits?: number
   animDone?: boolean
   animCredit?: boolean
@@ -18,13 +19,15 @@ export function ChecklistCard({
   icon,
   status,
   recordPage,
+  planId,
   earnedCredits,
   animDone,
   animCredit,
 }: ChecklistCardProps) {
   const handleTap = () => {
     if (status === 'pending') {
-      Taro.navigateTo({ url: recordPage })
+      const url = planId ? `${recordPage}?planId=${planId}` : recordPage
+      Taro.navigateTo({ url })
     }
   }
 

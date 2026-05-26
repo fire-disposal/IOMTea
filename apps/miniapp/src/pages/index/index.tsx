@@ -30,7 +30,7 @@ export default function Index() {
       <TopBar displayName={userName} credit={credit} />
       <View className="home-checklist anim-stagger">
         {plans.map((p) => (
-          <ChecklistCard key={p.id} moduleKey={p.code} label={p.title} icon="📋" status="pending" recordPage={getRecordPage(p.code)} />
+          <ChecklistCard key={p.id} moduleKey={p.code} label={p.title} icon="📋" status="pending" recordPage={getRecordPage(p.code)} planId={p.id} />
         ))}
         {plans.length === 0 && (
           <View className="home-checklist__empty">
