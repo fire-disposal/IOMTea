@@ -1,7 +1,9 @@
+import { useState } from 'react'
 import { Group, Paper, SimpleGrid, Text, ThemeIcon, Title } from '@mantine/core'
 import { IconAlertTriangle, IconAmbulance, IconCoin, IconUsers } from '@tabler/icons-react'
 import { useGet } from '../api/hooks'
 import { StateSkeleton } from '../components/StateComponents'
+import { useRealtime } from '../hooks/useRealtime'
 
 function StatCard({
   label,
@@ -33,6 +35,17 @@ export function DashboardPage() {
     criticalAlerts: number
   }>('/dashboard/summary')
   const { data: me } = useGet<{ credit: number }>('/users/me')
+
+  const [liveVitals, setLiveVitals] = useState<Record<string, { metric: string; value: number; unit: string | null }>>({})
+  useRealtime({
+    onVitals: (data) => {
+      setLiveVitals(prev => {
+        const next = { ...prev }
+        data.metrics.forEach(m => { next[m.metric] = m })
+        return next
+      })
+    },
+  })
 
   if (isLoading)
     return <StateSkeleton lines={3} />
@@ -68,6 +81,21 @@ export function DashboardPage() {
           icon={<IconCoin size={14} />}
         />
       </SimpleGrid>
+      <Paper p="md" withBorder mt="md">
+        <Text fw={600} mb="xs">实时体征</Text>
+        {Object.keys(liveVitals).length === 0 ? (
+          <Text size="sm" c="dimmed">等待实时数据...</Text>
+        ) : (
+          <Group gap="md">
+            {Object.entries(liveVitals).map(([k, v]) => (
+              <Paper key={k} p="xs" withBorder>
+                <Text size="xs" c="dimmed">{k}</Text>
+                <Text fw={600}>{v.value} {v.unit ?? ''}</Text>
+              </Paper>
+            ))}
+          </Group>
+        )}
+      </Paper>
     </div>
   )
 }
