@@ -92,6 +92,19 @@ emaApp.openapi(publishFormRoute, async (c) => {
   return c.json({ success: true, form })
 })
 
+const unpublishRoute = createRoute({
+  method: 'post',
+  path: '/:code/unpublish',
+  middleware: [jwtAuth, requirePermission('/forms', 'write')] as const,
+  responses: { 200: { description: 'Unpublished' } },
+})
+emaApp.openapi(unpublishRoute, async (c) => {
+  const code = c.req.param('code')
+  const [form] = await db.update(formDefinitions).set({ status: 'draft' } as any).where(eq(formDefinitions.code, code)).returning()
+  if (!form) return c.json({ error: 'Not found' }, 404 as any)
+  return c.json({ success: true })
+})
+
 const respondRoute = createRoute({
   method: 'post',
   path: '/:code/respond',
