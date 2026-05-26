@@ -5,6 +5,7 @@ import { ChecklistCard } from '../../components/ChecklistCard'
 import { TabBar } from '../../components/TabBar'
 import { TopBar } from '../../components/TopBar'
 import { STORAGE_KEYS } from '../../constants/storage-keys'
+import { getRecordPage } from '../../constants/modules'
 import { api } from '../../utils/api'
 import './index.scss'
 
@@ -29,7 +30,7 @@ export default function Index() {
       <TopBar displayName={userName} credit={credit} />
       <View className="home-checklist anim-stagger">
         {plans.map((p) => (
-          <ChecklistCard key={p.id} moduleKey={p.code} label={p.title} icon="📋" status="pending" recordPage={`/pages/record/${p.code}/index`} />
+          <ChecklistCard key={p.id} moduleKey={p.code} label={p.title} icon="📋" status="pending" recordPage={getRecordPage(p.code)} />
         ))}
         {plans.length === 0 && (
           <View className="home-checklist__empty">
