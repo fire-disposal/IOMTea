@@ -61,7 +61,8 @@ export default function HealthPage() {
         </View>
 
         <View className="health-cal-toggle" onClick={() => setCalVisible((v) => !v)}>
-          <Text>{calVisible ? '收起日历 ▲' : '展开日历 ▼'}</Text>
+          <Text className="health-cal-toggle__text">{calVisible ? '收起日历' : '展开日历'}</Text>
+          <Text className={`health-cal-toggle__arrow ${calVisible ? 'health-cal-toggle__arrow--up' : ''}`}>▼</Text>
         </View>
 
         {calVisible && (

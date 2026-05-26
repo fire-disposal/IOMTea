@@ -1,4 +1,5 @@
-import { Text, View } from '@tarojs/components'
+import { ScrollView, Text, View } from '@tarojs/components'
+import Taro from '@tarojs/taro'
 import { useEffect, useState } from 'react'
 import { TabBar } from '../../components/TabBar/TabBar'
 import { trpc } from '../../utils/trpc'
@@ -47,7 +48,9 @@ export default function MessagesPage() {
       <Text className="messages-page__title">告警中心</Text>
       <Text className="messages-page__subtitle">实时健康告警与通知</Text>
 
-      {loading && <Text className="empty">加载中...</Text>}
+      {loading && Array.from({ length: 3 }).map((_, i) => (
+        <View key={i} className="card-skeleton anim-pulse" style={{ height: 64, marginBottom: 10, borderRadius: 8, background: 'var(--text-secondary)', opacity: 0.12 }} />
+      ))}
 
       {!loading && alerts.length === 0 && (
         <View className="messages-page__empty">
@@ -59,26 +62,29 @@ export default function MessagesPage() {
         </View>
       )}
 
-      {alerts.map((a) => (
-        <View
-          key={a.id}
-          className="alert-item"
-          style={{ borderLeft: `3px solid ${severityColor[a.severity] || '#999'}` }}
-        >
-          <View className="alert-item__header">
-            <Text className="alert-item__metric">{a.metric}</Text>
-            <Text className="alert-item__severity" style={{ color: severityColor[a.severity] }}>
-              {severityLabel[a.severity] || a.severity}
-            </Text>
+      <ScrollView scrollY style={{ maxHeight: 'calc(100vh - 200px)' }}>
+        {alerts.map((a) => (
+          <View
+            key={a.id}
+            className="alert-item"
+            style={{ borderLeft: `3px solid ${severityColor[a.severity] || '#999'}` }}
+            onClick={() => Taro.navigateTo({ url: '/pages/alerts/index' })}
+          >
+            <View className="alert-item__header">
+              <Text className="alert-item__metric">{a.metric}</Text>
+              <Text className="alert-item__severity" style={{ color: severityColor[a.severity] }}>
+                {severityLabel[a.severity] || a.severity}
+              </Text>
+            </View>
+            <View className="alert-item__footer">
+              <Text className="alert-item__time">{new Date(a.recordedAt).toLocaleString()}</Text>
+              <Text className="alert-item__status">
+                {statusDot[a.status] || '●'} {statusLabel[a.status] || a.status}
+              </Text>
+            </View>
           </View>
-          <View className="alert-item__footer">
-            <Text className="alert-item__time">{new Date(a.recordedAt).toLocaleString()}</Text>
-            <Text className="alert-item__status">
-              {statusDot[a.status] || '●'} {statusLabel[a.status] || a.status}
-            </Text>
-          </View>
-        </View>
-      ))}
+        ))}
+      </ScrollView>
 
       <TabBar current="messages" />
     </View>

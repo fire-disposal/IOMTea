@@ -9,6 +9,13 @@
   font-weight: 600;
   color: var(--text-primary, #3C3C3C);
   display: block;
+  margin-bottom: 4px;
+}
+
+.messages-page__subtitle {
+  font-size: 14px;
+  color: var(--text-secondary, #8C8C7E);
+  display: block;
   margin-bottom: 16px;
 }
 
