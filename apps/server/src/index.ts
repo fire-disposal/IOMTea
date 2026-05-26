@@ -14,6 +14,7 @@ import { printBanner } from './core/lib/banner'
 import { type JwtPayload, verifyToken } from './core/lib/jwt'
 import { logger } from './core/lib/logger'
 import { hashPassword } from './core/lib/password'
+import { requestId } from './middleware/request-id'
 import { broadcastManager } from './core/realtime/broadcast'
 import { seedDemoData } from './core/services/demo-seed'
 import { seedPermissions } from './core/services/permission-seed'
@@ -82,6 +83,9 @@ app.use(
     logger.info(str.replace(/\s+/g, ' ').trim())
   }),
 )
+
+// 请求ID中间件 (x-request-id)
+app.use('*', requestId)
 
 // ── REST API routes ──
 app.route('/auth', auth)
