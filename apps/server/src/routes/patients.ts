@@ -7,7 +7,9 @@ import { userPatientLinks } from '../core/db/schema/user-patient'
 import { jwtAuth } from '../middleware/auth'
 import { requirePermission } from '../middleware/rbac'
 
-const patientsApp = new OpenAPIHono()
+const patientsApp = new OpenAPIHono<{
+  Variables: { userId: string; userRole: string }
+}>()
 
 const listPatRoute = createRoute({
   method: 'get',
@@ -44,6 +46,25 @@ patientsApp.openapi(listPatRoute, async (c) => {
     .orderBy(patients.createdAt)
     .limit(q.pageSize)
     .offset((q.page - 1) * q.pageSize)
+  return c.json(rows)
+})
+
+// ── Get patients linked to the current user ──
+
+const myPatientsRoute = createRoute({
+  method: 'get',
+  path: '/mine',
+  middleware: [jwtAuth, requirePermission('/patients', 'read')] as const,
+  responses: { 200: { description: 'My linked patients' } },
+})
+patientsApp.openapi(myPatientsRoute, async (c) => {
+  const userId = c.get('userId') as string
+  const rows = await db
+    .select({ id: patients.id, name: patients.name, status: patients.status })
+    .from(patients)
+    .innerJoin(userPatientLinks, eq(userPatientLinks.patientId, patients.id))
+    .where(eq(userPatientLinks.userId, userId))
+    .orderBy(patients.name)
   return c.json(rows)
 })
 

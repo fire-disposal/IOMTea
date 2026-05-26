@@ -11,7 +11,7 @@ export default function PatientSelect() {
   const currentId = Taro.getStorageSync('patient_id') || ''
 
   useEffect(() => {
-    api.get<Patient[]>('/patients', { pageSize: 200 }).then(setPatients).catch(() => {})
+    api.get<Patient[]>('/patients/mine').then(setPatients).catch(() => {})
   }, [])
 
   const select = (id: string) => {
