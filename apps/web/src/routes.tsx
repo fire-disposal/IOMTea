@@ -18,6 +18,7 @@ import { PatientDetailShell } from './pages/PatientDetailShell'
 import { PatientProfile } from './pages/PatientProfile'
 import { PatientWall } from './pages/PatientWall'
 import { PinManagementPage } from './pages/PinManagementPage'
+import { FormBuilderPage } from './pages/FormBuilderPage'
 import { PlanManagementPage } from './pages/PlanManagementPage'
 import { RbacManagementPage } from './pages/RbacManagementPage'
 import { SimulationPage } from './pages/SimulationPage'
@@ -141,6 +142,12 @@ const plansRoute = createRoute({
   component: PlanManagementPage,
 })
 
+const formsRoute = createRoute({
+  getParentRoute: () => authRoute,
+  path: '/forms',
+  component: FormBuilderPage,
+})
+
 const routeTree = rootRoute.addChildren([
   loginRoute,
   authRoute.addChildren([
@@ -162,6 +169,7 @@ const routeTree = rootRoute.addChildren([
     rbacRoute,
     nodeGraphRoute,
     plansRoute,
+    formsRoute,
   ]),
 ])
 

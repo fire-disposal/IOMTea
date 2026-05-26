@@ -56,6 +56,7 @@ const navGroups: NavGroup[] = [
       { label: '关系图谱', icon: IconFileExport, path: '/node-graph' },
       { label: '数据导出', icon: IconFileExport, path: '/data-export' },
       { label: '模拟工厂', icon: IconFlask, path: '/simulation' },
+      { label: '量表管理', icon: IconFileExport, path: '/forms' },
     ],
     roles: ['super_admin', 'admin'],
   },
@@ -191,6 +192,7 @@ export const authBeforeLoad = ({ location }: { location: { href: string } }) => 
     '/iot/pins',
     '/plans',
     '/node-graph',
+    '/forms',
   ]
   const superAdminRoutes = ['/settings/users', '/settings/rbac']
   const pathname = location.href || ''
