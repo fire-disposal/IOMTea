@@ -18,12 +18,13 @@ function parseId() {
 
 export function PatientAlertRules() {
   const pid = parseId()
-  const {
-    data: rules,
-    isLoading,
-    refetch,
-  } = useGet<R[]>(`/alert-rules/patients/${pid}/alert-rules`)
+  const { data: rules, isLoading, refetch } = useGet<R[]>(`/alert-rules/patients/${pid}/alert-rules`)
+  const [localRules, setLocalRules] = useState<R[]>([])
   const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    if (rules) setLocalRules(rules)
+  }, [rules])
 
   if (isLoading || !rules)
     return (
@@ -35,16 +36,31 @@ export function PatientAlertRules() {
     )
 
   const toggle = (i: number) => {
-    const n = [...rules]
-    n[i].enabled = !n[i].enabled
+    const n = [...localRules]
+    n[i] = { ...n[i], enabled: !n[i].enabled }
+    setLocalRules(n)
   }
+
+  const updateMin = (i: number, v: string | number) => {
+    const n = [...localRules]
+    n[i] = { ...n[i], min: v === '' ? undefined : Number(v) }
+    setLocalRules(n)
+  }
+
+  const updateMax = (i: number, v: string | number) => {
+    const n = [...localRules]
+    n[i] = { ...n[i], max: v === '' ? undefined : Number(v) }
+    setLocalRules(n)
+  }
+
   const save = async () => {
     setSaving(true)
     try {
-      await http.put(`/alert-rules/patients/${pid}/alert-rules`, { rules } as any)
-      notifications.show({ title: '已保存', color: 'green', message: '' as any })
+      await http.put(`/alert-rules/patients/${pid}/alert-rules`, { rules: localRules } as any)
+      notifications.show({ title: '已保存', color: 'green', message: '告警规则已更新' })
       refetch()
     } catch {
+      notifications.show({ title: '保存失败', color: 'red', message: '请重试' })
     } finally {
       setSaving(false)
     }
@@ -53,36 +69,19 @@ export function PatientAlertRules() {
   return (
     <Container py="md">
       <Group justify="flex-end" mb="md">
-        <Button loading={saving} onClick={save}>
-          保存
-        </Button>
+        <Button loading={saving} onClick={save}>保存</Button>
       </Group>
-      {rules.map((r, i) => (
+      {localRules.map((r, i) => (
         <Paper key={r.metric} p="sm" mb="xs" withBorder>
           <Group gap="xs" mb="xs">
             <Switch checked={r.enabled} onChange={() => toggle(i)} />
             <span>{r.label || r.metric}</span>
+            {r.unit && <span>({r.unit})</span>}
           </Group>
           {r.enabled && (
             <Group>
-              <NumberInput
-                size="xs"
-                label="Min"
-                w={100}
-                value={r.min ?? ''}
-                onChange={(v) => {
-                  rules[i].min = Number(v)
-                }}
-              />
-              <NumberInput
-                size="xs"
-                label="Max"
-                w={100}
-                value={r.max ?? ''}
-                onChange={(v) => {
-                  rules[i].max = Number(v)
-                }}
-              />
+              <NumberInput size="xs" label="最小值" w={120} value={r.min ?? ''} onChange={(v) => updateMin(i, v)} />
+              <NumberInput size="xs" label="最大值" w={120} value={r.max ?? ''} onChange={(v) => updateMax(i, v)} />
             </Group>
           )}
         </Paper>
