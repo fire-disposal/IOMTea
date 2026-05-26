@@ -5,22 +5,39 @@ import { v4 as uuid } from 'uuid'
 import { db } from '../core/db'
 import { refreshTokens, users } from '../core/db/schema'
 import { wechatAccounts } from '../core/db/schema/auth-ext'
-import { signAccessToken, signRefreshToken, verifyToken } from '../core/lib/jwt'
+import { hashToken, signAccessToken, signRefreshToken, verifyToken } from '../core/lib/jwt'
 import { hashPassword, verifyPassword } from '../core/lib/password'
 import { code2session } from '../core/lib/wechat'
+import { rateLimit } from '../middleware/rate-limit'
 
 const auth = new OpenAPIHono()
+
+const loginFailures = new Map<string, { count: number; lastAttempt: number }>()
+
+setInterval(() => {
+  const now = Date.now()
+  for (const [k, v] of loginFailures) {
+    if (now - v.lastAttempt > 30 * 60 * 1000) loginFailures.delete(k)
+  }
+}, 300000)
 
 const registerRoute = createRoute({
   method: 'post',
   path: '/register',
+  middleware: [rateLimit(20, 60000)] as const,
   request: {
     body: {
       content: {
         'application/json': {
           schema: z.object({
             username: z.string().min(3).max(50).openapi({ example: 'researcher' }),
-            password: z.string().min(6).openapi({ example: 'secret123' }),
+            password: z
+              .string()
+              .min(8, '密码至少8位')
+              .max(100)
+              .regex(/[A-Z]/, '需要包含大写字母')
+              .regex(/[0-9]/, '需要包含数字')
+              .openapi({ example: 'Secret123' }),
             displayName: z.string().optional().openapi({ example: '研究员' }),
           }),
         },
@@ -51,12 +68,34 @@ auth.openapi(registerRoute, async (c) => {
     })
     .returning()
 
-  return c.json({ id: user.id, username: user.username, displayName: user.displayName }, 201 as any)
+  const accessToken = await signAccessToken({ sub: user.id, role: user.role })
+  const { token: refreshToken, expiresAt } = await signRefreshToken(user.id)
+  const tokenHash = await hashToken(refreshToken)
+  await db.insert(refreshTokens).values({
+    userId: user.id,
+    tokenHash,
+    expiresAt,
+  })
+
+  return c.json(
+    {
+      accessToken,
+      refreshToken,
+      user: {
+        id: user.id,
+        username: user.username,
+        role: user.role,
+        displayName: user.displayName,
+      },
+    },
+    201 as any,
+  )
 })
 
 const loginRoute = createRoute({
   method: 'post',
   path: '/login',
+  middleware: [rateLimit(20, 60000)] as const,
   request: {
     body: {
       content: {
@@ -80,18 +119,44 @@ const loginRoute = createRoute({
 
 auth.openapi(loginRoute, async (c) => {
   const body = c.req.valid('json')
+
+  const failKey = `login:${body.username}`
+  const failure = loginFailures.get(failKey)
+  if (failure && failure.count >= 5 && Date.now() - failure.lastAttempt < 15 * 60 * 1000) {
+    return c.json(
+      { error: 'Account temporarily locked', message: '请15分钟后重试' },
+      429 as any,
+    )
+  }
+
   const [user] = await db.select().from(users).where(eq(users.username, body.username)).limit(1)
-  if (!user) return c.json({ error: 'Invalid credentials' }, 401 as any)
+  if (!user) {
+    const failEntry = loginFailures.get(failKey) || { count: 0, lastAttempt: 0 }
+    loginFailures.set(failKey, { count: failEntry.count + 1, lastAttempt: Date.now() })
+    return c.json({ error: 'Invalid credentials' }, 401 as any)
+  }
 
   const valid = await verifyPassword(user.passwordHash!, body.password)
-  if (!valid) return c.json({ error: 'Invalid credentials' }, 401 as any)
+  if (!valid) {
+    const failEntry = loginFailures.get(failKey) || { count: 0, lastAttempt: 0 }
+    loginFailures.set(failKey, { count: failEntry.count + 1, lastAttempt: Date.now() })
+    return c.json({ error: 'Invalid credentials' }, 401 as any)
+  }
+
+  loginFailures.delete(failKey)
 
   const accessToken = await signAccessToken({ sub: user.id, role: user.role })
-  const refreshTokenResult = await signRefreshToken(user.id)
+  const { token: refreshToken, expiresAt } = await signRefreshToken(user.id)
+  const tokenHash = await hashToken(refreshToken)
+  await db.insert(refreshTokens).values({
+    userId: user.id,
+    tokenHash,
+    expiresAt,
+  })
 
   return c.json({
     accessToken,
-    refreshToken: refreshTokenResult.token,
+    refreshToken,
     user: {
       id: user.id,
       username: user.username,
@@ -104,6 +169,7 @@ auth.openapi(loginRoute, async (c) => {
 const refreshRoute = createRoute({
   method: 'post',
   path: '/refresh',
+  middleware: [rateLimit(10, 60000)] as const,
   request: {
     body: {
       content: {
@@ -130,10 +196,17 @@ auth.openapi(refreshRoute, async (c) => {
     const payload = await verifyToken(body.refreshToken)
     const userId = payload.sub as string
 
+    const hash = await hashToken(body.refreshToken)
     const [stored] = await db
       .select()
       .from(refreshTokens)
-      .where(and(eq(refreshTokens.userId, userId), gt(refreshTokens.expiresAt, new Date())))
+      .where(
+        and(
+          eq(refreshTokens.userId, userId),
+          eq(refreshTokens.tokenHash, hash),
+          gt(refreshTokens.expiresAt, new Date()),
+        ),
+      )
       .limit(1)
 
     if (!stored) return c.json({ error: 'Invalid or expired refresh token' }, 401 as any)
@@ -141,9 +214,15 @@ auth.openapi(refreshRoute, async (c) => {
     await db.delete(refreshTokens).where(eq(refreshTokens.id, stored.id))
 
     const accessToken = await signAccessToken({ sub: userId, role: payload.role })
-    const newRefreshResult = await signRefreshToken(userId)
+    const { token: newRefreshToken, expiresAt: newExpiresAt } = await signRefreshToken(userId)
+    const newTokenHash = await hashToken(newRefreshToken)
+    await db.insert(refreshTokens).values({
+      userId,
+      tokenHash: newTokenHash,
+      expiresAt: newExpiresAt,
+    })
 
-    return c.json({ accessToken, refreshToken: newRefreshResult.token })
+    return c.json({ accessToken, refreshToken: newRefreshToken })
   } catch {
     return c.json({ error: 'Invalid refresh token' }, 401 as any)
   }
@@ -194,10 +273,16 @@ auth.openapi(wechatLoginRoute, async (c) => {
 
   const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1)
   const accessToken = await signAccessToken({ sub: userId, role: user!.role })
-  const rt = await signRefreshToken(userId)
+  const { token: refreshToken, expiresAt } = await signRefreshToken(userId)
+  const tokenHash = await hashToken(refreshToken)
+  await db.insert(refreshTokens).values({
+    userId,
+    tokenHash,
+    expiresAt,
+  })
   return c.json({
     accessToken,
-    refreshToken: rt.token,
+    refreshToken,
     user: {
       id: user!.id,
       username: user!.username,
@@ -205,6 +290,32 @@ auth.openapi(wechatLoginRoute, async (c) => {
       displayName: user!.displayName,
     },
   })
+})
+
+// ── Logout ──
+
+const logoutRoute = createRoute({
+  method: 'post',
+  path: '/logout',
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: z.object({ refreshToken: z.string() }),
+        },
+      },
+    },
+  },
+  responses: { 200: { description: 'Logged out' } },
+})
+
+auth.openapi(logoutRoute, async (c) => {
+  const { refreshToken } = c.req.valid('json')
+  try {
+    const hash = await hashToken(refreshToken)
+    await db.delete(refreshTokens).where(eq(refreshTokens.tokenHash, hash))
+  } catch {}
+  return c.json({ success: true })
 })
 
 export { auth }
