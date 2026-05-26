@@ -1,5 +1,6 @@
-import { Group, Paper, SimpleGrid, Text, ThemeIcon, Title } from '@mantine/core'
+import { Container, Group, Paper, SimpleGrid, Text, ThemeIcon, Title } from '@mantine/core'
 import { IconAlertTriangle, IconAmbulance, IconCoin, IconUsers } from '@tabler/icons-react'
+import { Link } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useGet } from '../api/hooks'
 import { StateSkeleton } from '../components/StateComponents'
@@ -10,9 +11,10 @@ function StatCard({
   value,
   color,
   icon,
-}: { label: string; value: number | string; color: string; icon: React.ReactNode }) {
-  return (
-    <Paper p="md" withBorder>
+  to,
+}: { label: string; value: number | string; color: string; icon: React.ReactNode; to?: string }) {
+  const content = (
+    <Paper p="md" withBorder className="card-hover">
       <Group gap="xs" mb={4}>
         <ThemeIcon size="sm" color={color} variant="light">
           {icon}
@@ -26,6 +28,14 @@ function StatCard({
       </Text>
     </Paper>
   )
+  if (to) {
+    return (
+      <Link to={to} style={{ textDecoration: 'none', color: 'inherit' }}>
+        {content}
+      </Link>
+    )
+  }
+  return content
 }
 
 export function DashboardPage() {
@@ -54,28 +64,34 @@ export function DashboardPage() {
   if (isLoading) return <StateSkeleton lines={3} />
 
   return (
-    <div style={{ padding: 24 }}>
-      <Title order={2} mb="md">
-        IOMTea Dashboard
+    <Container py="md">
+      <Title order={2} mb="xs">
+        工作台
       </Title>
+      <Text size="sm" c="dimmed" mb="md">
+        {new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' })}
+      </Text>
       <SimpleGrid cols={{ base: 1, sm: 4 }}>
         <StatCard
           label="在管患者"
           value={data?.patientCount ?? 0}
           color="teal"
           icon={<IconUsers size={14} />}
+          to="/patients"
         />
         <StatCard
           label="24h 活跃告警"
           value={data?.activeAlerts24h ?? 0}
           color="orange"
           icon={<IconAlertTriangle size={14} />}
+          to="/alerts"
         />
         <StatCard
           label="严重告警"
           value={data?.criticalAlerts ?? 0}
           color="red"
           icon={<IconAmbulance size={14} />}
+          to="/alerts"
         />
         <StatCard
           label="当前积分"
@@ -107,6 +123,6 @@ export function DashboardPage() {
           </Group>
         )}
       </Paper>
-    </div>
+    </Container>
   )
 }

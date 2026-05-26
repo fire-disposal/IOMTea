@@ -1,5 +1,5 @@
-import { Badge, Container, Group, Paper, SegmentedControl, Text } from '@mantine/core'
-import { useGet, usePatch } from '../api/hooks'
+import { Badge, Container, Group, Paper, Text, Title } from '@mantine/core'
+import { useGet } from '../api/hooks'
 import { StateSkeleton } from '../components/StateComponents'
 import { parsePatientId } from '../lib/path'
 
@@ -18,11 +18,17 @@ export function PatientAlerts() {
 
   if (isLoading) return <StateSkeleton lines={4} />
 
+  const activeAlerts = (alerts ?? []).filter((a) => a.status !== 'closed')
+
   return (
     <Container py="md">
-      {(alerts ?? [])
-        .filter((a) => a.status !== 'closed')
-        .map((a) => (
+      <Title order={4} mb="xs">
+        患者告警
+      </Title>
+      <Text size="xs" c="dimmed" mb="md">
+        共 {activeAlerts.length} 条活跃告警
+      </Text>
+      {activeAlerts.map((a) => (
           <Paper key={a.id} p="sm" mb="xs" withBorder>
             <Group justify="space-between">
               <Group gap="xs">
@@ -38,7 +44,7 @@ export function PatientAlerts() {
               </Badge>
             </Group>
           </Paper>
-        ))}
+      ))}
     </Container>
   )
 }
