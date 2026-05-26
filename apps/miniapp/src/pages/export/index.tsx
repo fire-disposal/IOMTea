@@ -1,19 +1,14 @@
 import { Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useCallback, useState } from 'react'
+import { HEALTH_MODULE_META } from '../../constants/modules'
 import { getLocalRecords } from '../../utils/storage'
 import './index.scss'
 
-const MODULES = [
-  { value: 'blood_glucose', label: '血糖' },
-  { value: 'blood_pressure', label: '血压' },
-  { value: 'weight', label: '体重' },
-  { value: 'heart_rate', label: '心率' },
-  { value: 'temperature', label: '体温' },
-  { value: 'spo2', label: '血氧' },
-  { value: 'medication', label: '用药' },
-  { value: 'period', label: '生理期' },
-]
+const MODULES = Object.entries(HEALTH_MODULE_META).map(([value, meta]) => ({
+  value,
+  label: meta.label,
+}))
 
 export default function ExportPage() {
   const [selectedTypes, setSelectedTypes] = useState<string[]>([

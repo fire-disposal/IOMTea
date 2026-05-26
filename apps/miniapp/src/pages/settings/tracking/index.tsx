@@ -1,18 +1,14 @@
 import { Switch, Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useEffect, useState } from 'react'
+import { HEALTH_MODULE_META } from '../../../constants/modules'
 import './index.scss'
 
-const ALL_MODULES = [
-  { key: 'blood_glucose', label: '血糖', icon: '🩸' },
-  { key: 'blood_pressure', label: '血压', icon: '❤️' },
-  { key: 'weight', label: '体重', icon: '⚖️' },
-  { key: 'heart_rate', label: '心率', icon: '💓' },
-  { key: 'temperature', label: '体温', icon: '🌡️' },
-  { key: 'spo2', label: '血氧', icon: '🫁' },
-  { key: 'medication', label: '用药', icon: '💊' },
-  { key: 'period', label: '生理期', icon: '🌸' },
-]
+const ALL_MODULES = Object.entries(HEALTH_MODULE_META).map(([key, meta]) => ({
+  key,
+  label: meta.label,
+  icon: meta.icon,
+}))
 
 const REMINDER_TIMES = ['早', '中', '晚', '睡前']
 

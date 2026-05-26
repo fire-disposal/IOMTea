@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Button, DatePicker } from '@nutui/nutui-react'
 import { Checkbox, Text, View } from '@tarojs/components'
 import Taro, { useRouter } from '@tarojs/taro'

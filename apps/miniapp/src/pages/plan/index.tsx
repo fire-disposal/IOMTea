@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Button } from '@nutui/nutui-react'
 import { Checkbox, Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'

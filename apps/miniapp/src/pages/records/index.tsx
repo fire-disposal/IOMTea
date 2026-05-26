@@ -2,18 +2,8 @@ import { Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useEffect, useState } from 'react'
 import { type HealthRecord, getLocalRecords } from '../../utils/storage'
+import { HEALTH_MODULE_LABELS as TYPE_LABELS } from '../../constants/modules'
 import './index.scss'
-
-const TYPE_LABELS: Record<string, string> = {
-  blood_glucose: '血糖',
-  blood_pressure: '血压',
-  weight: '体重',
-  heart_rate: '心率',
-  temperature: '体温',
-  spo2: '血氧',
-  medication: '用药',
-  period: '生理期',
-}
 
 const GLUCOSE_CONTEXT_LABELS: Record<string, string> = {
   fasting: '空腹',

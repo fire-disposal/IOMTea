@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Picker, Text, View } from '@tarojs/components'
 import { useEffect, useState } from 'react'
 import { trpc } from '../../utils/trpc'

@@ -1,14 +1,7 @@
-// @ts-nocheck
 import { Text, View } from '@tarojs/components'
 import { useEffect, useState } from 'react'
+import { PIN_TYPE_LABELS as typeLabels } from '../../constants/modules'
 import { trpc } from '../../utils/trpc'
-
-const typeLabels: Record<string, string> = {
-  device: '设备',
-  virtual: '虚拟',
-  user: '用户',
-  simulator: '仿真',
-}
 
 export default function Devices() {
   const [pins, setPins] = useState<any[]>([])
