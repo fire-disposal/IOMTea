@@ -1,6 +1,5 @@
 import {
   Badge,
-  Box,
   Container,
   Group,
   MultiSelect,
@@ -13,6 +12,7 @@ import {
 } from '@mantine/core'
 import { IconChartLine } from '@tabler/icons-react'
 import { useState } from 'react'
+import { Bar, BarChart, ResponsiveContainer, Tooltip as ReTooltip, XAxis, YAxis } from 'recharts'
 import { useGet } from '../api/hooks'
 import { useRealtime } from '../hooks/useRealtime'
 
@@ -90,43 +90,20 @@ export function DataDashboard() {
       </Group>
       <Paper p="md" withBorder>
         {isLoading ? (
-          <Skeleton height={120} />
+          <Skeleton height={300} />
         ) : !trend?.rows?.length ? (
-          <Text c="dimmed" ta="center">
+          <Text c="dimmed" ta="center" py="md">
             {selectedPatient ? '暂无数据' : '请选择患者和指标'}
           </Text>
         ) : (
-          <Group gap={0} align="flex-end" h={120}>
-            {trend.rows.map((r, i) => {
-              const maxV = Math.max(...trend.rows.map((t) => t.value || 0), 1)
-              return (
-                <Box
-                  key={i}
-                  style={{
-                    flex: 1,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'flex-end',
-                    height: '100%',
-                  }}
-                >
-                  <Text size="xs" c="dimmed">
-                    {r.value?.toFixed?.(1) ?? '-'}
-                  </Text>
-                  <Box
-                    style={{
-                      width: '80%',
-                      height: `${Math.max(4, ((r.value || 0) / maxV) * 100)}%`,
-                      backgroundColor: 'var(--mantine-color-teal-5)',
-                      borderRadius: '4px 4px 0 0',
-                      minHeight: 4,
-                    }}
-                  />
-                </Box>
-              )
-            })}
-          </Group>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={trend.rows}>
+              <XAxis dataKey="bucket" tick={{ fontSize: 12 }} />
+              <YAxis tick={{ fontSize: 12 }} />
+              <ReTooltip />
+              <Bar dataKey="value" fill="var(--mantine-color-teal-5)" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
         )}
       </Paper>
       <Group mt="md">

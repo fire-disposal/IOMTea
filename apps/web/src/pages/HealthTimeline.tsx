@@ -1,4 +1,4 @@
-import { Container, Group, MultiSelect, Paper, Skeleton, Text } from '@mantine/core'
+import { Container, Group, MultiSelect, Paper, Skeleton, Table, Text } from '@mantine/core'
 import { useState } from 'react'
 import { useGet } from '../api/hooks'
 
@@ -67,30 +67,26 @@ export function HealthTimeline() {
             所选指标暂无数据
           </Text>
         ) : (
-          <div style={{ maxHeight: 400, overflowY: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr>
-                  <th style={{ textAlign: 'left', padding: 4 }}>时间</th>
-                  <th style={{ textAlign: 'left', padding: 4 }}>指标</th>
-                  <th style={{ textAlign: 'left', padding: 4 }}>值</th>
-                </tr>
-              </thead>
-              <tbody>
-                {allRows.map((r, i) => (
-                  <tr key={i}>
-                    <td style={{ padding: 4, fontSize: 12 }}>
-                      {new Date(r.recordedAt).toLocaleString()}
-                    </td>
-                    <td style={{ padding: 4, fontSize: 12 }}>
-                      {metricNames[r.metric] || r.metric}
-                    </td>
-                    <td style={{ padding: 4 }}>{String(r.value)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table striped stickyHeader highlightOnHover style={{ maxHeight: 400 }}>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>时间</Table.Th>
+                <Table.Th>指标</Table.Th>
+                <Table.Th>数值</Table.Th>
+                <Table.Th>单位</Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {allRows.map((r, i) => (
+                <Table.Tr key={`${r.recordedAt}-${r.metric}-${i}`}>
+                  <Table.Td>{new Date(r.recordedAt).toLocaleString()}</Table.Td>
+                  <Table.Td>{metricNames[r.metric] || r.metric}</Table.Td>
+                  <Table.Td>{String(r.value)}</Table.Td>
+                  <Table.Td>{(metrics || []).find((m) => m.metric === r.metric)?.unit || ''}</Table.Td>
+                </Table.Tr>
+              ))}
+            </Table.Tbody>
+          </Table>
         )}
       </Paper>
     </Container>
