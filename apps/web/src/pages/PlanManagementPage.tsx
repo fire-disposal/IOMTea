@@ -88,7 +88,7 @@ export function PlanManagementPage() {
           新建计划
         </Button>
       </Group>
-      <Table striped>
+      <Table striped stickyHeader highlightOnHover>
         <Table.Thead>
           <Table.Tr>
             <Table.Th>Code</Table.Th>

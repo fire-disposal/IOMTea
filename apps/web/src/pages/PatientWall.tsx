@@ -85,7 +85,7 @@ export function PatientWall() {
           共{filtered.length}条患者记录
         </Text>
       )}
-      <Table striped>
+      <Table striped stickyHeader highlightOnHover>
         <Table.Thead>
           <Table.Tr>
             <Table.Th>姓名</Table.Th>

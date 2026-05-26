@@ -171,7 +171,7 @@ export function FormBuilderPage() {
         </Group>
       </Group>
 
-      <Table striped>
+      <Table striped stickyHeader highlightOnHover>
         <Table.Thead>
           <Table.Tr>
             <Table.Th>代码</Table.Th>

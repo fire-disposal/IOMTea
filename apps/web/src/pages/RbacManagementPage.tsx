@@ -44,7 +44,7 @@ export function RbacManagementPage() {
           管理用户角色分配。角色决定用户在后端 API 中的访问权限。
         </Text>
 
-        <Table striped>
+        <Table striped stickyHeader highlightOnHover>
           <Table.Thead>
             <Table.Tr>
               <Table.Th>用户名</Table.Th>

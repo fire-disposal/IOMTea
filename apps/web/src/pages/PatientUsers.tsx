@@ -57,7 +57,7 @@ export function PatientUsers() {
           关联
         </Button>
       </Group>
-      <Table striped>
+      <Table striped stickyHeader highlightOnHover>
         <Table.Thead>
           <Table.Tr>
             <Table.Th>用户名</Table.Th>

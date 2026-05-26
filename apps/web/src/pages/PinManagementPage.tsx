@@ -75,7 +75,7 @@ export function PinManagementPage() {
           </Button>
         </Group>
       </Group>
-      <Table striped>
+      <Table striped stickyHeader highlightOnHover>
         <Table.Thead>
           <Table.Tr>
             <Table.Th>PIN</Table.Th>

@@ -46,7 +46,7 @@ export function UserManagementPage() {
       <Title order={2} mb="md">
         用户管理
       </Title>
-      <Table striped>
+      <Table striped stickyHeader highlightOnHover>
         <Table.Thead>
           <Table.Tr>
             <Table.Th>用户名</Table.Th>
