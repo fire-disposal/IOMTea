@@ -19,9 +19,14 @@ function parseId() {
 }
 
 const METRIC_LABELS: Record<string, string> = {
-  heart_rate: '心率', spo2: '血氧', temperature: '体温',
-  systolic_bp: '收缩压', diastolic_bp: '舒张压', glucose: '血糖',
-  respiratory_rate: '呼吸率', motion_index: '活动指数',
+  heart_rate: '心率',
+  spo2: '血氧',
+  temperature: '体温',
+  systolic_bp: '收缩压',
+  diastolic_bp: '舒张压',
+  glucose: '血糖',
+  respiratory_rate: '呼吸率',
+  motion_index: '活动指数',
 }
 
 export function HealthTimeline() {
@@ -37,7 +42,9 @@ export function HealthTimeline() {
   const allRows = (rawData?.rows ?? []).filter((r) => selected.includes(r.metric))
 
   const metricNames: Record<string, string> = {}
-  metrics?.forEach((m) => { metricNames[m.metric] = m.displayName })
+  metrics?.forEach((m) => {
+    metricNames[m.metric] = m.displayName
+  })
 
   return (
     <Container py="md">
@@ -58,7 +65,9 @@ export function HealthTimeline() {
         {isLoading ? (
           <Skeleton height={300} />
         ) : allRows.length === 0 ? (
-          <Text c="dimmed" ta="center" py="xl">所选指标暂无数据</Text>
+          <Text c="dimmed" ta="center" py="xl">
+            所选指标暂无数据
+          </Text>
         ) : (
           <div style={{ maxHeight: 400, overflowY: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>

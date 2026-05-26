@@ -8,13 +8,13 @@ import {
   Skeleton,
   Switch,
   Text,
-  Title,
   TextInput,
+  Title,
 } from '@mantine/core'
-import { IconPlus, IconTrash, IconPlayerPlay } from '@tabler/icons-react'
+import { IconPlayerPlay, IconPlus, IconTrash } from '@tabler/icons-react'
 import { useState } from 'react'
-import { useDelete, useGet, usePost } from '../api/hooks'
 import { http } from '../api/client'
+import { useDelete, useGet, usePost } from '../api/hooks'
 
 interface SimConfig {
   id: string
@@ -30,10 +30,16 @@ export function SimulationPage() {
   const [newName, setNewName] = useState('')
 
   const toggleSim = async (id: string) => {
-    try { await http.post(`/twin/simulations/${id}/toggle`); refetch() } catch {}
+    try {
+      await http.post(`/twin/simulations/${id}/toggle`)
+      refetch()
+    } catch {}
   }
   const deleteSim = async (id: string) => {
-    try { await http.delete(`/twin/simulations/${id}`); refetch() } catch {}
+    try {
+      await http.delete(`/twin/simulations/${id}`)
+      refetch()
+    } catch {}
   }
 
   if (isLoading)
@@ -61,7 +67,10 @@ export function SimulationPage() {
             leftSection={<IconPlus size={12} />}
             onClick={() => {
               createSim.mutate({ name: newName || '新模拟', profile: 'elderly-cardiac' } as any, {
-                onSuccess: () => { setNewName(''); refetch() },
+                onSuccess: () => {
+                  setNewName('')
+                  refetch()
+                },
               })
             }}
           >
@@ -80,7 +89,9 @@ export function SimulationPage() {
                 label={s.running ? '运行中' : '已停止'}
               />
               <Text fw={600}>{s.name}</Text>
-              <Badge size="xs" variant="outline">{s.profileName}</Badge>
+              <Badge size="xs" variant="outline">
+                {s.profileName}
+              </Badge>
               <Badge size="xs">{s.patientCount} patients</Badge>
             </Group>
             <ActionIcon variant="light" color="red" onClick={() => deleteSim(s.id)}>

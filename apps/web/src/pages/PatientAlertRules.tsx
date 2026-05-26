@@ -18,7 +18,11 @@ function parseId() {
 
 export function PatientAlertRules() {
   const pid = parseId()
-  const { data: rules, isLoading, refetch } = useGet<R[]>(`/alert-rules/patients/${pid}/alert-rules`)
+  const {
+    data: rules,
+    isLoading,
+    refetch,
+  } = useGet<R[]>(`/alert-rules/patients/${pid}/alert-rules`)
   const [localRules, setLocalRules] = useState<R[]>([])
   const [saving, setSaving] = useState(false)
 
@@ -69,7 +73,9 @@ export function PatientAlertRules() {
   return (
     <Container py="md">
       <Group justify="flex-end" mb="md">
-        <Button loading={saving} onClick={save}>保存</Button>
+        <Button loading={saving} onClick={save}>
+          保存
+        </Button>
       </Group>
       {localRules.map((r, i) => (
         <Paper key={r.metric} p="sm" mb="xs" withBorder>
@@ -80,8 +86,20 @@ export function PatientAlertRules() {
           </Group>
           {r.enabled && (
             <Group>
-              <NumberInput size="xs" label="最小值" w={120} value={r.min ?? ''} onChange={(v) => updateMin(i, v)} />
-              <NumberInput size="xs" label="最大值" w={120} value={r.max ?? ''} onChange={(v) => updateMax(i, v)} />
+              <NumberInput
+                size="xs"
+                label="最小值"
+                w={120}
+                value={r.min ?? ''}
+                onChange={(v) => updateMin(i, v)}
+              />
+              <NumberInput
+                size="xs"
+                label="最大值"
+                w={120}
+                value={r.max ?? ''}
+                onChange={(v) => updateMax(i, v)}
+              />
             </Group>
           )}
         </Paper>

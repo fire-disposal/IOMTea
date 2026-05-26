@@ -1,4 +1,15 @@
-import { Button, Container, Group, NumberInput, Select, SimpleGrid, Skeleton, TextInput, Title, Textarea } from '@mantine/core'
+import {
+  Button,
+  Container,
+  Group,
+  NumberInput,
+  Select,
+  SimpleGrid,
+  Skeleton,
+  TextInput,
+  Textarea,
+  Title,
+} from '@mantine/core'
 import { useState } from 'react'
 import { useGet, usePatch } from '../api/hooks'
 
@@ -55,14 +66,20 @@ export function PatientProfile() {
       } as any,
       {
         onSuccess: () => refetch(),
-      }
+      },
     )
 
   return (
     <Container py="md">
-      <Title order={3} mb="md">患者档案</Title>
+      <Title order={3} mb="md">
+        患者档案
+      </Title>
       <SimpleGrid cols={2}>
-        <TextInput label="姓名" value={form.name} onChange={(e) => set('name', e.currentTarget.value)} />
+        <TextInput
+          label="姓名"
+          value={form.name}
+          onChange={(e) => set('name', e.currentTarget.value)}
+        />
         <Select
           label="性别"
           data={[
@@ -73,20 +90,43 @@ export function PatientProfile() {
           value={form.gender ?? ''}
           onChange={(v) => set('gender', v)}
         />
-        <TextInput label="出生日期" type="date" value={form.birthDate ?? ''} onChange={(e) => set('birthDate', e.currentTarget.value)} />
+        <TextInput
+          label="出生日期"
+          type="date"
+          value={form.birthDate ?? ''}
+          onChange={(e) => set('birthDate', e.currentTarget.value)}
+        />
         <Select
           label="血型"
           data={['A', 'B', 'AB', 'O'].map((v) => ({ value: v, label: v }))}
           value={form.bloodType ?? ''}
           onChange={(v) => set('bloodType', v)}
         />
-        <NumberInput label="身高 (cm)" value={form.heightCm ?? ''} onChange={(v) => set('heightCm', v)} />
-        <NumberInput label="体重 (kg)" value={form.weightKg ?? ''} onChange={(v) => set('weightKg', v)} />
-        <TextInput label="电话" value={form.phone ?? ''} onChange={(e) => set('phone', e.currentTarget.value)} />
-        <Textarea label="地址" value={form.address ?? ''} onChange={(e) => set('address', e.currentTarget.value)} />
+        <NumberInput
+          label="身高 (cm)"
+          value={form.heightCm ?? ''}
+          onChange={(v) => set('heightCm', v)}
+        />
+        <NumberInput
+          label="体重 (kg)"
+          value={form.weightKg ?? ''}
+          onChange={(v) => set('weightKg', v)}
+        />
+        <TextInput
+          label="电话"
+          value={form.phone ?? ''}
+          onChange={(e) => set('phone', e.currentTarget.value)}
+        />
+        <Textarea
+          label="地址"
+          value={form.address ?? ''}
+          onChange={(e) => set('address', e.currentTarget.value)}
+        />
       </SimpleGrid>
       <Group mt="md">
-        <Button loading={update.isPending} onClick={save}>保存</Button>
+        <Button loading={update.isPending} onClick={save}>
+          保存
+        </Button>
       </Group>
     </Container>
   )
