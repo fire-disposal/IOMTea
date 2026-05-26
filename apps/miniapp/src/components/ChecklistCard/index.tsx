@@ -12,6 +12,7 @@ interface ChecklistCardProps {
   earnedCredits?: number
   animDone?: boolean
   animCredit?: boolean
+  className?: string
 }
 
 export function ChecklistCard({
@@ -23,6 +24,7 @@ export function ChecklistCard({
   earnedCredits,
   animDone,
   animCredit,
+  className,
 }: ChecklistCardProps) {
   const handleTap = () => {
     if (status === 'pending') {
@@ -33,7 +35,7 @@ export function ChecklistCard({
 
   return (
     <View
-      className={`checklist-card checklist-card--${status} ${animDone ? 'anim-card-done' : ''}`}
+      className={`checklist-card checklist-card--${status} ${animDone ? 'anim-card-done' : ''} ${className || ''}`}
       onClick={handleTap}
     >
       <View className="checklist-card__accent" />

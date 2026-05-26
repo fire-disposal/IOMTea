@@ -52,6 +52,8 @@ export default function Index() {
             status="pending"
             recordPage={getRecordPage(p.code)}
             planId={p.id}
+            animDone={false}
+            className="anim-fade-up"
           />
         ))}
         {plans.length === 0 && (
