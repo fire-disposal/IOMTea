@@ -29,6 +29,13 @@
       "when": 1779699259121,
       "tag": "0003_oval_groot",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1779699259122,
+      "tag": "0004_casbin_rbac_cleanup",
+      "breakpoints": true
     }
   ]
 }
