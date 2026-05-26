@@ -1,6 +1,8 @@
 import {
   ActionIcon,
+  Anchor,
   AppShell,
+  Breadcrumbs,
   Burger,
   Button,
   Divider,
@@ -106,6 +108,16 @@ export function AuthLayout() {
 
   const isActive = (path: string) => (path === '/' ? pathname === '/' : pathname.startsWith(path))
 
+  const buildBreadcrumbs = () => {
+    const segments = pathname.split('/').filter(Boolean)
+    if (segments.length === 0) return [{ label: '工作台', href: '/' }]
+    return [{ label: '工作台', href: '/' }, ...segments.map((seg, i) => ({
+      label: seg,
+      href: '/' + segments.slice(0, i + 1).join('/'),
+    }))]
+  }
+  const crumbItems = buildBreadcrumbs()
+
   return (
     <AppShell
       header={{ height: 56 }}
@@ -160,6 +172,24 @@ export function AuthLayout() {
       <AppShell.Main>
         <style>{pageStyles}</style>
         <div className="page-fade-in" style={{ minHeight: 'calc(100vh - 112px)' }}>
+          <Breadcrumbs mb="xs" px="md">
+            {crumbItems.map((crumb, i) =>
+              i < crumbItems.length - 1 ? (
+                <Anchor
+                  key={crumb.href}
+                  size="xs"
+                  c="dimmed"
+                  onClick={() => navigate({ to: crumb.href })}
+                >
+                  {crumb.label}
+                </Anchor>
+              ) : (
+                <Text key={crumb.href} size="xs" c="dimmed">
+                  {crumb.label}
+                </Text>
+              ),
+            )}
+          </Breadcrumbs>
           <Outlet />
         </div>
       </AppShell.Main>
