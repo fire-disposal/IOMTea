@@ -3,7 +3,7 @@
   flex-direction: column;
   min-height: 100vh;
   padding: 24px;
-  background: #f8f9fa;
+  background: var(--bg-page, #FAFAF5);
 }
 .form-shell__header {
   text-align: center;
@@ -12,11 +12,11 @@
 .form-shell__title {
   font-size: 28px;
   font-weight: 600;
-  color: #1a1a2e;
+  color: var(--text-primary, #3C3C3C);
 }
 .form-shell__unit {
   font-size: 16px;
-  color: #6c757d;
+  color: var(--text-secondary, #8C8C7E);
   margin-left: 8px;
 }
 .form-shell__body {

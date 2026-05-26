@@ -37,7 +37,7 @@ export function MiniTrend({
     const step = width / (data.length - 1)
 
     ctx.beginPath()
-    ctx.strokeStyle = '#4a90d9'
+    ctx.strokeStyle = '#6BA539'
     ctx.lineWidth = 2
     ctx.lineJoin = 'round'
 
@@ -52,7 +52,7 @@ export function MiniTrend({
       const x = i * step
       const y = height - ((d.value - min) / range) * (height - 10) - 5
       ctx.beginPath()
-      ctx.fillStyle = i === data.length - 1 ? '#4a90d9' : '#a0c4e8'
+      ctx.fillStyle = i === data.length - 1 ? '#6BA539' : '#8EC15B'
       ctx.arc(x, y, i === data.length - 1 ? 3 : 2, 0, Math.PI * 2)
       ctx.fill()
     })

@@ -15,11 +15,11 @@
 .mini-trend-value {
   font-size: 20px;
   font-weight: 700;
-  color: #4a90d9;
+  color: var(--brand-500, #6BA539);
 }
 .mini-trend-unit {
   font-size: 12px;
-  color: #6c757d;
+  color: var(--text-secondary, #8C8C7E);
 }
 .mini-trend__empty {
   font-size: 13px;
