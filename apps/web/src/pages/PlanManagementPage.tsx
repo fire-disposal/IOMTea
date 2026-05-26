@@ -32,6 +32,7 @@ interface Plan {
 
 export function PlanManagementPage() {
   const { data: plans, isLoading, refetch } = useGet<Plan[]>('/plans')
+  const [search, setSearch] = useState('')
   const createPlan = usePost('/plans', ['plans'])
   const updatePlan = usePatch<Plan, Partial<Plan>>('/plans/:id', ['plans'])
   const deletePlan = useDelete('/plans/:id', ['plans'])
@@ -73,6 +74,13 @@ export function PlanManagementPage() {
     else createPlan.mutate(data as any, { onSuccess: () => setModalOpen(false) })
   }
 
+  const filtered = (plans ?? []).filter(
+    (p) =>
+      !search ||
+      p.title.toLowerCase().includes(search.toLowerCase()) ||
+      p.code.toLowerCase().includes(search.toLowerCase()),
+  )
+
   if (isLoading)
     return (
       <Container py="md">
@@ -84,9 +92,18 @@ export function PlanManagementPage() {
     <Container py="md">
       <Group justify="space-between" mb="md">
         <Title order={2}>计划管理</Title>
-        <Button size="xs" leftSection={<IconPlus size={12} />} onClick={openCreate}>
-          新建计划
-        </Button>
+        <Group>
+          <TextInput
+            size="xs"
+            placeholder="搜索计划..."
+            value={search}
+            onChange={(e) => setSearch(e.currentTarget.value)}
+            w={200}
+          />
+          <Button size="xs" leftSection={<IconPlus size={12} />} onClick={openCreate}>
+            新建计划
+          </Button>
+        </Group>
       </Group>
       <Table striped stickyHeader highlightOnHover>
         <Table.Thead>
@@ -101,7 +118,7 @@ export function PlanManagementPage() {
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
-          {(plans ?? []).map((p) => (
+          {filtered.map((p) => (
             <Table.Tr key={p.id}>
               <Table.Td>
                 <Badge variant="light">{p.code}</Badge>

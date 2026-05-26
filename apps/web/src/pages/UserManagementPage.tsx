@@ -1,5 +1,6 @@
-import { Container, Select, Skeleton, Table, Title } from '@mantine/core'
+import { Container, Select, Skeleton, Table, TextInput, Title } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
+import { useState } from 'react'
 import { useGet, usePatch } from '../api/hooks'
 
 interface User {
@@ -14,7 +15,12 @@ interface User {
 
 export function UserManagementPage() {
   const { data: users, isLoading } = useGet<User[]>('/users')
+  const [search, setSearch] = useState('')
   const patchRole = usePatch<unknown, { role: string }>('/users/:id/role')
+
+  const filtered = (users ?? []).filter(
+    (u) => !search || u.username.toLowerCase().includes(search.toLowerCase()),
+  )
 
   const handleRoleChange = (userId: string, newRole: string) => {
     patchRole.mutate(
@@ -46,6 +52,14 @@ export function UserManagementPage() {
       <Title order={2} mb="md">
         用户管理
       </Title>
+      <TextInput
+        size="xs"
+        placeholder="搜索用户..."
+        value={search}
+        onChange={(e) => setSearch(e.currentTarget.value)}
+        w={200}
+        mb="md"
+      />
       <Table striped stickyHeader highlightOnHover>
         <Table.Thead>
           <Table.Tr>
@@ -56,7 +70,7 @@ export function UserManagementPage() {
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
-          {(users ?? []).map((u) => (
+          {filtered.map((u) => (
             <Table.Tr key={u.id}>
               <Table.Td>{u.username}</Table.Td>
               <Table.Td>{u.displayName ?? '-'}</Table.Td>

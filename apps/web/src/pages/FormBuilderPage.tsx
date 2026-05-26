@@ -60,6 +60,7 @@ const FIELD_TYPES = [
 
 export function FormBuilderPage() {
   const { data: forms, isLoading, refetch } = useGet<FormDef[]>('/forms')
+  const [search, setSearch] = useState('')
   const createForm = usePost('/forms', ['forms'])
   const deleteForm = useDelete('/forms/:id', ['forms'])
   const [modalOpen, { open, close }] = useDisclosure(false)
@@ -148,6 +149,13 @@ export function FormBuilderPage() {
 
   const previewForm = forms?.find((f) => f.code === previewCode)
 
+  const filtered = (forms ?? []).filter(
+    (f) =>
+      !search ||
+      f.title.toLowerCase().includes(search.toLowerCase()) ||
+      f.code.toLowerCase().includes(search.toLowerCase()),
+  )
+
   if (isLoading)
     return (
       <Container py="md">
@@ -160,6 +168,13 @@ export function FormBuilderPage() {
       <Group justify="space-between" mb="md">
         <Title order={2}>量表管理</Title>
         <Group>
+          <TextInput
+            size="xs"
+            placeholder="搜索量表..."
+            value={search}
+            onChange={(e) => setSearch(e.currentTarget.value)}
+            w={200}
+          />
           {previewCode && (
             <Button variant="subtle" onClick={() => setPreviewCode(null)}>
               退出预览
@@ -182,7 +197,7 @@ export function FormBuilderPage() {
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
-          {(forms ?? []).map((f) => (
+          {filtered.map((f) => (
             <Table.Tr key={f.id}>
               <Table.Td>
                 <Badge variant="light">{f.code}</Badge>

@@ -31,6 +31,7 @@ interface Patient {
 
 export function PatientWall() {
   const { data: patients, isLoading } = useGet<Patient[]>('/patients', { pageSize: 200 })
+  const [search, setSearch] = useState('')
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [importOpen, setImportOpen] = useState(false)
   const [createOpen, setCreateOpen] = useState(false)
@@ -39,7 +40,10 @@ export function PatientWall() {
   const navigate = useNavigate()
   const { refetch } = useGet<Patient[]>('/patients', { pageSize: 200 })
 
-  const filtered = (patients ?? []).filter((p) => {
+  const searched = (patients ?? []).filter((p) =>
+    !search || p.name.toLowerCase().includes(search.toLowerCase()),
+  )
+  const filtered = searched.filter((p) => {
     if (selectedTags.length === 0) return true
     const ptags = p.tags as Record<string, unknown> | null
     if (!ptags) return false
@@ -56,7 +60,16 @@ export function PatientWall() {
         患者管理
       </Title>
       <Group mb="md" justify="space-between">
-        <TagFilter selected={selectedTags} onChange={setSelectedTags} />
+        <Group>
+          <TextInput
+            size="xs"
+            placeholder="搜索患者..."
+            value={search}
+            onChange={(e) => setSearch(e.currentTarget.value)}
+            w={200}
+          />
+          <TagFilter selected={selectedTags} onChange={setSelectedTags} />
+        </Group>
         <Group gap="xs">
           <Button
             size="xs"
