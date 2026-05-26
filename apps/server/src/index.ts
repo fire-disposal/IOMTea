@@ -113,7 +113,14 @@ app.doc('/openapi.json', {
 // Swagger UI
 app.get('/docs', swaggerUI({ url: '/openapi.json' }))
 
-app.get('/health', (c) => c.json({ status: 'ok' }))
+app.get('/health', async (c) => {
+  try {
+    await db.execute('SELECT 1')
+    return c.json({ status: 'ok', db: 'connected' })
+  } catch {
+    return c.json({ status: 'degraded', db: 'disconnected' } as any, 503)
+  }
+})
 
 // Root: API info
 app.get('/', (c) =>
