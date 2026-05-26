@@ -41,6 +41,7 @@ export default function Profile() {
         <View className="profile-menu__item" onClick={() => Taro.navigateTo({ url: '/pages/plan/index' })}><Text>健康计划</Text></View>
         <View className="profile-menu__item" onClick={() => Taro.navigateTo({ url: '/pages/alerts/index' })}><Text>告警中心</Text></View>
         <View className="profile-menu__item" onClick={() => Taro.navigateTo({ url: '/pages/settings/index' })}><Text>系统设置</Text></View>
+        <View className="profile-menu__item" onClick={() => Taro.navigateTo({ url: '/pages/patient-select/index' })}><Text>切换患者</Text></View>
         <View className="profile-menu__item" onClick={() => Taro.navigateTo({ url: '/pages/pin-overview/index' })}><Text>设备连接</Text></View>
         <View className="profile-menu__item" onClick={handleSync}><Text>同步数据</Text></View>
         <View className="profile-menu__item" onClick={handleLogout}><Text style={{ color: '#e03131' }}>退出登录</Text></View>

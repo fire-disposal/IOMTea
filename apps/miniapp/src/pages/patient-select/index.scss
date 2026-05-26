@@ -1,0 +1,8 @@
+.patient-select-page { padding: 16px; }
+.title { font-size: 18px; font-weight: 700; margin-bottom: 16px; display: block; }
+.patient-item { padding: 12px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+.patient-item--active { background: #e7f5ff; }
+.patient-name { font-size: 16px; }
+.patient-status { font-size: 12px; color: #999; }
+.current-badge { font-size: 10px; color: #1971c2; background: #d0ebff; padding: 2px 8px; border-radius: 4px; }
+.empty { text-align: center; color: #999; margin-top: 40px; display: block; }
