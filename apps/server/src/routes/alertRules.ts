@@ -41,7 +41,7 @@ const alertRulesApp = new OpenAPIHono()
 const getRulesRoute = createRoute({
   method: 'get',
   path: '/patients/:id/alert-rules',
-  middleware: [jwtAuth, requirePermission('/alert-rules', 'write')] as const,
+  middleware: [jwtAuth, requirePermission('/alert-rules', 'read')] as const,
   responses: {
     200: {
       content: { 'application/json': { schema: z.array(z.unknown()) } },
