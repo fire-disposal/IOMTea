@@ -2,10 +2,13 @@ import { eq } from 'drizzle-orm'
 import type { DbClient } from '../../core/db'
 import { events } from '../../core/db/schema.js'
 import { simConfigs, simPatients } from '../../core/db/schema/twin.js'
+import { createChildLogger } from '../../core/lib/logger'
 import * as phys from '../../core/pipeline/physiology.js'
 import { getProfile, listProfiles, profiles } from './profiles.js'
 import type { MetricConfig, UnifiedProfile } from './profiles.js'
 import { MetricScheduler } from './scheduler.js'
+
+const logger = createChildLogger('twin-engine')
 
 interface PatientRunner {
   patientId: string
@@ -146,7 +149,7 @@ export function createSimulation(db: DbClient, config: { profileName: string; na
       metrics: metrics as any,
     } as any)
     .execute()
-    .catch((err: Error) => console.error('sim save failed', err))
+    .catch((err: Error) => { logger.error({ err }, 'sim save failed') })
   return {
     id,
     metrics: sim.metrics.map((m) => ({ name: m.name, enabled: m.enabled, config: m.config })),
@@ -161,7 +164,7 @@ export function deleteSimulation(db: DbClient, id: string): boolean {
   db.delete(simConfigs)
     .where(eq(simConfigs.id, id))
     .execute()
-    .catch(() => {})
+    .catch((err: Error) => { logger.error({ err, simId: id }, 'sim delete failed') })
   return true
 }
 
@@ -174,7 +177,7 @@ export function toggleSimulation(db: DbClient, id: string, running: boolean): bo
     .set({ running } as any)
     .where(eq(simConfigs.id, id))
     .execute()
-    .catch(() => {})
+    .catch((err: Error) => { logger.error({ err, simId: id, running }, 'sim toggle failed') })
   return true
 }
 
@@ -197,7 +200,7 @@ export function addPatient(
   db.insert(simPatients)
     .values({ simId, patientId: patient.id } as any)
     .execute()
-    .catch(() => {})
+    .catch((err: Error) => { logger.error({ err, simId, patientId: patient.id }, 'sim addPatient failed') })
   return 1
 }
 
@@ -207,7 +210,7 @@ export function removePatient(db: DbClient, simId: string, patientId: string): n
   db.delete(simPatients)
     .where(eq(simPatients.patientId, patientId) as any)
     .execute()
-    .catch(() => {})
+    .catch((err: Error) => { logger.error({ err, simId, patientId }, 'sim removePatient failed') })
   return 1
 }
 
@@ -283,7 +286,7 @@ export function renameSim(db: DbClient, simId: string, name: string): boolean {
     .set({ name } as any)
     .where(eq(simConfigs.id, simId))
     .execute()
-    .catch(() => {})
+    .catch((err: Error) => { logger.error({ err, simId, name }, 'sim rename failed') })
   return true
 }
 
@@ -420,7 +423,7 @@ export function injectScenario(
         recordedAt: now,
       } as any)
       .execute()
-      .catch(() => {})
+      .catch((err: Error) => { logger.error({ err, simId, patientId, type, event: 'observation' }, 'injectScenario observation failed') })
   }
 
   if (scenario.alert) {
@@ -442,7 +445,7 @@ export function injectScenario(
         recordedAt: now,
       } as any)
       .execute()
-      .catch(() => {})
+      .catch((err: Error) => { logger.error({ err, simId, patientId, type, event: 'alert' }, 'injectScenario alert failed') })
   }
 
   return true
