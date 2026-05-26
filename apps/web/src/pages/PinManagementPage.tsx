@@ -12,6 +12,7 @@ import {
 import { IconPlus, IconTrash } from '@tabler/icons-react'
 import { useState } from 'react'
 import { useDelete, useGet, usePost } from '../api/hooks'
+import { useAuthStore } from '../store/auth'
 
 interface Pin {
   pin: string
@@ -20,11 +21,21 @@ interface Pin {
   label: string | null
 }
 
+function getUserId(): string {
+  const token = useAuthStore.getState().token
+  if (!token) return ''
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    return payload.sub || ''
+  } catch { return '' }
+}
+
 export function PinManagementPage() {
   const { data: pins, isLoading, refetch } = useGet<Pin[]>('/pins')
   const createPin = usePost('/pins', ['pins'])
-  const deletePin = useDelete('/pins', ['pins'])
+  const deletePin = useDelete('/pins/:id', ['pins'])
   const [label, setLabel] = useState('')
+  const userId = getUserId()
 
   if (isLoading)
     return (
@@ -50,9 +61,10 @@ export function PinManagementPage() {
             size="xs"
             leftSection={<IconPlus size={12} />}
             onClick={() => {
-              createPin.mutate({ userId: 'dummy', type: 'virtual', label } as any)
+              createPin.mutate({ userId, type: 'virtual', label: label || undefined } as any)
               setLabel('')
             }}
+            disabled={!userId}
           >
             新建
           </Button>
