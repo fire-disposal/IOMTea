@@ -126,11 +126,4 @@ jobs:
           script: |
             export COMPOSE_FILE=/srv/iomtea/docker-compose.yml
             export COMPOSE_PROJECT_DIR=/srv/iomtea
-            export IMAGE_TAG=$(echo "${{ github.sha }}" | cut -c1-7)
-            # Reset DB journal to align with current migration files, then apply all
-            docker compose exec -T postgres psql -U postgres -d iomtea -c "DELETE FROM drizzle.__drizzle_migrations;"
-            docker compose run --rm server pnpm db:migrate || (
-              # Fallback: drop schema and reapply from scratch
-              docker compose exec -T postgres psql -U postgres -d iomtea -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
-              docker compose run --rm server pnpm db:migrate
-            )
+            docker compose run --rm server pnpm db:migrate
