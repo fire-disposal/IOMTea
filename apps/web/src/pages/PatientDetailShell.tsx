@@ -12,6 +12,7 @@ import {
   IconActivity,
   IconAlertTriangle,
   IconChartLine,
+  IconLink,
   IconSettings,
   IconUser,
 } from '@tabler/icons-react'
@@ -82,9 +83,11 @@ export function PatientDetailShell() {
       ? 'alerts'
       : pathname.includes('/alert-rules')
         ? 'rules'
-        : pathname.includes('/health-timeline')
-          ? 'timeline'
-          : 'overview'
+        : pathname.includes('/users')
+          ? 'users'
+          : pathname.includes('/health-timeline')
+            ? 'timeline'
+            : 'overview'
 
   if (pLoading || !patient)
     return <StateSkeleton lines={5} />
@@ -131,6 +134,7 @@ export function PatientDetailShell() {
             alerts: `/patients/${pid}/alerts`,
             rules: `/patients/${pid}/alert-rules`,
             timeline: `/patients/${pid}/health-timeline`,
+            users: `/patients/${pid}/users`,
           }
           navigate({ to: map[v] || `/patients/${pid}` })
         }}
@@ -150,6 +154,9 @@ export function PatientDetailShell() {
           </Tabs.Tab>
           <Tabs.Tab value="timeline" leftSection={<IconChartLine size={14} />}>
             时间线
+          </Tabs.Tab>
+          <Tabs.Tab value="users" leftSection={<IconLink size={14} />}>
+            关联用户
           </Tabs.Tab>
         </Tabs.List>
       </Tabs>

@@ -16,6 +16,7 @@ import { PatientAlertRules } from './pages/PatientAlertRules'
 import { PatientAlerts } from './pages/PatientAlerts'
 import { PatientDetailShell } from './pages/PatientDetailShell'
 import { PatientProfile } from './pages/PatientProfile'
+import { PatientUsers } from './pages/PatientUsers'
 import { PatientWall } from './pages/PatientWall'
 import { PinManagementPage } from './pages/PinManagementPage'
 import { FormBuilderPage } from './pages/FormBuilderPage'
@@ -100,6 +101,12 @@ const pTimelineRoute = createRoute({
   component: HealthTimeline,
 })
 
+const pUsersRoute = createRoute({
+  getParentRoute: () => patientDetailRoute,
+  path: '/users',
+  component: PatientUsers,
+})
+
 const alertsRoute = createRoute({
   getParentRoute: () => authRoute,
   path: '/alerts',
@@ -161,6 +168,7 @@ const routeTree = rootRoute.addChildren([
       pAlertsRoute,
       pRulesRoute,
       pTimelineRoute,
+      pUsersRoute,
     ]),
     alertsRoute,
     pinsRoute,

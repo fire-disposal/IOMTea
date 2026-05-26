@@ -5,14 +5,16 @@ import {
   Container,
   Group,
   Modal,
+  Stack,
   Table,
   Text,
+  TextInput,
   Title,
 } from '@mantine/core'
 import { IconEye, IconPlus } from '@tabler/icons-react'
 import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
-import { useGet } from '../api/hooks'
+import { useGet, usePost } from '../api/hooks'
 import { BatchImportModal } from '../components/BatchImportModal'
 import { StateSkeleton } from '../components/StateComponents'
 import { TagFilter } from '../components/TagFilter'
@@ -30,6 +32,9 @@ export function PatientWall() {
   const { data: patients, isLoading } = useGet<Patient[]>('/patients', { pageSize: 200 })
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [importOpen, setImportOpen] = useState(false)
+  const [createOpen, setCreateOpen] = useState(false)
+  const [newPatient, setNewPatient] = useState({ name: '', gender: '', birthDate: '', phone: '' })
+  const createPatient = usePost('/patients', ['patients'])
   const navigate = useNavigate()
   const { refetch } = useGet<Patient[]>('/patients', { pageSize: 200 })
 
@@ -52,9 +57,14 @@ export function PatientWall() {
       </Title>
       <Group mb="md" justify="space-between">
         <TagFilter selected={selectedTags} onChange={setSelectedTags} />
-        <Button size="xs" leftSection={<IconPlus size={12} />} onClick={() => setImportOpen(true)}>
-          批量导入
-        </Button>
+        <Group gap="xs">
+          <Button size="xs" variant="light" leftSection={<IconPlus size={12} />} onClick={() => setCreateOpen(true)}>
+            新建患者
+          </Button>
+          <Button size="xs" leftSection={<IconPlus size={12} />} onClick={() => setImportOpen(true)}>
+            批量导入
+          </Button>
+        </Group>
       </Group>
       {filtered.length > 50 && (
         <Text size="xs" c="dimmed" mb="xs">
@@ -105,6 +115,20 @@ export function PatientWall() {
           })}
         </Table.Tbody>
       </Table>
+      <Modal opened={createOpen} onClose={() => setCreateOpen(false)} title="新建患者" size="sm">
+        <Stack>
+          <TextInput label="姓名" required value={newPatient.name} onChange={(e) => setNewPatient({ ...newPatient, name: e.currentTarget.value })} />
+          <TextInput label="性别" value={newPatient.gender} onChange={(e) => setNewPatient({ ...newPatient, gender: e.currentTarget.value })} />
+          <TextInput label="出生日期" type="date" value={newPatient.birthDate} onChange={(e) => setNewPatient({ ...newPatient, birthDate: e.currentTarget.value })} />
+          <TextInput label="电话" value={newPatient.phone} onChange={(e) => setNewPatient({ ...newPatient, phone: e.currentTarget.value })} />
+          <Group justify="flex-end">
+            <Button variant="subtle" onClick={() => setCreateOpen(false)}>取消</Button>
+            <Button onClick={() => {
+              createPatient.mutate(newPatient as any, { onSuccess: () => { setCreateOpen(false); setNewPatient({ name: '', gender: '', birthDate: '', phone: '' }); refetch() } })
+            }} disabled={!newPatient.name}>创建</Button>
+          </Group>
+        </Stack>
+      </Modal>
       <BatchImportModal
         opened={importOpen}
         onClose={() => setImportOpen(false)}
