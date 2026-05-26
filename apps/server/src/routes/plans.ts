@@ -108,43 +108,47 @@ plansApp.openapi(completeRoute, async (c) => {
   const [plan] = await db.select().from(plans).where(eq(plans.id, planId)).limit(1)
   if (!plan) return c.json({ error: 'Not found' } as any, 404)
 
-  const [completion] = await db
-    .insert(planCompletions)
-    .values({
-      planId,
-      patientId: body.patientId,
-      userId: body.userId ?? null,
-      responses: body.responses ?? null,
-      creditsEarned: plan.rewardCredits,
-    })
-    .returning()
-
-  if (plan.rewardCredits > 0) {
-    const uid = body.userId ?? completion.userId ?? null
-    if (uid) {
-      await db.insert(creditTransactions).values({
-        userId: uid,
+  const completion = await db.transaction(async (tx) => {
+    const [row] = await tx
+      .insert(planCompletions)
+      .values({
+        planId,
         patientId: body.patientId,
-        amount: plan.rewardCredits,
-        kind: 'earn',
-        source: 'plan',
-        description: `完成: ${plan.title}`,
-      } as any)
+        userId: body.userId ?? null,
+        responses: body.responses ?? null,
+        creditsEarned: plan.rewardCredits,
+      })
+      .returning()
 
-      await db.insert(events).values({
-        patientId: body.patientId,
-        kind: 'plan_earn',
-        metric: 'credits',
-        value: plan.rewardCredits,
-        source: 'plan',
-      } as any)
+    if (plan.rewardCredits > 0) {
+      const uid = body.userId ?? row.userId ?? null
+      if (uid) {
+        await tx.insert(creditTransactions).values({
+          userId: uid,
+          patientId: body.patientId,
+          amount: plan.rewardCredits,
+          kind: 'earn',
+          source: 'plan',
+          description: `完成: ${plan.title}`,
+        } as any)
 
-      await db
-        .update(users)
-        .set({ credit: sql`${users.credit} + ${plan.rewardCredits}` } as any)
-        .where(eq(users.id, uid))
+        await tx.insert(events).values({
+          patientId: body.patientId,
+          kind: 'plan_earn',
+          metric: 'credits',
+          value: plan.rewardCredits,
+          source: 'plan',
+        } as any)
+
+        await tx
+          .update(users)
+          .set({ credit: sql`${users.credit} + ${plan.rewardCredits}` } as any)
+          .where(eq(users.id, uid))
+      }
     }
-  }
+
+    return row
+  })
 
   return c.json(completion, 201 as any)
 })

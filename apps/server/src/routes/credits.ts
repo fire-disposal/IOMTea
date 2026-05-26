@@ -62,19 +62,21 @@ const earnRoute = createRoute({
 creditsApp.openapi(earnRoute, async (c) => {
   const body = c.req.valid('json')
 
-  await db.insert(creditTransactions).values({
-    userId: body.userId,
-    patientId: body.patientId ?? null,
-    amount: body.amount,
-    kind: 'earn',
-    source: body.source,
-    description: body.description ?? null,
-  } as any)
+  await db.transaction(async (tx) => {
+    await tx.insert(creditTransactions).values({
+      userId: body.userId,
+      patientId: body.patientId ?? null,
+      amount: body.amount,
+      kind: 'earn',
+      source: body.source,
+      description: body.description ?? null,
+    } as any)
 
-  await db
-    .update(users)
-    .set({ credit: sql`${users.credit} + ${body.amount}` })
-    .where(eq(users.id, body.userId))
+    await tx
+      .update(users)
+      .set({ credit: sql`${users.credit} + ${body.amount}` })
+      .where(eq(users.id, body.userId))
+  })
 
   return c.json({ success: true }, 201 as any)
 })
@@ -113,19 +115,21 @@ creditsApp.openapi(spendRoute, async (c) => {
     return c.json({ error: 'Insufficient credits' }, 400 as any)
   }
 
-  await db.insert(creditTransactions).values({
-    userId: body.userId,
-    patientId: body.patientId ?? null,
-    amount: -body.amount,
-    kind: 'spend',
-    source: body.source,
-    description: body.description ?? null,
-  } as any)
+  await db.transaction(async (tx) => {
+    await tx.insert(creditTransactions).values({
+      userId: body.userId,
+      patientId: body.patientId ?? null,
+      amount: -body.amount,
+      kind: 'spend',
+      source: body.source,
+      description: body.description ?? null,
+    } as any)
 
-  await db
-    .update(users)
-    .set({ credit: sql`${users.credit} - ${body.amount}` })
-    .where(eq(users.id, body.userId))
+    await tx
+      .update(users)
+      .set({ credit: sql`${users.credit} - ${body.amount}` })
+      .where(eq(users.id, body.userId))
+  })
 
   return c.json({ success: true }, 201 as any)
 })
