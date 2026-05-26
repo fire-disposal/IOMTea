@@ -12,6 +12,7 @@ import {
   TextInput,
   Textarea,
   Title,
+  Tooltip,
 } from '@mantine/core'
 import { modals } from '@mantine/modals'
 import { IconEdit, IconPlus, IconTrash } from '@tabler/icons-react'
@@ -118,25 +119,29 @@ export function PlanManagementPage() {
               </Table.Td>
               <Table.Td>
                 <Group gap={4}>
-                  <ActionIcon size="xs" variant="light" onClick={() => openEdit(p)}>
-                    <IconEdit size={12} />
-                  </ActionIcon>
-                  <ActionIcon
-                    size="xs"
-                    variant="light"
-                    color="red"
-                    onClick={() =>
-                      modals.openConfirmModal({
-                        title: '确认删除',
-                        children: <Text>确定要删除计划 "{p.title}" 吗？此操作不可撤销。</Text>,
-                        labels: { confirm: '删除', cancel: '取消' },
-                        confirmProps: { color: 'red' },
-                        onConfirm: () => deletePlan.mutate(p.id),
-                      })
-                    }
-                  >
-                    <IconTrash size={12} />
-                  </ActionIcon>
+                  <Tooltip label="编辑计划" withArrow>
+                    <ActionIcon size="xs" variant="light" onClick={() => openEdit(p)}>
+                      <IconEdit size={12} />
+                    </ActionIcon>
+                  </Tooltip>
+                  <Tooltip label="删除计划" withArrow>
+                    <ActionIcon
+                      size="xs"
+                      variant="light"
+                      color="red"
+                      onClick={() =>
+                        modals.openConfirmModal({
+                          title: '确认删除',
+                          children: <Text>确定要删除计划 "{p.title}" 吗？此操作不可撤销。</Text>,
+                          labels: { confirm: '删除', cancel: '取消' },
+                          confirmProps: { color: 'red' },
+                          onConfirm: () => deletePlan.mutate(p.id),
+                        })
+                      }
+                    >
+                      <IconTrash size={12} />
+                    </ActionIcon>
+                  </Tooltip>
                 </Group>
               </Table.Td>
             </Table.Tr>

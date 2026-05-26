@@ -1,4 +1,4 @@
-import { ActionIcon, Button, Container, Group, Select, Table, Text, Title } from '@mantine/core'
+import { ActionIcon, Button, Container, Group, Select, Table, Text, Title, Tooltip } from '@mantine/core'
 import { IconPlus, IconTrash } from '@tabler/icons-react'
 import { useState } from 'react'
 import { http } from '../api/client'
@@ -73,9 +73,11 @@ export function PatientUsers() {
               <Table.Td>{l.displayName || '-'}</Table.Td>
               <Table.Td>{l.role}</Table.Td>
               <Table.Td>
-                <ActionIcon variant="light" color="red" onClick={() => removeLink(l.userId)}>
-                  <IconTrash size={14} />
-                </ActionIcon>
+                <Tooltip label="取消关联" withArrow>
+                  <ActionIcon variant="light" color="red" onClick={() => removeLink(l.userId)}>
+                    <IconTrash size={14} />
+                  </ActionIcon>
+                </Tooltip>
               </Table.Td>
             </Table.Tr>
           ))}

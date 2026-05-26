@@ -10,6 +10,7 @@ import {
   Text,
   TextInput,
   Title,
+  Tooltip,
 } from '@mantine/core'
 import { IconEye, IconPlus } from '@tabler/icons-react'
 import { useNavigate } from '@tanstack/react-router'
@@ -114,9 +115,11 @@ export function PatientWall() {
                   <Badge size="xs">{p.status}</Badge>
                 </Table.Td>
                 <Table.Td>
-                  <ActionIcon variant="light" onClick={() => navigate({ to: '/patients/' + p.id })}>
-                    <IconEye size={14} />
-                  </ActionIcon>
+                  <Tooltip label="查看患者" withArrow>
+                    <ActionIcon variant="light" onClick={() => navigate({ to: '/patients/' + p.id })}>
+                      <IconEye size={14} />
+                    </ActionIcon>
+                  </Tooltip>
                 </Table.Td>
               </Table.Tr>
             )

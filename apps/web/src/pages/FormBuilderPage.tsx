@@ -15,6 +15,7 @@ import {
   TextInput,
   Textarea,
   Title,
+  Tooltip,
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { notifications } from '@mantine/notifications'
@@ -195,24 +196,34 @@ export function FormBuilderPage() {
               </Table.Td>
               <Table.Td>
                 <Group gap="xs">
-                  <ActionIcon variant="light" onClick={() => openEdit(f)}>
-                    <IconEdit size={14} />
-                  </ActionIcon>
-                  <ActionIcon variant="light" color="blue" onClick={() => setPreviewCode(f.code)}>
-                    <IconEye size={14} />
-                  </ActionIcon>
+                  <Tooltip label="编辑" withArrow>
+                    <ActionIcon variant="light" onClick={() => openEdit(f)}>
+                      <IconEdit size={14} />
+                    </ActionIcon>
+                  </Tooltip>
+                  <Tooltip label="预览" withArrow>
+                    <ActionIcon variant="light" color="blue" onClick={() => setPreviewCode(f.code)}>
+                      <IconEye size={14} />
+                    </ActionIcon>
+                  </Tooltip>
                   {f.status === 'published' ? (
-                    <ActionIcon variant="light" color="yellow" onClick={() => unpublish(f.code)}>
-                      <IconSend size={14} style={{ transform: 'rotate(180deg)' }} />
-                    </ActionIcon>
+                    <Tooltip label="取消发布" withArrow>
+                      <ActionIcon variant="light" color="yellow" onClick={() => unpublish(f.code)}>
+                        <IconSend size={14} style={{ transform: 'rotate(180deg)' }} />
+                      </ActionIcon>
+                    </Tooltip>
                   ) : (
-                    <ActionIcon variant="light" color="green" onClick={() => publish(f.code)}>
-                      <IconSend size={14} />
-                    </ActionIcon>
+                    <Tooltip label="发布" withArrow>
+                      <ActionIcon variant="light" color="green" onClick={() => publish(f.code)}>
+                        <IconSend size={14} />
+                      </ActionIcon>
+                    </Tooltip>
                   )}
-                  <ActionIcon variant="light" color="red" onClick={() => deleteForm.mutate(f.code)}>
-                    <IconTrash size={14} />
-                  </ActionIcon>
+                  <Tooltip label="删除" withArrow>
+                    <ActionIcon variant="light" color="red" onClick={() => deleteForm.mutate(f.code)}>
+                      <IconTrash size={14} />
+                    </ActionIcon>
+                  </Tooltip>
                 </Group>
               </Table.Td>
             </Table.Tr>
@@ -353,20 +364,24 @@ export function FormBuilderPage() {
                   </Badge>
                 </Text>
                 <Group gap="xs">
-                  <ActionIcon
-                    size="sm"
-                    variant="subtle"
-                    onClick={() => {
-                      setCurrentField(f)
-                      setEditingFieldIdx(i)
-                      setFieldModal(true)
-                    }}
-                  >
-                    <IconEdit size={12} />
-                  </ActionIcon>
-                  <ActionIcon size="sm" variant="subtle" color="red" onClick={() => removeField(i)}>
-                    <IconTrash size={12} />
-                  </ActionIcon>
+                  <Tooltip label="编辑字段" withArrow>
+                    <ActionIcon
+                      size="sm"
+                      variant="subtle"
+                      onClick={() => {
+                        setCurrentField(f)
+                        setEditingFieldIdx(i)
+                        setFieldModal(true)
+                      }}
+                    >
+                      <IconEdit size={12} />
+                    </ActionIcon>
+                  </Tooltip>
+                  <Tooltip label="删除字段" withArrow>
+                    <ActionIcon size="sm" variant="subtle" color="red" onClick={() => removeField(i)}>
+                      <IconTrash size={12} />
+                    </ActionIcon>
+                  </Tooltip>
                 </Group>
               </Group>
             </Paper>

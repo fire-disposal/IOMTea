@@ -1,4 +1,4 @@
-import { ActionIcon, Badge, Container, Group, Paper, Select, Text, Title } from '@mantine/core'
+import { ActionIcon, Badge, Container, Group, Paper, Select, Text, Title, Tooltip } from '@mantine/core'
 import { IconEye } from '@tabler/icons-react'
 import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
@@ -116,13 +116,15 @@ export function AlertBoard() {
                   </Badge>
                 </Group>
               )}
-              <ActionIcon
-                variant="light"
-                size="sm"
-                onClick={() => navigate({ to: `/patients/${a.patientId}/alerts` })}
-              >
-                <IconEye size={14} />
-              </ActionIcon>
+              <Tooltip label="查看患者告警" withArrow>
+                <ActionIcon
+                  variant="light"
+                  size="sm"
+                  onClick={() => navigate({ to: `/patients/${a.patientId}/alerts` })}
+                >
+                  <IconEye size={14} />
+                </ActionIcon>
+              </Tooltip>
               <Badge size="xs" variant="light">
                 {a.status}
               </Badge>
