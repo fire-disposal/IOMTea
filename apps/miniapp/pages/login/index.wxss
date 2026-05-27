@@ -15,24 +15,27 @@
   pointer-events: none;
 }
 
-.login-bar--1 { top: 80rpx; left: -400rpx; animation-delay: 0s; transform: rotate(50deg); }
-.login-bar--2 { top: 240rpx; left: -300rpx; animation-delay: -2.4s; transform: rotate(52deg); }
-.login-bar--3 { top: 420rpx; left: -480rpx; animation-delay: -4.8s; transform: rotate(48deg); }
-.login-bar--4 { top: 580rpx; left: -240rpx; animation-delay: -7.2s; transform: rotate(50deg); }
-.login-bar--5 { top: 740rpx; left: -360rpx; animation-delay: -9.6s; transform: rotate(48deg); }
+.login-bar--1 { top: -80rpx; left: -360rpx; animation-delay: 0s; transform: rotate(48deg); }
+.login-bar--2 { top: 80rpx; left: -440rpx; animation-delay: -1.6s; transform: rotate(52deg); }
+.login-bar--3 { top: 260rpx; left: -300rpx; animation-delay: -3.8s; transform: rotate(50deg); }
+.login-bar--4 { top: 440rpx; left: -480rpx; animation-delay: -5.4s; transform: rotate(49deg); }
+.login-bar--5 { top: 600rpx; left: -240rpx; animation-delay: -7.8s; transform: rotate(51deg); }
+.login-bar--6 { top: 780rpx; left: -400rpx; animation-delay: -9.4s; transform: rotate(47deg); }
+.login-bar--7 { top: 950rpx; left: -340rpx; animation-delay: -11s; transform: rotate(50deg); }
 
 .login-bar__inner {
   border-radius: 20rpx;
-  opacity: 0.08;
   background: var(--brand-500);
-  animation: barFlow 12s linear infinite;
+  animation: barFlow 14s linear infinite;
 }
 
-.login-bar--1 .login-bar__inner { width: 360rpx; height: 16rpx; opacity: 0.10; }
-.login-bar--2 .login-bar__inner { width: 240rpx; height: 12rpx; opacity: 0.08; }
-.login-bar--3 .login-bar__inner { width: 440rpx; height: 14rpx; opacity: 0.07; }
-.login-bar--4 .login-bar__inner { width: 200rpx; height: 10rpx; opacity: 0.09; }
-.login-bar--5 .login-bar__inner { width: 320rpx; height: 16rpx; opacity: 0.06; }
+.login-bar--1 .login-bar__inner { width: 320rpx; height: 14rpx; opacity: 0.10; }
+.login-bar--2 .login-bar__inner { width: 480rpx; height: 12rpx; opacity: 0.06; }
+.login-bar--3 .login-bar__inner { width: 240rpx; height: 16rpx; opacity: 0.09; }
+.login-bar--4 .login-bar__inner { width: 400rpx; height: 10rpx; opacity: 0.07; }
+.login-bar--5 .login-bar__inner { width: 280rpx; height: 14rpx; opacity: 0.08; }
+.login-bar--6 .login-bar__inner { width: 360rpx; height: 12rpx; opacity: 0.06; }
+.login-bar--7 .login-bar__inner { width: 200rpx; height: 16rpx; opacity: 0.10; }
 
 @keyframes barFlow {
   from { transform: translateX(0); }

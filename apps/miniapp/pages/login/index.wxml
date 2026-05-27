@@ -4,6 +4,8 @@
   <view class="login-bar login-bar--3"><view class="login-bar__inner"></view></view>
   <view class="login-bar login-bar--4"><view class="login-bar__inner"></view></view>
   <view class="login-bar login-bar--5"><view class="login-bar__inner"></view></view>
+  <view class="login-bar login-bar--6"><view class="login-bar__inner"></view></view>
+  <view class="login-bar login-bar--7"><view class="login-bar__inner"></view></view>
 
   <view class="login-content anim-fade-up">
     <view class="login-icon {{iconBounce ? 'login-icon--bounce' : ''}}" bind:tap="onIconTap">🍵</view>
