@@ -2,8 +2,7 @@ import { ActionIcon, Badge, Container, Group, Paper, Select, Text, Title, Toolti
 import { IconEye } from '@tabler/icons-react'
 import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
-import { http } from '../api/client'
-import { useGet, usePost } from '../api/hooks'
+import { useGet, usePost, usePatch } from '../api/hooks'
 import { StateSkeleton } from '../components/StateComponents'
 
 interface Alert {
@@ -19,6 +18,8 @@ interface Alert {
 export function AlertBoard() {
   const { data: alerts, isLoading } = useGet<Alert[]>('/alerts', { pageSize: 100 })
   const acknowledge = usePost('/alerts/:id')
+  const resolveAlert = usePatch('/alerts/:id')
+  const closeAlert = usePost('/alerts/:id/close')
   const navigate = useNavigate()
   const [filterPatient, setFilterPatient] = useState<string | null>(null)
   const [filterSeverity, setFilterSeverity] = useState<string | null>(null)
@@ -81,7 +82,7 @@ export function AlertBoard() {
                   size="xs"
                   style={{ cursor: 'pointer' }}
                   color="green"
-                  onClick={() => acknowledge.mutate({ id: a.id, action: 'acknowledge' } as any)}
+                  onClick={() => acknowledge.mutate({ id: a.id, action: 'acknowledge' })}
                 >
                   确认
                 </Badge>
@@ -92,12 +93,7 @@ export function AlertBoard() {
                     size="xs"
                     style={{ cursor: 'pointer' }}
                     color="blue"
-                    onClick={() => {
-                      http
-                        .patch(`/alerts/${a.id}`, { action: 'resolve' })
-                        .then(() => acknowledge.reset())
-                        .catch(() => {})
-                    }}
+                    onClick={() => resolveAlert.mutate({ id: a.id, action: 'resolve' })}
                   >
                     解决
                   </Badge>
@@ -105,12 +101,7 @@ export function AlertBoard() {
                     size="xs"
                     style={{ cursor: 'pointer' }}
                     color="gray"
-                    onClick={() => {
-                      http
-                        .post(`/alerts/${a.id}/close`)
-                        .then(() => acknowledge.reset())
-                        .catch(() => {})
-                    }}
+                    onClick={() => closeAlert.mutate(a.id)}
                   >
                     关闭
                   </Badge>

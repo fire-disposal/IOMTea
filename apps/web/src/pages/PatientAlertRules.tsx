@@ -1,8 +1,8 @@
 import { Button, Container, Group, NumberInput, Paper, Switch, Text } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
 import { useEffect, useState } from 'react'
-import { http } from '../api/client'
 import { useGet } from '../api/hooks'
+import { usePut } from '../api/hooks'
 import { StateSkeleton } from '../components/StateComponents'
 import { parsePatientId } from '../lib/path'
 
@@ -23,7 +23,7 @@ export function PatientAlertRules() {
     refetch,
   } = useGet<R[]>(`/alert-rules/patients/${pid}/alert-rules`)
   const [localRules, setLocalRules] = useState<R[]>([])
-  const [saving, setSaving] = useState(false)
+  const saveRules = usePut(`/alert-rules/patients/:id/alert-rules`)
 
   useEffect(() => {
     if (rules) setLocalRules(rules)
@@ -59,23 +59,25 @@ export function PatientAlertRules() {
     setLocalRules(n)
   }
 
-  const save = async () => {
-    setSaving(true)
-    try {
-      await http.put(`/alert-rules/patients/${pid}/alert-rules`, { rules: localRules } as any)
-      notifications.show({ title: '已保存', color: 'green', message: '告警规则已更新' })
-      refetch()
-    } catch {
-      notifications.show({ title: '保存失败', color: 'red', message: '请重试' })
-    } finally {
-      setSaving(false)
-    }
+  const save = () => {
+    saveRules.mutate(
+      { id: pid, rules: localRules },
+      {
+        onSuccess: () => {
+          notifications.show({ title: '已保存', color: 'green', message: '告警规则已更新' })
+          refetch()
+        },
+        onError: () => {
+          notifications.show({ title: '保存失败', color: 'red', message: '请重试' })
+        },
+      },
+    )
   }
 
   return (
     <Container py="md">
       <Group justify="flex-end" mb="md">
-        <Button loading={saving} onClick={save}>
+        <Button loading={saveRules.isPending} onClick={save}>
           保存
         </Button>
       </Group>

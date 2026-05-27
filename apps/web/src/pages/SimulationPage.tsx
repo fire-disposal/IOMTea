@@ -5,18 +5,17 @@ import {
   Container,
   Group,
   Paper,
-  Skeleton,
   Switch,
   Text,
   TextInput,
   Title,
   Tooltip,
 } from '@mantine/core'
-import { modals } from '@mantine/modals'
 import { IconPlus, IconTrash } from '@tabler/icons-react'
 import { useState } from 'react'
-import { http } from '../api/client'
 import { useGet, usePost } from '../api/hooks'
+import { StateSkeleton } from '../components/StateComponents'
+import { confirmDelete } from '../lib/confirm-delete'
 
 interface SimConfig {
   id: string
@@ -29,29 +28,11 @@ interface SimConfig {
 export function SimulationPage() {
   const { data: sims, isLoading, refetch } = useGet<SimConfig[]>('/twin/simulations')
   const createSim = usePost('/twin/simulations', ['twin'])
+  const toggleSim = usePost('/twin/simulations/:id/toggle', ['twin'])
+  const deleteSim = usePost('/twin/simulations/:id', ['twin'])
   const [newName, setNewName] = useState('')
 
-  const toggleSim = async (id: string) => {
-    try {
-      await http.post(`/twin/simulations/${id}/toggle`)
-      refetch()
-    } catch {}
-  }
-  const deleteSim = async (id: string) => {
-    try {
-      await http.delete(`/twin/simulations/${id}`)
-      refetch()
-    } catch {}
-  }
-
-  if (isLoading)
-    return (
-      <Container py="md">
-        {Array.from({ length: 3 }, (_, i) => (
-          <Skeleton key={i} height={40} mb="sm" />
-        ))}
-      </Container>
-    )
+  if (isLoading) return <StateSkeleton lines={3} />
 
   return (
     <Container py="md">
@@ -68,12 +49,10 @@ export function SimulationPage() {
             size="xs"
             leftSection={<IconPlus size={12} />}
             onClick={() => {
-              createSim.mutate({ name: newName || '新模拟', profile: 'elderly-cardiac' } as any, {
-                onSuccess: () => {
-                  setNewName('')
-                  refetch()
-                },
-              })
+              createSim.mutate(
+                { name: newName || '新模拟', profile: 'elderly-cardiac' },
+                { onSuccess: () => setNewName('') },
+              )
             }}
           >
             创建
@@ -86,7 +65,7 @@ export function SimulationPage() {
             <Group gap="xs">
               <Switch
                 checked={s.running}
-                onChange={() => toggleSim(s.id)}
+                onChange={() => toggleSim.mutate({ id: s.id, running: !s.running })}
                 size="sm"
                 label={s.running ? '运行中' : '已停止'}
               />
@@ -101,13 +80,9 @@ export function SimulationPage() {
                 variant="light"
                 color="red"
                 onClick={() =>
-                  modals.openConfirmModal({
-                    title: '确认删除',
-                    children: <Text>确定要删除模拟 "{s.name}" 吗？此操作不可撤销。</Text>,
-                    labels: { confirm: '删除', cancel: '取消' },
-                    confirmProps: { color: 'red' },
-                    onConfirm: () => deleteSim(s.id),
-                  })
+                  confirmDelete(`确定要删除模拟 "${s.name}" 吗？此操作不可撤销。`, () =>
+                    deleteSim.mutate(s.id),
+                  )
                 }
               >
                 <IconTrash size={14} />

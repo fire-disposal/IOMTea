@@ -56,7 +56,7 @@ export function DataDashboard() {
       fn: 'avg',
       from,
     },
-    selectedPatient ? undefined : undefined,
+    undefined,
   )
 
   return (

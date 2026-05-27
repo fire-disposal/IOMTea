@@ -27,9 +27,9 @@ Page({data:{},fi:0,cr:null,dt:null,cv:0,dwt:null,dwa:false,dws:0,cc:-1,pc:-1,loc
   _uc(){var cs=this.colsRects,cf=this.data.chainFields;if(!cs||!cf)return;var labelPx=Math.round(48*this._pxr);var cons=[];for(var i=0;i<cf.length-1;i++){if(cf[i].done&&cf[i+1].done&&cs[i]&&cs[i+1]&&cf[i].selIdx>=0&&cf[i+1].selIdx>=0){var av1=cs[i].height-labelPx-12,av2=cs[i+1].height-labelPx-12;var n1=cf[i].options.length,n2=cf[i+1].options.length;var ph1=Math.max(20,av1/n1),ph2=Math.max(20,av2/n2);var y1=cs[i].top+labelPx+12+(cf[i].selIdx+0.5)*ph1;var y2=cs[i+1].top+labelPx+12+(cf[i+1].selIdx+0.5)*ph2;var midY=(y1+y2)/2;cons.push({x1:cs[i].left+cs[i].width,y:midY,w:cs[i+1].left-(cs[i].left+cs[i].width)})}}this.setData({connectors:cons})},
 
   /** Lock column ci with settle animation */
-  _lock(ci){if(this.locked[ci])return;this.locked[ci]=true;var cf=this.data.chainFields.slice();var f=cf[ci];if(f.type==='dial'){f.done=true;f.selIdx=1;var dec=Number(f.min)%1!==0||Number(f.max)%1!==0?1:0;f.selLabel=String(this.cv.toFixed(dec));this.setData({chainFields:cf,stl:1});var s=this;setTimeout(function(){s.setData({stl:2})},400);setTimeout(function(){s.setData({stl:3})},700)}
+  _lock(ci,cf){if(this.locked[ci])return cf;this.locked[ci]=true;var f=cf[ci];if(f.type==='dial'){f.done=true;f.selIdx=1;var dec=Number(f.min)%1!==0||Number(f.max)%1!==0?1:0;f.selLabel=String(this.cv.toFixed(dec));this.setData({chainFields:cf,stl:1});var s=this;setTimeout(function(){s.setData({stl:2})},400);setTimeout(function(){s.setData({stl:3})},700)}
     else if(f.type==='picker'&&f.hlIdx>=0){f.selIdx=f.hlIdx;f.selLabel=f.options[f.hlIdx].l;f.hlIdx=-1;f.done=true;wx.vibrateShort({type:'light'})}
-    this.setData({chainFields:cf})},
+    return cf},
 
   canAccess(ci){if(ci===0)return true;return this.locked[0]===true},
 
@@ -54,7 +54,7 @@ Page({data:{},fi:0,cr:null,dt:null,cv:0,dwt:null,dwa:false,dws:0,cc:-1,pc:-1,loc
     else if(typeof z==='number'){this._sd();this._sdia();this.setData({lza:false,rza:false})
       if(this.cc!==z){
         // Forward: lock previous column before transition
-        if(z < this.cc){this.locked[z]=false;cf[z].done=false}else if(this.cc>=0&&this.cc<cf.length&&!this.locked[this.cc]){this._lock(this.cc)}
+        if(z < this.cc){this.locked[z]=false;cf[z].done=false}else if(this.cc>=0&&this.cc<cf.length&&!this.locked[this.cc]){cf=this._lock(this.cc,cf)}
         if(this.cc>=0&&this.cc<cf.length)cf[this.cc].hlIdx=-1;this.pc=this.cc;this.cc=z}
       this.setData({ac:z});var f=cf[z];if(!f||!this.canAccess(z))return
       if(f.type==='picker'){var idx=this._pick(z,t.pageY);if(idx>=0&&f.hlIdx!==idx){f.hlIdx=idx;f.selLabel=f.options[idx].l;this.setData({chainFields:cf})}}
@@ -63,9 +63,9 @@ Page({data:{},fi:0,cr:null,dt:null,cv:0,dwt:null,dwa:false,dws:0,cc:-1,pc:-1,loc
     this.setData({px:t.pageX-20,py:t.pageY-20,trail:tr})},
 
   onEnd(e){var t=e.changedTouches[0],r=this.cr;if(!r)return;var z=this._z((t.pageX-r.left)/r.width),cf=this.data.chainFields.slice();if(!cf)return;this._sd();this._sdia()
-    if(z==='submit'&&cf.every(function(f){return f.selIdx>=0})){if(this.cc>=0&&this.cc<cf.length&&!this.locked[this.cc])this._lock(this.cc);this._sf();return}
+    if(z==='submit'&&cf.every(function(f){return f.selIdx>=0})){if(this.cc>=0&&this.cc<cf.length&&!this.locked[this.cc])cf=this._lock(this.cc,cf);this._sf();return}
     // Lock column if hovering an option
-    if(typeof z==='number'){var f=cf[z];if(f&&!this.locked[z]&&f.hlIdx>=0){if(f.type==='picker')this._lock(z);else if(f.type==='dial')this._lock(z)}}
+    if(typeof z==='number'&&cf[z]&&!this.locked[z]&&cf[z].hlIdx>=0)cf=this._lock(z,cf)
     // Clear picks only for unlocked columns (dial values kept)
     for(var i=0;i<cf.length;i++){if(cf[i].type==='picker'&&!this.locked[i]){cf[i].selIdx=-1;cf[i].selLabel='';cf[i].done=false;cf[i].hlIdx=-1}}
     this.locked=[];this.setData({chainFields:cf,lza:false,rza:false,ac:-1,dlv:false,daz:''});this.cc=-1;this.pc=-1;this._uc()},

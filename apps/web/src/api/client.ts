@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { decodeJwtPayload } from '../store/auth'
 import type { paths } from './types'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000'
@@ -11,13 +12,9 @@ const http = axios.create({
 let proactiveRefreshPromise: Promise<void> | null = null
 
 function getTokenExpiry(token: string): Date | null {
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]))
-    if (!payload.exp) return null
-    return new Date(payload.exp * 1000)
-  } catch {
-    return null
-  }
+  const payload = decodeJwtPayload(token)
+  if (!payload?.exp) return null
+  return new Date(payload.exp * 1000)
 }
 
 http.interceptors.request.use(async (config) => {

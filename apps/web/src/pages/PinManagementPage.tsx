@@ -4,18 +4,17 @@ import {
   Button,
   Container,
   Group,
-  Skeleton,
   Table,
-  Text,
   TextInput,
   Title,
   Tooltip,
 } from '@mantine/core'
-import { modals } from '@mantine/modals'
 import { IconPlus, IconTrash } from '@tabler/icons-react'
 import { useState } from 'react'
 import { useDelete, useGet, usePost } from '../api/hooks'
-import { useAuthStore } from '../store/auth'
+import { StateSkeleton } from '../components/StateComponents'
+import { confirmDelete } from '../lib/confirm-delete'
+import { decodeJwtPayload } from '../store/auth'
 
 interface Pin {
   pin: string
@@ -25,31 +24,20 @@ interface Pin {
 }
 
 function getUserId(): string {
-  const token = useAuthStore.getState().token
+  const token = localStorage.getItem('token')
   if (!token) return ''
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]))
-    return payload.sub || ''
-  } catch {
-    return ''
-  }
+  const payload = token ? decodeJwtPayload(token) : null
+  return payload?.sub || ''
 }
 
 export function PinManagementPage() {
-  const { data: pins, isLoading, refetch } = useGet<Pin[]>('/pins')
+  const { data: pins, isLoading } = useGet<Pin[]>('/pins')
   const createPin = usePost('/pins', ['pins'])
   const deletePin = useDelete('/pins/:id', ['pins'])
   const [label, setLabel] = useState('')
   const userId = getUserId()
 
-  if (isLoading)
-    return (
-      <Container py="md">
-        {Array.from({ length: 3 }, (_, i) => (
-          <Skeleton key={i} height={24} mb="sm" />
-        ))}
-      </Container>
-    )
+  if (isLoading) return <StateSkeleton lines={3} />
 
   return (
     <Container py="md">
@@ -66,7 +54,7 @@ export function PinManagementPage() {
             size="xs"
             leftSection={<IconPlus size={12} />}
             onClick={() => {
-              createPin.mutate({ userId, type: 'virtual', label: label || undefined } as any)
+              createPin.mutate({ userId, type: 'virtual', label: label || undefined })
               setLabel('')
             }}
             disabled={!userId}
@@ -98,13 +86,9 @@ export function PinManagementPage() {
                     variant="light"
                     color="red"
                     onClick={() =>
-                      modals.openConfirmModal({
-                        title: '确认删除',
-                        children: <Text>确定要删除 PIN "{p.pin}" 吗？此操作不可撤销。</Text>,
-                        labels: { confirm: '删除', cancel: '取消' },
-                        confirmProps: { color: 'red' },
-                        onConfirm: () => deletePin.mutate(p.pin),
-                      })
+                      confirmDelete(`确定要删除 PIN "${p.pin}" 吗？此操作不可撤销。`, () =>
+                        deletePin.mutate(p.pin),
+                      )
                     }
                   >
                     <IconTrash size={14} />

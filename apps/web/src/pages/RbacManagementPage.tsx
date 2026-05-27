@@ -1,7 +1,8 @@
-import { Badge, Container, Group, Paper, Select, Table, Text, Title } from '@mantine/core'
+import { Badge, Container, Group, Paper, Table, Text, Title } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
 import { IconShield } from '@tabler/icons-react'
 import { useGet, usePatch } from '../api/hooks'
+import { RoleSelect } from '../components/RoleSelect'
 import { StateSkeleton } from '../components/StateComponents'
 
 interface User {
@@ -22,11 +23,7 @@ export function RbacManagementPage() {
       { id: userId, role: newRole },
       {
         onSuccess: () =>
-          notifications.show({
-            title: '角色已更新',
-            message: `用户角色已更新为 ${newRole}`,
-            color: 'green',
-          }),
+          notifications.show({ title: '角色已更新', message: `用户角色已更新为 ${newRole}`, color: 'green' }),
         onError: () =>
           notifications.show({ title: '更新失败', message: '角色更新失败', color: 'red' }),
       },
@@ -67,17 +64,7 @@ export function RbacManagementPage() {
                   </Badge>
                 </Table.Td>
                 <Table.Td>
-                  <Select
-                    size="xs"
-                    data={[
-                      { value: 'super_admin', label: '超级管理员' },
-                      { value: 'admin', label: '管理员' },
-                      { value: 'user', label: '普通用户' },
-                    ]}
-                    value={u.role}
-                    onChange={(v) => v && handleRoleChange(u.id, v)}
-                    w={140}
-                  />
+                  <RoleSelect value={u.role} onChange={(v) => handleRoleChange(u.id, v)} />
                 </Table.Td>
               </Table.Tr>
             ))}

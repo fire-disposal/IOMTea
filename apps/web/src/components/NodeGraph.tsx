@@ -11,7 +11,7 @@ import {
   Tooltip,
 } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
-import { IconFilter, IconLink, IconTrash } from '@tabler/icons-react'
+import { IconFilter } from '@tabler/icons-react'
 import {
   Background,
   BackgroundVariant,

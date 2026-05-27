@@ -14,10 +14,10 @@ import {
   Title,
   Tooltip,
 } from '@mantine/core'
-import { modals } from '@mantine/modals'
 import { IconEdit, IconPlus, IconTrash } from '@tabler/icons-react'
 import { useState } from 'react'
 import { useDelete, useGet, usePatch, usePost } from '../api/hooks'
+import { confirmDelete } from '../lib/confirm-delete'
 
 interface Plan {
   id: string
@@ -147,13 +147,10 @@ export function PlanManagementPage() {
                       variant="light"
                       color="red"
                       onClick={() =>
-                        modals.openConfirmModal({
-                          title: '确认删除',
-                          children: <Text>确定要删除计划 "{p.title}" 吗？此操作不可撤销。</Text>,
-                          labels: { confirm: '删除', cancel: '取消' },
-                          confirmProps: { color: 'red' },
-                          onConfirm: () => deletePlan.mutate(p.id),
-                        })
+                        confirmDelete(
+                          `确定要删除计划 "${p.title}" 吗？此操作不可撤销。`,
+                          () => deletePlan.mutate(p.id),
+                        )
                       }
                     >
                       <IconTrash size={12} />

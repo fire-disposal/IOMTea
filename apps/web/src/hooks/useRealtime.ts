@@ -17,12 +17,17 @@ interface RealtimeOptions {
 
 export function useRealtime({ patientId, onVitals, onAlert }: RealtimeOptions) {
   const wsRef = useRef<WebSocket | null>(null)
+  const onVitalsRef = useRef(onVitals)
+  const onAlertRef = useRef(onAlert)
+  onVitalsRef.current = onVitals
+  onAlertRef.current = onAlert
 
   useEffect(() => {
     const token = localStorage.getItem('token')
     if (!token) return
 
-    const url = `ws://localhost:3000/ws?token=${token}${patientId ? `&patientId=${patientId}` : ''}`
+    const wsBase = import.meta.env.VITE_WS_URL || 'ws://localhost:3000'
+    const url = `${wsBase}/ws?token=${token}${patientId ? `&patientId=${patientId}` : ''}`
     const ws = new WebSocket(url)
     wsRef.current = ws
 
@@ -35,13 +40,15 @@ export function useRealtime({ patientId, onVitals, onAlert }: RealtimeOptions) {
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data)
-        if (data.type === 'vitals' && onVitals) {
-          onVitals(data)
+        if (data.type === 'vitals') {
+          onVitalsRef.current?.(data)
         }
-        if (data.type === 'alert' && onAlert) {
-          onAlert(data)
+        if (data.type === 'alert') {
+          onAlertRef.current?.(data)
         }
-      } catch {}
+      } catch {
+        // ignore malformed messages
+      }
     }
 
     ws.onerror = () => {}

@@ -1,7 +1,9 @@
-import { Container, Select, Skeleton, Table, TextInput, Title } from '@mantine/core'
+import { Container, Table, TextInput, Title } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
 import { useState } from 'react'
 import { useGet, usePatch } from '../api/hooks'
+import { RoleSelect } from '../components/RoleSelect'
+import { StateSkeleton } from '../components/StateComponents'
 
 interface User {
   id: string
@@ -27,25 +29,14 @@ export function UserManagementPage() {
       { id: userId, role: newRole },
       {
         onSuccess: () =>
-          notifications.show({
-            title: '角色已更新',
-            message: `用户角色已更新为 ${newRole}`,
-            color: 'green',
-          }),
+          notifications.show({ title: '角色已更新', message: `用户角色已更新为 ${newRole}`, color: 'green' }),
         onError: () =>
           notifications.show({ title: '更新失败', message: '角色更新失败', color: 'red' }),
       },
     )
   }
 
-  if (isLoading)
-    return (
-      <Container py="md">
-        {Array.from({ length: 4 }, (_, i) => (
-          <Skeleton key={i} height={24} mb="sm" />
-        ))}
-      </Container>
-    )
+  if (isLoading) return <StateSkeleton lines={4} />
 
   return (
     <Container py="md">
@@ -75,17 +66,7 @@ export function UserManagementPage() {
               <Table.Td>{u.username}</Table.Td>
               <Table.Td>{u.displayName ?? '-'}</Table.Td>
               <Table.Td>
-                <Select
-                  size="xs"
-                  data={[
-                    { value: 'super_admin', label: '超级管理员' },
-                    { value: 'admin', label: '管理员' },
-                    { value: 'user', label: '普通用户' },
-                  ]}
-                  value={u.role}
-                  onChange={(v) => v && handleRoleChange(u.id, v)}
-                  w={140}
-                />
+                <RoleSelect value={u.role} onChange={(v) => handleRoleChange(u.id, v)} />
               </Table.Td>
               <Table.Td>{u.status}</Table.Td>
             </Table.Tr>
