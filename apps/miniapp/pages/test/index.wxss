@@ -56,7 +56,7 @@
 .test-col-label { text-align: center; font-size: 22rpx; color: var(--text-secondary); padding: 8rpx 0; margin-bottom: 4rpx; border-bottom: 1rpx solid #f0f0e8; flex-shrink: 0; }
 
 /* Picker column */
-.test-picker-col { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 4rpx; }
+.test-picker-col { flex: 1; display: flex; flex-direction: column; padding-top: 12rpx; }
 .test-opt { display: flex; align-items: center; justify-content: space-between; padding: 16rpx 12rpx; border-radius: 10rpx; transition: all 0.1s; }
 .test-opt--hl { background: rgba(107,165,57,0.15); transform: scale(1.03); box-shadow: inset 4rpx 0 0 var(--brand-500); }
 .test-opt--locked { background: rgba(107,165,57,0.06); border: 1rpx solid var(--brand-500); }
@@ -73,6 +73,9 @@
 .test-dial-val--live { color: var(--brand-500); }
 .test-dial-unit { font-size: 22rpx; color: var(--text-secondary); display: block; }
 .test-dial-limits { display: flex; justify-content: space-between; font-size: 18rpx; color: #ccc; padding: 0 4rpx; }
+
+/* Connector lines between locked options */
+.test-connector { position: absolute; height: 2rpx; background: var(--brand-500); opacity: 0.5; pointer-events: none; border-radius: 1rpx; }
 
 /* Pointer */
 .test-pointer { position: fixed; width: 40rpx; height: 40rpx; border-radius: 50%; background: rgba(107,165,57,0.18); pointer-events: none; z-index: 999; }

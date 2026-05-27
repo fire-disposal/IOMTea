@@ -52,6 +52,11 @@
           <view class="test-dial-limits"><text>{{item.min}}</text><text>{{item.max}}</text></view>
         </view>
       </view>
+
+      <!-- Connector lines between locked options -->
+      <view wx:for="{{connectors}}" wx:key="i" class="test-connector"
+        style="left:{{item.x1}}px;top:{{item.y}}px;width:{{item.w}}px">
+      </view>
     </view>
 
     <!-- Right edge -->
@@ -61,14 +66,6 @@
         <text class="test-edge-label">{{rl}}</text>
       </view>
       <text wx:else class="test-edge-text">{{odd ? '取消 →' : '提交 →'}}</text>
-    </view>
-
-    <!-- Chain -->
-    <view class="test-chain">
-      <view wx:for="{{chain}}" wx:key="i" class="test-chain-node {{item.active ? 'test-chain-node--active' : ''}} {{item.locked ? 'test-chain-node--locked' : ''}}">
-        <text wx:if="{{item.locked}}" class="test-chain-text">{{item.label}}</text>
-      </view>
-      <view wx:for="{{chainLinks}}" wx:key="i" class="test-chain-link {{item.active ? 'test-chain-link--active' : ''}}"></view>
     </view>
 
     <view wx:if="{{pv}}" class="test-pointer" style="left:{{px}}px;top:{{py}}px"></view>
