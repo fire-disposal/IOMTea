@@ -1,0 +1,71 @@
+<view class="page form-page">
+  <block wx:if="{{!form}}">
+    <view wx:for="{{[1,2,3,4]}}" wx:key="*this" class="card-skeleton anim-pulse"
+      style="height:{{index===0 ? '40' : '60'}}rpx;margin:0 16rpx {{index===0?'':'12rpx'}};border-radius:8rpx;background:var(--text-secondary);opacity:{{index===0?'0.12':'0.1'}}"></view>
+  </block>
+
+  <block wx:if="{{form}}">
+    <text class="form-title">{{form.title}}</text>
+    <text wx:if="{{form.description}}" class="form-desc">{{form.description}}</text>
+
+    <view wx:for="{{form.fields}}" wx:key="id" wx:for-item="f" class="form-field">
+      <text class="form-field-label">
+        {{f.label}}
+        <text wx:if="{{f.required}}" class="required"> *</text>
+      </text>
+
+      <block wx:if="{{f.type === 'choice' && f.options}}">
+        <radio-group data-field-id="{{f.id}}" bindchange="onRadioChange">
+          <label wx:for="{{f.options}}" wx:key="value" wx:for-item="o">
+            <radio value="{{o.value}}" checked="{{responses[f.id] === o.value}}" />
+            <text>{{o.label}}</text>
+          </label>
+        </radio-group>
+      </block>
+
+      <block wx:if="{{f.type === 'multi' && f.options}}">
+        <checkbox-group data-field-id="{{f.id}}" bindchange="onCheckboxChange">
+          <label wx:for="{{f.options}}" wx:key="value" wx:for-item="o">
+            <checkbox value="{{o.value}}" checked="{{(responses[f.id] || []).indexOf(o.value) > -1}}" />
+            <text>{{o.label}}</text>
+          </label>
+        </checkbox-group>
+      </block>
+
+      <block wx:if="{{f.type === 'likert' && f.labels}}">
+        <radio-group data-field-id="{{f.id}}" bindchange="onRadioChange">
+          <label wx:for="{{f.labels}}" wx:key="*this" wx:for-index="li" wx:for-item="labelItem">
+            <radio value="{{li}}" checked="{{responses[f.id] === li}}" />
+            <text>{{labelItem}}</text>
+          </label>
+        </radio-group>
+      </block>
+
+      <block wx:if="{{f.type === 'vas'}}">
+        <view class="vas-slider">
+          <text wx:if="{{f.min_label}}" class="vas-label">{{f.min_label}}</text>
+          <slider min="0" max="100" step="1" value="{{responses[f.id] || 50}}" data-field-id="{{f.id}}"
+            bindchange="onSliderChange" show-value />
+          <text wx:if="{{f.max_label}}" class="vas-label">{{f.max_label}}</text>
+        </view>
+      </block>
+
+      <block wx:if="{{f.type === 'number'}}">
+        <input type="number" placeholder="{{f.min || ''}}{{f.min&&f.max?' - ':''}}{{f.max||''}}"
+          value="{{responses[f.id] || ''}}" data-field-id="{{f.id}}" bindinput="onNumberInput" />
+      </block>
+
+      <block wx:if="{{f.type === 'text'}}">
+        <textarea placeholder="{{f.placeholder || ''}}" value="{{responses[f.id] || ''}}"
+          data-field-id="{{f.id}}" bindinput="onTextareaInput" maxlength="2000" />
+      </block>
+    </view>
+
+    <view class="form-submit">
+      <button class="submit-btn {{submitting ? 'submit-btn--loading' : ''}}"
+        bind:tap="{{submitting ? '' : 'submit'}}">
+        {{submitting ? '提交中...' : '提交'}}
+      </button>
+    </view>
+  </block>
+</view>

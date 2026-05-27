@@ -1,0 +1,61 @@
+.goals-page {
+  padding: 24rpx;
+  min-height: 100vh;
+  background: var(--bg-page);
+}
+
+.goals-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24rpx;
+}
+
+.goals-back {
+  font-size: 28rpx;
+  color: var(--brand-500);
+  margin-right: 16rpx;
+}
+
+.goals-title {
+  font-size: 36rpx;
+  font-weight: 700;
+}
+
+.goals-section {
+  background: var(--bg-card);
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 16rpx;
+}
+
+.goals-section-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  margin-bottom: 16rpx;
+  display: block;
+}
+
+.goals-field {
+  margin-bottom: 16rpx;
+}
+
+.goals-field-label {
+  font-size: 26rpx;
+  color: var(--text-secondary);
+  display: block;
+  margin-bottom: 8rpx;
+}
+
+input {
+  font-size: 28rpx;
+  padding: 16rpx;
+  border: 1rpx solid #e0e0e0;
+  border-radius: 8rpx;
+  background: var(--bg-page);
+}
+
+.goals-save {
+  background: var(--brand-500);
+  color: #fff;
+  border-radius: 12rpx;
+}

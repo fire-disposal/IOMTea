@@ -1,0 +1,38 @@
+.page {
+  padding: 24rpx;
+  min-height: 100vh;
+  background: var(--bg-page);
+}
+
+.form-group {
+  background: var(--bg-card);
+  padding: 24rpx;
+  border-radius: 12rpx;
+  margin-bottom: 16rpx;
+}
+
+.label {
+  font-size: 28rpx;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 12rpx;
+}
+
+input {
+  font-size: 28rpx;
+  padding: 16rpx;
+  border: 1rpx solid #e0e0e0;
+  border-radius: 8rpx;
+}
+
+.btn {
+  width: 100%;
+  margin-bottom: 12rpx;
+  background: var(--brand-500);
+  color: #fff;
+  border-radius: 12rpx;
+}
+
+.btn-logout {
+  background: #e03131;
+}

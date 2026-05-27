@@ -1,0 +1,25 @@
+<view class="records-page">
+  <view class="records-header">
+    <text class="records-back" bind:tap="onBack">← 返回</text>
+    <text class="records-title">{{label}}历史</text>
+    <view style="width:48rpx"></view>
+  </view>
+
+  <view wx:if="{{loading}}" class="records-skeleton">
+    <view wx:for="{{[1,2,3,4,5]}}" wx:key="*this" class="record-item-skeleton"></view>
+  </view>
+
+  <view wx:if="{{!loading && records.length === 0}}" class="records-empty">
+    <view class="records-empty-icon">📋</view>
+    <text class="records-empty-text">暂无记录</text>
+    <text class="records-empty-hint">开始记录你的第一条健康数据</text>
+    <button class="records-empty-btn" bind:tap="onBack">去记录</button>
+  </view>
+
+  <view wx:if="{{!loading && records.length > 0}}" class="records-list">
+    <view wx:for="{{records}}" wx:key="id" class="record-item">
+      <text class="record-item-time">{{item.time}}</text>
+      <text class="record-item-value">{{item.content}}</text>
+    </view>
+  </view>
+</view>

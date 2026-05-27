@@ -1,0 +1,93 @@
+.form-page {
+  padding: 24rpx;
+  min-height: 100vh;
+  background: var(--bg-page);
+}
+
+.form-title {
+  font-size: 36rpx;
+  font-weight: 700;
+  display: block;
+  margin-bottom: 8rpx;
+}
+
+.form-desc {
+  font-size: 26rpx;
+  color: var(--text-secondary);
+  display: block;
+  margin-bottom: 24rpx;
+}
+
+.form-field {
+  background: var(--bg-card);
+  padding: 20rpx;
+  border-radius: 12rpx;
+  margin-bottom: 12rpx;
+}
+
+.form-field-label {
+  font-size: 28rpx;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 12rpx;
+}
+
+.required {
+  color: var(--color-error);
+}
+
+radio-group, checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+label {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  font-size: 28rpx;
+}
+
+.vas-slider {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.vas-label {
+  font-size: 22rpx;
+  color: var(--text-secondary);
+}
+
+input, textarea {
+  font-size: 28rpx;
+  padding: 16rpx;
+  border: 1rpx solid #e0e0e0;
+  border-radius: 8rpx;
+  background: var(--bg-page);
+}
+
+textarea {
+  min-height: 120rpx;
+}
+
+.form-submit {
+  margin-top: 24rpx;
+}
+
+.submit-btn {
+  background: var(--brand-500);
+  color: #fff;
+  border-radius: 12rpx;
+  font-size: 30rpx;
+}
+
+.submit-btn--loading {
+  opacity: 0.6;
+}
+
+.card-skeleton {
+  background: var(--text-secondary);
+  border-radius: 8rpx;
+}

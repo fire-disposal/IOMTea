@@ -1,0 +1,45 @@
+.page {
+  padding: 24rpx;
+  min-height: 100vh;
+  background: var(--bg-page);
+}
+
+.title {
+  font-size: 36rpx;
+  font-weight: 700;
+  display: block;
+  margin-bottom: 24rpx;
+}
+
+.patient-item {
+  display: flex;
+  align-items: center;
+  background: var(--bg-card);
+  padding: 24rpx;
+  border-radius: 12rpx;
+  margin-bottom: 8rpx;
+}
+
+.patient-item--active {
+  border: 2rpx solid var(--brand-500);
+}
+
+.patient-name {
+  font-size: 30rpx;
+  font-weight: 600;
+  flex: 1;
+}
+
+.patient-status {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  margin-right: 12rpx;
+}
+
+.current-badge {
+  font-size: 22rpx;
+  background: #f0f7e8;
+  color: var(--brand-500);
+  padding: 4rpx 12rpx;
+  border-radius: 10rpx;
+}

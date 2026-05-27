@@ -1,0 +1,52 @@
+<view class="goals-page">
+  <view class="goals-header">
+    <text class="goals-back" bind:tap="onBack">← 返回</text>
+    <text class="goals-title">健康目标</text>
+  </view>
+
+  <view class="goals-section">
+    <text class="goals-section-title">血糖目标</text>
+    <view class="goals-field">
+      <text class="goals-field-label">空腹血糖最低 (mmol/L)</text>
+      <input type="digit" value="{{goals.bloodGlucose.fastingMin}}" bindinput="onGlucoseFastingMinInput" />
+    </view>
+    <view class="goals-field">
+      <text class="goals-field-label">空腹血糖最高 (mmol/L)</text>
+      <input type="digit" value="{{goals.bloodGlucose.fastingMax}}" bindinput="onGlucoseFastingMaxInput" />
+    </view>
+    <view class="goals-field">
+      <text class="goals-field-label">餐后血糖最高 (mmol/L)</text>
+      <input type="digit" value="{{goals.bloodGlucose.postprandialMax}}" bindinput="onGlucosePostprandialMaxInput" />
+    </view>
+  </view>
+
+  <view class="goals-section">
+    <text class="goals-section-title">体重目标</text>
+    <view class="goals-field">
+      <text class="goals-field-label">目标体重 (kg)</text>
+      <input type="digit" value="{{goals.weight.targetKg}}" bindinput="onWeightTargetInput" />
+    </view>
+    <view class="goals-field">
+      <text class="goals-field-label">最低体重 (kg)</text>
+      <input type="digit" value="{{goals.weight.minKg}}" bindinput="onWeightMinInput" />
+    </view>
+    <view class="goals-field">
+      <text class="goals-field-label">最高体重 (kg)</text>
+      <input type="digit" value="{{goals.weight.maxKg}}" bindinput="onWeightMaxInput" />
+    </view>
+  </view>
+
+  <view class="goals-section">
+    <text class="goals-section-title">血压目标</text>
+    <view class="goals-field">
+      <text class="goals-field-label">收缩压上限 (mmHg)</text>
+      <input type="digit" value="{{goals.bloodPressure.systolicMax}}" bindinput="onBpSystolicInput" />
+    </view>
+    <view class="goals-field">
+      <text class="goals-field-label">舒张压上限 (mmHg)</text>
+      <input type="digit" value="{{goals.bloodPressure.diastolicMax}}" bindinput="onBpDiastolicInput" />
+    </view>
+  </view>
+
+  <button class="goals-save" bind:tap="save">保存</button>
+</view>

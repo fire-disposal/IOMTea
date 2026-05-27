@@ -1,0 +1,19 @@
+<view class="pin-page">
+  <text class="pin-page-title">设备连接</text>
+  <text class="pin-page-subtitle">在传感设备上输入 PIN 码以连接数据</text>
+
+  <view wx:if="{{loading}}" class="pin-page-skeleton"></view>
+
+  <view wx:for="{{pins}}" wx:key="pin" class="pin-card">
+    <text class="pin-card-code">{{item.pin}}</text>
+    <text wx:if="{{item.nickname}}" class="pin-card-nickname">{{item.nickname}}</text>
+    <text wx:if="{{item.label}}" class="pin-card-label">{{item.label}}</text>
+    <view class="pin-card-actions">
+      <button class="pin-card-copy" data-pin="{{item.pin}}" bind:tap="copyPin">复制 PIN</button>
+    </view>
+  </view>
+
+  <view class="pin-page-nav">
+    <button bind:tap="goHome">进入首页</button>
+  </view>
+</view>

@@ -1,0 +1,18 @@
+<view class="tracking-page">
+  <view class="tracking-header">
+    <text class="tracking-back" bind:tap="onBack">← 返回</text>
+    <text class="tracking-title">记录项目设置</text>
+  </view>
+  <view wx:for="{{modules}}" wx:key="key" class="tracking-item">
+    <view class="tracking-item-row">
+      <text class="tracking-item-icon">{{item.icon}}</text>
+      <text class="tracking-item-label">{{item.label}}</text>
+      <switch checked="{{config[item.key].enabled}}" data-key="{{item.key}}" bindchange="onToggle" />
+    </view>
+    <view wx:if="{{config[item.key].enabled}}" class="tracking-item-reminders">
+      <text wx:for="{{['早','中','晚','睡前']}}" wx:key="*this" wx:for-item="time"
+        class="tracking-chip {{config[item.key].reminderTimes.indexOf(time) > -1 ? 'tracking-chip--active' : ''}}"
+        data-key="{{item.key}}" data-time="{{time}}" bind:tap="onReminderToggle">{{time}}</text>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,10 @@
+<view class="page">
+  <picker mode="selector" range="{{patientNames}}" value="{{selectedIndex}}" bindchange="onPickerChange">
+    <view class="picker">当前患者: {{selectedName}}</view>
+  </picker>
+  <text wx:if="{{vitals.length === 0}}" class="empty">暂无数据</text>
+  <view wx:for="{{vitals}}" wx:key="metric" class="vital-item">
+    <text class="vital-metric">{{item.metric}}</text>
+    <text class="vital-value">{{item.value}} {{item.unit}}</text>
+  </view>
+</view>

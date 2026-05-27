@@ -1,0 +1,29 @@
+.login-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: var(--bg-page);
+}
+
+.login-logo {
+  font-size: 64rpx;
+  font-weight: 700;
+  color: var(--brand-500);
+  margin-bottom: 16rpx;
+}
+
+.login-desc {
+  font-size: 28rpx;
+  color: var(--text-secondary);
+  margin-bottom: 80rpx;
+}
+
+.login-btn {
+  background: var(--brand-500);
+  color: #fff;
+  border-radius: 16rpx;
+  font-size: 32rpx;
+  padding: 24rpx 80rpx;
+}

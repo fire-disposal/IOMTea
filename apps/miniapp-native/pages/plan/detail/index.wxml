@@ -1,0 +1,30 @@
+<view class="plan-detail">
+  <view class="plan-detail-header">
+    <text class="plan-detail-back" bind:tap="onBack">← 返回</text>
+    <text class="plan-detail-title">{{meta.label}} · 提醒设置</text>
+    <view style="width:48rpx"></view>
+  </view>
+
+  <view class="plan-detail-section">
+    <text class="plan-detail-section-title">提醒时段</text>
+    <view wx:for="{{slots}}" wx:key="index" wx:for-index="idx" class="reminder-slot">
+      <view class="reminder-slot-left" data-index="{{idx}}" bind:tap="onSlotToggle">
+        <checkbox value="{{idx}}" checked="{{item.enabled}}" />
+        <text class="reminder-slot-label">{{item.label}}</text>
+      </view>
+      <picker wx:if="{{item.enabled}}" mode="time"
+        value="{{item.hour < 10 ? '0' + item.hour : '' + item.hour}}:{{item.min < 10 ? '0' + item.min : '' + item.min}}"
+        data-index="{{idx}}" bindchange="onTimeChange">
+        <text class="reminder-slot-time">
+          {{item.hour < 10 ? '0' + item.hour : '' + item.hour}}:{{item.min < 10 ? '0' + item.min : '' + item.min}}
+        </text>
+      </picker>
+    </view>
+  </view>
+
+  <view class="plan-detail-footer">
+    <button class="btn-save" disabled="{{saving}}" bind:tap="handleSave">
+      {{saving ? '保存中...' : '保存'}}
+    </button>
+  </view>
+</view>

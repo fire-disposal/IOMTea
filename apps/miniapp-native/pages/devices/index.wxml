@@ -1,0 +1,10 @@
+<view class="page">
+  <text wx:if="{{pins.length === 0}}" class="empty">无设备</text>
+  <view wx:for="{{pins}}" wx:key="pin" class="device-item">
+    <text class="device-serial">{{item.pin}}</text>
+    <view class="device-meta">
+      <text class="device-type">{{item.type || '设备'}}</text>
+      <text wx:if="{{item.label}}" class="device-status">{{item.label}}</text>
+    </view>
+  </view>
+</view>

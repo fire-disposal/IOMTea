@@ -1,0 +1,26 @@
+<view class="plan-page">
+  <view class="plan-header">
+    <text class="plan-back" bind:tap="onBack">← 返回</text>
+    <text class="plan-title">我的健康计划</text>
+    <view style="width:48rpx"></view>
+  </view>
+
+  <view class="plan-list">
+    <view wx:for="{{HEALTH_MODULE_KEYS}}" wx:key="*this" wx:for-item="key" class="plan-item">
+      <view class="plan-item-main" data-key="{{key}}" bind:tap="onToggle">
+        <checkbox value="{{key}}" checked="{{items[key].enabled}}" />
+        <text class="plan-item-icon">{{HEALTH_MODULE_META[key].icon}}</text>
+        <text class="plan-item-label">{{HEALTH_MODULE_META[key].label}}</text>
+      </view>
+      <view wx:if="{{items[key].enabled}}" class="plan-item-gear" data-key="{{key}}" bind:tap="onDetailTap">
+        <text>⚙</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="plan-footer">
+    <button class="btn-save" disabled="{{saving}}" bind:tap="handleSave">
+      {{saving ? '保存中...' : '保存计划'}}
+    </button>
+  </view>
+</view>

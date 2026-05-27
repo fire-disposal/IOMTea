@@ -1,0 +1,9 @@
+<view class="page">
+  <view class="form-group">
+    <text class="label">服务器地址</text>
+    <input value="{{serverUrl}}" bindinput="onUrlInput" placeholder="http://localhost:3000" />
+  </view>
+  <button class="btn" bind:tap="save">保存</button>
+  <button class="btn" bind:tap="testConn">测试连接</button>
+  <button class="btn btn-logout" bind:tap="logout">退出登录</button>
+</view>
