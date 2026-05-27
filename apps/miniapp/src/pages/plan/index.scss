@@ -69,3 +69,15 @@
     color: var(--text-secondary);
   }
 }
+
+.btn-save {
+  width: 100%;
+  background: var(--brand-500);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 14px 0;
+  text-align: center;
+}

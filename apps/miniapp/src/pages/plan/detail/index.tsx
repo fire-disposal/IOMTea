@@ -1,5 +1,4 @@
-import { Button, DatePicker } from '@nutui/nutui-react'
-import { Checkbox, Text, View } from '@tarojs/components'
+import { Button, Checkbox, Picker, Text, View } from '@tarojs/components'
 import Taro, { useRouter } from '@tarojs/taro'
 import { useEffect, useState } from 'react'
 import { HEALTH_MODULE_META, type HealthModuleKey } from '../../../constants/modules'
@@ -28,8 +27,6 @@ export default function PlanDetailPage() {
   const [slots, setSlots] = useState<ReminderSlot[]>(DEFAULT_SLOTS)
   const [frequency, setFrequency] = useState<'daily' | 'multiple'>('daily')
   const [saving, setSaving] = useState(false)
-  const [pickerVisible, setPickerVisible] = useState(false)
-  const [editingSlot, setEditingSlot] = useState<number>(-1)
 
   useEffect(() => {
     trpc.plan.get
@@ -111,42 +108,26 @@ export default function PlanDetailPage() {
               <Text className="reminder-slot__label">{slot.label}</Text>
             </View>
             {slot.enabled && (
-              <Text
-                className="reminder-slot__time"
-                onClick={() => {
-                  setEditingSlot(i)
-                  setPickerVisible(true)
+              <Picker
+                mode="time"
+                value={`${String(slot.hour).padStart(2, '0')}:${String(slot.min).padStart(2, '0')}`}
+                onChange={(e) => {
+                  const [h, m] = e.detail.value.split(':').map(Number)
+                  setSlots((prev) => prev.map((s, j) => (j === i ? { ...s, hour: h, min: m } : s)))
                 }}
               >
-                {String(slot.hour).padStart(2, '0')}:{String(slot.min).padStart(2, '0')}
-              </Text>
+                <Text className="reminder-slot__time">
+                  {String(slot.hour).padStart(2, '0')}:{String(slot.min).padStart(2, '0')}
+                </Text>
+              </Picker>
             )}
           </View>
         ))}
       </View>
 
-      <DatePicker
-        visible={pickerVisible}
-        title="选择时间"
-        type="hour-minutes"
-        value={
-          editingSlot >= 0
-            ? new Date(2024, 0, 1, slots[editingSlot].hour, slots[editingSlot].min)
-            : new Date(2024, 0, 1, 8, 0)
-        }
-        onConfirm={(_options: any, values: any[]) => {
-          const v0 = values[0] as Date
-          const hour = v0.getHours()
-          const min = v0.getMinutes()
-          setSlots((prev) => prev.map((s, j) => (j === editingSlot ? { ...s, hour, min } : s)))
-          setPickerVisible(false)
-        }}
-        onClose={() => setPickerVisible(false)}
-      />
-
       <View className="plan-detail__footer">
-        <Button block type="primary" onClick={save} loading={saving}>
-          保存
+        <Button className="btn-save" disabled={saving} onClick={save}>
+          {saving ? '保存中...' : '保存'}
         </Button>
       </View>
     </View>

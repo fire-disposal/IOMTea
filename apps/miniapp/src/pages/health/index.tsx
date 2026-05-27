@@ -1,4 +1,3 @@
-import { Cell, CellGroup, Skeleton, Tag } from '@nutui/nutui-react'
 import { ScrollView, Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useEffect, useState } from 'react'
@@ -86,41 +85,46 @@ export default function HealthPage() {
           </View>
         )}
 
-        {!loaded ? (
-          <CellGroup className="anim-stagger">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Cell key={i} title={<Skeleton width="120px" height="20px" animated />} />
-            ))}
-          </CellGroup>
-        ) : (
-          <CellGroup className="anim-stagger">
-            {modules.map((m) => (
-              <Cell
-                key={m.key}
-                title={m.label}
-                description={m.unit ? `记录${m.unit}` : '记录'}
-                extra={
-                  <Tag type={counts[m.key] > 0 ? 'primary' : 'default'}>
-                    {counts[m.key] > 0 ? `今日 ${counts[m.key]} 次` : '未记录'}
-                  </Tag>
-                }
-                onClick={() => Taro.navigateTo({ url: m.page })}
-              />
-            ))}
-            <Cell
-              title="健康量表"
-              description="查看已发布的健康量表"
-              extra={<Text style={{ color: '#999', fontSize: '12px' }}>→</Text>}
-              onClick={() => Taro.navigateTo({ url: '/pages/form-list/index' })}
-            />
-            <Cell
-              title="全部记录"
-              description="按类型筛选历史数据"
-              extra={<Text style={{ color: '#999', fontSize: '12px' }}>→</Text>}
-              onClick={() => Taro.navigateTo({ url: '/pages/records/index' })}
-            />
-          </CellGroup>
-        )}
+        <View className="cell-group anim-stagger">
+          {!loaded
+            ? Array.from({ length: 4 }).map((_, i) => (
+                <View key={i} className="cell cell--loading">
+                  <View className="cell__body">
+                    <View className="skeleton-line" style={{ width: '120px' }} />
+                  </View>
+                </View>
+              ))
+            : modules.map((m) => (
+                <View key={m.key} className="cell anim-fade-up" onClick={() => Taro.navigateTo({ url: m.page })}>
+                  <View className="cell__body">
+                    <View className="cell__title-row">
+                      <Text className="cell__title">{m.label}</Text>
+                      <Text className="cell__tag" data-active={counts[m.key] > 0}>
+                        {counts[m.key] > 0 ? `今日 ${counts[m.key]} 次` : '未记录'}
+                      </Text>
+                    </View>
+                    <Text className="cell__desc">{m.unit ? `记录${m.unit}` : '记录'}</Text>
+                  </View>
+                  <Text className="cell__arrow">›</Text>
+                </View>
+              ))}
+
+          <View className="cell" onClick={() => Taro.navigateTo({ url: '/pages/form-list/index' })}>
+            <View className="cell__body">
+              <Text className="cell__title">健康量表</Text>
+              <Text className="cell__desc">查看已发布的健康量表</Text>
+            </View>
+            <Text className="cell__arrow">›</Text>
+          </View>
+
+          <View className="cell" onClick={() => Taro.navigateTo({ url: '/pages/records/index' })}>
+            <View className="cell__body">
+              <Text className="cell__title">全部记录</Text>
+              <Text className="cell__desc">按类型筛选历史数据</Text>
+            </View>
+            <Text className="cell__arrow">›</Text>
+          </View>
+        </View>
       </ScrollView>
       <TabBar current="health" />
     </View>

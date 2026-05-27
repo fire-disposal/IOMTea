@@ -1,5 +1,4 @@
-import { Button } from '@nutui/nutui-react'
-import { Checkbox, Text, View } from '@tarojs/components'
+import { Button, Checkbox, Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useEffect, useState } from 'react'
 import { HEALTH_MODULE_KEYS, HEALTH_MODULE_META } from '../../constants/modules'
@@ -112,8 +111,8 @@ export default function PlanPage() {
       </View>
 
       <View className="plan-page__footer">
-        <Button block type="primary" onClick={handleSave} loading={saving}>
-          保存计划
+        <Button className="btn-save" disabled={saving} onClick={handleSave}>
+          {saving ? '保存中...' : '保存计划'}
         </Button>
       </View>
     </View>

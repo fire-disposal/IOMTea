@@ -58,3 +58,80 @@
 .health-cal-toggle__arrow--up {
   transform: rotate(180deg);
 }
+
+.cell-group {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-card, #fff);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.cell {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  transition: background 0.15s;
+}
+.cell:last-child { border-bottom: none; }
+.cell:active { background: rgba(0, 0, 0, 0.03); }
+
+.cell__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.cell__title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cell__title {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.cell__desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.cell__arrow {
+  font-size: 20px;
+  color: #ccc;
+  margin-left: 8px;
+}
+
+.cell__tag {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: #f0f0f0;
+  color: #999;
+  white-space: nowrap;
+}
+.cell__tag[data-active="true"] {
+  background: rgba(107, 165, 57, 0.1);
+  color: var(--brand-500);
+}
+
+.skeleton-line {
+  height: 14px;
+  background: linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 4px;
+}
+
+.cell--loading {
+  .cell__body {
+    display: flex;
+    align-items: center;
+    height: 36px;
+  }
+}
