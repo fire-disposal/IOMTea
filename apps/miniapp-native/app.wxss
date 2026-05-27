@@ -1,0 +1,58 @@
+page {
+  --brand-500: #6BA539;
+  --brand-700: #416323;
+  --bg-page: #FAFAF5;
+  --bg-card: #FFFFFF;
+  --text-primary: #3C3C3C;
+  --text-secondary: #8C8C7E;
+  --color-error: #D32F2F;
+  --color-warning: #ED6C02;
+  --color-success: #4A8C3F;
+  --border-radius: 8px;
+
+  background: var(--bg-page);
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.page {
+  padding: 24rpx;
+  min-height: 100%;
+  background: var(--bg-page);
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 120rpx 0;
+  color: var(--text-secondary);
+  font-size: 28rpx;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24rpx); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideRight {
+  from { opacity: 0; transform: translateX(-40rpx); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.anim-fade-up { animation: fadeUp 0.35s ease-out both; }
+.anim-slide-right { animation: slideRight 0.3s ease-out both; }
+.anim-scale-in { animation: scaleIn 0.3s ease-out both; }
+.anim-pulse { animation: pulse 1.5s ease-in-out infinite; }

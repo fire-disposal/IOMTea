@@ -1,0 +1,73 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/health/index",
+    "pages/messages/index",
+    "pages/profile/index",
+    "pages/login/index",
+    "pages/alerts/index",
+    "pages/data/index",
+    "pages/settings/index",
+    "pages/settings/goals/index",
+    "pages/settings/tracking/index",
+    "pages/export/index",
+    "pages/pin-overview/index",
+    "pages/plan/index",
+    "pages/plan/detail/index",
+    "pages/credit/index",
+    "pages/records/index",
+    "pages/record/glucose/index",
+    "pages/record/pressure/index",
+    "pages/record/weight/index",
+    "pages/record/heart-rate/index",
+    "pages/record/temperature/index",
+    "pages/record/spo2/index",
+    "pages/record/medication/index",
+    "pages/record/period/index",
+    "pages/form/index",
+    "pages/form-list/index",
+    "pages/patient-select/index",
+    "pages/devices/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "IOMTea",
+    "navigationBarBackgroundColor": "#ffffff",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#FAFAF5"
+  },
+  "tabBar": {
+    "custom": false,
+    "color": "#8C8C7E",
+    "selectedColor": "#6BA539",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页",
+        "iconPath": "",
+        "selectedIconPath": ""
+      },
+      {
+        "pagePath": "pages/health/index",
+        "text": "健康",
+        "iconPath": "",
+        "selectedIconPath": ""
+      },
+      {
+        "pagePath": "pages/messages/index",
+        "text": "告警",
+        "iconPath": "",
+        "selectedIconPath": ""
+      },
+      {
+        "pagePath": "pages/profile/index",
+        "text": "我的",
+        "iconPath": "",
+        "selectedIconPath": ""
+      }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}
