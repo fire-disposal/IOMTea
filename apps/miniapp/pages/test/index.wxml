@@ -44,7 +44,7 @@
               style="background:{{item.c}};opacity:{{ac === ci && daz === item.name ? 0.2 : 0}}">
             </view>
           </view>
-          <view class="test-dial-display">
+          <view class="test-dial-display {{item.done ? 'test-dial-locked' : ''}}">
             <text class="test-dial-val {{ac === ci && dlv ? 'test-dial-val--live' : ''}} {{stl === 1 ? 'test-dial-settle' : ''}}">{{item.selLabel || ''}}</text>
             <text class="test-dial-unit">{{item.unit}}</text>
           </view>

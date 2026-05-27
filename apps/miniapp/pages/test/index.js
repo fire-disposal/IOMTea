@@ -19,7 +19,7 @@ var SPEED=[{name:'fastUp',f:0,t:0.2,s:4,c:'#2E7D32'},{name:'slowUp',f:0.2,t:0.4,
 function initField(f){
   var c={id:f.id,label:f.label,type:f.type,options:f.options,min:f.min,max:f.max,unit:f.unit,normal:f.normal}
   c.selIdx=-1;c.selLabel='';c.hlIdx=-1;c.done=false
-  if(c.type==='dial'&&c.min!==undefined){c.selIdx=1;c.done=true}
+  if(c.type==='dial'&&c.min!==undefined){c.selIdx=1;c.done=false}
   return c
 }
 

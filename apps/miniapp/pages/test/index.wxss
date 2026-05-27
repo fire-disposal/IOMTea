@@ -68,8 +68,8 @@
 .test-dial-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0 8rpx; position: relative; }
 .test-dial-zones { position: absolute; inset: 0; display: flex; flex-direction: column; }
 .test-dial-zone { flex: 1; transition: opacity 0.15s; }
-.test-dial-display { position: relative; z-index: 2; text-align: center; padding: 8rpx 24rpx; border-radius: 12rpx; transition: border 0.3s, background 0.3s; }
-.test-col--locked .test-dial-display { border: 2rpx solid var(--brand-500); background: rgba(107,165,57,0.06); }
+.test-dial-display { position: relative; z-index: 2; text-align: center; padding: 8rpx 24rpx; border-radius: 12rpx; }
+.test-dial-locked { border: 2rpx solid var(--brand-500); background: rgba(107,165,57,0.06); }
 .test-dial-val { font-size: 64rpx; font-weight: 700; color: var(--text-primary); display: block; transition: color 0.3s; }
 .test-dial-val--live { color: var(--brand-500); }
 .test-dial-unit { font-size: 24rpx; color: var(--text-secondary); display: block; }
