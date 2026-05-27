@@ -137,12 +137,13 @@ Page({
   },
   _updateColGray(cf) {
     var g = []
-    if (cf) for (var i = 0; i < cf.length; i++) g.push(i > 0 && this.locked[i - 1] !== true)
+    if (cf) for (var i = 0; i < cf.length; i++) g.push(i > 0 && cf[i - 1].selIdx < 0)
     this.setData({ colGray: g })
   },
   _canAccess(ci) {
     if (ci <= 0) return true
-    return this.locked[ci - 1] === true
+    var cf = this.data.chainFields
+    return cf && cf[ci - 1] && cf[ci - 1].selIdx >= 0
   },
 
   _lockColumn(ci) {
