@@ -74,6 +74,9 @@ Page({
     }
     this._updateColGray()
 
+    var guide = odd ? '←按住向右' : '按住向左→'
+    var os = odd ? '提交→' : '←提交'
+
     this.setData({
       metricChips: chips, metricSelIdx: chipSel,
       chainFields: chainFields, ad: false,
