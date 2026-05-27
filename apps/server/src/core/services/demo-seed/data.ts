@@ -112,9 +112,19 @@ function buildHomeGraph(prefix: string): Record<string, unknown> {
       type: 'livingroom' as const,
       x: 300,
       y: 300,
-      connections: [roomId(prefix, 'bedroom'), roomId(prefix, 'kitchen'), roomId(prefix, 'bathroom')],
+      connections: [
+        roomId(prefix, 'bedroom'),
+        roomId(prefix, 'kitchen'),
+        roomId(prefix, 'bathroom'),
+      ],
       hasCamera: true,
-      devices: [] as { id: string; serialNumber: string; deviceType: string; status: string; pin?: string }[],
+      devices: [] as {
+        id: string
+        serialNumber: string
+        deviceType: string
+        status: string
+        pin?: string
+      }[],
     },
     {
       id: roomId(prefix, 'bedroom'),
@@ -124,7 +134,13 @@ function buildHomeGraph(prefix: string): Record<string, unknown> {
       y: 300,
       connections: [roomId(prefix, 'livingroom')],
       hasCamera: false,
-      devices: [] as { id: string; serialNumber: string; deviceType: string; status: string; pin?: string }[],
+      devices: [] as {
+        id: string
+        serialNumber: string
+        deviceType: string
+        status: string
+        pin?: string
+      }[],
     },
     {
       id: roomId(prefix, 'kitchen'),
@@ -134,7 +150,13 @@ function buildHomeGraph(prefix: string): Record<string, unknown> {
       y: 300,
       connections: [roomId(prefix, 'livingroom')],
       hasCamera: false,
-      devices: [] as { id: string; serialNumber: string; deviceType: string; status: string; pin?: string }[],
+      devices: [] as {
+        id: string
+        serialNumber: string
+        deviceType: string
+        status: string
+        pin?: string
+      }[],
     },
     {
       id: roomId(prefix, 'bathroom'),
@@ -144,7 +166,13 @@ function buildHomeGraph(prefix: string): Record<string, unknown> {
       y: 100,
       connections: [roomId(prefix, 'livingroom')],
       hasCamera: false,
-      devices: [] as { id: string; serialNumber: string; deviceType: string; status: string; pin?: string }[],
+      devices: [] as {
+        id: string
+        serialNumber: string
+        deviceType: string
+        status: string
+        pin?: string
+      }[],
     },
   ]
   return { rooms, entryRoomId: roomId(prefix, 'livingroom'), personLocation: null }
@@ -152,50 +180,213 @@ function buildHomeGraph(prefix: string): Record<string, unknown> {
 
 const PATIENTS: SeedPatient[] = [
   {
-    username: 'zhangdaye', password: 'password123', name: '张大爷', gender: 'male',
-    birthDate: '1953-03-15', heightCm: 170, weightKg: 68, profileId: 'elderly-cardiac',
-    conditions: ['hypertension', 'fall_risk'], hasHomeGraph: true, graphPrefix: 'zdy',
-    baselines: { hr: 78, hrVar: 8, spo2: 96, spo2Var: 1.5, bpSys: 135, bpDia: 85, bpVar: 5, temp: 36.5, tempVar: 0.3, glucoseFast: 5.2, glucoseVar: 0.4, glucosePost: 3.5 },
+    username: 'zhangdaye',
+    password: 'password123',
+    name: '张大爷',
+    gender: 'male',
+    birthDate: '1953-03-15',
+    heightCm: 170,
+    weightKg: 68,
+    profileId: 'elderly-cardiac',
+    conditions: ['hypertension', 'fall_risk'],
+    hasHomeGraph: true,
+    graphPrefix: 'zdy',
+    baselines: {
+      hr: 78,
+      hrVar: 8,
+      spo2: 96,
+      spo2Var: 1.5,
+      bpSys: 135,
+      bpDia: 85,
+      bpVar: 5,
+      temp: 36.5,
+      tempVar: 0.3,
+      glucoseFast: 5.2,
+      glucoseVar: 0.4,
+      glucosePost: 3.5,
+    },
     meds: [
-      { drugName: '硝苯地平缓释片', genericName: 'Nifedipine', dosage: '30', dosageUnit: 'mg', frequency: '每日1次', route: 'oral', instructions: '早餐后服用' },
-      { drugName: '阿司匹林肠溶片', genericName: 'Aspirin', dosage: '100', dosageUnit: 'mg', frequency: '每日1次', route: 'oral', instructions: '晚餐后服用' },
-      { drugName: '阿托伐他汀钙片', genericName: 'Atorvastatin', dosage: '10', dosageUnit: 'mg', frequency: '每日1次', route: 'oral', instructions: '睡前服用' },
+      {
+        drugName: '硝苯地平缓释片',
+        genericName: 'Nifedipine',
+        dosage: '30',
+        dosageUnit: 'mg',
+        frequency: '每日1次',
+        route: 'oral',
+        instructions: '早餐后服用',
+      },
+      {
+        drugName: '阿司匹林肠溶片',
+        genericName: 'Aspirin',
+        dosage: '100',
+        dosageUnit: 'mg',
+        frequency: '每日1次',
+        route: 'oral',
+        instructions: '晚餐后服用',
+      },
+      {
+        drugName: '阿托伐他汀钙片',
+        genericName: 'Atorvastatin',
+        dosage: '10',
+        dosageUnit: 'mg',
+        frequency: '每日1次',
+        route: 'oral',
+        instructions: '睡前服用',
+      },
     ],
     pinLabels: ['客厅摄像头', '主卧传感器'],
     alertScenarios: [
-      { metric: 'heart_rate', value: 145, unit: 'bpm', severity: 'critical', tags: { scenario: 'tachycardia' } },
-      { metric: 'spo2', value: 88, unit: '%', severity: 'critical', tags: { scenario: 'low_spo2' } },
+      {
+        metric: 'heart_rate',
+        value: 145,
+        unit: 'bpm',
+        severity: 'critical',
+        tags: { scenario: 'tachycardia' },
+      },
+      {
+        metric: 'spo2',
+        value: 88,
+        unit: '%',
+        severity: 'critical',
+        tags: { scenario: 'low_spo2' },
+      },
     ],
   },
   {
-    username: 'wangnainai', password: 'password123', name: '王奶奶', gender: 'female',
-    birthDate: '1957-08-22', heightCm: 158, weightKg: 62, profileId: 'diabetes',
-    conditions: ['type2_diabetes', 'neuropathy'], hasHomeGraph: true, graphPrefix: 'wnn',
-    baselines: { hr: 72, hrVar: 7, spo2: 97, spo2Var: 1, bpSys: 130, bpDia: 82, bpVar: 5, temp: 36.5, tempVar: 0.3, glucoseFast: 5.5, glucoseVar: 0.6, glucosePost: 5 },
+    username: 'wangnainai',
+    password: 'password123',
+    name: '王奶奶',
+    gender: 'female',
+    birthDate: '1957-08-22',
+    heightCm: 158,
+    weightKg: 62,
+    profileId: 'diabetes',
+    conditions: ['type2_diabetes', 'neuropathy'],
+    hasHomeGraph: true,
+    graphPrefix: 'wnn',
+    baselines: {
+      hr: 72,
+      hrVar: 7,
+      spo2: 97,
+      spo2Var: 1,
+      bpSys: 130,
+      bpDia: 82,
+      bpVar: 5,
+      temp: 36.5,
+      tempVar: 0.3,
+      glucoseFast: 5.5,
+      glucoseVar: 0.6,
+      glucosePost: 5,
+    },
     meds: [
-      { drugName: '盐酸二甲双胍片', genericName: 'Metformin', dosage: '500', dosageUnit: 'mg', frequency: '每日2次', route: 'oral', instructions: '早晚餐后服用' },
-      { drugName: '甘精胰岛素注射液', genericName: 'Insulin Glargine', dosage: '10', dosageUnit: 'IU', frequency: '每日1次', route: 'injection', instructions: '睡前皮下注射' },
+      {
+        drugName: '盐酸二甲双胍片',
+        genericName: 'Metformin',
+        dosage: '500',
+        dosageUnit: 'mg',
+        frequency: '每日2次',
+        route: 'oral',
+        instructions: '早晚餐后服用',
+      },
+      {
+        drugName: '甘精胰岛素注射液',
+        genericName: 'Insulin Glargine',
+        dosage: '10',
+        dosageUnit: 'IU',
+        frequency: '每日1次',
+        route: 'injection',
+        instructions: '睡前皮下注射',
+      },
     ],
     pinLabels: ['客厅摄像头', '厨房传感器'],
     alertScenarios: [
-      { metric: 'glucose', value: 13.2, unit: 'mmol/L', severity: 'critical', tags: { scenario: 'hyperglycemia' } },
-      { metric: 'glucose', value: 3.1, unit: 'mmol/L', severity: 'warning', tags: { scenario: 'hypoglycemia' } },
+      {
+        metric: 'glucose',
+        value: 13.2,
+        unit: 'mmol/L',
+        severity: 'critical',
+        tags: { scenario: 'hyperglycemia' },
+      },
+      {
+        metric: 'glucose',
+        value: 3.1,
+        unit: 'mmol/L',
+        severity: 'warning',
+        tags: { scenario: 'hypoglycemia' },
+      },
     ],
   },
   {
-    username: 'lishushu', password: 'password123', name: '李叔叔', gender: 'male',
-    birthDate: '1970-11-08', heightCm: 175, weightKg: 75, profileId: 'post-surgery',
-    conditions: ['post_op', 'infection_risk'], hasHomeGraph: false, graphPrefix: 'lss',
-    baselines: { hr: 85, hrVar: 10, spo2: 94, spo2Var: 2, bpSys: 125, bpDia: 80, bpVar: 6, temp: 37.2, tempVar: 0.5, glucoseFast: 6.0, glucoseVar: 0.5, glucosePost: 3 },
+    username: 'lishushu',
+    password: 'password123',
+    name: '李叔叔',
+    gender: 'male',
+    birthDate: '1970-11-08',
+    heightCm: 175,
+    weightKg: 75,
+    profileId: 'post-surgery',
+    conditions: ['post_op', 'infection_risk'],
+    hasHomeGraph: false,
+    graphPrefix: 'lss',
+    baselines: {
+      hr: 85,
+      hrVar: 10,
+      spo2: 94,
+      spo2Var: 2,
+      bpSys: 125,
+      bpDia: 80,
+      bpVar: 6,
+      temp: 37.2,
+      tempVar: 0.5,
+      glucoseFast: 6.0,
+      glucoseVar: 0.5,
+      glucosePost: 3,
+    },
     meds: [
-      { drugName: '头孢呋辛酯片', genericName: 'Cefuroxime', dosage: '250', dosageUnit: 'mg', frequency: '每日2次', route: 'oral', instructions: '早晚各一次，饭后服用' },
-      { drugName: '布洛芬缓释胶囊', genericName: 'Ibuprofen', dosage: '300', dosageUnit: 'mg', frequency: '每日2次', route: 'oral', instructions: '疼痛时服用' },
-      { drugName: '奥美拉唑肠溶胶囊', genericName: 'Omeprazole', dosage: '20', dosageUnit: 'mg', frequency: '每日1次', route: 'oral', instructions: '早餐前空腹服用' },
+      {
+        drugName: '头孢呋辛酯片',
+        genericName: 'Cefuroxime',
+        dosage: '250',
+        dosageUnit: 'mg',
+        frequency: '每日2次',
+        route: 'oral',
+        instructions: '早晚各一次，饭后服用',
+      },
+      {
+        drugName: '布洛芬缓释胶囊',
+        genericName: 'Ibuprofen',
+        dosage: '300',
+        dosageUnit: 'mg',
+        frequency: '每日2次',
+        route: 'oral',
+        instructions: '疼痛时服用',
+      },
+      {
+        drugName: '奥美拉唑肠溶胶囊',
+        genericName: 'Omeprazole',
+        dosage: '20',
+        dosageUnit: 'mg',
+        frequency: '每日1次',
+        route: 'oral',
+        instructions: '早餐前空腹服用',
+      },
     ],
     pinLabels: ['主卧传感器'],
     alertScenarios: [
-      { metric: 'temperature', value: 38.6, unit: '°C', severity: 'critical', tags: { scenario: 'postop_fever' } },
-      { metric: 'systolic_bp', value: 85, unit: 'mmHg', severity: 'warning', tags: { scenario: 'hypotension' } },
+      {
+        metric: 'temperature',
+        value: 38.6,
+        unit: '°C',
+        severity: 'critical',
+        tags: { scenario: 'postop_fever' },
+      },
+      {
+        metric: 'systolic_bp',
+        value: 85,
+        unit: 'mmHg',
+        severity: 'warning',
+        tags: { scenario: 'hypotension' },
+      },
     ],
   },
 ]

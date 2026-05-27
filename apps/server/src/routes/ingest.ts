@@ -3,9 +3,12 @@ import { HTTPException } from 'hono/http-exception'
 import { db } from '../core/db'
 import { events, patients } from '../core/db/schema'
 import type { AppEnv } from '../core/http/types'
+import { createChildLogger } from '../core/lib/logger'
+import { getMetricOrDefault } from '../core/pipeline/registry'
 import { jwtAuth } from '../middleware/auth'
 import { requirePermission } from '../middleware/rbac'
 
+const logger = createChildLogger('ingest')
 const ingestRouter = new OpenAPIHono<AppEnv>()
 
 const singleRoute = createRoute({

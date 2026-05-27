@@ -1,7 +1,7 @@
 ﻿import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
-import { HTTPException } from 'hono/http-exception'
 import { metricResponseSchema } from '@iomtea/shared-types'
 import { and, asc, desc, eq, gte, lte, sql } from 'drizzle-orm'
+import { HTTPException } from 'hono/http-exception'
 import { db } from '../core/db'
 import { events } from '../core/db/schema'
 import type { AppEnv } from '../core/http/types'

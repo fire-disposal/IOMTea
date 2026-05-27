@@ -125,6 +125,44 @@ Page({
       dateStr: new Date().toISOString().slice(0, 10)
     })
     wx.setNavigationBarTitle({ title: (meta.label || config.title) + '记录' })
+    this.initChart()
+  },
+
+  initChart() {
+    var self = this
+    var trendData = this.data.trendData
+    if (!trendData || trendData.length < 2) return
+
+    var query = wx.createSelectorQuery().in(this)
+    query.select('#trendCanvas')
+      .fields({ node: true, size: true })
+      .exec(function (res) {
+        if (!res[0] || !res[0].node) return
+        var canvas = res[0].node
+        var width = res[0].width
+        var height = res[0].height
+        var dpr = wx.getSystemInfoSync().pixelRatio || 2
+        canvas.width = width * dpr
+        canvas.height = height * dpr
+        
+        var echarts = require('../../components/ec-canvas/echarts.min')
+        var chart = echarts.init(canvas, null, {
+          width: width, height: height, devicePixelRatio: dpr
+        })
+        
+        var option = {
+          grid: { top: 12, bottom: 8, left: 0, right: 8 },
+          xAxis: { type: 'category', show: false, data: trendData.map(function (d) { return d.date.slice(5) }) },
+          yAxis: { type: 'value', show: false, min: function (v) { return v.min - (v.max - v.min) * 0.2 }, max: function (v) { return v.max + (v.max - v.min) * 0.2 } },
+          series: [{
+            type: 'line', data: trendData.map(function (d) { return d.value }),
+            smooth: true, lineStyle: { color: '#6BA539', width: 2 },
+            itemStyle: { color: '#6BA539' }, symbol: 'circle', symbolSize: 6,
+            areaStyle: { color: 'rgba(107,165,57,0.08)' }
+          }]
+        }
+        chart.setOption(option)
+      })
   },
 
   handleSave() {
@@ -173,6 +211,7 @@ Page({
     wx.vibrateShort()
 
     this.setData({ saving: false, trendData: getTrendData(this.data.type, this.data.type === 'period' ? 30 : 7) })
+    this.initChart()
     wx.showToast({ title: '已保存', icon: 'success', duration: 600 })
     setTimeout(function () { wx.navigateBack() }, 600)
   },

@@ -84,4 +84,3 @@ export function isValueInRange(metric: string, value: number): boolean {
   if (!range) return true
   return value >= range.min && value <= range.max
 }
-

@@ -16,5 +16,3 @@ export function truncExpr(interval: string): ReturnType<typeof sql> {
   const ival = valid.includes(interval) ? interval : 'day'
   return sql`date_trunc(${ival}, ${events.recordedAt})`
 }
-
-

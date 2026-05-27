@@ -1,7 +1,7 @@
 ﻿import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
-import { HTTPException } from 'hono/http-exception'
 import { patientListSchema, patientResponseSchema, successSchema } from '@iomtea/shared-types'
 import { and, eq, ilike, or } from 'drizzle-orm'
+import { HTTPException } from 'hono/http-exception'
 import { db } from '../core/db'
 import { patients } from '../core/db/schema'
 import { userPatientLinks } from '../core/db/schema/user-patient'
@@ -194,7 +194,11 @@ const deletePatRoute = createRoute({
 
 patientsRouter.openapi(deletePatRoute, async (c) => {
   const id = c.req.param('id')
-  const [existing] = await db.select({ id: patients.id }).from(patients).where(eq(patients.id, id)).limit(1)
+  const [existing] = await db
+    .select({ id: patients.id })
+    .from(patients)
+    .where(eq(patients.id, id))
+    .limit(1)
   if (!existing) throw new HTTPException(404)
   await db.delete(patients).where(eq(patients.id, id))
   return c.json({ success: true })

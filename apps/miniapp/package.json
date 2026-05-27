@@ -1,0 +1,8 @@
+{
+  "name": "iomtea-miniapp",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "echarts-for-weixin": "^1.0.1"
+  }
+}

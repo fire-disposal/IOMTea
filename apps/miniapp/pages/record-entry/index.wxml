@@ -63,6 +63,10 @@
     </view>
   </view>
 
+  <view wx:if="{{trendData.length > 1}}" class="entry-trend">
+    <canvas type="2d" id="trendCanvas" class="entry-trend-canvas"></canvas>
+  </view>
+
   <view wx:if="{{type !== 'medication'}}" class="record-entry-footer">
     <button class="entry-save" disabled="{{saving}}" bind:tap="handleSave">
       {{saving ? '保存中...' : '保存'}}

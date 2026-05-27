@@ -1,6 +1,6 @@
 import { createMiddleware } from 'hono/factory'
-import type { AppEnv } from '../core/http/types'
 import { getEnforcer } from '../core/casbin/enforcer'
+import type { AppEnv } from '../core/http/types'
 
 export function requirePermission(obj: string, act: string) {
   return createMiddleware<AppEnv>(async (c, next) => {

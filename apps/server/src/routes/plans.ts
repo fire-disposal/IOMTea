@@ -1,5 +1,4 @@
 ﻿import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
-import { HTTPException } from 'hono/http-exception'
 import {
   planCompleteSchema,
   planCreateSchema,
@@ -8,6 +7,7 @@ import {
 } from '@iomtea/shared-types'
 import { successSchema } from '@iomtea/shared-types'
 import { and, eq, sql } from 'drizzle-orm'
+import { HTTPException } from 'hono/http-exception'
 import { db } from '../core/db'
 import { events, users } from '../core/db/schema'
 import { creditTransactions, planCompletions, plans } from '../core/db/schema/plan'

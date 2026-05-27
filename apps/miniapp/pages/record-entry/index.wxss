@@ -175,3 +175,8 @@
 .entry-trend {
   padding: 0 32rpx 32rpx;
 }
+
+.entry-trend-canvas {
+  width: 100%;
+  height: 200rpx;
+}

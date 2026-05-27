@@ -1,14 +1,9 @@
 import { eq } from 'drizzle-orm'
 import type { DbClient } from '../../core/db'
-import { events, simConfigs, simPatients } from '../../core/db/schema/twin'
+import { events } from '../../core/db/schema.js'
+import { simConfigs, simPatients } from '../../core/db/schema/twin'
 import { createChildLogger } from '../../core/lib/logger'
-import {
-  simulations,
-  patientSimMap,
-  startPatientRunner,
-  stopPatientRunner,
-} from './engine'
-import type { Simulation } from './engine'
+import { patientSimMap, simulations, startPatientRunner, stopPatientRunner } from './engine'
 
 const logger = createChildLogger('twin-ops')
 
@@ -100,65 +95,101 @@ const SCENARIOS: Record<
   tachycardia: {
     observation: { metric: 'heart_rate', value: 155, unit: 'bpm' },
     alert: {
-      metric: 'heart_rate', value: 155, unit: 'bpm',
-      kind: 'alert', severity: 'critical', status: 'active',
+      metric: 'heart_rate',
+      value: 155,
+      unit: 'bpm',
+      kind: 'alert',
+      severity: 'critical',
+      status: 'active',
     },
   },
   low_spo2: {
     observation: { metric: 'spo2', value: 88, unit: '%' },
     alert: {
-      metric: 'spo2', value: 88, unit: '%',
-      kind: 'alert', severity: 'critical', status: 'active',
+      metric: 'spo2',
+      value: 88,
+      unit: '%',
+      kind: 'alert',
+      severity: 'critical',
+      status: 'active',
     },
   },
   hypotension: {
     observation: { metric: 'systolic_bp', value: 85, unit: 'mmHg' },
     alert: {
-      metric: 'systolic_bp', value: 85, unit: 'mmHg',
-      kind: 'alert', severity: 'warning', status: 'active',
+      metric: 'systolic_bp',
+      value: 85,
+      unit: 'mmHg',
+      kind: 'alert',
+      severity: 'warning',
+      status: 'active',
     },
   },
   fall: {
     observation: { metric: 'posture', value: null, unit: null },
     alert: {
-      metric: 'fall_detected', value: null, unit: null,
-      kind: 'alert', severity: 'critical', status: 'active',
+      metric: 'fall_detected',
+      value: null,
+      unit: null,
+      kind: 'alert',
+      severity: 'critical',
+      status: 'active',
       tags: { scenario: 'fall' },
     },
   },
   bed_exit: {
     observation: { metric: 'bed_status', value: 0, unit: null },
     alert: {
-      metric: 'bed_exit', value: null, unit: null,
-      kind: 'alert', severity: 'warning', status: 'active',
+      metric: 'bed_exit',
+      value: null,
+      unit: null,
+      kind: 'alert',
+      severity: 'warning',
+      status: 'active',
     },
   },
   hyperglycemia: {
     observation: { metric: 'glucose', value: 13.5, unit: 'mmol/L' },
     alert: {
-      metric: 'glucose', value: 13.5, unit: 'mmol/L',
-      kind: 'alert', severity: 'critical', status: 'active',
+      metric: 'glucose',
+      value: 13.5,
+      unit: 'mmol/L',
+      kind: 'alert',
+      severity: 'critical',
+      status: 'active',
     },
   },
   hypoglycemia: {
     observation: { metric: 'glucose', value: 2.8, unit: 'mmol/L' },
     alert: {
-      metric: 'glucose', value: 2.8, unit: 'mmol/L',
-      kind: 'alert', severity: 'critical', status: 'active',
+      metric: 'glucose',
+      value: 2.8,
+      unit: 'mmol/L',
+      kind: 'alert',
+      severity: 'critical',
+      status: 'active',
     },
   },
   arrhythmia: {
     observation: { metric: 'heart_rate', value: 180, unit: 'bpm' },
     alert: {
-      metric: 'arrhythmia', value: null, unit: null,
-      kind: 'alert', severity: 'critical', status: 'active',
+      metric: 'arrhythmia',
+      value: null,
+      unit: null,
+      kind: 'alert',
+      severity: 'critical',
+      status: 'active',
     },
   },
   respiratory_distress: {
     observation: { metric: 'resp_rate', value: 35, unit: 'rpm' },
     alert: {
-      metric: 'resp_rate', value: 35, unit: 'rpm',
-      kind: 'alert', severity: 'critical', status: 'active',
+      metric: 'resp_rate',
+      value: 35,
+      unit: 'rpm',
+      kind: 'alert',
+      severity: 'critical',
+      status: 'active',
     },
   },
 }
@@ -188,7 +219,7 @@ export function injectScenario(
         source: 'manual',
         tags: { scenario: type, injected: true },
         recordedAt: now,
-      })
+      } as any)
       .execute()
       .catch((err: Error) => {
         logger.error(
@@ -215,7 +246,7 @@ export function injectScenario(
           ...((scenario.alert.tags as Record<string, unknown>) || {}),
         },
         recordedAt: now,
-      })
+      } as any)
       .execute()
       .catch((err: Error) => {
         logger.error({ err, simId, patientId, type, event: 'alert' }, 'injectScenario alert failed')

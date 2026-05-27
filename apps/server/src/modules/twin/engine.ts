@@ -4,7 +4,7 @@ import { events } from '../../core/db/schema.js'
 import { simConfigs } from '../../core/db/schema/twin.js'
 import { createChildLogger } from '../../core/lib/logger'
 import * as phys from '../../core/pipeline/physiology.js'
-import { profiles, listProfiles } from './profiles.js'
+import { listProfiles, profiles } from './profiles.js'
 import type { MetricConfig, UnifiedProfile } from './profiles.js'
 import { MetricScheduler } from './scheduler.js'
 
@@ -72,7 +72,7 @@ function startPatientRunner(
 ) {
   const scheduler = new MetricScheduler()
   const simSpeed = sim.speed
-  let globalSpeed = 1
+  const globalSpeed = 1
   scheduler.setSpeed(simSpeed * globalSpeed)
   const runner: PatientRunner = { patientId, patientName, scheduler, lastValues: {}, tickCount: 0 }
   sim.patients.set(patientId, runner)

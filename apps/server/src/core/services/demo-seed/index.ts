@@ -4,12 +4,12 @@ import { usersPin } from '../../db/schema/pin'
 import { userPatientLinks } from '../../db/schema/user-patient'
 import { hashPassword } from '../../lib/password'
 import {
+  HOUR_MS,
   PATIENTS,
+  buildHomeGraph,
   generatePin,
   generateVitals,
   recentAlertTime,
-  buildHomeGraph,
-  HOUR_MS,
 } from './data'
 
 export async function seedDemoData(db: DbClient): Promise<void> {
@@ -147,7 +147,7 @@ export async function seedDemoData(db: DbClient): Promise<void> {
           dosage: med.dosage,
           dosageUnit: med.dosageUnit,
           frequency: med.frequency,
-          route: med.route,
+          route: med.route as 'oral' | 'injection' | 'topical' | 'inhalation' | 'other',
           startDate: new Date(Date.now() - 14 * 24 * HOUR_MS).toISOString().slice(0, 10),
           status: 'active',
           instructions: med.instructions,
