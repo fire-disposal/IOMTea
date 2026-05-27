@@ -9,18 +9,17 @@ Page({
   data: {
     modules: MODULES,
     selectedTypes: ['blood_glucose', 'blood_pressure', 'weight'],
+    selectedMap: { blood_glucose: true, blood_pressure: true, weight: true },
   },
 
   onTypeToggle(e) {
     var type = e.currentTarget.dataset.type
     var selected = this.data.selectedTypes.slice()
     var idx = selected.indexOf(type)
-    if (idx > -1) {
-      selected.splice(idx, 1)
-    } else {
-      selected.push(type)
-    }
-    this.setData({ selectedTypes: selected })
+    if (idx > -1) { selected.splice(idx, 1) } else { selected.push(type) }
+    var map = {}
+    for (var i = 0; i < selected.length; i++) { map[selected[i]] = true }
+    this.setData({ selectedTypes: selected, selectedMap: map })
   },
 
   handleExport() {

@@ -23,7 +23,7 @@
       <text class="period-label">症状</text>
       <view class="period-chips">
         <text wx:for="{{symptomOptions}}" wx:key="*this"
-          class="period-chip {{symptoms.indexOf(item) > -1 ? 'period-chip--active' : ''}}"
+          class="period-chip {{symptomMap[item] ? 'period-chip--active' : ''}}"
           data-value="{{item}}" bind:tap="onSymptomTap">{{item}}</text>
       </view>
     </view>

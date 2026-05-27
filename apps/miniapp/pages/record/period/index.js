@@ -14,6 +14,7 @@ Page({
   data: {
     flow: 'medium',
     symptoms: [],
+    symptomMap: {},
     notes: '',
     saving: false,
     saved: false,
@@ -38,14 +39,12 @@ Page({
 
   onSymptomTap(e) {
     const s = e.currentTarget.dataset.value
-    const symptoms = this.data.symptoms
+    const symptoms = this.data.symptoms.slice()
     const idx = symptoms.indexOf(s)
-    if (idx > -1) {
-      symptoms.splice(idx, 1)
-    } else {
-      symptoms.push(s)
-    }
-    this.setData({ symptoms })
+    if (idx > -1) { symptoms.splice(idx, 1) } else { symptoms.push(s) }
+    const map = {}
+    for (var i = 0; i < symptoms.length; i++) { map[symptoms[i]] = true }
+    this.setData({ symptoms, symptomMap: map })
   },
 
   onNotesInput(e) {

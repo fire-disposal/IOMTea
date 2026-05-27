@@ -6,6 +6,7 @@ Page({
     form: null,
     code: '',
     responses: {},
+    checkboxState: {},
     submitting: false,
     loading: true,
   },
@@ -16,11 +17,33 @@ Page({
     this.setData({ code: code })
     api.get('/forms/' + code)
       .then(function (form) {
-        this.setData({ form: form, loading: false })
+        // Init responses for multi-select fields
+        var responses = {}
+        if (form && form.fields) {
+          for (var i = 0; i < form.fields.length; i++) {
+            var f = form.fields[i]
+            if (f.type === 'multi') responses[f.id] = []
+          }
+        }
+        this.setData({ form: form, responses: responses, loading: false })
+        this.updateCheckboxState()
       }.bind(this))
       .catch(function () {
         this.setData({ loading: false })
       }.bind(this))
+  },
+
+  updateCheckboxState() {
+    var state = {}
+    var responses = this.data.responses
+    for (var key in responses) {
+      if (Array.isArray(responses[key])) {
+        for (var i = 0; i < responses[key].length; i++) {
+          state[key + '_' + responses[key][i]] = true
+        }
+      }
+    }
+    this.setData({ checkboxState: state })
   },
 
   onRadioChange(e) {
@@ -35,6 +58,7 @@ Page({
     var responses = this.data.responses
     responses[fieldId] = e.detail.value
     this.setData({ responses: Object.assign({}, responses) })
+    this.updateCheckboxState()
   },
 
   onSliderChange(e) {

@@ -3,7 +3,7 @@
   <text class="export-subtitle">选择要导出的模块</text>
   <view class="export-modules">
     <text wx:for="{{modules}}" wx:key="value"
-      class="export-chip {{selectedTypes.indexOf(item.value) > -1 ? 'export-chip--active' : ''}}"
+      class="export-chip {{selectedMap[item.value] ? 'export-chip--active' : ''}}"
       data-type="{{item.value}}" bind:tap="onTypeToggle">{{item.label}}</text>
   </view>
   <view class="export-footer">

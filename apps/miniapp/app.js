@@ -1,14 +1,15 @@
 const { syncUnsyncedRecords, startAutoSync } = require('./utils/sync')
 
 App({
+  globalData: { syncTimer: null },
+
   onLaunch() {
     const token = wx.getStorageSync('token')
     if (!token) {
       wx.reLaunch({ url: '/pages/login/index' })
       return
     }
-    const syncTimer = startAutoSync()
-    this.globalData = { syncTimer }
+    this.globalData.syncTimer = startAutoSync()
     syncUnsyncedRecords()
   },
 

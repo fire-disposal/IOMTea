@@ -26,7 +26,7 @@
       <block wx:if="{{f.type === 'multi' && f.options}}">
         <checkbox-group data-field-id="{{f.id}}" bindchange="onCheckboxChange">
           <label wx:for="{{f.options}}" wx:key="value" wx:for-item="o">
-            <checkbox value="{{o.value}}" checked="{{(responses[f.id] || []).indexOf(o.value) > -1}}" />
+            <checkbox value="{{o.value}}" checked="{{checkboxState[f.id + '_' + o.value]}}" />
             <text>{{o.label}}</text>
           </label>
         </checkbox-group>
@@ -63,7 +63,7 @@
 
     <view class="form-submit">
       <button class="submit-btn {{submitting ? 'submit-btn--loading' : ''}}"
-        bind:tap="{{submitting ? '' : 'submit'}}">
+        disabled="{{submitting}}" bind:tap="submit">
         {{submitting ? '提交中...' : '提交'}}
       </button>
     </view>
