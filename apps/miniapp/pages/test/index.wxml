@@ -1,92 +1,63 @@
 <view class="test-page">
-  <!-- Top: form label + progress -->
   <view class="test-top">
-    <text class="test-form-label">{{formLabel}}</text>
-    <text class="test-hint-text">{{hintText}}</text>
+    <text class="test-form-label">{{fl}}</text>
+    <view class="test-metric-bar">
+      <view wx:for="{{metric.options}}" wx:key="v" wx:for-index="mi"
+        class="test-metric-chip {{metric.selIdx === mi ? 'test-metric-chip--on' : ''}}"
+        data-idx="{{mi}}" bind:tap="onMetricTap">
+        <text>{{item.l}}</text>
+      </view>
+    </view>
+    <text class="test-hint-text">{{ht}}</text>
   </view>
 
-  <!-- Canvas: all columns visible simultaneously -->
   <view class="test-canvas"
-    bindtouchstart="onStart"
-    bindtouchmove="onMove"
-    bindtouchend="onEnd">
-
-    <!-- Dwell progress bar (top edge, invisible until dwell starts) -->
-    <view class="test-dwell-bar {{dwellBarVisible ? 'test-dwell-bar--on' : ''}}" style="width:{{dwellPct}}%"></view>
-
-    <!-- Left edge zone -->
-    <view class="test-edge test-edge--left {{leftZoneActive ? 'test-edge--active' : ''}}">
-      <text class="test-edge-text">{{leftLabel}}</text>
-      <view wx:if="{{leftDwell}}" class="test-dwell-ring"></view>
+    bindtouchstart="onStart" bindtouchmove="onMove" bindtouchend="onEnd">
+    <view class="test-dwell-bar {{dbv ? 'test-dwell-bar--on' : ''}}" style="width:{{dp}}%"></view>
+    <view class="test-edge test-edge--left {{lza ? 'test-edge--active' : ''}}">
+      <text class="test-edge-text">{{ll}}</text>
     </view>
-
-    <!-- Columns -->
     <view class="test-cols">
-      <view wx:for="{{fields}}" wx:key="id" wx:for-index="ci"
-        class="test-col {{activeCol === ci ? 'test-col--active' : ''}} {{item.done ? 'test-col--locked' : ''}}">
-
-        <!-- Lock indicator — only for data columns, not metric selector -->
-        <view wx:if="{{item.done && item.id !== 'metric'}}" class="test-col-lock">◇</view>
-        <view wx:elif="{{item.id !== 'metric'}}" class="test-col-dot {{activeCol === ci ? 'test-col-dot--live' : ''}}"></view>
-
+      <view wx:for="{{chainFields}}" wx:key="id" wx:for-index="ci"
+        class="test-col {{ac === ci ? 'test-col--active' : ''}} {{item.done ? 'test-col--locked' : ''}}">
+        <view wx:if="{{item.done}}" class="test-col-lock">◇</view>
+        <view wx:else class="test-col-dot {{ac === ci ? 'test-col-dot--live' : ''}}"></view>
         <text class="test-col-label">{{item.label}}</text>
-
-        <!-- Picker column -->
         <view wx:if="{{item.type === 'picker'}}" class="test-picker-col">
           <view wx:for="{{item.options}}" wx:key="v" wx:for-index="oi"
-            class="test-opt {{activeCol === ci && item.hlIdx === oi ? 'test-opt--hl' : ''}} {{item.selIdx === oi ? 'test-opt--locked' : ''}}">
+            class="test-opt {{ac === ci && item.hlIdx === oi ? 'test-opt--hl' : ''}} {{item.selIdx === oi ? 'test-opt--locked' : ''}}">
             <text class="test-opt-label">{{item.l}}</text>
             <text wx:if="{{item.selIdx === oi}}" class="test-opt-check">✓</text>
           </view>
         </view>
-
-        <!-- Dial column -->
         <view wx:if="{{item.type === 'dial'}}" class="test-dial-col">
           <view class="test-dial-zone-bar">
-            <view wx:for="{{dialZones}}" wx:key="name" class="test-dial-zone-seg"
-              style="opacity:{{activeCol === ci && dialActiveZone === item.name ? 0.5 : 0.08}};background:{{item.color}}">
+            <view wx:for="{{dz}}" wx:key="name" class="test-dial-zone-seg"
+              style="opacity:{{ac === ci && daz === item.name ? 0.5 : 0.08}};background:{{item.c}}">
             </view>
           </view>
           <view class="test-dial-display">
-            <text class="test-dial-val {{activeCol === ci && dialLive ? 'test-dial-val--live' : ''}}">{{displayValue || item.selLabel || ''}}</text>
+            <text class="test-dial-val {{ac === ci && dlv ? 'test-dial-val--live' : ''}}">{{dv || item.selLabel || ''}}</text>
             <text class="test-dial-unit">{{item.unit}}</text>
           </view>
-          <view class="test-dial-limits">
-            <text>{{item.min}}</text>
-            <text>{{item.max}}</text>
-          </view>
+          <view class="test-dial-limits"><text>{{item.min}}</text><text>{{item.max}}</text></view>
         </view>
       </view>
     </view>
-
-    <!-- Right edge zone -->
-    <view class="test-edge test-edge--right {{rightZoneActive ? 'test-edge--active' : ''}}">
-      <text class="test-edge-text">{{rightLabel}}</text>
-      <view wx:if="{{rightDwell}}" class="test-dwell-ring"></view>
+    <view class="test-edge test-edge--right {{rza ? 'test-edge--active' : ''}}">
+      <text class="test-edge-text">{{rl}}</text>
     </view>
-
-    <!-- Chain connector bar -->
     <view class="test-chain">
       <view wx:for="{{chain}}" wx:key="i" class="test-chain-node {{item.active ? 'test-chain-node--active' : ''}} {{item.locked ? 'test-chain-node--locked' : ''}}">
         <text wx:if="{{item.locked}}" class="test-chain-text">{{item.label}}</text>
       </view>
       <view wx:for="{{chainLinks}}" wx:key="i" class="test-chain-link {{item.active ? 'test-chain-link--active' : ''}}"></view>
     </view>
-
-    <!-- Pointer glow -->
-    <view wx:if="{{pointerVisible}}" class="test-pointer" style="left:{{pointerX}}px;top:{{pointerY}}px"></view>
-
-    <!-- Trail -->
-    <view wx:for="{{trail}}" wx:key="i" class="test-trail-dot"
-      style="left:{{item.x}}px;top:{{item.y}}px;opacity:{{item.o}};width:{{item.w}}rpx;height:{{item.w}}rpx">
-    </view>
+    <view wx:if="{{pv}}" class="test-pointer" style="left:{{px}}px;top:{{py}}px"></view>
+    <view wx:for="{{trail}}" wx:key="i" class="test-trail-dot" style="left:{{item.x}}px;top:{{item.y}}px;opacity:{{item.o}};width:{{item.w}}rpx;height:{{item.w}}rpx"></view>
   </view>
-
-  <!-- Lock flash -->
-  <view wx:if="{{lockFlash}}" class="test-lock-flash"></view>
-
-  <!-- All done -->
-  <view wx:if="{{allDone}}" class="test-result anim-fade-up">
+  <view wx:if="{{lf}}" class="test-lock-flash"></view>
+  <view wx:if="{{ad}}" class="test-result anim-fade-up">
     <text class="test-result-title">✓ 全部完成</text>
     <button class="test-reset-btn" bind:tap="reset">再来一轮</button>
   </view>
