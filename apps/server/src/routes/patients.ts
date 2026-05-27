@@ -1,9 +1,14 @@
 ﻿import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
-import { patientListSchema, patientResponseSchema, successSchema } from '@iomtea/shared-types'
-import { and, eq, ilike, or } from 'drizzle-orm'
+import {
+  patientListSchema,
+  patientResponseSchema,
+  PATIENT_RELATIONS,
+  successSchema,
+} from '@iomtea/shared-types'
+import { and, eq, ilike, or, sql } from 'drizzle-orm'
 import { HTTPException } from 'hono/http-exception'
 import { db } from '../core/db'
-import { patients } from '../core/db/schema'
+import { patients, users } from '../core/db/schema'
 import { userPatientLinks } from '../core/db/schema/user-patient'
 import type { AppEnv } from '../core/http/types'
 import { jwtAuth } from '../middleware/auth'
@@ -221,7 +226,7 @@ const linkUserPatRoute = createRoute({
         'application/json': {
           schema: z.object({
             userId: z.string().uuid(),
-            relation: z.string().optional().openapi({ example: 'caregiver' }),
+            relation: z.enum(PATIENT_RELATIONS).optional().openapi({ example: 'caregiver' }),
           }),
         },
       },
@@ -235,11 +240,9 @@ const linkUserPatRoute = createRoute({
 patientsRouter.openapi(linkUserPatRoute, async (c) => {
   const patientId = c.req.param('id')
   const body = c.req.valid('json')
-  await db.insert(userPatientLinks).values({
-    userId: body.userId,
-    patientId,
-    relation: body.relation ?? null,
-  } as any)
+  const values: Record<string, string> = { userId: body.userId, patientId }
+  if (body.relation) values.relation = body.relation
+  await db.insert(userPatientLinks).values(values as any)
   return c.json({ success: true }, 201)
 })
 
@@ -328,6 +331,14 @@ patientsRouter.openapi(bulkCreatePatRoute, async (c) => {
 
 // ── List linked users for a patient ──
 
+const linkedUserSchema = z.object({
+  userId: z.string(),
+  username: z.string().nullable(),
+  displayName: z.string().nullable(),
+  role: z.string(),
+  relation: z.string().nullable(),
+})
+
 const listUsersPatRoute = createRoute({
   method: 'get',
   path: '/:id/users',
@@ -337,7 +348,7 @@ const listUsersPatRoute = createRoute({
     200: {
       content: {
         'application/json': {
-          schema: z.array(z.object({ userId: z.string(), relation: z.string().nullable() })),
+          schema: z.array(linkedUserSchema),
         },
       },
       description: 'Linked users',
@@ -348,8 +359,15 @@ const listUsersPatRoute = createRoute({
 patientsRouter.openapi(listUsersPatRoute, async (c) => {
   const patientId = c.req.param('id')
   const rows = await db
-    .select({ userId: userPatientLinks.userId, relation: userPatientLinks.relation })
+    .select({
+      userId: userPatientLinks.userId,
+      relation: userPatientLinks.relation,
+      username: users.username,
+      displayName: users.displayName,
+      role: sql<string>`COALESCE(${users.role}, 'user')`,
+    })
     .from(userPatientLinks)
+    .leftJoin(users, eq(users.id, userPatientLinks.userId))
     .where(eq(userPatientLinks.patientId, patientId))
   return c.json(rows)
 })

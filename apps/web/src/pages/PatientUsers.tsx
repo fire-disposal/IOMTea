@@ -16,19 +16,26 @@ import { useDelete, useGet, usePost } from '../api/hooks'
 import { StateEmpty, StateSkeleton } from '../components/StateComponents'
 import { parsePatientId } from '../lib/path'
 
+const PATIENT_RELATIONS = [
+  'primary', 'spouse', 'child', 'parent', 'sibling',
+  'caregiver', 'doctor', 'nurse', 'admin', 'other',
+] as const
+
 interface LinkedUser {
   userId: string
   username?: string
   displayName?: string
   role?: string
+  relation?: string | null
 }
 
 export function PatientUsers() {
   const pid = parsePatientId()
-  const { data: linked, isLoading, refetch } = useGet<LinkedUser[]>(`/patients/${pid}/users`)
+  const { data: linked, isLoading } = useGet<LinkedUser[]>(`/patients/${pid}/users`)
   const { data: allUsers } =
     useGet<{ id: string; displayName: string; username: string }[]>('/users')
   const [selectedUser, setSelectedUser] = useState<string | null>(null)
+  const [relation, setRelation] = useState<string | null>('caregiver')
 
   const addLink = usePost(`/patients/${pid}/users`, [`patients/${pid}/users`])
   const removeLink = useDelete(`/patients/${pid}/users/:userId`, [`patients/${pid}/users`])
@@ -53,12 +60,23 @@ export function PatientUsers() {
           onChange={setSelectedUser}
           w={200}
         />
+        <Select
+          size="xs"
+          placeholder="关系类型"
+          data={PATIENT_RELATIONS.map((r) => ({ value: r, label: r }))}
+          value={relation}
+          onChange={setRelation}
+          w={140}
+        />
         <Button
           size="xs"
           leftSection={<IconPlus size={12} />}
           onClick={() => {
             if (!selectedUser) return
-            addLink.mutate({ userId: selectedUser }, { onSuccess: () => setSelectedUser(null) })
+            addLink.mutate(
+              { userId: selectedUser, relation: relation ?? undefined },
+              { onSuccess: () => { setSelectedUser(null); setRelation('caregiver') } },
+            )
           }}
           disabled={!selectedUser}
         >
@@ -74,6 +92,7 @@ export function PatientUsers() {
               <Table.Th>用户名</Table.Th>
               <Table.Th>显示名</Table.Th>
               <Table.Th>角色</Table.Th>
+              <Table.Th>关系</Table.Th>
               <Table.Th>操作</Table.Th>
             </Table.Tr>
           </Table.Thead>
@@ -83,6 +102,7 @@ export function PatientUsers() {
                 <Table.Td>{l.username}</Table.Td>
                 <Table.Td>{l.displayName || '-'}</Table.Td>
                 <Table.Td>{l.role}</Table.Td>
+                <Table.Td>{l.relation || '-'}</Table.Td>
                 <Table.Td>
                   <Tooltip label="取消关联" withArrow>
                     <ActionIcon

@@ -149,6 +149,25 @@ export function NodeGraph() {
     setSelectedNode(node)
   }, [])
 
+  const onEdgesDelete = useCallback(
+    (deletedEdges: Edge[]) => {
+      for (const edge of deletedEdges) {
+        const patientId = edge.target.replace('pat-', '')
+        const userId = edge.source.replace('usr-', '')
+        http
+          .delete(`/patients/${patientId}/users/${userId}`)
+          .catch(() =>
+            notifications.show({
+              color: 'red',
+              title: '删除失败',
+              message: `关系 ${edge.label || ''} 删除失败，请重试`,
+            }),
+          )
+      }
+    },
+    [],
+  )
+
   const filteredNodes =
     filter === 'all'
       ? nodes
@@ -163,6 +182,7 @@ export function NodeGraph() {
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onNodeClick={onNodeClick}
+          onEdgesDelete={onEdgesDelete}
           nodeTypes={nodeTypes}
           fitView
           deleteKeyCode={['Backspace', 'Delete']}

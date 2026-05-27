@@ -28,7 +28,24 @@ Page({
   fi: 0, cr: null, _pxr: 1, cc: -1, pc: -1, locked: [], cv: 0,
   dwa: false, dws: 0, dwt: null, dt: null, _dialSpeed: 0,
   subIdx: 0, currentMetric: null, _submitLock: false,
-  
+
+  onLoad() {
+    var s = this
+    wx.createSelectorQuery()
+      .select('.test-canvas')
+      .boundingClientRect()
+      .exec(function (r) { if (r[0]) s.cr = r[0] })
+    this._pxr = wx.getSystemInfoSync().screenWidth / 750
+    this._loadForm(0)
+  },
+
+  onUnload() {
+    this._stopDwell()
+    this._stopDial()
+    this.dwt = null
+    this.dt = null
+  },
+
   _loadForm(subIdx, metricKey) {
     this._stopDwell(); this._stopDial()
     this.cc = -1; this.pc = -1; this.subIdx = subIdx; this.locked = []; this._submitLock = true

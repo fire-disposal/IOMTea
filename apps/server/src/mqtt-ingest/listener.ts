@@ -29,11 +29,6 @@ export function startMqttListener(
   brokerUrl: string,
   opts?: { username?: string; password?: string },
 ): mqtt.MqttClient {
-  let reconnectAttempts = 0
-  let reconnectTimer: ReturnType<typeof setTimeout> | null = null
-  const MAX_RECONNECT = 3
-  const BASE_DELAY_MS = 1000
-
   const mqttClient = mqtt.connect(brokerUrl, {
     username: opts?.username,
     password: opts?.password,
@@ -45,19 +40,7 @@ export function startMqttListener(
   })
   client = mqttClient
 
-  const scheduleReconnect = () => {
-    const delay = Math.min(BASE_DELAY_MS * Math.pow(2, reconnectAttempts), 30000)
-    reconnectTimer = setTimeout(() => {
-      mqttClient.reconnect()
-    }, delay)
-  }
-
   mqttClient.on('connect', () => {
-    reconnectAttempts = 0
-    if (reconnectTimer) {
-      clearTimeout(reconnectTimer)
-      reconnectTimer = null
-    }
     logger.info('✓ MQTT Broker 已连接')
     subscribeTopic(mqttClient, TOPIC, `√ 已订阅 PIN 数据主题: ${TOPIC}`, '✗ MQTT 主题订阅失败')
     subscribeTopic(
@@ -87,16 +70,8 @@ export function startMqttListener(
   })
 
   mqttClient.on('close', () => {
-    reconnectAttempts++
-    if (reconnectAttempts > MAX_RECONNECT) {
-      logger.warn(`MQTT 重连已达上限 (${MAX_RECONNECT} 次)，放弃连接`)
-      mqttClient.end()
-      client = null
-      return
-    }
-    const delay = Math.min(BASE_DELAY_MS * Math.pow(2, reconnectAttempts), 30000)
-    logger.warn(`MQTT 断开，${delay / 1000}s 后重连 (${reconnectAttempts}/${MAX_RECONNECT})`)
-    scheduleReconnect()
+    logger.warn('MQTT 连接已关闭，不再重连')
+    client = null
   })
 
   return mqttClient

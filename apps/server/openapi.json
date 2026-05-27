@@ -1582,6 +1582,18 @@
                   },
                   "relation": {
                     "type": "string",
+                    "enum": [
+                      "primary",
+                      "spouse",
+                      "child",
+                      "parent",
+                      "sibling",
+                      "caregiver",
+                      "doctor",
+                      "nurse",
+                      "admin",
+                      "other"
+                    ],
                     "example": "caregiver"
                   }
                 },
@@ -1630,6 +1642,17 @@
                       "userId": {
                         "type": "string"
                       },
+                      "username": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "displayName": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "role": {
+                        "type": "string"
+                      },
                       "relation": {
                         "type": "string",
                         "nullable": true
@@ -1637,6 +1660,9 @@
                     },
                     "required": [
                       "userId",
+                      "username",
+                      "displayName",
+                      "role",
                       "relation"
                     ]
                   }
