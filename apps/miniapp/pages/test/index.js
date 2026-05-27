@@ -35,7 +35,8 @@ Page({data:{},fi:0,cr:null,dt:null,cv:0,dwt:null,dwa:false,dws:0,cc:-1,pc:-1,loc
 
   onMetricTap(e){var idx=Number(e.currentTarget.dataset.idx);if(isNaN(idx))return;var m=this.data.metric;m.selIdx=idx;m.selLabel=m.options[idx].l;var mk=m.options[idx].v;var cf=this.data.chainFields.slice();for(var i=0;i<cf.length;i++){if(cf[i].type==='dial'&&cf[i].ranges&&cf[i].ranges[mk]){var r=cf[i].ranges[mk];cf[i].min=r.min;cf[i].max=r.max;cf[i].unit=r.unit;var dec=Number(r.min)%1!==0||Number(r.max)%1!==0?1:0;this.cv=r.normal;cf[i].selLabel=String(r.normal.toFixed(dec))}}wx.vibrateShort({type:'light'});this.setData({metric:m,chainFields:cf})},
 
-  _z(fx){var odd=this.fi%2===0,e=0.08,cf=this.data.chainFields,n=cf?cf.length:2;if(odd){if(fx>1-e)return'submit'}else{if(fx<e)return'submit'};if(odd){if(fx<e)return'guide'}else{if(fx>1-e)return'guide'};var ci=Math.floor((fx-e)/(1-2*e)*n);if(ci<0)ci=0;if(ci>=n)ci=n-1;return ci},
+  _z(fx){var odd=this.fi%2===0,e=0.08,cf=this.data.chainFields,n=cf?cf.length:2;if(odd){if(fx>1-e)return'submit';if(fx<e)return'guide'}else{if(fx<e)return'submit';if(fx>1-e)return'guide'}
+    var raw=Math.floor((fx-e)/(1-2*e)*n);if(raw<0)raw=0;if(raw>=n)raw=n-1;var ci=odd?raw:n-1-raw;return ci},
 
   _sda(){this._sd();this.dwa=true;this.dws=Date.now();this.setData({dbv:true});this._td()},
   _td(){if(!this.dwa)return;var pct=Math.min(80,(Date.now()-this.dws)/10);this.setData({dp:pct});if(pct>=80){this._od();return}var s=this;this.dwt=setTimeout(function(){s._td()},30)},
