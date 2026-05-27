@@ -231,9 +231,9 @@ Page({
 
   _tickDwell() {
     if (!this.dwa) return
-    var pct = Math.min(40, (Date.now() - this.dws) / 10)
+    var pct = Math.min(100, (Date.now() - this.dws) / 4)
     this.setData({ dp: pct })
-    if (pct >= 40) {
+    if (pct >= 100) {
       this._onDwellComplete()
       return
     }
