@@ -23,7 +23,7 @@
     </view>
 
     <!-- Columns -->
-    <view class="test-cols">
+    <view class="test-cols {{!odd ? 'test-cols--reversed' : ''}}">
       <view wx:for="{{chainFields}}" wx:key="id" wx:for-index="ci"
         class="test-col {{ac === ci ? 'test-col--active' : ''}} {{item.done ? 'test-col--locked' : ''}} {{colGray[ci] ? 'test-col--gray' : ''}}">
         <view class="test-col-bar {{colGray[ci] ? 'test-col-bar--gray' : ac === ci ? 'test-col-bar--active' : item.done ? 'test-col-bar--done' : 'test-col-bar--idle'}}"></view>
