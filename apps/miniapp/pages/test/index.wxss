@@ -25,10 +25,14 @@
 /* Edge zones */
 .test-edge { width: 80rpx; display: flex; flex-direction: column; align-items: center; justify-content: center; writing-mode: vertical-rl; transition: background 0.2s, width 0.2s; flex-shrink: 0; position: relative; }
 .test-edge--active { width: 120rpx; }
-.test-edge--active.test-edge--left { background: rgba(107,165,57,0.12); }
-.test-edge--active.test-edge--right { background: rgba(107,165,57,0.12); }
+.test-edge--active.test-edge--left { background: rgba(107,165,57,0.08); }
+.test-edge--active.test-edge--right { background: rgba(107,165,57,0.08); }
 .test-edge-text { font-size: 22rpx; color: #bbb; }
 .test-edge--active .test-edge-text { font-weight: 600; color: #666; }
+
+.test-edge-glow { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.test-edge-icon { font-size: 36rpx; }
+.test-edge-label { font-size: 20rpx; color: var(--brand-500); font-weight: 600; margin-top: 4rpx; }
 
 .test-dwell-ring {
   position: absolute; inset: 8rpx; border-radius: 16rpx; border: 3rpx solid var(--brand-500);
@@ -45,7 +49,7 @@
 
 .test-col { flex: 1; display: flex; flex-direction: column; padding: 8rpx 12rpx; border-right: 1rpx solid rgba(0,0,0,0.03); transition: background 0.2s; }
 .test-col--active { background: rgba(107,165,57,0.04); }
-.test-col--locked { background: rgba(107,165,57,0.02); }
+.test-col--locked { background: rgba(107,165,57,0.03); border-left: 2rpx solid var(--brand-500); }
 .test-col-lock { text-align: center; font-size: 16rpx; color: var(--brand-500); padding-top: 6rpx; padding-bottom: 2rpx; }
 .test-col-dot { width: 8rpx; height: 8rpx; border-radius: 50%; background: #e0e0e0; margin: 10rpx auto 6rpx; }
 .test-col-dot--live { background: var(--brand-500); animation: pulse 1.5s ease-in-out infinite; }
@@ -54,7 +58,7 @@
 /* Picker column */
 .test-picker-col { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 4rpx; }
 .test-opt { display: flex; align-items: center; justify-content: space-between; padding: 16rpx 12rpx; border-radius: 10rpx; transition: all 0.1s; }
-.test-opt--hl { background: rgba(107,165,57,0.12); }
+.test-opt--hl { background: rgba(107,165,57,0.15); transform: scale(1.03); box-shadow: inset 4rpx 0 0 var(--brand-500); }
 .test-opt--locked { background: rgba(107,165,57,0.06); border: 1rpx solid var(--brand-500); }
 .test-opt-label { font-size: 26rpx; font-weight: 500; }
 .test-opt--hl .test-opt-label { color: var(--brand-500); font-weight: 700; }
@@ -83,6 +87,12 @@
 .test-result { padding: 32rpx; text-align: center; }
 .test-result-title { font-size: 40rpx; font-weight: 700; margin-bottom: 24rpx; }
 .test-reset-btn { width: 100%; background: var(--brand-500); color: #fff; border: none; border-radius: 14rpx; padding: 24rpx; font-size: 30rpx; font-weight: 600; text-align: center; margin-top: 24rpx; }
+
+/* Step dots */
+.test-steps { display: flex; justify-content: center; gap: 32rpx; padding: 20rpx 0; flex-shrink: 0; }
+.test-step-dot { width: 10rpx; height: 10rpx; border-radius: 50%; background: #e0e0e0; transition: all 0.3s; }
+.test-step-dot--done { background: var(--brand-500); }
+.test-step-dot--cur { background: var(--brand-500); width: 16rpx; height: 16rpx; box-shadow: 0 0 8rpx rgba(107,165,57,0.4); }
 
 /* Chain bar */
 .test-chain { position: absolute; bottom: 0; left: 80rpx; right: 80rpx; height: 40rpx; display: flex; align-items: center; justify-content: center; gap: 0; pointer-events: none; }

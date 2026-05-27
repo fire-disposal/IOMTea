@@ -8,21 +8,29 @@
         <text>{{item.l}}</text>
       </view>
     </view>
-    <text class="test-hint-text">{{ht}}</text>
   </view>
 
   <view class="test-canvas"
     bindtouchstart="onStart" bindtouchmove="onMove" bindtouchend="onEnd">
+
+    <!-- Dwell bar -->
     <view class="test-dwell-bar {{dbv ? 'test-dwell-bar--on' : ''}}" style="width:{{dp}}%"></view>
+
+    <!-- Left edge -->
     <view class="test-edge test-edge--left {{lza ? 'test-edge--active' : ''}}">
-      <text class="test-edge-text">{{ll}}</text>
+      <view wx:if="{{lza}}" class="test-edge-glow">
+        <text class="test-edge-icon">{{!odd ? '✕' : '✓'}}</text>
+        <text class="test-edge-label">{{ll}}</text>
+      </view>
+      <text wx:else class="test-edge-text">{{!odd ? '← 取消' : '← 提交'}}</text>
     </view>
+
+    <!-- Columns -->
     <view class="test-cols">
       <view wx:for="{{chainFields}}" wx:key="id" wx:for-index="ci"
         class="test-col {{ac === ci ? 'test-col--active' : ''}} {{item.done ? 'test-col--locked' : ''}}">
-        <view wx:if="{{item.done}}" class="test-col-lock">◇</view>
-        <view wx:else class="test-col-dot {{ac === ci ? 'test-col-dot--live' : ''}}"></view>
         <text class="test-col-label">{{item.label}}</text>
+
         <view wx:if="{{item.type === 'picker'}}" class="test-picker-col">
           <view wx:for="{{item.options}}" wx:key="v" wx:for-index="oi"
             class="test-opt {{ac === ci && item.hlIdx === oi ? 'test-opt--hl' : ''}} {{item.selIdx === oi ? 'test-opt--locked' : ''}}">
@@ -30,6 +38,7 @@
             <text wx:if="{{item.selIdx === oi}}" class="test-opt-check">✓</text>
           </view>
         </view>
+
         <view wx:if="{{item.type === 'dial'}}" class="test-dial-col">
           <view class="test-dial-zone-bar">
             <view wx:for="{{dz}}" wx:key="name" class="test-dial-zone-seg"
@@ -44,18 +53,34 @@
         </view>
       </view>
     </view>
+
+    <!-- Right edge -->
     <view class="test-edge test-edge--right {{rza ? 'test-edge--active' : ''}}">
-      <text class="test-edge-text">{{rl}}</text>
+      <view wx:if="{{rza}}" class="test-edge-glow">
+        <text class="test-edge-icon">{{odd ? '✕' : '✓'}}</text>
+        <text class="test-edge-label">{{rl}}</text>
+      </view>
+      <text wx:else class="test-edge-text">{{odd ? '取消 →' : '提交 →'}}</text>
     </view>
+
+    <!-- Chain -->
     <view class="test-chain">
       <view wx:for="{{chain}}" wx:key="i" class="test-chain-node {{item.active ? 'test-chain-node--active' : ''}} {{item.locked ? 'test-chain-node--locked' : ''}}">
         <text wx:if="{{item.locked}}" class="test-chain-text">{{item.label}}</text>
       </view>
       <view wx:for="{{chainLinks}}" wx:key="i" class="test-chain-link {{item.active ? 'test-chain-link--active' : ''}}"></view>
     </view>
+
     <view wx:if="{{pv}}" class="test-pointer" style="left:{{px}}px;top:{{py}}px"></view>
     <view wx:for="{{trail}}" wx:key="i" class="test-trail-dot" style="left:{{item.x}}px;top:{{item.y}}px;opacity:{{item.o}};width:{{item.w}}rpx;height:{{item.w}}rpx"></view>
   </view>
+
+  <!-- Progress indicator below canvas -->
+  <view class="test-steps">
+    <view wx:for="{{chainFields}}" wx:key="id" wx:for-index="si"
+      class="test-step-dot {{item.done ? 'test-step-dot--done' : ''}} {{ac === si ? 'test-step-dot--cur' : ''}}"></view>
+  </view>
+
   <view wx:if="{{lf}}" class="test-lock-flash"></view>
   <view wx:if="{{ad}}" class="test-result anim-fade-up">
     <text class="test-result-title">✓ 全部完成</text>
