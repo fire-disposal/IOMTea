@@ -25,7 +25,7 @@ function initField(f){
 
 Page({
   data: { dz: SPEED, trail: [], connectors: [], pv: false, ad: false, colGray: [] },
-  fi: 0, cr: null, _pxr: 1, cc: -1, pc: -1, locked: [],
+  fi: 0, cr: null, _pxr: 1, cc: -1, pc: -1, traversed: [],
   dwa: false, dws: 0, dwt: null, dt: null, _dialSpeed: 0,
   subIdx: 0, currentMetric: null, _submitLock: false,
 
@@ -48,7 +48,7 @@ Page({
 
   _loadForm(subIdx, metricKey) {
     this._stopDwell(); this._stopDial()
-    this.cc = -1; this.pc = -1; this.subIdx = subIdx; this.locked = []; this._submitLock = true
+    this.cc = -1; this.pc = -1; this.subIdx = subIdx; this.traversed = []; this._submitLock = true
 
     var mk = metricKey || METRIC_KEYS[0]
     var meta = METRICS[mk]
@@ -72,12 +72,7 @@ Page({
         chainFields[k].selLabel = chainFields[k].options[0].l
       }
     }
-    this._resetLocked(chainFields)
-
-    var guide = odd ? '←按住向右' : '按住向左→'
-    var os = odd ? '提交→' : '←提交'
-
-    this._updateColGray(chainFields)
+    this._updateColGray()
 
     this.setData({
       metricChips: chips, metricSelIdx: chipSel,
@@ -132,45 +127,35 @@ Page({
   },
 
   _resetLocked(cf) {
-    this.locked = []
-    if (cf) for (var i = 0; i < cf.length; i++) { if (cf[i].type === 'dial') this.locked[i] = true }
   },
-  _updateColGray(cf) {
+  _updateColGray() {
     var g = []
-    if (cf) for (var i = 0; i < cf.length; i++) g.push(i > 0 && cf[i - 1].selIdx < 0)
+    var cf = this.data.chainFields
+    if (cf) for (var i = 0; i < cf.length; i++) g.push(i > 0 && !this.traversed[i - 1])
     this.setData({ colGray: g })
   },
   _canAccess(ci) {
     if (ci <= 0) return true
-    var cf = this.data.chainFields
-    return cf && cf[ci - 1] && cf[ci - 1].selIdx >= 0
+    return this.traversed[ci - 1] === true
   },
 
   _lockColumn(ci) {
-    if (this.locked[ci]) return
     var cf = this.data.chainFields
-    if (!cf || !cf[ci]) return
-
-    this.locked[ci] = true
-    this._updateColGray(cf)
+    if (!cf || !cf[ci] || cf[ci].done) return
     var f = cf[ci]
-
     if (f.type === 'dial') {
       f.done = true
-      f.selIdx = 1
       var dec = Number(f.min) % 1 !== 0 || Number(f.max) % 1 !== 0 ? 1 : 0
       f.selLabel = String(f.value.toFixed(dec))
       this.setData({ chainFields: cf, stl: 1 })
       var s = this
       setTimeout(function () { s.setData({ stl: 2 }) }, 400)
       setTimeout(function () { s.setData({ stl: 3 }) }, 700)
-    } else if (f.type === 'picker' && f.selIdx >= 0) {
-      f.selLabel = f.options[f.selIdx].l
+    } else if (f.type === 'picker') {
       f.done = true
       wx.vibrateShort({ type: 'light' })
       this.setData({ chainFields: cf })
     }
-
     this._updateConnectors()
   },
 
@@ -363,14 +348,9 @@ Page({
     if (z !== this.cc) {
       this._stopDial()
       if (this.cc >= 0) {
-        if (z < this.cc) {
-          this.locked[z] = false
-          cf[z].done = false
-          this._updateColGray(cf)
-          if (cf[z].type === 'picker') cf[z].hlIdx = -1
-        } else {
-          this._lockColumn(this.cc)
-        }
+        this._lockColumn(this.cc)
+        this.traversed[this.cc] = true
+        this._updateColGray()
         if (cf[this.cc] && cf[this.cc].type === 'picker') cf[this.cc].hlIdx = -1
       }
       this.pc = this.cc
@@ -412,17 +392,17 @@ Page({
     var allDone = cf.every(function (f) { return f.selIdx >= 0 })
 
     if (z === 'submit' && allDone) {
-      if (this.cc >= 0 && this.cc < cf.length && !this.locked[this.cc]) {
+      if (this.cc >= 0 && this.cc < cf.length && !cf[this.cc].done) {
         this._lockColumn(this.cc)
       }
       this._doSubmit()
       return
     }
 
-    if (typeof z === 'number' && cf[z] && !this.locked[z] && cf[z].selIdx >= 0) {
-      this._resetLocked(cf)
+    if (typeof z === 'number' && cf[z] && cf[z].selIdx >= 0) {
       this._lockColumn(z)
-      this._updateColGray(cf)
+      this.traversed[z] = true
+      this._updateColGray()
       this.cc = -1
       this.pc = -1
       this.setData({ lza: false, rza: false, ac: -1, dlv: false, daz: '' })
@@ -439,8 +419,8 @@ Page({
       }
     }
 
-    this._resetLocked(cf)
-    this._updateColGray(cf)
+    this.traversed = []
+    this._updateColGray()
     this.cc = -1
     this.pc = -1
     this.setData({
