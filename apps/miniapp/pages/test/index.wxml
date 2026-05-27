@@ -35,7 +35,6 @@
         <view wx:if="{{item.type === 'picker'}}" class="test-picker-col">
           <view wx:for="{{item.options}}" wx:key="v" wx:for-index="oi"
             class="test-opt {{activeCol === ci && item.hlIdx === oi ? 'test-opt--hl' : ''}} {{item.selIdx === oi ? 'test-opt--locked' : ''}}"
-            style="{{activeCol === ci ? '' : 'pointer-events:none'}}">
             <text class="test-opt-label">{{item.l}}</text>
             <text wx:if="{{item.selIdx === oi}}" class="test-opt-check">✓</text>
           </view>
@@ -45,7 +44,7 @@
         <view wx:if="{{item.type === 'dial'}}" class="test-dial-col">
           <view class="test-dial-zone-bar">
             <view wx:for="{{dialZones}}" wx:key="name" class="test-dial-zone-seg"
-              style="opacity:{{activeCol === ci && dialActiveZone === item.name ? 0.35 : 0.06}};background:{{item.color}}">
+              style="opacity:{{activeCol === ci && dialActiveZone === item.name ? 0.5 : 0.08}};background:{{item.color}}">
             </view>
           </view>
           <view class="test-dial-display">

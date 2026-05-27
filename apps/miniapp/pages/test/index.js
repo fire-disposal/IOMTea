@@ -43,11 +43,11 @@ var FORMS = [
 ]
 
 var SPEED = [
-  { name:'fastUp',   f:0.00,t:0.15,s:+4,  c:'#6BA539' },
-  { name:'slowUp',   f:0.15,t:0.38,s:+0.5,c:'#8EC15B' },
-  { name:'center',   f:0.38,t:0.62,s:0,   c:'#ddd' },
-  { name:'slowDown', f:0.62,t:0.85,s:-0.5,c:'#8EC15B' },
-  { name:'fastDown', f:0.85,t:1.00,s:-4,  c:'#6BA539' },
+  { name:'fastUp',   f:0.00,t:0.20,s:+4,  c:'#2E7D32' },
+  { name:'slowUp',   f:0.20,t:0.40,s:+0.5,c:'#66BB6A' },
+  { name:'center',   f:0.40,t:0.60,s:0,   c:'#E0E0E0' },
+  { name:'slowDown', f:0.60,t:0.80,s:-0.5,c:'#EF9A9A' },
+  { name:'fastDown', f:0.80,t:1.00,s:-4,  c:'#C62828' },
 ]
 
 function makeFields(fdef) {
@@ -81,6 +81,9 @@ Page({
   data: {},
   formIdx: 0, canvasRect: null, dialRect: null, dialTimer: null, currentVal: 0,
   dwellTimer: null, dwellActive: false, dwellStart: 0,
+  lockedCol: -1,      // column that has been locked (user released in it)
+  claimedCol: -1,     // column that currently owns the pointer
+  prevClaimed: -1,
 
   onLoad() {
     var s = this
@@ -91,6 +94,7 @@ Page({
   _loadForm(idx, keepPtr) {
     if (idx >= FORMS.length) { this.setData({ allDone: true, pointerVisible: false }); return }
     this._stopDwell(); this._stopDial()
+    this.claimedCol = -1; this.prevClaimed = -1
     this.formIdx = idx
     var odd = (idx % 2 === 0)
     var fields = makeFields(FORMS[idx].fields)
@@ -119,12 +123,17 @@ Page({
 
   _zone(fx) {
     var odd = (this.formIdx % 2 === 0)
-    var e = 0.08, colCount = this.data.fields ? this.data.fields.length : 3
+    var e = 0.08, fields = this.data.fields || []
+    // Count only data columns (exclude metric selector)
+    var dataCols = []; for (var i = 0; i < fields.length; i++) { if (fields[i].id !== 'metric') dataCols.push(i) }
+    var colCount = dataCols.length
     if (fx < e) return odd ? 'submit' : 'cancel'
     if (fx > 1 - e) return odd ? 'cancel' : 'submit'
-    var ci = Math.floor((fx - e) / (1 - 2 * e) * colCount)
+    // Map X fraction to data column index
+    var colFrac = (fx - e) / (1 - 2 * e)
+    var ci = Math.floor(colFrac * colCount)
     if (ci < 0) ci = 0; if (ci >= colCount) ci = colCount - 1
-    return ci
+    return dataCols[ci] // return actual field index
   },
 
   _updateChain(fields, activeCol) {
@@ -162,6 +171,7 @@ Page({
   },
   _cancelForm() {
     this._stopDwell(); this._stopDial()
+    this.claimedCol = -1; this.prevClaimed = -1
     wx.vibrateShort({ type: 'heavy' })
     var odd = (this.formIdx % 2 === 0)
     var fields = makeFields(FORMS[this.formIdx].fields)
@@ -219,9 +229,25 @@ Page({
       var allSel = fs.every(function (f) { return f.selIdx >= 0 })
       if (allSel) { this.setData({ leftZoneActive: !odd, rightZoneActive: odd }); if (!this.dwellActive) this._startDwell() }
     } else if (typeof z === 'number') {
-      this._stopDwell(); this.setData({ leftZoneActive: false, rightZoneActive: false, activeCol: z })
+      // Column claim system: only one column active at a time
+      this._stopDwell(); this.setData({ leftZoneActive: false, rightZoneActive: false })
+
+      // If entering a new column, clear previous highlight
+      if (this.claimedCol !== z) {
+        if (this.prevClaimed >= 0 && this.prevClaimed < fs.length) {
+          fs[this.prevClaimed].hlIdx = -1
+        }
+        this.prevClaimed = this.claimedCol
+        this.claimedCol = z
+      }
+
+      this.setData({ activeCol: z })
       var f = fs[z]; if (!f) return
-      if (f.type === 'picker') { var idx = Math.floor((t.pageY - 120) / 80); if (idx < 0) idx = 0; if (idx >= f.options.length) idx = f.options.length - 1; if (f.hlIdx !== idx) { f.hlIdx = idx; this.setData({ fields: fs }) } }
+      if (f.type === 'picker') {
+        var idx = Math.floor((t.pageY - 120) / 80)
+        if (idx < 0) idx = 0; if (idx >= f.options.length) idx = f.options.length - 1
+        if (f.hlIdx !== idx) { f.hlIdx = idx; this.setData({ fields: fs }) }
+      }
       if (f.type === 'dial') this._dialMove(t, f, fs)
     }
 
@@ -248,6 +274,7 @@ Page({
     }
 
     this.setData({ fields: fs, leftZoneActive: false, rightZoneActive: false, activeCol: -1, dialLive: false, dialActiveZone: '' })
+    this.claimedCol = -1; this.prevClaimed = -1
     this._updateChain(fs, -1)
   },
   reset() { this._stopDial(); this._stopDwell(); this.setData({ pointerVisible: false, trail: [] }); this._loadForm(0) },
