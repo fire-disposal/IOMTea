@@ -9,6 +9,10 @@ Page({
     saving: false,
   },
 
+  onBack() {
+    wx.navigateBack()
+  },
+
   onLoad() {
     var cached = wx.getStorageSync(STORAGE_KEYS.PLAN_CACHE)
     var plan = cached || null

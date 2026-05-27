@@ -46,7 +46,10 @@
 .login-icon {
   font-size: 80rpx;
   margin-bottom: 24rpx;
-  animation: iconBounce 1.2s ease-in-out infinite;
+}
+
+.login-icon--bounce {
+  animation: iconBounce 1.2s ease-in-out;
 }
 
 @keyframes iconBounce {

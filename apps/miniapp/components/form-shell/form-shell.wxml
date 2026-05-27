@@ -1,4 +1,4 @@
-<view class="form-shell animation-fade">
+<view class="form-shell anim-fade-up">
   <view class="form-shell__header">
     <text class="form-shell__title">{{title}}</text>
     <text class="form-shell__unit">{{unit}}</text>

@@ -3,8 +3,25 @@ const { HEALTH_MODULE_META } = require('../../constants/modules')
 
 Page({
   data: {
-    transactions: [],
-    balance: 0,
+    balance: 0, transactions: [], loading: true,
+  },
+
+  onLoad() {
+    const userId = wx.getStorageSync(STORAGE_KEYS.USER_ID) || ''
+    Promise.all([
+      api.get('/credits/balance'),
+      api.get('/credits/transactions', { userId, pageSize: 50 }),
+    ])
+      .then(([bal, txs]) => {
+        this.setData({ balance: bal ? bal.balance : 0, transactions: txs || [], loading: false })
+      })
+      .catch(() => {
+        this.setData({ loading: false })
+      })
+  },
+
+  onBack() {
+    wx.navigateBack()
   },
 
   onLoad() {
