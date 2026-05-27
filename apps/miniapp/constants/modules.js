@@ -39,17 +39,7 @@ const PIN_TYPE_LABELS = {
 }
 
 function getRecordPage(key) {
-  const pages = {
-    blood_glucose: '/pages/record/glucose/index',
-    blood_pressure: '/pages/record/pressure/index',
-    weight: '/pages/record/weight/index',
-    heart_rate: '/pages/record/heart-rate/index',
-    temperature: '/pages/record/temperature/index',
-    spo2: '/pages/record/spo2/index',
-    medication: '/pages/record/medication/index',
-    period: '/pages/record/period/index',
-  }
-  return pages[key] || ''
+  return '/pages/record-entry/index?type=' + key
 }
 
 module.exports = {

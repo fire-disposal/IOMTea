@@ -1,0 +1,72 @@
+<view class="page record-entry-page">
+  <view class="record-entry-header">
+    <text class="record-entry-back" bind:tap="onBack">‹ 返回</text>
+    <text class="record-entry-title">{{meta.label}} 记录</text>
+    <text class="record-entry-unit">{{meta.unit}}</text>
+  </view>
+
+  <view class="record-entry-body">
+    <!-- Number fields -->
+    <view wx:for="{{config.fields}}" wx:key="id" wx:for-item="f" class="entry-field">
+      <text class="entry-field-label">{{f.label}}</text>
+      <input class="entry-input"
+        type="{{f.decimal ? 'digit' : 'number'}}"
+        placeholder="{{f.placeholder}}"
+        value="{{values[f.id] || ''}}"
+        data-id="{{f.id}}"
+        bindinput="onInput"
+        bindblur="onBlur" />
+    </view>
+
+    <!-- Context / segment pickers -->
+    <view wx:if="{{config.contexts}}" class="entry-segment-group">
+      <view wx:for="{{config.contexts}}" wx:key="value" wx:for-item="c"
+        class="entry-segment {{segments.context === c.value ? 'entry-segment--active' : ''}}"
+        data-key="context" data-value="{{c.value}}" bind:tap="onSegmentTap">
+        <text>{{c.label}}</text>
+      </view>
+    </view>
+
+    <!-- Custom segments (flow, etc.) -->
+    <block wx:if="{{config.segments}}" wx:for="{{config.segments}}" wx:key="key" wx:for-item="sg">
+      <view class="entry-segment-group">
+        <text class="entry-field-label">{{sg.label}}</text>
+        <view wx:for="{{sg.options}}" wx:key="value" wx:for-item="o"
+          class="entry-segment {{segments[sg.key] === o.value ? 'entry-segment--active' : ''}}"
+          data-key="{{sg.key}}" data-value="{{o.value}}" bind:tap="onSegmentTap">
+          <text>{{o.label}}</text>
+        </view>
+      </view>
+    </block>
+
+    <!-- Chip selector (symptoms) -->
+    <view wx:if="{{config.chips}}" class="entry-chip-group">
+      <text class="entry-field-label">{{config.chips.key === 'symptoms' ? '症状' : ''}}</text>
+      <view wx:for="{{config.chips.options}}" wx:key="*this" wx:for-item="item"
+        class="entry-chip {{chipMap[item] ? 'entry-chip--active' : ''}}"
+        data-value="{{item}}" bind:tap="onChipTap">
+        <text>{{item}}</text>
+      </view>
+    </view>
+
+    <!-- Medication special case -->
+    <view wx:if="{{type === 'medication'}}">
+      <block wx:if="{{meds && meds.length > 0}}" wx:for="{{meds}}" wx:key="id" wx:for-item="med">
+        <view class="entry-med-item">
+          <text class="entry-med-name">{{med.drug || med.title}}</text>
+          <view class="entry-med-actions">
+            <text class="entry-med-btn entry-med-btn--take" bind:tap="onMedTake" data-id="{{med.id}}">已服用</text>
+            <text class="entry-med-btn entry-med-btn--skip" bind:tap="onMedSkip" data-id="{{med.id}}">跳过</text>
+          </view>
+        </view>
+      </block>
+      <view wx:else class="entry-empty">暂无用药计划</view>
+    </view>
+  </view>
+
+  <view wx:if="{{type !== 'medication'}}" class="record-entry-footer">
+    <button class="entry-save" disabled="{{saving}}" bind:tap="handleSave">
+      {{saving ? '保存中...' : '保存'}}
+    </button>
+  </view>
+</view>
