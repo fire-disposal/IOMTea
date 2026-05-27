@@ -164,6 +164,10 @@ Page({
     return idx
   },
 
+  _resetLocked(cf) {
+    this.locked = []
+    if (cf) for (var i = 0; i < cf.length; i++) { if (cf[i].type === 'dial') this.locked[i] = true }
+  },
   _canAccess(ci) {
     if (ci <= 0) return true
     return this.locked[ci - 1] === true
@@ -455,7 +459,7 @@ Page({
 
     if (typeof z === 'number' && cf[z] && !this.locked[z] && cf[z].selIdx >= 0) {
       this._lockColumn(z)
-      this.locked = []
+      this._resetLocked(cf)
       this.cc = -1
       this.pc = -1
       this.setData({ lza: false, rza: false, ac: -1, dlv: false, daz: '' })
@@ -472,7 +476,7 @@ Page({
       }
     }
 
-    this.locked = []
+    this._resetLocked(cf)
     this.cc = -1
     this.pc = -1
     this.setData({
