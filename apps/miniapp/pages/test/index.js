@@ -10,7 +10,7 @@ var METRICS = {
   temperature: { label:'体温',
     fields:[{id:'value',label:'数值',type:'dial',min:34.0,max:43.0,unit:'°C',normal:36.5}]},
   spo2: { label:'血氧',
-    fields:[{id:'value',label:'数值',type:'dial',min:50,max:100,unit:'%',normal:98}]},
+    fields:[{id:'value',label:'数值',type:'dial',min:70,max:100,unit:'%',normal:98}]},
 }
 
 var METRIC_KEYS = Object.keys(METRICS)
