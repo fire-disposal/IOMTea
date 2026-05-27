@@ -23,16 +23,12 @@
 .test-dwell-bar--on { opacity: 1; }
 
 /* Edge zones */
-.test-edge { width: 80rpx; display: flex; flex-direction: column; align-items: center; justify-content: center; writing-mode: vertical-rl; transition: background 0.2s, width 0.2s; flex-shrink: 0; position: relative; }
+.test-edge { width: 80rpx; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: background 0.2s, width 0.2s; flex-shrink: 0; position: relative; }
 .test-edge--active { width: 120rpx; }
 .test-edge--active.test-edge--left { background: rgba(107,165,57,0.08); }
 .test-edge--active.test-edge--right { background: rgba(107,165,57,0.08); }
-.test-edge-text { font-size: 22rpx; color: #bbb; }
-.test-edge--active .test-edge-text { font-weight: 600; color: #666; }
-
-.test-edge-glow { display: flex; flex-direction: column; align-items: center; justify-content: center; }
-.test-edge-icon { font-size: 36rpx; }
-.test-edge-label { font-size: 20rpx; color: var(--brand-500); font-weight: 600; margin-top: 4rpx; }
+.test-edge-guide { font-size: 20rpx; color: #bbb; writing-mode: vertical-rl; }
+.test-edge--active .test-edge-guide { color: var(--brand-500); font-weight: 600; }
 
 .test-dwell-ring {
   position: absolute; inset: 8rpx; border-radius: 16rpx; border: 3rpx solid var(--brand-500);

@@ -12,29 +12,24 @@ Page({data:{},fi:0,cr:null,dt:null,cv:0,dwt:null,dwa:false,dws:0,cc:-1,pc:-1,
     for(var i=0;i<fds.length;i++){if(fds[i].id==='metric'){m=fds[i];continue}cf.push(fds[i])}
     for(var k=0;k<cf.length;k++){if(cf[k].type==='dial'&&cf[k].def!==undefined){this.cv=cf[k].def;cf[k].selIdx=1;cf[k].selLabel=String(cf[k].def.toFixed(cf[k].dec||0))}}
     if(m&&m.selIdx>=0){var mk=m.options[m.selIdx].v;for(var j=0;j<cf.length;j++){if(cf[j].type==='dial'&&cf[j].ranges&&cf[j].ranges[mk]){var r=cf[j].ranges[mk];cf[j].min=r.min;cf[j].max=r.max;cf[j].unit=r.unit;cf[j].step=r.step;cf[j].dec=r.dec}}}
-    this.setData({fl:FORMS[idx].label,metric:m,chainFields:cf,ad:false,ll:odd?'提交':'取消',rl:odd?'取消':'提交',ht:odd?'从右向左滑·左端停留提交':'从左向右滑·右端停留提交',lza:false,rza:false,ac:-1,dp:0,dbv:false,dz:SPEED,daz:'',dlv:false,lf:false,pv:!!kp,odd:odd})
-    var s=this;setTimeout(function(){s._qr()},300)
-  },
+    var guide = odd ? '←按住向右' : '按住向左→'
+    var otherSide = odd ? '提交→' : '←提交'
+    this.setData({fl:FORMS[idx].label,metric:m,chainFields:cf,ad:false,guide:guide,otherLabel:otherSide,ht:odd?'从左向右通过选项·右端停留提交':'从右向左通过选项·左端停留提交',lza:false,rza:false,ac:-1,dp:0,dbv:false,dz:SPEED,daz:'',dlv:false,lf:false,pv:!!kp,odd:odd})
+    var s=this;setTimeout(function(){s._qr()},300)},
 
-  /** Query rects for hit-testing */
   _qr(){var s=this;wx.createSelectorQuery().selectAll('.test-col').boundingClientRect().exec(function(r){if(r[0]){s.colsRects=r[0];s._uc()}})},
-
-  /** Find option index by finger Y within column ci */
   _pick(ci,y){var cs=this.colsRects,cf=this.data.chainFields;if(!cs||!cs[ci]||!cf||!cf[ci])return-1;var n=cf[ci].options.length;if(!n)return-1;var cr=cs[ci];var labelPx=Math.round(48*this._pxr);var av=cr.height-labelPx-12;var ph=Math.max(20,av/n);var idx=Math.floor((y-cr.top-labelPx-12)/ph);if(idx<0)idx=0;if(idx>=n)idx=n-1;return idx},
-
-  /** Connector lines between locked options */
   _uc(){var cs=this.colsRects,cf=this.data.chainFields;if(!cs||!cf)return;var labelPx=Math.round(48*this._pxr);var cons=[];for(var i=0;i<cf.length-1;i++){if(cf[i].done&&cf[i+1].done&&cs[i]&&cs[i+1]&&cf[i].selIdx>=0&&cf[i+1].selIdx>=0){var av1=cs[i].height-labelPx-12,av2=cs[i+1].height-labelPx-12;var n1=cf[i].options.length,n2=cf[i+1].options.length;var ph1=Math.max(20,av1/n1),ph2=Math.max(20,av2/n2);var y1=cs[i].top+labelPx+12+(cf[i].selIdx+0.5)*ph1;var y2=cs[i+1].top+labelPx+12+(cf[i+1].selIdx+0.5)*ph2;var midY=(y1+y2)/2;cons.push({x1:cs[i].left+cs[i].width,y:midY,w:cs[i+1].left-(cs[i].left+cs[i].width)})}}this.setData({connectors:cons})},
 
   onMetricTap(e){var idx=Number(e.currentTarget.dataset.idx);if(isNaN(idx))return;var m=this.data.metric;m.selIdx=idx;m.selLabel=m.options[idx].l;var mk=m.options[idx].v;var cf=this.data.chainFields.slice();for(var i=0;i<cf.length;i++){if(cf[i].type==='dial'&&cf[i].ranges&&cf[i].ranges[mk]){var r=cf[i].ranges[mk];cf[i].min=r.min;cf[i].max=r.max;cf[i].unit=r.unit;cf[i].step=r.step;cf[i].dec=r.dec}}wx.vibrateShort({type:'light'});this.setData({metric:m,chainFields:cf})},
 
-  _z(fx){var odd=this.fi%2===0,e=0.08,cf=this.data.chainFields,n=cf?cf.length:2;if(fx<e)return odd?'submit':'cancel';if(fx>1-e)return odd?'cancel':'submit';var ci=Math.floor((fx-e)/(1-2*e)*n);if(ci<0)ci=0;if(ci>=n)ci=n-1;return ci},
+  _z(fx){var odd=this.fi%2===0,e=0.08,cf=this.data.chainFields,n=cf?cf.length:2;if(odd){if(fx>1-e)return'submit'}else{if(fx<e)return'submit'};if(odd){if(fx<e)return'guide'}else{if(fx>1-e)return'guide'};var ci=Math.floor((fx-e)/(1-2*e)*n);if(ci<0)ci=0;if(ci>=n)ci=n-1;return ci},
 
   _sda(){this._sd();this.dwa=true;this.dws=Date.now();this.setData({dbv:true});this._td()},
-  _td(){if(!this.dwa)return;var pct=Math.min(100,(Date.now()-this.dws)/10);this.setData({dp:pct});if(pct>=100){this._od();return}var s=this;this.dwt=setTimeout(function(){s._td()},30)},
+  _td(){if(!this.dwa)return;var pct=Math.min(80,(Date.now()-this.dws)/10);this.setData({dp:pct});if(pct>=80){this._od();return}var s=this;this.dwt=setTimeout(function(){s._td()},30)},
   _sd(){this.dwa=false;if(this.dwt){clearTimeout(this.dwt);this.dwt=null};this.setData({dp:0,dbv:false})},
   _od(){this.dwa=false;this.setData({dp:0,dbv:false});this._sf()},
   _sf(){this._sd();this._sdia();wx.vibrateShort({type:'heavy'});this.setData({lf:true,lza:false,rza:false,pv:true});var s=this;setTimeout(function(){s.setData({lf:false});s._lf(s.fi+1,true)},350)},
-  _cf(){this._sd();this._sdia();this.cc=-1;this.pc=-1;wx.vibrateShort({type:'heavy'});this._lf(this.fi)},
 
   _dm(t,ci){var s=this;var crs=this.colsRects;if(crs&&crs[ci])this.dr=crs[ci];if(!this.dr)return;var frac=(t.pageY-this.dr.top)/this.dr.height;if(frac<0)frac=0;if(frac>1)frac=1;var zn=null;for(var i=0;i<SPEED.length;i++){if(frac>=SPEED[i].f&&frac<=SPEED[i].t){zn=SPEED[i];break}}if(!zn)return;this.setData({daz:zn.name,dlv:zn.s!==0});this._sdia();if(zn.s!==0){this.dt=setInterval(function(){s._dtk(zn.s)},100)}},
   _dtk(speed){var cf=this.data.chainFields.slice();var f=cf[this.data.ac];if(!f)return;var v=Number(this.cv)+speed*(f.step||0.1);if(v<f.min)v=f.min;if(v>f.max)v=f.max;this.cv=v;var disp=v.toFixed(f.dec||0);f.selIdx=1;f.selLabel=disp;this.setData({chainFields:cf,dv:disp})},
@@ -42,7 +37,7 @@ Page({data:{},fi:0,cr:null,dt:null,cv:0,dwt:null,dwa:false,dws:0,cc:-1,pc:-1,
 
   onStart(e){var t=e.touches[0];this.setData({pv:true,px:t.pageX-20,py:t.pageY-20,trail:[{x:t.pageX-4,y:t.pageY-4,o:1,w:12}]})},
   onMove(e){var t=e.touches[0],r=this.cr;if(!r)return;var z=this._z((t.pageX-r.left)/r.width),odd=this.fi%2===0;var cf=this.data.chainFields.slice();if(!cf)return
-    if(z==='cancel'){this._sd();this._sdia();this.setData({lza:odd,rza:!odd})}
+    if(z==='guide'){this._sd();this._sdia();this.setData({lza:odd,rza:!odd})}
     else if(z==='submit'){this._sdia();var as=cf.every(function(f){return f.selIdx>=0});if(as){this.setData({lza:!odd,rza:odd});if(!this.dwa)this._sda()}}
     else if(typeof z==='number'){this._sd();this.setData({lza:false,rza:false})
       if(this.cc!==z){if(this.pc>=0&&this.pc<cf.length)cf[this.pc].hlIdx=-1;this.pc=this.cc;this.cc=z}
@@ -51,10 +46,11 @@ Page({data:{},fi:0,cr:null,dt:null,cv:0,dwt:null,dwa:false,dws:0,cc:-1,pc:-1,
       if(f.type==='dial')this._dm(t,z)}
     var tr=this.data.trail.slice();if(tr.length>50)tr.shift();tr.push({x:t.pageX-4,y:t.pageY-4,o:1,w:10});for(var i=0;i<tr.length-1;i++){tr[i].o=(i+1)/tr.length;tr[i].w=4+6*(i/tr.length)}
     this.setData({px:t.pageX-20,py:t.pageY-20,trail:tr})},
+
   onEnd(e){var t=e.changedTouches[0],r=this.cr;if(!r)return;var z=this._z((t.pageX-r.left)/r.width),cf=this.data.chainFields.slice();if(!cf)return;this._sd();this._sdia()
-    if(z==='cancel'){this._cf();return}
     if(z==='submit'&&cf.every(function(f){return f.selIdx>=0})){this._sf();return}
-    if(typeof z==='number'){var f=cf[z];if(f.type==='picker'&&f.hlIdx>=0){f.selIdx=f.hlIdx;f.selLabel=f.options[f.hlIdx].l;f.hlIdx=-1;f.done=true;wx.vibrateShort({type:'light'})}if(f.type==='dial'){f.done=true;f.selIdx=1;f.selLabel=String(this.cv.toFixed(f.dec||0))}}
+    // Release in center or guide → clear picker selections, keep dial values
+    for(var i=0;i<cf.length;i++){if(cf[i].type==='picker'){if(cf[i].selIdx>=0&&!cf[i].hlIdx){cf[i].selIdx=-1;cf[i].selLabel='';cf[i].done=false}cf[i].hlIdx=-1}}
     this.setData({chainFields:cf,lza:false,rza:false,ac:-1,dlv:false,daz:''});this.cc=-1;this.pc=-1
     this._uc()},
   reset(){this._sdia();this._sd();this.setData({pv:false,trail:[]});this._lf(0)},

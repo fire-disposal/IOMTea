@@ -16,13 +16,10 @@
     <!-- Dwell bar -->
     <view class="test-dwell-bar {{dbv ? 'test-dwell-bar--on' : ''}}" style="width:{{dp}}%"></view>
 
-    <!-- Left edge -->
+    <!-- Left edge zone — guidance or submit -->
     <view class="test-edge test-edge--left {{lza ? 'test-edge--active' : ''}}">
-      <view wx:if="{{lza}}" class="test-edge-glow">
-        <text class="test-edge-icon">{{!odd ? '✕' : '✓'}}</text>
-        <text class="test-edge-label">{{ll}}</text>
-      </view>
-      <text wx:else class="test-edge-text">{{!odd ? '← 取消' : '← 提交'}}</text>
+      <text wx:if="{{odd}}" class="test-edge-guide">{{lza ? '→' : guide}}</text>
+      <text wx:else class="test-edge-guide">{{lza ? otherLabel : otherLabel}}</text>
     </view>
 
     <!-- Columns -->
@@ -61,13 +58,10 @@
       </view>
     </view>
 
-    <!-- Right edge -->
+    <!-- Right edge zone — submit or guidance -->
     <view class="test-edge test-edge--right {{rza ? 'test-edge--active' : ''}}">
-      <view wx:if="{{rza}}" class="test-edge-glow">
-        <text class="test-edge-icon">{{odd ? '✕' : '✓'}}</text>
-        <text class="test-edge-label">{{rl}}</text>
-      </view>
-      <text wx:else class="test-edge-text">{{odd ? '取消 →' : '提交 →'}}</text>
+      <text wx:if="{{odd}}" class="test-edge-guide">{{rza ? otherLabel : otherLabel}}</text>
+      <text wx:else class="test-edge-guide">{{rza ? '←' : guide}}</text>
     </view>
 
     <view wx:if="{{pv}}" class="test-pointer" style="left:{{px}}px;top:{{py}}px"></view>
