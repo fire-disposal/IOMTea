@@ -170,3 +170,7 @@
   opacity: 0.1;
   border-radius: 4rpx;
 }
+
+.cell:active { background: rgba(0,0,0,0.03); transform: scale(0.985); transition: transform 0.1s, background 0.1s; }
+.health-cal-toggle:active { background: #e9ecef; }
+.health-gear:active { opacity: 0.6; transform: scale(0.9); transition: opacity 0.1s, transform 0.1s; }

@@ -16,3 +16,4 @@
 .save-btn{width:100%;background:var(--brand-500);color:#fff;border-radius:16rpx;font-size:32rpx;font-weight:600;padding:24rpx 0}
 .save-btn--loading{opacity:.6}
 .save-btn--saved{background:var(--color-success)}
+.segment-item:active{transform:scale(0.96);opacity:0.8;transition:transform 0.1s}

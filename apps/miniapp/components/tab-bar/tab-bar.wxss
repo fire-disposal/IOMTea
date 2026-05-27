@@ -57,3 +57,5 @@
   border-radius: 0 0 3px 3px;
   background: var(--brand-500, #6BA539);
 }
+
+.tab-bar__item:active { transform: scale(0.92); opacity: 0.7; transition: transform 0.1s, opacity 0.1s; }

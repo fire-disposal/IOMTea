@@ -43,3 +43,5 @@
   padding: 4rpx 12rpx;
   border-radius: 10rpx;
 }
+
+.patient-item:active { background: rgba(0,0,0,0.03); transform: scale(0.985); transition: transform 0.1s; }

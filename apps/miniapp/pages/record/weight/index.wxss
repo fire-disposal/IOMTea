@@ -105,3 +105,5 @@
 
 .save-btn--loading { opacity: 0.6; }
 .save-btn--saved { background: var(--color-success); }
+
+.segment-item:active { transform: scale(0.96); opacity: 0.8; transition: transform 0.1s; }

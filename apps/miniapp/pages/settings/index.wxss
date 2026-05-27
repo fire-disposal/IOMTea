@@ -36,3 +36,5 @@ input {
 .btn-logout {
   background: #e03131;
 }
+
+.btn:active { opacity: 0.7; transform: scale(0.97); transition: transform 0.1s, opacity 0.1s; }

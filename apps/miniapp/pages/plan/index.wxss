@@ -63,3 +63,6 @@
   border-radius: 12rpx;
   font-size: 30rpx;
 }
+
+.plan-item:active { background: rgba(0,0,0,0.02); }
+.plan-item-gear:active { transform: scale(1.2); transition: transform 0.1s; }

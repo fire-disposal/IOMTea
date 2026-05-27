@@ -86,3 +86,7 @@
   padding: 120rpx 0;
   color: var(--text-secondary);
 }
+
+.credit-tx:active { opacity: 0.8; transition: opacity 0.1s; }
+
+.tx-skeleton { height: 80rpx; background: linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%); background-size: 200% 100%; animation: shimmer 1.5s ease-in-out infinite; border-radius: 8rpx; margin-bottom: 12rpx; }
