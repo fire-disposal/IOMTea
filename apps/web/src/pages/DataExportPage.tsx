@@ -229,7 +229,7 @@ export function DataExportPage() {
             </Table.Thead>
             <Table.Tbody>
               {preview.rows.slice(0, 30).map((row, i) => (
-                <Table.Tr key={i}>
+                <Table.Tr key={`row-${i}`}>
                   {filteredColumns.map((c) => (
                     <Table.Td key={c} style={{ fontSize: 12 }}>
                       {row[c] === null || row[c] === undefined ? '-' : String(row[c]).slice(0, 40)}

@@ -50,10 +50,10 @@ let isRefreshing = false
 let failedQueue: Array<{ resolve: (token: string) => void; reject: (err: unknown) => void }> = []
 
 function processQueue(error: unknown, token: string | null) {
-  failedQueue.forEach((p) => {
+  for (const p of failedQueue) {
     if (error) p.reject(error)
-    else p.resolve(token!)
-  })
+    else p.resolve(token as string)
+  }
   failedQueue = []
 }
 

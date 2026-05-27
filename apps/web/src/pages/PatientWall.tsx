@@ -131,7 +131,7 @@ export function PatientWall() {
                   <Tooltip label="查看患者" withArrow>
                     <ActionIcon
                       variant="light"
-                      onClick={() => navigate({ to: '/patients/' + p.id })}
+                      onClick={() => navigate({ to: `/patients/${p.id}` })}
                     >
                       <IconEye size={14} />
                     </ActionIcon>

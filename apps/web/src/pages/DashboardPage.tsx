@@ -53,9 +53,7 @@ export function DashboardPage() {
     onVitals: (data) => {
       setLiveVitals((prev) => {
         const next = { ...prev }
-        data.metrics.forEach((m) => {
-          next[m.metric] = m
-        })
+        for (const m of data.metrics) next[m.metric] = m
         return next
       })
     },

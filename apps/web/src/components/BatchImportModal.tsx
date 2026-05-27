@@ -31,7 +31,7 @@ export function BatchImportModal({ opened, onClose, onSuccess }: Props) {
       const res = await http.post('/patients/bulk', { patients: preview } as any)
       const data = res.data as { created: number; errors: string[] }
       notifications.show({
-        title: `导入完成`,
+        title: '导入完成',
         message: `成功 ${data.created} 条，失败 ${data.errors.length} 条`,
         color: data.errors.length ? 'yellow' : 'green',
       })
@@ -78,7 +78,7 @@ export function BatchImportModal({ opened, onClose, onSuccess }: Props) {
             </Table.Thead>
             <Table.Tbody>
               {preview.map((p, i) => (
-                <Table.Tr key={i}>
+                <Table.Tr key={`import-${i}`}>
                   <Table.Td>{i + 1}</Table.Td>
                   <Table.Td>{p.name}</Table.Td>
                   <Table.Td>{p.gender ?? '-'}</Table.Td>

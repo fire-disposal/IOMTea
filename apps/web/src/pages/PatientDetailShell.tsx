@@ -47,9 +47,7 @@ export function PatientDetailShell() {
     onVitals: (data) => {
       setLiveLatest((prev) => {
         const next = { ...prev }
-        data.metrics.forEach((m) => {
-          next[m.metric] = { value: m.value, unit: m.unit }
-        })
+        for (const m of data.metrics) next[m.metric] = { value: m.value, unit: m.unit }
         return next
       })
     },

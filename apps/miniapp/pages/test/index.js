@@ -31,7 +31,7 @@ Page({data:{},fi:0,cr:null,dt:null,cv:0,dwt:null,dwa:false,dws:0,cc:-1,pc:-1,loc
     else if(f.type==='picker'&&f.hlIdx>=0){f.selIdx=f.hlIdx;f.selLabel=f.options[f.hlIdx].l;f.hlIdx=-1;f.done=true;wx.vibrateShort({type:'light'})}
     return cf},
 
-  canAccess(ci){if(ci===0)return true;return this.locked[0]===true},
+  canAccess(ci){if(ci<=0)return true;return this.locked[ci-1]===true},
 
   onMetricTap(e){var idx=Number(e.currentTarget.dataset.idx);if(isNaN(idx))return;var m=this.data.metric;m.selIdx=idx;m.selLabel=m.options[idx].l;var mk=m.options[idx].v;var cf=this.data.chainFields.slice();for(var i=0;i<cf.length;i++){if(cf[i].type==='dial'&&cf[i].ranges&&cf[i].ranges[mk]){var r=cf[i].ranges[mk];cf[i].min=r.min;cf[i].max=r.max;cf[i].unit=r.unit;var dec=Number(r.min)%1!==0||Number(r.max)%1!==0?1:0;this.cv=r.normal;cf[i].selLabel=String(r.normal.toFixed(dec))}}wx.vibrateShort({type:'light'});this.setData({metric:m,chainFields:cf})},
 

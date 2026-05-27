@@ -4,7 +4,7 @@ export function StateSkeleton({ lines = 3 }: { lines?: number }) {
   return (
     <Container py="md">
       {Array.from({ length: lines }, (_, i) => (
-        <Skeleton key={i} height={24} mb="sm" />
+        <Skeleton key={`sk-${i}`} height={24} mb="sm" />
       ))}
     </Container>
   )

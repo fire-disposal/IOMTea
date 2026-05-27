@@ -40,9 +40,7 @@ export function HealthTimeline() {
   const allRows = (rawData?.rows ?? []).filter((r) => selected.includes(r.metric))
 
   const metricNames: Record<string, string> = {}
-  metrics?.forEach((m) => {
-    metricNames[m.metric] = m.displayName
-  })
+  for (const m of metrics ?? []) metricNames[m.metric] = m.displayName
 
   return (
     <Container py="md">

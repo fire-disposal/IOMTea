@@ -23,7 +23,7 @@ export function PatientAlertRules() {
     refetch,
   } = useGet<R[]>(`/alert-rules/patients/${pid}/alert-rules`)
   const [localRules, setLocalRules] = useState<R[]>([])
-  const saveRules = usePut(`/alert-rules/patients/:id/alert-rules`)
+  const saveRules = usePut('/alert-rules/patients/:id/alert-rules')
 
   useEffect(() => {
     if (rules) setLocalRules(rules)

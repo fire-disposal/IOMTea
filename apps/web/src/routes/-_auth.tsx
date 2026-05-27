@@ -127,7 +127,7 @@ export function AuthLayout() {
       { label: '工作台', href: '/' },
       ...segments.map((seg, i) => ({
         label: seg,
-        href: '/' + segments.slice(0, i + 1).join('/'),
+        href: `/${segments.slice(0, i + 1).join('/')}`,
       })),
     ]
   }
