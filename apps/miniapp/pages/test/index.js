@@ -9,7 +9,7 @@ function mf(f){var c={id:f.id,label:f.label,type:f.type,options:f.options,ranges
   if(c.type==='dial'){var r=c.ranges&&c.ranges[Object.keys(c.ranges)[0]];if(r){c.min=r.min;c.max=r.max;c.unit=r.unit}}
   return c}
 
-Page({data:{},fi:0,cr:null,dt:null,cv:0,dwt:null,dwa:false,dws:0,cc:-1,pc:-1,locked:[],
+Page({data:{},fi:0,cr:null,dt:null,cv:0,dwt:null,dwa:false,dws:0,cc:-1,pc:-1,locked:[],stroke:false,
   onLoad(){var s=this;wx.createSelectorQuery().select('.test-canvas').boundingClientRect().exec(function(r){if(r[0])s.cr=r[0]});this._pxr=wx.getSystemInfoSync().screenWidth/750;this._lf(0)},
   onUnload(){this._sd();this._sdia();this.dwt=null;this.dt=null},
 
@@ -48,11 +48,11 @@ Page({data:{},fi:0,cr:null,dt:null,cv:0,dwt:null,dwa:false,dws:0,cc:-1,pc:-1,loc
   _dtk(speed){var cf=this.data.chainFields;if(!cf)return;var ac=this.data.ac;if(ac<0||ac>=cf.length||!cf[ac])return;var f=cf[ac];if(!f||!f.ranges)return;var rng=Object.values(f.ranges)[0];if(!rng)return;var range=rng.max-rng.min;var pct=speed*0.01;var inc=range*pct;if(!this.cv||isNaN(this.cv))this.cv=rng.normal;var v=Number(this.cv)+inc;if(v<f.min)v=f.min;if(v>f.max)v=f.max;var dec=Number(f.min)%1!==0||Number(f.max)%1!==0?1:0;this.cv=v;var disp=v.toFixed(dec);f.selIdx=1;f.selLabel=disp;this.setData({chainFields:cf,dv:disp})},
   _sdia(){if(this.dt){clearInterval(this.dt);this.dt=null}},
 
-  onStart(e){var t=e.touches[0];this.setData({pv:true,px:t.pageX-20,py:t.pageY-20,trail:[{x:t.pageX-4,y:t.pageY-4,o:1,w:12}]})},
+  onStart(e){this.stroke=false;var t=e.touches[0];this.setData({pv:true,px:t.pageX-20,py:t.pageY-20,trail:[{x:t.pageX-4,y:t.pageY-4,o:1,w:12}]})},
   onMove(e){var t=e.touches[0],r=this.cr;if(!r)return;var z=this._z((t.pageX-r.left)/r.width),odd=this.fi%2===0;var cf=this.data.chainFields.slice();if(!cf)return
-    if(z==='guide'){this._sd();this._sdia();this.setData({lza:odd,rza:!odd})}
+    if(z==='guide'){this._sd();this._sdia();this.stroke=true;this.setData({lza:odd,rza:!odd})}
     else if(z==='submit'){this._sdia();var as=cf.every(function(f){return f.selIdx>=0});if(as){this.setData({lza:!odd,rza:odd});if(!this.dwa)this._sda()}}
-    else if(typeof z==='number'){this._sd();this._sdia();this.setData({lza:false,rza:false})
+    else if(typeof z==='number'){if(!this.stroke)return;this._sd();this._sdia();this.setData({lza:false,rza:false})
       if(this.cc!==z){
         // Forward: lock previous column before transition
         if(z < this.cc){this.locked[z]=false;cf[z].done=false}else if(this.cc>=0&&this.cc<cf.length&&!this.locked[this.cc]){cf=this._lock(this.cc,cf)}
@@ -69,6 +69,6 @@ Page({data:{},fi:0,cr:null,dt:null,cv:0,dwt:null,dwa:false,dws:0,cc:-1,pc:-1,loc
     if(typeof z==='number'&&cf[z]&&!this.locked[z]&&cf[z].hlIdx>=0)cf=this._lock(z,cf)
     // Clear picks only for unlocked columns (dial values kept)
     for(var i=0;i<cf.length;i++){if(cf[i].type==='picker'&&!this.locked[i]){cf[i].selIdx=-1;cf[i].selLabel='';cf[i].done=false;cf[i].hlIdx=-1}}
-    this.locked=[];this.setData({chainFields:cf,lza:false,rza:false,ac:-1,dlv:false,daz:''});this.cc=-1;this.pc=-1;this._uc()},
+    this.locked=[];this.setData({chainFields:cf,lza:false,rza:false,ac:-1,dlv:false,daz:''});this.cc=-1;this.pc=-1;this.stroke=false;this._uc()},
   reset(){this._sdia();this._sd();this.setData({pv:false,trail:[]});this._lf(0)},
 })
