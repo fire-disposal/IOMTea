@@ -24,7 +24,7 @@ function initField(f){
 }
 
 Page({
-  data: { dz: SPEED, trail: [], connectors: [], pv: false, ad: false },
+  data: { dz: SPEED, trail: [], connectors: [], pv: false, ad: false, colGray: [] },
   fi: 0, cr: null, _pxr: 1, cc: -1, pc: -1, locked: [],
   dwa: false, dws: 0, dwt: null, dt: null, _dialSpeed: 0,
   subIdx: 0, currentMetric: null, _submitLock: false,
@@ -77,6 +77,8 @@ Page({
     var guide = odd ? '←按住向右' : '按住向左→'
     var os = odd ? '提交→' : '←提交'
 
+    this._updateColGray(chainFields)
+
     this.setData({
       metricChips: chips, metricSelIdx: chipSel,
       chainFields: chainFields, ad: false,
@@ -86,7 +88,7 @@ Page({
       dp: 0, dbv: false,
       daz: '', dlv: false,
       lf: false, stl: 0,
-      pv: false, odd: odd,
+      pv: false, odd: odd, colGray: [],
     })
   },
 
@@ -133,6 +135,11 @@ Page({
     this.locked = []
     if (cf) for (var i = 0; i < cf.length; i++) { if (cf[i].type === 'dial') this.locked[i] = true }
   },
+  _updateColGray(cf) {
+    var g = []
+    if (cf) for (var i = 0; i < cf.length; i++) g.push(i > 0 && this.locked[i - 1] !== true)
+    this.setData({ colGray: g })
+  },
   _canAccess(ci) {
     if (ci <= 0) return true
     return this.locked[ci - 1] === true
@@ -144,6 +151,7 @@ Page({
     if (!cf || !cf[ci]) return
 
     this.locked[ci] = true
+    this._updateColGray(cf)
     var f = cf[ci]
 
     if (f.type === 'dial') {
@@ -357,6 +365,7 @@ Page({
         if (z < this.cc) {
           this.locked[z] = false
           cf[z].done = false
+          this._updateColGray(cf)
           if (cf[z].type === 'picker') cf[z].hlIdx = -1
         } else {
           this._lockColumn(this.cc)
@@ -412,6 +421,7 @@ Page({
     if (typeof z === 'number' && cf[z] && !this.locked[z] && cf[z].selIdx >= 0) {
       this._lockColumn(z)
       this._resetLocked(cf)
+      this._updateColGray(cf)
       this.cc = -1
       this.pc = -1
       this.setData({ lza: false, rza: false, ac: -1, dlv: false, daz: '' })
@@ -429,6 +439,7 @@ Page({
     }
 
     this._resetLocked(cf)
+    this._updateColGray(cf)
     this.cc = -1
     this.pc = -1
     this.setData({
