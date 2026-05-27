@@ -1,16 +1,25 @@
-var FORMS = [{label:'血糖记录',fields:[{id:'metric',label:'指标',options:[{v:'blood_glucose',l:'血糖'},{v:'blood_pressure',l:'血压'},{v:'heart_rate',l:'心率'},{v:'weight',l:'体重'},{v:'temperature',l:'体温'},{v:'spo2',l:'血氧'}],selIdx:0,selLabel:'血糖'},{id:'value',label:'数值',type:'dial',
-  ranges:{blood_glucose:{min:1.0,max:30.0,unit:'mmol/L',normal:5.5},blood_pressure:{min:60,max:250,unit:'mmHg',normal:120},heart_rate:{min:30,max:220,unit:'bpm',normal:72},weight:{min:20,max:300,unit:'kg',normal:65},temperature:{min:34.0,max:43.0,unit:'°C',normal:36.5},spo2:{min:50,max:100,unit:'%',normal:98}}
-},{id:'context',label:'场景',type:'picker',options:[{v:'fasting',l:'空腹'},{v:'postprandial',l:'餐后'},{v:'bedtime',l:'睡前'},{v:'random',l:'随机'}]}]},{label:'血压记录',fields:[{id:'metric',label:'指标',options:[{v:'blood_glucose',l:'血糖'},{v:'blood_pressure',l:'血压'},{v:'heart_rate',l:'心率'},{v:'weight',l:'体重'},{v:'temperature',l:'体温'},{v:'spo2',l:'血氧'}],selIdx:1,selLabel:'血压'},{id:'value',label:'数值',type:'dial',
-  ranges:{blood_glucose:{min:1.0,max:30.0,unit:'mmol/L',normal:5.5},blood_pressure:{min:60,max:250,unit:'mmHg',normal:120},heart_rate:{min:30,max:220,unit:'bpm',normal:72},weight:{min:20,max:300,unit:'kg',normal:65},temperature:{min:34.0,max:43.0,unit:'°C',normal:36.5},spo2:{min:50,max:100,unit:'%',normal:98}}
-},{id:'context',label:'场景',type:'picker',options:[{v:'resting',l:'静息'},{v:'exercise',l:'运动后'},{v:'random',l:'随机'}]}]}]
+var METRICS = {
+  blood_glucose: { label:'血糖',
+    fields:[{id:'value',label:'数值',type:'dial',min:1.0,max:30.0,unit:'mmol/L',normal:5.5},{id:'context',label:'场景',type:'picker',options:[{v:'fasting',l:'空腹'},{v:'postprandial',l:'餐后'},{v:'bedtime',l:'睡前'},{v:'random',l:'随机'}]}]},
+  blood_pressure: { label:'血压',
+    fields:[{id:'sys',label:'收缩压',type:'dial',min:60,max:250,unit:'mmHg',normal:120},{id:'dia',label:'舒张压',type:'dial',min:30,max:150,unit:'mmHg',normal:80},{id:'context',label:'场景',type:'picker',options:[{v:'resting',l:'静息'},{v:'exercise',l:'运动后'},{v:'random',l:'随机'}]}]},
+  heart_rate: { label:'心率',
+    fields:[{id:'value',label:'数值',type:'dial',min:30,max:220,unit:'bpm',normal:72},{id:'context',label:'场景',type:'picker',options:[{v:'resting',l:'静息'},{v:'exercise',l:'运动后'},{v:'random',l:'随机'}]}]},
+  weight: { label:'体重',
+    fields:[{id:'value',label:'数值',type:'dial',min:20,max:300,unit:'kg',normal:65}]},
+  temperature: { label:'体温',
+    fields:[{id:'value',label:'数值',type:'dial',min:34.0,max:43.0,unit:'°C',normal:36.5}]},
+  spo2: { label:'血氧',
+    fields:[{id:'value',label:'数值',type:'dial',min:50,max:100,unit:'%',normal:98}]},
+}
+
+var METRIC_KEYS = Object.keys(METRICS)
 var SPEED=[{name:'fastUp',f:0,t:0.2,s:4,c:'#2E7D32'},{name:'slowUp',f:0.2,t:0.4,s:0.5,c:'#66BB6A'},{name:'center',f:0.4,t:0.6,s:0,c:'#E0E0E0'},{name:'slowDown',f:0.6,t:0.8,s:-0.5,c:'#EF9A9A'},{name:'fastDown',f:0.8,t:1,s:-4,c:'#C62828'}]
 
-function initField(f) {
-  var c = {id:f.id,label:f.label,type:f.type,options:f.options,ranges:f.ranges,selIdx:-1,selLabel:'',hlIdx:-1,done:false}
-  if (c.type === 'dial') {
-    var r = c.ranges && c.ranges[Object.keys(c.ranges)[0]]
-    if (r) { c.min = r.min; c.max = r.max; c.unit = r.unit }
-  }
+function initField(f){
+  var c={id:f.id,label:f.label,type:f.type,options:f.options,min:f.min,max:f.max,unit:f.unit,normal:f.normal}
+  c.selIdx=-1;c.selLabel='';c.hlIdx=-1;c.done=false
+  if(c.type==='dial'&&c.min!==undefined){c.selIdx=1;c.done=true}
   return c
 }
 
@@ -56,77 +65,53 @@ Page({
     this.dt = null
   },
 
-  _loadForm(idx) {
-    this._stopDwell()
-    this._stopDial()
-    this.cc = -1
-    this.pc = -1
-    this.fi = idx
-    this.locked = []
-    this.stroke = false
+  
+  subIdx: 0,
+  currentMetric: null,
+  
+  _loadForm(subIdx, metricKey) {
+    this._stopDwell(); this._stopDial()
+    this.cc = -1; this.pc = -1; this.subIdx = subIdx; this.locked = []; this.stroke = false
 
-    if (idx >= FORMS.length) {
-      this.setData({ ad: true, pv: false })
-      return
-    }
+    var mk = metricKey || METRIC_KEYS[0]
+    var meta = METRICS[mk]
+    if (!meta) { this.setData({ ad: true, pv: false }); return }
+    this.currentMetric = mk
 
-    var odd = idx % 2 === 0
-    var fds = FORMS[idx].fields.map(initField)
-    var metric = null
-    var chainFields = []
-
-    for (var i = 0; i < fds.length; i++) {
-      if (fds[i].id === 'metric') { metric = fds[i]; continue }
-      chainFields.push(fds[i])
-    }
+    var odd = subIdx % 2 === 0
+    var chainFields = meta.fields.map(initField)
+    var chips = METRIC_KEYS.map(function (k) { return { v: k, l: METRICS[k].label } })
+    var chipSel = METRIC_KEYS.indexOf(mk)
 
     for (var k = 0; k < chainFields.length; k++) {
-      if (chainFields[k].type === 'dial') {
-        chainFields[k].done = true
+      if (chainFields[k].type === 'dial' && chainFields[k].normal !== undefined) {
         chainFields[k].selIdx = 1
-        this.locked[k] = true
+        var dec = Number(chainFields[k].min) % 1 !== 0 || Number(chainFields[k].max) % 1 !== 0 ? 1 : 0
+        chainFields[k].selLabel = String(chainFields[k].normal.toFixed(dec))
+        chainFields[k].value = chainFields[k].normal
+        this.cv = chainFields[k].normal
       }
     }
-
-    if (metric && metric.selIdx >= 0) {
-      var mk = metric.options[metric.selIdx].v
-      for (var j = 0; j < chainFields.length; j++) {
-        if (chainFields[j].type === 'dial' && chainFields[j].ranges && chainFields[j].ranges[mk]) {
-          var r = chainFields[j].ranges[mk]
-          chainFields[j].min = r.min
-          chainFields[j].max = r.max
-          chainFields[j].unit = r.unit
-          var dec = Number(r.min) % 1 !== 0 || Number(r.max) % 1 !== 0 ? 1 : 0
-          this.cv = r.normal
-          chainFields[j].selLabel = String(r.normal.toFixed(dec))
-        }
-      }
-    }
+    this._resetLocked(chainFields)
 
     var guide = odd ? '←按住向右' : '按住向左→'
     var os = odd ? '提交→' : '←提交'
 
     this.setData({
-      fl: FORMS[idx].label,
-      metric: metric,
-      chainFields: chainFields,
-      ad: false,
-      guide: guide,
-      otherLabel: os,
-      ht: odd ? '从左向右通过选项·右端停留提交' : '从右向左通过选项·左端停留提交',
-      lza: false, rza: false,
-      ac: -1,
+      metricChips: chips, metricSelIdx: chipSel,
+      chainFields: chainFields, ad: false,
+      guide: guide, otherLabel: os,
+      ht: odd ? '从左向右通过·右端停留提交' : '从右向左通过·左端停留提交',
+      lza: false, rza: false, ac: -1,
       dp: 0, dbv: false,
       daz: '', dlv: false,
       lf: false, stl: 0,
-      pv: false,
-      odd: odd,
-      dv: '',
+      pv: false, odd: odd, dv: '',
     })
   },
 
   _resolveZone(nx) {
-    var odd = this.fi % 2 === 0
+    var odd = this.subIdx % 2 === 0
     var e = 0.08
     var cf = this.data.chainFields
     var n = cf ? cf.length : 2
@@ -236,18 +221,15 @@ Page({
     var ac = this.data.ac
     if (!cf || ac < 0 || ac >= cf.length || !cf[ac]) return
     var f = cf[ac]
-    if (!f || !f.ranges) return
-    var rng = Object.values(f.ranges)[0]
-    if (!rng) return
+    if (!f || f.type !== 'dial') return
 
-    var range = rng.max - rng.min
+    var range = f.max - f.min
     var inc = range * speed * 0.01
-    if (!this.cv || isNaN(this.cv)) this.cv = rng.normal
+    if (!this.cv || isNaN(this.cv)) this.cv = f.normal || (f.min + f.max) / 2
     var v = Number(this.cv) + inc
     if (v < f.min) v = f.min
     if (v > f.max) v = f.max
     this.cv = v
-
     var dec = Number(f.min) % 1 !== 0 || Number(f.max) % 1 !== 0 ? 1 : 0
     var disp = v.toFixed(dec)
     f.selIdx = 1
@@ -292,14 +274,14 @@ Page({
   },
 
   _doSubmit() {
-    this._stopDwell()
-    this._stopDial()
+    this._stopDwell(); this._stopDial()
     wx.vibrateShort({ type: 'heavy' })
     this.setData({ lf: true, lza: false, rza: false, pv: true })
     var s = this
+    // Next submission: increment subIdx for direction reversal, keep same metric (or cycle)
     setTimeout(function () {
       s.setData({ lf: false })
-      s._loadForm(s.fi + 1)
+      s._loadForm(s.subIdx + 1, s.currentMetric)
       s.setData({ pv: true })
     }, 350)
   },
@@ -378,14 +360,14 @@ Page({
     if (z === 'guide') {
       this._stopDwell()
       this._stopDial()
-      var odd = this.fi % 2 === 0
+      var odd = this.subIdx % 2 === 0
       this.setData({ lza: odd, rza: !odd })
       return
     }
 
     if (z === 'submit') {
       this._stopDial()
-      var odd = this.fi % 2 === 0
+      var odd = this.subIdx % 2 === 0
       this.setData({ lza: !odd, rza: odd })
       var allDone = cf.every(function (f) { return f.selIdx >= 0 })
       if (allDone && !this.dwa) {
@@ -489,28 +471,11 @@ Page({
 
   onMetricTap(e) {
     var idx = Number(e.currentTarget.dataset.idx)
-    if (isNaN(idx)) return
-
-    var m = this.data.metric
-    m.selIdx = idx
-    m.selLabel = m.options[idx].l
-    var mk = m.options[idx].v
-    var cf = this.data.chainFields.slice()
-
-    for (var i = 0; i < cf.length; i++) {
-      if (cf[i].type === 'dial' && cf[i].ranges && cf[i].ranges[mk]) {
-        var r = cf[i].ranges[mk]
-        cf[i].min = r.min
-        cf[i].max = r.max
-        cf[i].unit = r.unit
-        var dec = Number(r.min) % 1 !== 0 || Number(r.max) % 1 !== 0 ? 1 : 0
-        this.cv = r.normal
-        cf[i].selLabel = String(r.normal.toFixed(dec))
-      }
-    }
-
+    if (isNaN(idx) || idx < 0 || idx >= METRIC_KEYS.length) return
+    var mk = METRIC_KEYS[idx]
+    if (mk === this.currentMetric) return
     wx.vibrateShort({ type: 'light' })
-    this.setData({ metric: m, chainFields: cf })
+    this._loadForm(this.subIdx, mk)
   },
 
   reset() {

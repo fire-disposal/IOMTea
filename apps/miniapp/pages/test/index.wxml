@@ -2,8 +2,8 @@
   <view class="test-top">
     <text class="test-form-label">{{fl}}</text>
     <view class="test-metric-bar">
-      <view wx:for="{{metric.options}}" wx:key="v" wx:for-index="mi"
-        class="test-metric-chip {{metric.selIdx === mi ? 'test-metric-chip--on' : ''}}"
+      <view wx:for="{{metricChips}}" wx:key="v" wx:for-index="mi"
+        class="test-metric-chip {{metricSelIdx === mi ? 'test-metric-chip--on' : ''}}"
         data-idx="{{mi}}" bind:tap="onMetricTap">
         <text>{{item.l}}</text>
       </view>
