@@ -1,94 +1,84 @@
 <view class="test-page">
-  <text class="test-title">一笔填写</text>
-  <text class="test-hint">从左到右一笔画 · 左侧取消 · 右侧提交 · 中列指速调数</text>
+  <!-- Top: field indicator + progress -->
+  <view class="test-top">
+    <text class="test-field-name">{{currentField.label}}</text>
+    <view class="test-progress-dots">
+      <view wx:for="{{fields}}" wx:key="id" wx:for-index="fi"
+        class="test-dot-indicator {{fi < currentIdx ? 'test-dot-indicator--done' : ''}} {{fi === currentIdx ? 'test-dot-indicator--current' : ''}}">
+      </view>
+    </view>
+    <text class="test-hint-text">{{hintText}}</text>
+  </view>
 
+  <!-- Interaction canvas -->
   <view class="test-canvas"
     bindtouchstart="onStart"
     bindtouchmove="onMove"
     bindtouchend="onEnd">
 
-    <!-- Cancel zone -->
-    <view class="test-zone test-zone--cancel {{inCancelZone ? 'test-zone--active' : ''}}">
-      <text>← 取消</text>
+    <!-- Left zone -->
+    <view class="test-edge test-edge--left {{leftZoneActive ? 'test-edge--active' : ''}}"
+      style="background:{{leftZoneBg}}">
+      <text class="test-edge-text">{{leftLabel}}</text>
     </view>
 
-    <!-- Column 1: metric picker -->
-    <view class="test-column {{columns[0].active ? 'test-column--active' : ''}} {{columns[0].done ? 'test-column--done' : ''}} {{columns[0].revisiting ? 'test-column--revisit' : ''}}">
-      <text class="test-column-label">指标</text>
-      <view wx:for="{{columns[0].options}}" wx:key="value" wx:for-index="oi"
-        class="test-opt {{columns[0].active && columns[0].highlightIdx === oi ? 'test-opt--highlight' : ''}} {{columns[0].selectedIdx === oi ? 'test-opt--picked' : ''}}">
-        <text class="test-opt-label">{{item.label}}</text>
-        <text wx:if="{{columns[0].selectedIdx === oi}}" class="test-opt-check">●</text>
-      </view>
-    </view>
+    <!-- Center: content area -->
+    <view class="test-center">
 
-    <!-- Column 2: speed-dial number input -->
-    <view class="test-column test-column--dial {{columns[1].active ? 'test-column--active' : ''}} {{columns[1].done ? 'test-column--done' : ''}} {{columns[1].revisiting ? 'test-column--revisit' : ''}}">
-      <text class="test-column-label">{{columns[1].label}}</text>
-      <view class="test-dial">
-        <!-- Speed zone indicators (top → fast up) -->
-        <view class="test-dial-zone test-dial-zone--fast" style="opacity:{{dialZone === 'fastUp' ? 0.3 : 0.05}}"></view>
-        <view class="test-dial-zone test-dial-zone--slow" style="opacity:{{dialZone === 'slowUp' ? 0.25 : 0.05}}"></view>
-        <view class="test-dial-zone test-dial-zone--center" style="opacity:{{dialZone === 'center' ? 0.15 : 0.05}}"></view>
-        <view class="test-dial-zone test-dial-zone--slow" style="opacity:{{dialZone === 'slowDown' ? 0.25 : 0.05}}"></view>
-        <view class="test-dial-zone test-dial-zone--fast" style="opacity:{{dialZone === 'fastDown' ? 0.3 : 0.05}}"></view>
-
-        <!-- Value display -->
-        <view class="test-dial-value">
-          <text class="test-dial-num {{dialActive ? 'test-dial-num--live' : ''}}">{{displayValue}}</text>
-          <text wx:if="{{columns[1].unit}}" class="test-dial-unit">{{columns[1].unit}}</text>
+      <!-- Picker mode: horizontal option bar -->
+      <view wx:if="{{mode === 'picker'}}" class="test-picker">
+        <view wx:for="{{currentField.options}}" wx:key="value" wx:for-index="oi"
+          class="test-pick {{highlightIdx === oi ? 'test-pick--hl' : ''}} {{currentField.selectedIdx === oi ? 'test-pick--locked' : ''}}">
+          <text class="test-pick-label">{{item.label}}</text>
+          <text wx:if="{{currentField.selectedIdx === oi}}" class="test-pick-lock">✓</text>
         </view>
+      </view>
 
-        <!-- Range labels -->
-        <view class="test-dial-range">
-          <text class="test-dial-min">{{columns[1].min}}</text>
-          <text class="test-dial-max">{{columns[1].max}}</text>
+      <!-- Dial mode: speed-dial number -->
+      <view wx:if="{{mode === 'dial'}}" class="test-dial-wrap">
+        <view class="test-dial-zone-bar">
+          <view wx:for="{{dialZones}}" wx:key="name" class="test-dial-zone-seg"
+            style="opacity:{{dialActiveZone === item.name ? 0.35 : 0.06}};background:{{item.color}}">
+          </view>
+        </view>
+        <view class="test-dial-display">
+          <text class="test-dial-val {{dialLive ? 'test-dial-val--live' : ''}}">{{displayValue}}</text>
+          <text class="test-dial-unit">{{currentField.unit}}</text>
+        </view>
+        <view class="test-dial-limits">
+          <text>{{currentField.min}}</text>
+          <text>{{currentField.max}}</text>
         </view>
       </view>
     </view>
 
-    <!-- Column 3: context picker -->
-    <view class="test-column {{columns[2].active ? 'test-column--active' : ''}} {{columns[2].done ? 'test-column--done' : ''}} {{columns[2].revisiting ? 'test-column--revisit' : ''}}">
-      <text class="test-column-label">场景</text>
-      <view wx:for="{{columns[2].options}}" wx:key="value" wx:for-index="oi"
-        class="test-opt {{columns[2].active && columns[2].highlightIdx === oi ? 'test-opt--highlight' : ''}} {{columns[2].selectedIdx === oi ? 'test-opt--picked' : ''}}">
-        <text class="test-opt-label">{{item.label}}</text>
-        <text wx:if="{{columns[2].selectedIdx === oi}}" class="test-opt-check">●</text>
-      </view>
+    <!-- Right zone -->
+    <view class="test-edge test-edge--right {{rightZoneActive ? 'test-edge--active' : ''}}"
+      style="background:{{rightZoneBg}}">
+      <text class="test-edge-text">{{rightLabel}}</text>
     </view>
 
-    <!-- Submit zone -->
-    <view class="test-zone test-zone--submit {{inSubmitZone ? 'test-zone--active' : ''}}">
-      <text>提交→</text>
+    <!-- Pointer glow -->
+    <view wx:if="{{pointerVisible}}" class="test-pointer"
+      style="left:{{pointerX}}px;top:{{pointerY}}px;opacity:{{pointerOpacity}}">
     </view>
 
-    <!-- Path trace -->
-    <view wx:for="{{path}}" wx:key="i" class="test-dot"
-      style="left:{{item.x}}px;top:{{item.y}}px;opacity:{{item.opacity}}">
+    <!-- Trail -->
+    <view wx:for="{{trail}}" wx:key="i" class="test-trail-dot"
+      style="left:{{item.x}}px;top:{{item.y}}px;opacity:{{item.o}};width:{{item.w}}rpx;height:{{item.w}}rpx">
     </view>
   </view>
 
-  <!-- Info bar -->
-  <view class="test-info">
-    <text wx:if="{{inCancelZone}}" class="test-info-warn">松手取消全部</text>
-    <text wx:elif="{{inSubmitZone}}" class="test-info-ok">松手提交！</text>
-    <text wx:elif="{{activeColumn === 1 && dialActive}}" class="test-info-normal">{{dialInfo}}</text>
-    <text wx:elif="{{activeColumn >= 0}}" class="test-info-normal">选择 {{columns[activeColumn].label}}</text>
-    <text wx:else class="test-info-dim">向右拖动开始</text>
-  </view>
+  <!-- Lock flash overlay -->
+  <view wx:if="{{lockFlash}}" class="test-lock-flash anim-scale-in"></view>
 
-  <!-- Result -->
+  <!-- Done result -->
   <view wx:if="{{done}}" class="test-result anim-fade-up">
-    <text class="test-result-title">✓ 提交成功</text>
-    <view wx:for="{{columns}}" wx:key="id" class="test-result-item">
+    <text class="test-result-title">✓ 完成</text>
+    <view wx:for="{{fields}}" wx:key="id" class="test-result-row">
       <text class="test-result-label">{{item.label}}</text>
       <text class="test-result-value">{{item.selectedLabel || '—'}}</text>
     </view>
-    <button class="test-reset-btn" bind:tap="onReset">再来一次</button>
-  </view>
-
-  <view wx:if="{{cancelled}}" class="test-cancelled anim-fade-up">
-    <text class="test-cancelled-text">已取消</text>
-    <button class="test-reset-btn" bind:tap="onReset">重新开始</button>
+    <button class="test-reset-btn" bind:tap="reset">再来一次</button>
   </view>
 </view>

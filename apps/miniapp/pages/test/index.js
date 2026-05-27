@@ -1,242 +1,254 @@
-var COL_CFG = [
-  { id: 'metric', label: '指标', type: 'picker', options: [
+/** Field definitions — order, direction, type, options */
+var FIELD_DEFS = [
+  { id: 'metric', label: '指标类型', direction: 'L→R', type: 'picker', options: [
     { value: 'blood_glucose', label: '血糖' }, { value: 'blood_pressure', label: '血压' },
     { value: 'heart_rate', label: '心率' }, { value: 'weight', label: '体重' },
     { value: 'temperature', label: '体温' }, { value: 'spo2', label: '血氧' }
   ]},
-  { id: 'value', label: '数值', type: 'dial', defaultValue: 5.5, step: 0.1, min: 1.0, max: 30.0, unit: 'mmol/L', decimal: 1,
-    rangesByMetric: {
-      blood_glucose:     { min: 1.0, max: 30.0, unit: 'mmol/L', step: 0.1, decimal: 1 },
-      blood_pressure:    { min: 60, max: 250, unit: 'mmHg', step: 1, decimal: 0 },
-      heart_rate:        { min: 30, max: 220, unit: 'bpm', step: 1, decimal: 0 },
-      weight:            { min: 20, max: 300, unit: 'kg', step: 0.5, decimal: 1 },
-      temperature:       { min: 34.0, max: 43.0, unit: '°C', step: 0.1, decimal: 1 },
-      spo2:              { min: 50, max: 100, unit: '%', step: 1, decimal: 0 }
+  { id: 'value', label: '数值', direction: 'R→L', type: 'dial', defaultValue: 5.5, min: 1.0, max: 30.0, unit: 'mmol/L', step: 0.1, decimal: 1,
+    metricRanges: {
+      blood_glucose:  { min: 1.0, max: 30.0, unit: 'mmol/L', step: 0.1, dec: 1 },
+      blood_pressure: { min: 60,  max: 250,  unit: 'mmHg',  step: 1,   dec: 0 },
+      heart_rate:     { min: 30,  max: 220,  unit: 'bpm',   step: 1,   dec: 0 },
+      weight:         { min: 20,  max: 300,  unit: 'kg',    step: 0.5, dec: 1 },
+      temperature:    { min: 34.0,max: 43.0, unit: '°C',    step: 0.1, dec: 1 },
+      spo2:           { min: 50,  max: 100,  unit: '%',     step: 1,   dec: 0 }
     }
   },
-  { id: 'context', label: '场景', type: 'picker', options: [
+  { id: 'context', label: '测量场景', direction: 'L→R', type: 'picker', options: [
     { value: 'fasting', label: '空腹' }, { value: 'postprandial', label: '餐后' },
     { value: 'bedtime', label: '睡前' }, { value: 'random', label: '随机' }
   ]}
 ]
 
-var CANCEL_W = 70, SUBMIT_W = 80, OPT_H = 72, PICKER_COL_W = 190, DIAL_COL_W = 260
-
-/** Speed zones relative to dial height, as fraction from top */
-var ZONES = [
-  { name: 'fastUp',    from: 0.00, to: 0.15, speed: +5, desc: '快速增加' },
-  { name: 'slowUp',    from: 0.15, to: 0.38, speed: +0.5, desc: '缓慢增加' },
-  { name: 'center',    from: 0.38, to: 0.62, speed: 0, desc: '保持' },
-  { name: 'slowDown',  from: 0.62, to: 0.85, speed: -0.5, desc: '缓慢减少' },
-  { name: 'fastDown',  from: 0.85, to: 1.00, speed: -5, desc: '快速减少' },
+/** Speed zones for dial (vertical position fraction) */
+var SPEED_ZONES = [
+  { name: 'fastUp',   from: 0.00, to: 0.12, speed: +4,  color: '#6BA539', desc: '快速+' },
+  { name: 'slowUp',   from: 0.12, to: 0.35, speed: +0.5, color: '#8EC15B', desc: '缓速+' },
+  { name: 'center',   from: 0.35, to: 0.65, speed: 0,    color: '#ddd',    desc: '保持' },
+  { name: 'slowDown', from: 0.65, to: 0.88, speed: -0.5, color: '#8EC15B', desc: '缓速-' },
+  { name: 'fastDown', from: 0.88, to: 1.00, speed: -4,   color: '#6BA539', desc: '快速-' },
 ]
 
-function buildColumns() {
-  return COL_CFG.map(function (c) {
-    var col = {
-      id: c.id, label: c.label, type: c.type, options: c.options,
-      active: false, done: false, revisiting: false,
-      selectedIdx: -1, selectedLabel: '', highlightIdx: -1,
-    }
-    if (c.type === 'dial') {
-      col.defaultValue = c.defaultValue; col.currentValue = c.defaultValue
-      col.step = c.step; col.min = c.min; col.max = c.max
-      col.unit = c.unit; col.decimal = c.decimal; col.rangesByMetric = c.rangesByMetric
-    }
-    return col
+/** Pick option width used for hit-testing */
+var OPT_W = 160
+
+function buildFields() {
+  return FIELD_DEFS.map(function (f) {
+    var f2 = JSON.parse(JSON.stringify(f))
+    f2.selectedIdx = -1; f2.selectedLabel = ''; f2.highlightIdx = -1
+    return f2
   })
 }
 
 Page({
   data: {
-    columns: buildColumns(),
-    activeColumn: -1, inCancelZone: false, inSubmitZone: false,
-    path: [], done: false, cancelled: false,
-    displayValue: '', dialZone: '', dialActive: false, dialInfo: '',
+    fields: buildFields(), currentField: null, currentIdx: 0, mode: '', hintText: '',
+    displayValue: '', dialLive: false, dialActiveZone: '', dialZones: SPEED_ZONES,
+    leftLabel: '', rightLabel: '', leftZoneActive: false, rightZoneActive: false,
+    leftZoneBg: '', rightZoneBg: '',
+    highlightIdx: -1,
+    pointerVisible: false, pointerX: 0, pointerY: 0, pointerOpacity: 0,
+    trail: [], lockFlash: false, done: false,
   },
 
-  dialLastY: 0, dialTimer: null, dialRect: null, canvasRect: null,
+  canvasRect: null, dialRect: null, dialTimer: null, currentVal: 0, lastMetric: '',
 
   onLoad() {
     var self = this
-    this._load = true
     wx.createSelectorQuery().select('.test-canvas').boundingClientRect()
-      .exec(function (res) { if (res[0]) self.canvasRect = res[0] })
+      .exec(function (r) { if (r[0]) self.canvasRect = r[0] })
+    this.loadField(0)
   },
 
-  colX(x) {
-    var l = this.canvasRect ? this.canvasRect.left : 0
-    var dx = x - l - CANCEL_W
-    if (dx < 0) return -2 // cancel zone
-    if (dx < PICKER_COL_W) return 0  // col 1
-    if (dx < PICKER_COL_W + DIAL_COL_W) return 1 // col 2 (dial)
-    if (dx < PICKER_COL_W + DIAL_COL_W + PICKER_COL_W) return 2 // col 3
-    return 99 // submit zone
-  },
+  /** Load a field and configure zones based on its direction */
+  loadField(idx) {
+    if (idx >= FIELD_DEFS.length) { this.setData({ done: true }); return }
+    var f = this.data.fields.slice()
+    var cf = f[idx]
+    var isL2R = (idx % 2 === 0) // even = L→R, odd = R→L
 
-  stopDial() {
-    if (this.dialTimer) { clearInterval(this.dialTimer); this.dialTimer = null }
-    this.setData({ dialActive: false, dialZone: '', dialInfo: '' })
-  },
-
-  startDial(val) {
     this.stopDial()
-    this.setData({ dialActive: true, displayValue: val.toFixed(COL_CFG[1].decimal || 1) })
+    this.setData({
+      currentField: cf, currentIdx: idx, mode: cf.type,
+      hintText: isL2R ? '从左向右滑动选择' : '从右向左滑动选择',
+      leftLabel: isL2R ? '取消' : '提交',
+      rightLabel: isL2R ? '提交' : '取消',
+      leftZoneBg: isL2R ? 'rgba(211,47,47,0.04)' : 'rgba(107,165,57,0.04)',
+      rightZoneBg: isL2R ? 'rgba(107,165,57,0.04)' : 'rgba(211,47,47,0.04)',
+      highlightIdx: -1, displayValue: cf.type === 'dial' ? String(cf.defaultValue) : '',
+      fields: f, lockFlash: false
+    })
+    this.currentVal = cf.type === 'dial' ? cf.defaultValue : 0
   },
 
-  updateDialRange(metricKey) {
-    var col = this.data.columns.slice()
-    var cfg = COL_CFG[1]
-    var range = (cfg.rangesByMetric && cfg.rangesByMetric[metricKey]) || { min: cfg.min, max: cfg.max, unit: cfg.unit, step: cfg.step, decimal: cfg.decimal }
-    col[1].min = range.min
-    col[1].max = range.max
-    col[1].unit = range.unit
-    col[1].step = range.step
-    col[1].decimal = range.decimal
-    col[1].currentValue = ((range.min + range.max) / 2).toFixed(range.decimal)
-    col[1].selectedLabel = String(col[1].currentValue)
-    this.setData({ columns: col, displayValue: col[1].currentValue })
-  },
-
-  onDialMove(y) {
-    var col = this.data.columns[1]
-    if (!this.dialRect) {
-      var self = this
-      wx.createSelectorQuery().select('.test-dial').boundingClientRect()
-        .exec(function (res) { if (res[0]) self.dialRect = res[0] })
-      return
-    }
-    var h = this.dialRect.height
-    var dy = y - this.dialRect.top
-    var frac = dy / h
-    if (frac < 0) frac = 0; if (frac > 1) frac = 1
-
-    var zone = null
-    for (var i = 0; i < ZONES.length; i++) {
-      if (frac >= ZONES[i].from && frac <= ZONES[i].to) { zone = ZONES[i]; break }
-    }
-    if (!zone) return
-
-    this.setData({ dialZone: zone.name, dialInfo: zone.desc })
-    this.stopDial()
-
-    if (zone.speed !== 0) {
-      var self = this
-      this.dialTimer = setInterval(function () {
-        var c = self.data.columns.slice()
-        var v = Number(c[1].currentValue)
-        var s = zone.speed * (c[1].step || 0.1)
-        v += s
-        if (v < c[1].min) v = c[1].min
-        if (v > c[1].max) v = c[1].max
-        var display = v.toFixed(c[1].decimal || 0)
-        c[1].currentValue = display
-        c[1].selectedLabel = display
-        c[1].selectedIdx = 1
-        c[1].done = true
-        self.setData({ columns: c, displayValue: display })
-      }, 120)
-    }
-  },
+  // ── Touch ──
 
   onStart(e) {
     var t = e.touches[0]
-    this.setData({ path: [{ x: t.pageX - 12, y: t.pageY, opacity: 1 }], inCancelZone: false, inSubmitZone: false })
-    this.stopDial()
-    this.dialRect = null
+    this.setData({ pointerVisible: true, pointerX: t.pageX - 20, pointerY: t.pageY - 20, pointerOpacity: 1,
+      trail: [{ x: t.pageX - 4, y: t.pageY - 4, o: 1, w: 12 }] })
   },
 
   onMove(e) {
     var t = e.touches[0]
-    var ci = this.colX(t.pageX)
-    var columns = this.data.columns.slice()
+    var cf = this.data.currentField
+    if (!cf) return
+    var isL2R = (this.data.currentIdx % 2 === 0)
+    var rect = this.canvasRect
+    if (!rect) return
+    var w = rect.width, l = rect.left
+    var fx = (t.pageX - l) / w // 0..1 fraction across canvas
 
-    var inCancel = ci === -2, inSubmit = ci === 99
-    var allDone = true; for (var j = 0; j < columns.length; j++) { if (columns[j].selectedIdx < 0) allDone = false }
+    var edgeW = 0.08 // 8% edge zone width
+    var inLeft = fx < edgeW
+    var inRight = fx > (1 - edgeW)
+    var inCenter = !inLeft && !inRight
 
-    // Sync metric → update dial range
-    if (columns[0].selectedIdx >= 0) {
-      var metricKey = COL_CFG[0].options[columns[0].selectedIdx].value
-      if (this._lastMetricKey !== metricKey) {
-        this._lastMetricKey = metricKey
-        var cfg = COL_CFG[1]
-        var range = (cfg.rangesByMetric && cfg.rangesByMetric[metricKey]) || { min: cfg.min, max: cfg.max, unit: cfg.unit, step: cfg.step, decimal: cfg.decimal }
-        columns[1].min = range.min; columns[1].max = range.max; columns[1].unit = range.unit
-        columns[1].step = range.step; columns[1].decimal = range.decimal
-        columns[1].currentValue = ((range.min + range.max) / 2).toFixed(range.decimal)
-        columns[1].selectedLabel = String(columns[1].currentValue)
-      }
-    }
+    var fields = this.data.fields.slice()
+    var f = fields[this.data.currentIdx]
 
-    // Activate/deactivate columns
-    for (var k = 0; k < columns.length; k++) {
-      if (k === ci) {
-        columns[k].active = true
-        if (columns[k].revisiting) columns[k].done = false
-      } else if (k < ci && ci <= 2) {
-        columns[k].active = false; columns[k].revisiting = false; columns[k].done = true
+    if (isL2R) {
+      // Left = cancel, Right = submit
+      if (inRight && f.selectedIdx >= 0) {
+        this.setData({ leftZoneActive: false, rightZoneActive: true })
+      } else if (inLeft) {
+        this.setData({ leftZoneActive: true, rightZoneActive: false })
       } else {
-        columns[k].active = false; columns[k].revisiting = false
-        if (k > ci) { columns[k].done = false; columns[k].selectedIdx = -1; columns[k].selectedLabel = '' }
+        this.setData({ leftZoneActive: false, rightZoneActive: false })
+        if (cf.type === 'picker') this.onPickerMove(t, fx, f, fields)
+        if (cf.type === 'dial') this.onDialMove(t, f, fields)
       }
-    }
-
-    // Handle picker columns (0, 2)
-    if (ci === 0 || ci === 2) {
-      this.stopDial()
-      var col = columns[ci]
-      if (col.options) {
-        var idx = Math.floor((t.pageY - (this.canvasRect ? this.canvasRect.top : 0) - 40) / OPT_H)
-        if (idx < 0) idx = 0; if (idx >= col.options.length) idx = col.options.length - 1
-        if (col.highlightIdx !== idx) {
-          col.highlightIdx = idx; col.selectedIdx = idx; col.selectedLabel = col.options[idx].label; col.done = true
-        }
-      }
-    }
-
-    // Handle dial column (1)
-    if (ci === 1) {
-      columns[1].done = true
-      this.onDialMove(t.pageY)
     } else {
-      this.stopDial()
+      // Right = cancel, Left = submit (reversed)
+      if (inLeft && f.selectedIdx >= 0) {
+        this.setData({ leftZoneActive: true, rightZoneActive: false })
+      } else if (inRight) {
+        this.setData({ leftZoneActive: false, rightZoneActive: true })
+      } else {
+        this.setData({ leftZoneActive: false, rightZoneActive: false })
+        if (cf.type === 'picker') this.onPickerMove(t, fx, f, fields)
+        if (cf.type === 'dial') this.onDialMove(t, f, fields)
+      }
     }
 
-    // Path trace
-    var path = this.data.path.slice()
-    if (path.length > 50) path.shift()
-    path.push({ x: t.pageX - 12, y: t.pageY, opacity: 1 })
-    for (var p = 0; p < path.length - 1; p++) { path[p].opacity = (p + 1) / path.length }
+    // Trail
+    var trail = this.data.trail.slice()
+    if (trail.length > 60) trail.shift()
+    trail.push({ x: t.pageX - 4, y: t.pageY - 4, o: 1, w: 10 })
+    for (var i = 0; i < trail.length - 1; i++) { trail[i].o = (i + 1) / trail.length; trail[i].w = 4 + 6 * (i / trail.length) }
 
-    this.setData({ columns: columns, activeColumn: ci,
-      inCancelZone: inCancel, inSubmitZone: inSubmit && allDone, path: path })
+    this.setData({
+      pointerX: t.pageX - 20, pointerY: t.pageY - 20,
+      trail: trail, fields: fields
+    })
   },
 
-  onEnd() {
-    this.stopDial()
-    var inCancel = this.data.inCancelZone, inSubmit = this.data.inSubmitZone
-    var columns = this.data.columns.slice()
-    for (var i = 0; i < columns.length; i++) { columns[i].active = false; columns[i].highlightIdx = -1 }
+  onPickerMove(t, fx, f, fields) {
+    var idx = Math.floor(fx * (f.options ? f.options.length : 1))
+    if (idx < 0) idx = 0; if (idx >= f.options.length) idx = f.options.length - 1
+    if (f.highlightIdx !== idx) {
+      f.highlightIdx = idx
+      this.setData({ highlightIdx: idx })
+    }
+  },
 
-    if (inCancel) {
+  onDialMove(t, f, fields) {
+    var self = this
+    if (!this.dialRect) {
+      wx.createSelectorQuery().select('.test-dial-wrap').boundingClientRect()
+        .exec(function (r) { if (r[0]) self.dialRect = r[0] })
+      return
+    }
+    var h = this.dialRect.height
+    var dy = t.pageY - this.dialRect.top
+    var frac = dy / h
+    if (frac < 0) frac = 0; if (frac > 1) frac = 1
+
+    var zone = null
+    for (var i = 0; i < SPEED_ZONES.length; i++) {
+      if (frac >= SPEED_ZONES[i].from && frac <= SPEED_ZONES[i].to) { zone = SPEED_ZONES[i]; break }
+    }
+    if (!zone) return
+    this.setData({ dialActiveZone: zone.name, dialLive: zone.speed !== 0 })
+
+    this.stopDial()
+    if (zone.speed !== 0) {
+      this.dialTimer = setInterval(function () {
+        var ff = self.data.fields.slice()
+        var fd = ff[self.data.currentIdx]
+        var v = Number(self.currentVal) + zone.speed * (fd.step || 0.1)
+        if (v < fd.min) v = fd.min
+        if (v > fd.max) v = fd.max
+        self.currentVal = v
+        var disp = v.toFixed(fd.decimal || 0)
+        fd.selectedIdx = 1; fd.selectedLabel = disp
+        self.setData({ fields: ff, displayValue: disp })
+      }, 100)
+    }
+  },
+
+  onEnd(e) {
+    this.stopDial()
+    var t = e.changedTouches[0]
+    var rect = this.canvasRect
+    if (!rect) return
+    var fx = (t.pageX - rect.left) / rect.width
+    var edgeW = 0.08
+    var inLeft = fx < edgeW, inRight = fx > (1 - edgeW)
+    var isL2R = (this.data.currentIdx % 2 === 0)
+    var fields = this.data.fields.slice()
+    var f = fields[this.data.currentIdx]
+    var cancel = isL2R ? inLeft : inRight
+    var submit = isL2R ? inRight : inLeft
+
+    if (cancel) {
       wx.vibrateShort({ type: 'heavy' })
-      this.setData({ columns: buildColumns(), cancelled: true, inCancelZone: false })
+      this.setData({ fields: buildFields(), done: false, leftZoneActive: false, rightZoneActive: false })
+      this.loadField(0)
       return
     }
 
-    var allDone = true; for (var j = 0; j < columns.length; j++) { if (columns[j].selectedIdx < 0) allDone = false }
-    if (inSubmit && allDone) {
-      wx.vibrateShort({ type: 'heavy' })
-      this.setData({ columns: columns, done: true, inSubmitZone: false })
-    } else {
-      wx.vibrateShort({ type: 'light' })
-      this.setData({ columns: columns })
+    if (submit && f.selectedIdx >= 0) {
+      // Lock and advance
+      wx.vibrateShort({ type: 'medium' })
+      f.highlightIdx = -1
+      this.setData({ fields: fields, lockFlash: true, leftZoneActive: false, rightZoneActive: false })
+      var self = this
+      setTimeout(function () {
+        self.setData({ lockFlash: false })
+        self.loadField(self.data.currentIdx + 1)
+      }, 400)
+      return
     }
+
+    // Lock current picker selection
+    if (f.type === 'picker' && f.highlightIdx >= 0) {
+      f.selectedIdx = f.highlightIdx; f.selectedLabel = f.options[f.highlightIdx].label
+      f.highlightIdx = -1
+      wx.vibrateShort({ type: 'light' })
+
+      // If metric changed, update dial ranges
+      if (f.id === 'metric' && f.selectedIdx >= 0) {
+        var mk = f.options[f.selectedIdx].value
+        var rd = fields[1]
+        var r = rd.metricRanges[mk] || {}
+        if (r.min !== undefined) { rd.min = r.min; rd.max = r.max; rd.unit = r.unit; rd.step = r.step; rd.decimal = r.dec }
+      }
+    }
+
+    if (f.type === 'dial') {
+      f.selectedIdx = 1; f.selectedLabel = String(this.currentVal.toFixed(f.decimal || 0))
+    }
+
+    this.setData({ fields: fields, leftZoneActive: false, rightZoneActive: false, highlightIdx: -1, dialLive: false, dialActiveZone: '' })
   },
 
-  onReset() {
+  stopDial() { if (this.dialTimer) { clearInterval(this.dialTimer); this.dialTimer = null } },
+
+  reset() {
     this.stopDial()
-    this.setData({ columns: buildColumns(), done: false, cancelled: false,
-      activeColumn: -1, inCancelZone: false, inSubmitZone: false, path: [], displayValue: '' })
+    this.setData({ fields: buildFields(), done: false, displayValue: '', dialLive: false, dialActiveZone: '', lockFlash: false })
+    this.loadField(0)
   },
 })
