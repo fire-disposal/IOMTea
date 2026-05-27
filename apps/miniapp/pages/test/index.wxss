@@ -1,135 +1,70 @@
 .test-page { padding: 24rpx; min-height: 100vh; background: var(--bg-page); }
 .test-title { font-size: 36rpx; font-weight: 700; display: block; }
-.test-hint { font-size: 24rpx; color: var(--text-secondary); display: block; margin: 8rpx 0 24rpx; }
+.test-hint { font-size: 22rpx; color: var(--text-secondary); display: block; margin: 8rpx 0 20rpx; }
 
 .test-canvas {
-  position: relative;
-  display: flex;
-  background: var(--bg-card);
-  border-radius: 20rpx;
-  overflow: hidden;
-  box-shadow: 0 4rpx 20rpx rgba(0,0,0,0.06);
-  min-height: 520rpx;
-  margin-bottom: 16rpx;
+  position: relative; display: flex; background: var(--bg-card);
+  border-radius: 20rpx; overflow: hidden;
+  box-shadow: 0 4rpx 20rpx rgba(0,0,0,0.06); min-height: 520rpx; margin-bottom: 16rpx;
 }
 
-/* Zones */
 .test-zone {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  writing-mode: vertical-rl;
-  font-size: 22rpx;
-  color: #ccc;
-  transition: background 0.2s, color 0.2s;
-  min-height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  writing-mode: vertical-rl; font-size: 20rpx; color: #ccc; transition: background 0.2s, color 0.2s;
 }
+.test-zone--cancel { width: 70rpx; background: rgba(0,0,0,0.02); flex-shrink: 0; }
+.test-zone--submit { width: 80rpx; background: rgba(107,165,57,0.03); flex-shrink: 0; }
+.test-zone--active.test-zone--cancel { background: rgba(211,47,47,0.12); color: #D32F2F; }
+.test-zone--active.test-zone--submit { background: rgba(107,165,57,0.15); color: var(--brand-500); }
 
-.test-zone--cancel {
-  width: 80rpx;
-  background: rgba(0,0,0,0.02);
-  flex-shrink: 0;
-}
-
-.test-zone--submit {
-  width: 90rpx;
-  background: rgba(107,165,57,0.03);
-  flex-shrink: 0;
-}
-
-.test-zone--active.test-zone--cancel {
-  background: rgba(211,47,47,0.12);
-  color: #D32F2F;
-}
-
-.test-zone--active.test-zone--submit {
-  background: rgba(107,165,57,0.15);
-  color: var(--brand-500);
-}
-
-/* Columns */
-.test-columns {
-  display: flex;
-  flex: 1;
-}
-
-.test-column {
-  width: 210rpx;
-  flex-shrink: 0;
-  padding: 16rpx 0;
-  border-right: 1rpx solid #f0f0e8;
-  transition: background 0.2s;
-}
-
+.test-columns { display: flex; flex: 1; }
+.test-column { flex-shrink: 0; padding: 16rpx 0; border-right: 1rpx solid #f0f0e8; transition: background 0.2s; }
 .test-column--done { background: rgba(107,165,57,0.04); }
-.test-column--active { background: rgba(107,165,57,0.08); }
+.test-column--active { background: rgba(107,165,57,0.06); }
 .test-column--revisit { background: rgba(237,108,2,0.06); }
+.test-column-label { text-align: center; font-size: 20rpx; color: var(--text-secondary); padding-bottom: 10rpx; display: block; border-bottom: 1rpx solid #f0f0e8; margin-bottom: 6rpx; }
 
-.test-column-label {
-  text-align: center;
-  font-size: 22rpx;
-  color: var(--text-secondary);
-  padding-bottom: 12rpx;
-  display: block;
-  border-bottom: 1rpx solid #f0f0e8;
-  margin-bottom: 8rpx;
-}
+/* Picker options */
+.test-opt { display: flex; align-items: center; justify-content: space-between; padding: 16rpx 12rpx; height: 72rpx; transition: background 0.1s; border-radius: 6rpx; margin: 0 6rpx; }
+.test-opt--highlight { background: rgba(107,165,57,0.12); transform: scale(1.02); }
+.test-opt--picked { color: var(--brand-500); font-weight: 600; }
+.test-opt-label { font-size: 26rpx; }
+.test-opt-check { font-size: 18rpx; color: var(--brand-500); }
 
-.test-opt {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 18rpx 16rpx;
-  height: 76rpx;
-  transition: background 0.1s;
-  border-radius: 8rpx;
-  margin: 0 8rpx;
-}
+/* Dial (column 2) */
+.test-column--dial { width: 260rpx !important; }
+.test-dial { position: relative; display: flex; flex-direction: column; height: 100%; min-height: 460rpx; }
 
-.test-opt--highlight {
-  background: rgba(107,165,57,0.12);
-  transform: scale(1.02);
-}
+.test-dial-zone { flex: 1; transition: opacity 0.15s; border-radius: 6rpx; margin: 2rpx 8rpx; }
+.test-dial-zone--fast { background: #6BA539; }
+.test-dial-zone--slow { background: #8EC15B; }
+.test-dial-zone--center { background: #e8e8e8; }
 
-.test-opt--picked {
-  color: var(--brand-500);
-  font-weight: 600;
-}
+.test-dial-value { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; }
+.test-dial-num { font-size: 64rpx; font-weight: 700; color: var(--text-primary); transition: color 0.3s; display: block; }
+.test-dial-num--live { color: var(--brand-500); }
+.test-dial-unit { font-size: 24rpx; color: var(--text-secondary); display: block; margin-top: 4rpx; }
 
-.test-opt-label { font-size: 28rpx; }
-.test-opt-check { font-size: 20rpx; color: var(--brand-500); }
+.test-dial-range { display: flex; justify-content: space-between; padding: 12rpx 16rpx; margin-top: auto; }
+.test-dial-min, .test-dial-max { font-size: 20rpx; color: #ccc; }
 
-/* Path dots */
-.test-dot {
-  position: absolute;
-  width: 8rpx; height: 8rpx;
-  border-radius: 50%;
-  background: var(--brand-500);
-  pointer-events: none;
-}
+/* Path */
+.test-dot { position: absolute; width: 8rpx; height: 8rpx; border-radius: 50%; background: var(--brand-500); pointer-events: none; }
 
-/* Info bar */
+/* Info */
 .test-info { text-align: center; padding: 8rpx; }
 .test-info-warn { color: #D32F2F; font-size: 26rpx; font-weight: 500; }
 .test-info-ok { color: var(--brand-500); font-size: 26rpx; font-weight: 500; }
-.test-info-normal { font-size: 26rpx; color: var(--text-secondary); }
+.test-info-normal { font-size: 24rpx; color: var(--text-secondary); }
 .test-info-dim { font-size: 24rpx; color: #ccc; }
 
 /* Result */
 .test-result { margin-top: 32rpx; }
 .test-result-title { font-size: 34rpx; font-weight: 700; margin-bottom: 20rpx; }
-.test-result-item {
-  display: flex; justify-content: space-between;
-  padding: 24rpx; background: var(--bg-card);
-  border-radius: 12rpx; margin-bottom: 12rpx;
-}
+.test-result-item { display: flex; justify-content: space-between; padding: 24rpx; background: var(--bg-card); border-radius: 12rpx; margin-bottom: 12rpx; }
 .test-result-label { font-size: 28rpx; color: var(--text-secondary); }
 .test-result-value { font-size: 28rpx; font-weight: 600; color: var(--brand-500); }
-.test-reset-btn {
-  background: var(--brand-500); color: #fff; border: none;
-  border-radius: 14rpx; padding: 24rpx; font-size: 30rpx;
-  font-weight: 600; text-align: center; margin-top: 16rpx;
-}
+.test-reset-btn { background: var(--brand-500); color: #fff; border: none; border-radius: 14rpx; padding: 24rpx; font-size: 30rpx; font-weight: 600; text-align: center; margin-top: 16rpx; }
 
 .test-cancelled { margin-top: 32rpx; text-align: center; }
 .test-cancelled-text { font-size: 34rpx; color: var(--text-secondary); display: block; margin-bottom: 20rpx; }
