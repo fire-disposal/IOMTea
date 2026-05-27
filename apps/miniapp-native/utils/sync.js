@@ -1,22 +1,23 @@
-const STORAGE_KEYS = require('../constants/storage-keys').STORAGE_KEYS
+const { STORAGE_KEYS } = require('../constants/storage-keys')
 const { api } = require('./api')
 
-async function syncUnsyncedRecords() {
+function syncUnsyncedRecords() {
   const records = wx.getStorageSync(STORAGE_KEYS.RECORDS) || []
-  const unsynced = records.filter(r => !r.synced)
-  if (unsynced.length === 0) return
+  const unsynced = records.filter(function (r) { return !r.synced })
+  if (unsynced.length === 0) return Promise.resolve()
 
-  const events = unsynced.map(r => {
-    let metric = r.type
-    let value = r.data
+  const events = unsynced.map(function (r) {
+    var metric = r.type
+    var value = r.data
     if (r.type === 'blood_glucose') {
       metric = 'glucose'
       value = r.data.value_mgdl != null ? r.data.value_mgdl : Number(r.data.value)
     } else if (r.type === 'blood_pressure') {
       metric = 'systolic_bp'
       value = Number(r.data.systolic)
-    } else if (r.type === 'weight') metric = 'weight'
-    else if (r.type === 'medication') {
+    } else if (r.type === 'weight') {
+      metric = 'weight'
+    } else if (r.type === 'medication') {
       metric = 'medication'
       value = r.data
     } else if (r.type === 'period') {
@@ -26,16 +27,19 @@ async function syncUnsyncedRecords() {
     return {
       patientId: wx.getStorageSync(STORAGE_KEYS.PATIENT_ID) || '',
       kind: 'observation',
-      metric,
+      metric: metric,
       source: 'manual',
-      value: typeof value === 'number' ? value : (value != null ? value : 0),
-      recordedAt: r.recordedAt || new Date().toISOString()
+      value: typeof value === 'number' ? value : (value || 0),
+      recordedAt: r.recordedAt || new Date().toISOString(),
     }
   })
 
-  await api.post('/ingest/batch', { events })
-  for (const r of unsynced) r.synced = true
-  wx.setStorageSync(STORAGE_KEYS.RECORDS, records)
+  return api.post('/ingest/batch', { events: events }).then(function () {
+    for (var i = 0; i < unsynced.length; i++) {
+      unsynced[i].synced = true
+    }
+    wx.setStorageSync(STORAGE_KEYS.RECORDS, records)
+  })
 }
 
 function startAutoSync() {

@@ -1,0 +1,68 @@
+<scroll-view class="health-scroll" scroll-y>
+  <view class="health-header">
+    <text class="health-title">健康记录</text>
+    <text class="health-gear" bind:tap="onTrackingTap">⚙️</text>
+  </view>
+
+  <view class="health-cal-toggle" bind:tap="onToggleCal">
+    <text class="health-cal-toggle-text">{{calVisible ? '收起日历' : '展开日历'}}</text>
+    <text class="health-cal-toggle-arrow {{calVisible ? 'health-cal-toggle-arrow-up' : ''}}">▼</text>
+  </view>
+
+  <view wx:if="{{calVisible}}" class="calendar anim-fade-up">
+    <view class="cal-header">
+      <text class="cal-nav" bind:tap="onPrevMonth">‹</text>
+      <text class="cal-month-label">{{monthLabel}}</text>
+      <text class="cal-nav" bind:tap="onNextMonth">›</text>
+    </view>
+    <view class="cal-weekdays">
+      <text wx:for="{{weekDays}}" wx:key="*this" class="cal-wd">{{item}}</text>
+    </view>
+    <view class="cal-grid">
+      <view wx:for="{{calendarDays}}" wx:key="index"
+        class="cal-day {{item.active ? 'cal-day--active' : ''}} {{item.day ? '' : 'cal-day--empty'}}"
+        data-date="{{item.date}}" data-count="{{item.count}}" bind:tap="onDayTap">
+        <text wx:if="{{item.day}}">{{item.day}}</text>
+        <view wx:if="{{item.active && item.day}}" class="cal-dot"></view>
+      </view>
+    </view>
+  </view>
+
+  <view class="cell-group">
+    <view wx:if="{{!loaded}}" wx:for="{{[1,2,3,4]}}" wx:key="*this" class="cell cell--loading">
+      <view class="cell-body">
+        <view class="skeleton-line" style="width:120rpx"></view>
+      </view>
+    </view>
+
+    <view wx:if="{{loaded}}" wx:for="{{modules}}" wx:key="key" class="cell anim-fade-up"
+      data-page="{{item.page}}" bind:tap="onModuleTap">
+      <view class="cell-body">
+        <view class="cell-title-row">
+          <text class="cell-title">{{item.label}}</text>
+          <text class="cell-tag" data-active="{{counts[item.key] > 0}}">
+            {{counts[item.key] > 0 ? '今日 ' + counts[item.key] + ' 次' : '未记录'}}
+          </text>
+        </view>
+        <text class="cell-desc">{{item.unit ? '记录' + item.unit : '记录'}}</text>
+      </view>
+      <text class="cell-arrow">›</text>
+    </view>
+
+    <view class="cell" bind:tap="onFormListTap">
+      <view class="cell-body">
+        <text class="cell-title">健康量表</text>
+        <text class="cell-desc">查看已发布的健康量表</text>
+      </view>
+      <text class="cell-arrow">›</text>
+    </view>
+
+    <view class="cell" bind:tap="onRecordsTap">
+      <view class="cell-body">
+        <text class="cell-title">全部记录</text>
+        <text class="cell-desc">按类型筛选历史数据</text>
+      </view>
+      <text class="cell-arrow">›</text>
+    </view>
+  </view>
+</scroll-view>

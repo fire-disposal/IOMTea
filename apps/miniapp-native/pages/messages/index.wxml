@@ -1,0 +1,34 @@
+<view class="messages-page">
+  <text class="messages-page-title">告警中心</text>
+  <text class="messages-page-subtitle">实时健康告警与通知</text>
+
+  <view wx:if="{{loading}}" wx:for="{{[1,2,3]}}" wx:key="*this" class="card-skeleton anim-pulse"></view>
+
+  <view wx:if="{{!loading && alerts.length === 0}}" class="messages-page-empty">
+    <view class="messages-page-empty-icon">
+      <text class="messages-page-empty-icon-text">✓</text>
+    </view>
+    <text class="messages-page-empty-title">暂无告警</text>
+    <text class="messages-page-empty-hint">健康提醒和通知将显示在这里</text>
+  </view>
+
+  <scroll-view scroll-y style="max-height:calc(100vh - 200rpx)">
+    <view wx:for="{{alerts}}" wx:key="id" class="alert-item"
+      style="border-left:6rpx solid {{item.severity === 'critical' ? '#e03131' : item.severity === 'warning' ? '#f08c00' : '#1971c2'}}"
+      bind:tap="onAlertTap">
+      <view class="alert-item-header">
+        <text class="alert-item-metric">{{item.metric}}</text>
+        <text class="alert-item-severity"
+          style="color:{{item.severity === 'critical' ? '#e03131' : item.severity === 'warning' ? '#f08c00' : '#1971c2'}}">
+          {{item.severity === 'critical' ? '危急' : item.severity === 'warning' ? '警告' : '提示'}}
+        </text>
+      </view>
+      <view class="alert-item-footer">
+        <text class="alert-item-time">{{item.recordedAt}}</text>
+        <text class="alert-item-status">
+          {{item.status === 'active' ? '● 活跃' : item.status === 'acknowledged' ? '○ 已确认' : '✓ 已解决'}}
+        </text>
+      </view>
+    </view>
+  </scroll-view>
+</view>

@@ -1,6 +1,12 @@
 const HEALTH_MODULE_KEYS = [
-  'blood_glucose', 'blood_pressure', 'weight', 'heart_rate',
-  'temperature', 'spo2', 'medication', 'period'
+  'blood_glucose',
+  'blood_pressure',
+  'weight',
+  'heart_rate',
+  'temperature',
+  'spo2',
+  'medication',
+  'period',
 ]
 
 const HEALTH_MODULE_META = {
@@ -11,7 +17,7 @@ const HEALTH_MODULE_META = {
   temperature: { label: '体温', unit: '°C', icon: '🌡️' },
   spo2: { label: '血氧', unit: '%', icon: '🫁' },
   medication: { label: '用药', unit: '', icon: '💊' },
-  period: { label: '生理期', unit: '', icon: '🌸' }
+  period: { label: '生理期', unit: '', icon: '🌸' },
 }
 
 const HEALTH_MODULE_LABELS = {
@@ -22,14 +28,14 @@ const HEALTH_MODULE_LABELS = {
   temperature: '体温',
   spo2: '血氧',
   medication: '用药',
-  period: '生理期'
+  period: '生理期',
 }
 
 const PIN_TYPE_LABELS = {
   device: '设备',
   virtual: '虚拟',
   user: '用户',
-  simulator: '仿真'
+  simulator: '仿真',
 }
 
 function getRecordPage(key) {
@@ -41,9 +47,15 @@ function getRecordPage(key) {
     temperature: '/pages/record/temperature/index',
     spo2: '/pages/record/spo2/index',
     medication: '/pages/record/medication/index',
-    period: '/pages/record/period/index'
+    period: '/pages/record/period/index',
   }
   return pages[key] || ''
 }
 
-module.exports = { HEALTH_MODULE_KEYS, HEALTH_MODULE_META, HEALTH_MODULE_LABELS, PIN_TYPE_LABELS, getRecordPage }
+module.exports = {
+  HEALTH_MODULE_KEYS,
+  HEALTH_MODULE_META,
+  HEALTH_MODULE_LABELS,
+  PIN_TYPE_LABELS,
+  getRecordPage,
+}

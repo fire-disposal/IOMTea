@@ -1,0 +1,172 @@
+.health-scroll {
+  height: 100vh;
+}
+
+.health-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 32rpx 24rpx 16rpx;
+}
+
+.health-title {
+  font-size: 40rpx;
+  font-weight: 700;
+}
+
+.health-gear {
+  font-size: 36rpx;
+  padding: 8rpx;
+}
+
+.health-cal-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12rpx 24rpx;
+  gap: 8rpx;
+}
+
+.health-cal-toggle-text {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+}
+
+.health-cal-toggle-arrow {
+  font-size: 20rpx;
+  color: var(--text-secondary);
+  transition: transform 0.2s;
+  display: inline-block;
+}
+
+.health-cal-toggle-arrow-up {
+  transform: rotate(180deg);
+}
+
+.calendar {
+  margin: 0 24rpx 16rpx;
+  background: var(--bg-card);
+  border-radius: 16rpx;
+  padding: 20rpx;
+}
+
+.cal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 16rpx;
+}
+
+.cal-nav {
+  font-size: 40rpx;
+  color: var(--brand-500);
+  padding: 0 16rpx;
+}
+
+.cal-month-label {
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.cal-weekdays {
+  display: flex;
+}
+
+.cal-wd {
+  flex: 1;
+  text-align: center;
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  padding: 8rpx 0;
+}
+
+.cal-grid {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.cal-day {
+  width: calc(100% / 7);
+  text-align: center;
+  padding: 12rpx 0;
+  font-size: 26rpx;
+  position: relative;
+}
+
+.cal-day--active {
+  color: var(--brand-500);
+  font-weight: 600;
+}
+
+.cal-dot {
+  width: 8rpx;
+  height: 8rpx;
+  border-radius: 50%;
+  background: var(--brand-500);
+  margin: 4rpx auto 0;
+}
+
+.cell-group {
+  padding: 0 24rpx 100rpx;
+}
+
+.cell {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg-card);
+  padding: 24rpx;
+  border-radius: 12rpx;
+  margin-bottom: 12rpx;
+}
+
+.cell-body {
+  flex: 1;
+}
+
+.cell-title-row {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.cell-title {
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.cell-tag {
+  font-size: 22rpx;
+  color: var(--text-secondary);
+  background: #f0f0f0;
+  padding: 2rpx 12rpx;
+  border-radius: 20rpx;
+}
+
+.cell-tag[data-active="true"] {
+  color: var(--brand-500);
+  background: #f0f7e8;
+}
+
+.cell-desc {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  display: block;
+  margin-top: 6rpx;
+}
+
+.cell-arrow {
+  font-size: 36rpx;
+  color: var(--text-secondary);
+}
+
+.cell--loading {
+  opacity: 0.6;
+}
+
+.skeleton-line {
+  height: 16rpx;
+  background: var(--text-secondary);
+  opacity: 0.1;
+  border-radius: 4rpx;
+}

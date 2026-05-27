@@ -9,7 +9,7 @@ const STORAGE_KEYS = {
   PATIENT_ID: 'patient_id',
   SERVER_URL: 'server_url',
   PLAN_CACHE: 'plan_cache',
-  CREDIT_BALANCE: 'credit_balance'
+  CREDIT_BALANCE: 'credit_balance',
 }
 
 module.exports = { STORAGE_KEYS }

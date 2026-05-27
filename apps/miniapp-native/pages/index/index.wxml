@@ -1,0 +1,33 @@
+<view class="home-page">
+  <view class="topbar">
+    <view class="topbar-left">
+      <text class="topbar-greeting">你好，</text>
+      <text class="topbar-name">{{userName}}</text>
+    </view>
+    <view class="topbar-right">
+      <text class="topbar-credit">🪙 {{credit}}</text>
+    </view>
+  </view>
+
+  <view class="home-checklist">
+    <view wx:if="{{loading}}" wx:for="{{[1,2,3]}}" wx:key="*this" class="card-skeleton anim-pulse"></view>
+
+    <view wx:if="{{!loading && plans.length > 0}}" wx:for="{{plans}}" wx:key="id" class="checklist-card anim-fade-up"
+      data-page="{{item.code}}" bind:tap="onPlanTap">
+      <view class="checklist-card-left">
+        <text class="checklist-card-icon">📋</text>
+        <view class="checklist-card-info">
+          <text class="checklist-card-title">{{item.title}}</text>
+          <text class="checklist-card-status">待完成</text>
+        </view>
+      </view>
+      <text class="checklist-card-arrow">›</text>
+    </view>
+
+    <view wx:if="{{!loading && plans.length === 0}}" class="home-checklist-empty">
+      <text class="home-checklist-empty-icon">📋</text>
+      <text class="home-checklist-empty-text">暂无计划</text>
+      <text class="home-checklist-empty-hint" bind:tap="onGoPlan">去制定健康计划 →</text>
+    </view>
+  </view>
+</view>
