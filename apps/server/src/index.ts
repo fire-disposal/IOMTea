@@ -44,12 +44,6 @@ function resolveCorsOrigins(rawCorsOrigin: string | undefined): string[] {
   return rawCorsOrigin.split(',').map((origin) => origin.trim())
 }
 
-function hasRooms(value: unknown): value is { rooms: unknown[] } {
-  if (!value || typeof value !== 'object') return false
-  const rooms = (value as { rooms?: unknown }).rooms
-  return Array.isArray(rooms) && rooms.length > 0
-}
-
 // ============================================================
 // 横幅
 // ============================================================

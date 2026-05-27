@@ -5,8 +5,6 @@
  * 生成工具: figlet / patorjk.com ASCII 字体 "Big"
  */
 
-import pkg from '../../../package.json' with { type: 'json' }
-
 const mode = process.env.NODE_ENV || 'development'
 
 export const BANNER = `

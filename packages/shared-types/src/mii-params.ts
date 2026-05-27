@@ -26,7 +26,6 @@ export const MiiParamsSchema = z.object({
 })
 
 export type MiiParams = z.infer<typeof MiiParamsSchema>
-export type RenderStrategy = 'procedural' | 'svg'
 export const DEFAULT_MII_PARAMS: MiiParams = {
   version: 1,
   face: {

@@ -3,7 +3,6 @@
 import { sql } from 'drizzle-orm'
 import { events } from '../db/schema'
 import type { MetricDefinition } from './registry'
-import { getMetricOrDefault } from './registry'
 
 export function valueExpression(def: MetricDefinition, fieldPath?: string): ReturnType<typeof sql> {
   if (def.valueType === 'scalar' || !fieldPath) {
@@ -18,10 +17,4 @@ export function truncExpr(interval: string): ReturnType<typeof sql> {
   return sql`date_trunc(${ival}, ${events.recordedAt})`
 }
 
-export function resolveValueExpr(
-  metric: string,
-  fieldPath?: string,
-): { def: MetricDefinition; expr: ReturnType<typeof sql> } | null {
-  const def = getMetricOrDefault(metric)
-  return { def, expr: valueExpression(def, fieldPath) }
-}
+

@@ -51,8 +51,8 @@
 
     <!-- Medication special case -->
     <view wx:if="{{type === 'medication'}}">
-      <block wx:if="{{meds && meds.length > 0}}" wx:for="{{meds}}" wx:key="id" wx:for-item="med">
-        <view class="entry-med-item">
+      <block wx:if="{{meds && meds.length > 0}}">
+        <view wx:for="{{meds}}" wx:key="id" wx:for-item="med" class="entry-med-item">
           <text class="entry-med-name">{{med.drug || med.title}}</text>
           <view class="entry-med-actions">
             <text class="entry-med-btn entry-med-btn--take" bind:tap="onMedTake" data-id="{{med.id}}">已服用</text>

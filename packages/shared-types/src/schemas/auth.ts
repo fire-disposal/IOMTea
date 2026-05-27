@@ -13,7 +13,7 @@ export const registerSchema = z.object({
     .max(100)
     .regex(/[A-Z]/, '需要包含大写字母')
     .regex(/[0-9]/, '需要包含数字'),
-  displayName: z.string().min(1).max(100),
+  displayName: z.string().optional(),
 })
 
 export const tokenPairSchema = z.object({
