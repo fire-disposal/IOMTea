@@ -1,7 +1,14 @@
 <view class="login-page">
-  <view class="login-logo">IOMTea</view>
-  <view class="login-desc">健康数据监护平台</view>
-  <button class="login-btn" loading="{{loading}}" bind:tap="handleWechatLogin">
-    微信一键登录
-  </button>
+  <view class="login-bg-circle login-bg-circle--1"></view>
+  <view class="login-bg-circle login-bg-circle--2"></view>
+  <view class="login-bg-circle login-bg-circle--3"></view>
+
+  <view class="login-content anim-fade-up">
+    <view class="login-icon">🍵</view>
+    <view class="login-logo">IOMTea</view>
+    <view class="login-desc">健康数据监护平台</view>
+    <button class="login-btn anim-scale-in" loading="{{loading}}" bind:tap="handleWechatLogin">
+      微信一键登录
+    </button>
+  </view>
 </view>
