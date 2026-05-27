@@ -20,7 +20,8 @@
     "pages/form/index",
     "pages/form-list/index",
     "pages/patient-select/index",
-    "pages/devices/index"
+    "pages/devices/index",
+    "pages/test/index"
   ],
   "window": {
     "navigationBarTitleText": "IOMTea",
@@ -48,8 +49,8 @@
         "selectedIconPath": ""
       },
       {
-        "pagePath": "pages/messages/index",
-        "text": "告警",
+        "pagePath": "pages/test/index",
+        "text": "测试",
         "iconPath": "",
         "selectedIconPath": ""
       },

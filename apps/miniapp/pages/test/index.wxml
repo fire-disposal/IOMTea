@@ -1,0 +1,50 @@
+<view class="test-page">
+  <view class="test-header">
+    <text class="test-title">一笔画录入</text>
+    <text class="test-step">{{currentStep}}/{{totalSteps}}</text>
+  </view>
+
+  <!-- Progress bar -->
+  <view class="test-progress">
+    <view class="test-progress-bar" style="width:{{(currentStep/totalSteps)*100}}%"></view>
+  </view>
+
+  <!-- Drag zone -->
+  <view class="test-drag-zone"
+    bindtouchstart="onTouchStart"
+    bindtouchmove="onTouchMove"
+    bindtouchend="onTouchEnd">
+
+    <!-- Left: drag indicator + current value -->
+    <view class="test-left">
+      <text class="test-field-label">{{fields[currentStep-1].label}}</text>
+      <text class="test-field-value">{{currentValue || '—'}}</text>
+      <text class="test-drag-hint">{{touchActive ? '松手确认' : '← 向右拖动选择'}}</text>
+    </view>
+
+    <!-- Right: option column -->
+    <view class="test-options">
+      <view wx:for="{{currentOptions}}" wx:key="value" class="test-option {{item.value === highlighted ? 'test-option--active' : ''}} {{item.value === currentValue ? 'test-option--selected' : ''}}"
+        style="transform:translateY({{item.value === highlighted ? '-4rpx' : '0'}})">
+        <text class="test-option-label">{{item.label}}</text>
+        <text class="test-option-check">{{item.value === currentValue ? '✓' : ''}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- Action buttons -->
+  <view class="test-actions">
+    <button wx:if="{{currentStep > 1}}" class="test-btn test-btn--back" bind:tap="onPrev">上一步</button>
+    <button class="test-btn test-btn--done" bind:tap="onDone" disabled="{{currentStep < totalSteps}}">完成</button>
+  </view>
+
+  <!-- Result summary -->
+  <view wx:if="{{done}}" class="test-result anim-fade-up">
+    <text class="test-result-title">填写结果</text>
+    <view wx:for="{{fields}}" wx:key="id" class="test-result-item">
+      <text class="test-result-label">{{item.label}}</text>
+      <text class="test-result-value">{{item.value}}</text>
+    </view>
+    <button class="test-btn test-btn--reset" bind:tap="onReset">重新开始</button>
+  </view>
+</view>
