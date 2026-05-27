@@ -69,14 +69,14 @@
 @keyframes glowPulse { 0%,100% { box-shadow: 0 0 8rpx rgba(107,165,57,0.1); } 50% { box-shadow: 0 0 24rpx rgba(107,165,57,0.25); } }
 
 /* Dial column */
-.test-dial-col { flex: 1; display: flex; flex-direction: column; align-items: center; margin: 0 8rpx; position: relative; }
+.test-dial-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0 8rpx; position: relative; }
 .test-dial-zones { position: absolute; inset: 0; display: flex; flex-direction: column; }
 .test-dial-zone { flex: 1; transition: opacity 0.15s; }
-.test-dial-display { position: relative; z-index: 2; text-align: center; padding: 12rpx 0; }
-.test-dial-val { font-size: 54rpx; font-weight: 700; color: var(--text-primary); display: block; transition: color 0.3s; }
+.test-dial-display { position: relative; z-index: 2; text-align: center; }
+.test-dial-val { font-size: 64rpx; font-weight: 700; color: var(--text-primary); display: block; transition: color 0.3s; }
 .test-dial-val--live { color: var(--brand-500); }
-.test-dial-unit { font-size: 22rpx; color: var(--text-secondary); display: block; }
-.test-dial-limits { display: flex; justify-content: space-between; width: 100%; font-size: 18rpx; color: #ccc; padding: 0 8rpx; z-index: 2; position: relative; }
+.test-dial-unit { font-size: 24rpx; color: var(--text-secondary); display: block; }
+.test-dial-limits { display: flex; justify-content: space-between; width: 100%; font-size: 18rpx; color: #ccc; padding: 0 8rpx; z-index: 2; position: relative; margin-top: auto; }
 
 /* Connector lines between locked options */
 .test-connector { position: absolute; height: 2rpx; background: var(--brand-500); opacity: 0.5; pointer-events: none; border-radius: 1rpx; }
