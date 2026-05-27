@@ -14,7 +14,7 @@ Page({
   onLoad() {
     this.setData({ devMode: getApp().globalData.devMode || false })
     const token = wx.getStorageSync(STORAGE_KEYS.TOKEN)
-    if (!token) {
+    if (!token && !getApp().globalData.devMode) {
       wx.redirectTo({ url: '/pages/login/index' })
       return
     }
