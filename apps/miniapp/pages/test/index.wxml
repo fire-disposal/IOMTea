@@ -26,6 +26,7 @@
     <view class="test-cols">
       <view wx:for="{{chainFields}}" wx:key="id" wx:for-index="ci"
         class="test-col {{ac === ci ? 'test-col--active' : ''}} {{item.done ? 'test-col--locked' : ''}} {{colGray[ci] ? 'test-col--gray' : ''}}">
+        <view class="test-col-bar {{colGray[ci] ? 'test-col-bar--gray' : ac === ci ? 'test-col-bar--active' : item.done ? 'test-col-bar--done' : 'test-col-bar--idle'}}"></view>
         <text class="test-col-label">{{item.label}}</text>
 
         <view wx:if="{{item.type === 'picker'}}" class="test-picker-col">
