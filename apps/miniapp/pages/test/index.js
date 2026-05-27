@@ -419,8 +419,8 @@ Page({
     }
 
     if (typeof z === 'number' && cf[z] && !this.locked[z] && cf[z].selIdx >= 0) {
-      this._lockColumn(z)
       this._resetLocked(cf)
+      this._lockColumn(z)
       this._updateColGray(cf)
       this.cc = -1
       this.pc = -1
