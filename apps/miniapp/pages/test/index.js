@@ -403,7 +403,7 @@ Page({
     if (!f) return
 
     if (f.type === 'picker') {
-      var idx = this._pickOption(z, t.pageY)
+      var idx = Math.max(0, this._pickOption(z, t.pageY))
       if (idx >= 0 && f.selIdx !== idx) {
         f.selIdx = idx
         f.selLabel = f.options[idx].l
