@@ -23,7 +23,11 @@
     <!-- Columns -->
     <view class="test-cols">
       <view wx:for="{{fields}}" wx:key="id" wx:for-index="ci"
-        class="test-col {{activeCol === ci ? 'test-col--active' : ''}} {{item.done ? 'test-col--done' : ''}}">
+        class="test-col {{activeCol === ci ? 'test-col--active' : ''}} {{item.done ? 'test-col--locked' : ''}}">
+
+        <!-- Lock indicator -->
+        <view wx:if="{{item.done}}" class="test-col-lock">◇</view>
+        <view wx:else class="test-col-dot {{activeCol === ci ? 'test-col-dot--live' : ''}}"></view>
 
         <text class="test-col-label">{{item.label}}</text>
 
@@ -60,6 +64,14 @@
     <view class="test-edge test-edge--right {{rightZoneActive ? 'test-edge--active' : ''}}">
       <text class="test-edge-text">{{rightLabel}}</text>
       <view wx:if="{{rightDwell}}" class="test-dwell-ring"></view>
+    </view>
+
+    <!-- Chain connector bar -->
+    <view class="test-chain">
+      <view wx:for="{{chain}}" wx:key="i" class="test-chain-node {{item.active ? 'test-chain-node--active' : ''}} {{item.locked ? 'test-chain-node--locked' : ''}}">
+        <text wx:if="{{item.locked}}" class="test-chain-text">{{item.label}}</text>
+      </view>
+      <view wx:for="{{chainLinks}}" wx:key="i" class="test-chain-link {{item.active ? 'test-chain-link--active' : ''}}"></view>
     </view>
 
     <!-- Pointer glow -->
