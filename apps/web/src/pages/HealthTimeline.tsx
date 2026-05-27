@@ -82,7 +82,9 @@ export function HealthTimeline() {
                   <Table.Td>{new Date(r.recordedAt).toLocaleString()}</Table.Td>
                   <Table.Td>{metricNames[r.metric] || r.metric}</Table.Td>
                   <Table.Td>{String(r.value)}</Table.Td>
-                  <Table.Td>{(metrics || []).find((m) => m.metric === r.metric)?.unit || ''}</Table.Td>
+                  <Table.Td>
+                    {(metrics || []).find((m) => m.metric === r.metric)?.unit || ''}
+                  </Table.Td>
                 </Table.Tr>
               ))}
             </Table.Tbody>

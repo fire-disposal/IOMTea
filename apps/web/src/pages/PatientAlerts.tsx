@@ -29,21 +29,21 @@ export function PatientAlerts() {
         共 {activeAlerts.length} 条活跃告警
       </Text>
       {activeAlerts.map((a) => (
-          <Paper key={a.id} p="sm" mb="xs" withBorder>
-            <Group justify="space-between">
-              <Group gap="xs">
-                <Badge color={a.severity === 'critical' ? 'red' : 'yellow'} size="xs">
-                  {a.severity}
-                </Badge>
-                <Text size="sm">
-                  {a.metric}: {String(a.value ?? '-')} {a.unit}
-                </Text>
-              </Group>
-              <Badge size="xs" variant="light">
-                {a.status}
+        <Paper key={a.id} p="sm" mb="xs" withBorder>
+          <Group justify="space-between">
+            <Group gap="xs">
+              <Badge color={a.severity === 'critical' ? 'red' : 'yellow'} size="xs">
+                {a.severity}
               </Badge>
+              <Text size="sm">
+                {a.metric}: {String(a.value ?? '-')} {a.unit}
+              </Text>
             </Group>
-          </Paper>
+            <Badge size="xs" variant="light">
+              {a.status}
+            </Badge>
+          </Group>
+        </Paper>
       ))}
     </Container>
   )

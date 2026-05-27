@@ -1,8 +1,18 @@
-import { ActionIcon, Button, Container, Group, Select, Table, Text, Title, Tooltip } from '@mantine/core'
+import {
+  ActionIcon,
+  Button,
+  Container,
+  Group,
+  Select,
+  Table,
+  Text,
+  Title,
+  Tooltip,
+} from '@mantine/core'
 import { notifications } from '@mantine/notifications'
 import { IconPlus, IconTrash } from '@tabler/icons-react'
 import { useState } from 'react'
-import { useGet, usePost, useDelete } from '../api/hooks'
+import { useDelete, useGet, usePost } from '../api/hooks'
 import { StateEmpty, StateSkeleton } from '../components/StateComponents'
 import { parsePatientId } from '../lib/path'
 
@@ -16,7 +26,8 @@ interface LinkedUser {
 export function PatientUsers() {
   const pid = parsePatientId()
   const { data: linked, isLoading, refetch } = useGet<LinkedUser[]>(`/patients/${pid}/users`)
-  const { data: allUsers } = useGet<{ id: string; displayName: string; username: string }[]>('/users')
+  const { data: allUsers } =
+    useGet<{ id: string; displayName: string; username: string }[]>('/users')
   const [selectedUser, setSelectedUser] = useState<string | null>(null)
 
   const addLink = usePost(`/patients/${pid}/users`, [`patients/${pid}/users`])
@@ -74,7 +85,11 @@ export function PatientUsers() {
                 <Table.Td>{l.role}</Table.Td>
                 <Table.Td>
                   <Tooltip label="取消关联" withArrow>
-                    <ActionIcon variant="light" color="red" onClick={() => removeLink.mutate(l.userId)}>
+                    <ActionIcon
+                      variant="light"
+                      color="red"
+                      onClick={() => removeLink.mutate(l.userId)}
+                    >
                       <IconTrash size={14} />
                     </ActionIcon>
                   </Tooltip>

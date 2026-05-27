@@ -12,6 +12,7 @@ import {
 } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
 import { IconFilter } from '@tabler/icons-react'
+import { useNavigate } from '@tanstack/react-router'
 import {
   Background,
   BackgroundVariant,
@@ -26,7 +27,6 @@ import {
   useNodesState,
 } from '@xyflow/react'
 import { useCallback, useEffect, useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
 import { http } from '../api/client'
 import { useGet } from '../api/hooks'
 

@@ -1,8 +1,18 @@
-import { ActionIcon, Badge, Container, Group, Paper, Select, Text, Title, Tooltip } from '@mantine/core'
+import {
+  ActionIcon,
+  Badge,
+  Container,
+  Group,
+  Paper,
+  Select,
+  Text,
+  Title,
+  Tooltip,
+} from '@mantine/core'
 import { IconEye } from '@tabler/icons-react'
 import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
-import { useGet, usePost, usePatch } from '../api/hooks'
+import { useGet, usePatch, usePost } from '../api/hooks'
 import { StateSkeleton } from '../components/StateComponents'
 
 interface Alert {

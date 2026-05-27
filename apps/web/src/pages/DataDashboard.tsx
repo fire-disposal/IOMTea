@@ -12,7 +12,7 @@ import {
 } from '@mantine/core'
 import { IconChartLine } from '@tabler/icons-react'
 import { useState } from 'react'
-import { Bar, BarChart, ResponsiveContainer, Tooltip as ReTooltip, XAxis, YAxis } from 'recharts'
+import { Bar, BarChart, Tooltip as ReTooltip, ResponsiveContainer, XAxis, YAxis } from 'recharts'
 import { useGet } from '../api/hooks'
 import { useRealtime } from '../hooks/useRealtime'
 

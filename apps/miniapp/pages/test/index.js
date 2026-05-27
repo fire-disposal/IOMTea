@@ -17,7 +17,7 @@ Page({data:{},fi:0,cr:null,dt:null,cv:0,dwt:null,dwa:false,dws:0,cc:-1,pc:-1,loc
     this._sd();this._sdia();this.cc=-1;this.pc=-1;this.fi=idx;this.locked=[];this.dr=null
     var odd=idx%2===0,fds=FORMS[idx].fields.map(function(f){return mf(f)}),m=null,cf=[]
     for(var i=0;i<fds.length;i++){if(fds[i].id==='metric'){m=fds[i];continue}cf.push(fds[i])}
-    for(var k=0;k<cf.length;k++){if(cf[k].type==='dial'){cf[k].done=true;cf[k].selIdx=1;}}
+    for(var k=0;k<cf.length;k++){if(cf[k].type==='dial'){cf[k].done=true;cf[k].selIdx=1;this.locked[k]=true}}
     if(m&&m.selIdx>=0){var mk=m.options[m.selIdx].v;for(var j=0;j<cf.length;j++){if(cf[j].type==='dial'&&cf[j].ranges&&cf[j].ranges[mk]){var r=cf[j].ranges[mk];cf[j].min=r.min;cf[j].max=r.max;cf[j].unit=r.unit;cf[j].selLabel=String(r.normal.toFixed(Number(r.min)%1!==0||Number(r.max)%1!==0?1:0));this.cv=r.normal}}}
     var guide=odd?'←按住向右':'按住向左→';var os=odd?'提交→':'←提交'
     var s=this;this.setData({fl:FORMS[idx].label,metric:m,chainFields:cf,ad:false,guide:guide,otherLabel:os,ht:odd?'从左向右通过选项·右端停留提交':'从右向左通过选项·左端停留提交',lza:false,rza:false,ac:-1,dp:0,dbv:false,dz:SPEED,daz:'',dlv:false,lf:false,stl:0,pv:!!kp,odd:odd});setTimeout(function(){s._qr()},300)},
@@ -47,7 +47,7 @@ Page({data:{},fi:0,cr:null,dt:null,cv:0,dwt:null,dwa:false,dws:0,cc:-1,pc:-1,loc
   _dtk(speed){var cf=this.data.chainFields;if(!cf)return;var ac=this.data.ac;if(ac<0||ac>=cf.length||!cf[ac])return;var f=cf[ac];if(!f||!f.ranges)return;var rng=Object.values(f.ranges)[0];if(!rng)return;var range=rng.max-rng.min;var pct=speed*0.01;var inc=range*pct;if(!this.cv||isNaN(this.cv))this.cv=rng.normal;var v=Number(this.cv)+inc;if(v<f.min)v=f.min;if(v>f.max)v=f.max;var dec=Number(f.min)%1!==0||Number(f.max)%1!==0?1:0;this.cv=v;var disp=v.toFixed(dec);f.selIdx=1;f.selLabel=disp;this.setData({chainFields:cf,dv:disp})},
   _sdia(){if(this.dt){clearInterval(this.dt);this.dt=null}},
 
-  onStart(e){this.locked=[];var t=e.touches[0];this.setData({pv:true,px:t.pageX-20,py:t.pageY-20,trail:[{x:t.pageX-4,y:t.pageY-4,o:1,w:12}]})},
+  onStart(e){var t=e.touches[0];this.setData({pv:true,px:t.pageX-20,py:t.pageY-20,trail:[{x:t.pageX-4,y:t.pageY-4,o:1,w:12}]})},
   onMove(e){var t=e.touches[0],r=this.cr;if(!r)return;var z=this._z((t.pageX-r.left)/r.width),odd=this.fi%2===0;var cf=this.data.chainFields.slice();if(!cf)return
     if(z==='guide'){this._sd();this._sdia();this.setData({lza:odd,rza:!odd})}
     else if(z==='submit'){this._sdia();var as=cf.every(function(f){return f.selIdx>=0});if(as){this.setData({lza:!odd,rza:odd});if(!this.dwa)this._sda()}}

@@ -221,13 +221,21 @@ export function FormBuilderPage() {
                       </ActionIcon>
                     </Tooltip>
                     <Tooltip label="预览" withArrow>
-                      <ActionIcon variant="light" color="blue" onClick={() => setPreviewCode(f.code)}>
+                      <ActionIcon
+                        variant="light"
+                        color="blue"
+                        onClick={() => setPreviewCode(f.code)}
+                      >
                         <IconEye size={14} />
                       </ActionIcon>
                     </Tooltip>
                     {f.status === 'published' ? (
                       <Tooltip label="取消发布" withArrow>
-                        <ActionIcon variant="light" color="yellow" onClick={() => unpublish(f.code)}>
+                        <ActionIcon
+                          variant="light"
+                          color="yellow"
+                          onClick={() => unpublish(f.code)}
+                        >
                           <IconSend size={14} style={{ transform: 'rotate(180deg)' }} />
                         </ActionIcon>
                       </Tooltip>
@@ -239,7 +247,11 @@ export function FormBuilderPage() {
                       </Tooltip>
                     )}
                     <Tooltip label="删除" withArrow>
-                      <ActionIcon variant="light" color="red" onClick={() => deleteForm.mutate(f.code)}>
+                      <ActionIcon
+                        variant="light"
+                        color="red"
+                        onClick={() => deleteForm.mutate(f.code)}
+                      >
                         <IconTrash size={14} />
                       </ActionIcon>
                     </Tooltip>
@@ -398,7 +410,12 @@ export function FormBuilderPage() {
                     </ActionIcon>
                   </Tooltip>
                   <Tooltip label="删除字段" withArrow>
-                    <ActionIcon size="sm" variant="subtle" color="red" onClick={() => removeField(i)}>
+                    <ActionIcon
+                      size="sm"
+                      variant="subtle"
+                      color="red"
+                      onClick={() => removeField(i)}
+                    >
                       <IconTrash size={12} />
                     </ActionIcon>
                   </Tooltip>

@@ -123,10 +123,13 @@ export function AuthLayout() {
   const buildBreadcrumbs = () => {
     const segments = pathname.split('/').filter(Boolean)
     if (segments.length === 0) return [{ label: '工作台', href: '/' }]
-    return [{ label: '工作台', href: '/' }, ...segments.map((seg, i) => ({
-      label: seg,
-      href: '/' + segments.slice(0, i + 1).join('/'),
-    }))]
+    return [
+      { label: '工作台', href: '/' },
+      ...segments.map((seg, i) => ({
+        label: seg,
+        href: '/' + segments.slice(0, i + 1).join('/'),
+      })),
+    ]
   }
   const crumbItems = buildBreadcrumbs()
 
@@ -230,14 +233,7 @@ export const authBeforeLoad = ({ location }: { location: { href: string } }) => 
   const state = useAuthStore.getState()
   if (!state.token) throw redirect({ to: '/login', search: { redirect: location.href } })
 
-  const adminRoutes = [
-    '/patients',
-    '/data-export',
-    '/simulation',
-    '/iot/pins',
-    '/plans',
-    '/forms',
-  ]
+  const adminRoutes = ['/patients', '/data-export', '/simulation', '/iot/pins', '/plans', '/forms']
   const superAdminRoutes = ['/settings/users', '/settings/rbac']
   const pathname = location.href || ''
 

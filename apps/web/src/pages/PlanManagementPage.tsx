@@ -147,9 +147,8 @@ export function PlanManagementPage() {
                       variant="light"
                       color="red"
                       onClick={() =>
-                        confirmDelete(
-                          `确定要删除计划 "${p.title}" 吗？此操作不可撤销。`,
-                          () => deletePlan.mutate(p.id),
+                        confirmDelete(`确定要删除计划 "${p.title}" 吗？此操作不可撤销。`, () =>
+                          deletePlan.mutate(p.id),
                         )
                       }
                     >

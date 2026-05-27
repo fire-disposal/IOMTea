@@ -40,8 +40,8 @@ export function PatientWall() {
   const navigate = useNavigate()
   const { refetch } = useGet<Patient[]>('/patients', { pageSize: 200 })
 
-  const searched = (patients ?? []).filter((p) =>
-    !search || p.name.toLowerCase().includes(search.toLowerCase()),
+  const searched = (patients ?? []).filter(
+    (p) => !search || p.name.toLowerCase().includes(search.toLowerCase()),
   )
   const filtered = searched.filter((p) => {
     if (selectedTags.length === 0) return true
@@ -129,7 +129,10 @@ export function PatientWall() {
                 </Table.Td>
                 <Table.Td>
                   <Tooltip label="查看患者" withArrow>
-                    <ActionIcon variant="light" onClick={() => navigate({ to: '/patients/' + p.id })}>
+                    <ActionIcon
+                      variant="light"
+                      onClick={() => navigate({ to: '/patients/' + p.id })}
+                    >
                       <IconEye size={14} />
                     </ActionIcon>
                   </Tooltip>

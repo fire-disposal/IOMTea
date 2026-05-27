@@ -13,13 +13,5 @@ export function RoleSelect({
   value: string
   onChange: (role: string) => void
 }) {
-  return (
-    <Select
-      data={ROLES}
-      value={value}
-      onChange={(v) => v && onChange(v)}
-      w={140}
-      size="xs"
-    />
-  )
+  return <Select data={ROLES} value={value} onChange={(v) => v && onChange(v)} w={140} size="xs" />
 }

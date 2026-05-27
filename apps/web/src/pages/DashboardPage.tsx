@@ -69,7 +69,12 @@ export function DashboardPage() {
         工作台
       </Title>
       <Text size="sm" c="dimmed" mb="md">
-        {new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' })}
+        {new Date().toLocaleDateString('zh-CN', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          weekday: 'long',
+        })}
       </Text>
       <SimpleGrid cols={{ base: 1, sm: 4 }}>
         <StatCard

@@ -3,15 +3,18 @@ import { Button, Container, Paper, PasswordInput, TextInput, Title } from '@mant
 import { notifications } from '@mantine/notifications'
 import { useForm } from '@tanstack/react-form'
 import { useNavigate } from '@tanstack/react-router'
+import type { AxiosError } from 'axios'
 import { useState } from 'react'
 import { http } from '../api/client'
 import { useAuthStore } from '../store/auth'
 import classes from './LoginPage.module.css'
 
-function zodCheck(schema: any) {
+function zodCheck(schema: {
+  safeParse: (v: unknown) => { success: boolean; error?: { issues: { message: string }[] } }
+}) {
   return ({ value }: { value: unknown }) => {
     const r = schema.safeParse(value)
-    return r.success ? undefined : r.error.issues.map((e: any) => e.message).join(', ')
+    return r.success ? undefined : r.error?.issues.map((e) => e.message).join(', ')
   }
 }
 
@@ -57,8 +60,9 @@ export function LoginPage() {
         } else {
           handleAuthSuccess(res.data)
         }
-      } catch (err: any) {
-        setError(err.response?.data?.error || err.message)
+      } catch (err) {
+        const axiosErr = err as AxiosError<{ error?: string }>
+        setError(axiosErr.response?.data?.error || axiosErr.message)
       } finally {
         setLoading(false)
       }

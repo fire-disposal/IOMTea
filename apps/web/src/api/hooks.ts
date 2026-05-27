@@ -36,7 +36,7 @@ export function usePost<T = unknown, B = unknown>(path: string, invalidateKeys?:
 export function usePatch<T = unknown, B = unknown>(path: string, invalidateKeys?: string[]) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, ...body }: { id: string } & B) =>
+    mutationFn: ({ id, ...body }: { id: string } & Record<string, unknown>) =>
       http.patch(path.replace(':id', id), body).then((r) => r.data as T),
     onSuccess: () => {
       notifications.show({ title: '更新成功', color: 'green', message: undefined })
@@ -71,7 +71,7 @@ export function useDelete<T = unknown>(path: string, invalidateKeys?: string[]) 
 export function usePut<T = unknown, B = unknown>(path: string, invalidateKeys?: string[]) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, ...body }: { id: string } & B) =>
+    mutationFn: ({ id, ...body }: { id: string } & Record<string, unknown>) =>
       http.put(path.replace(':id', id), body).then((r) => r.data as T),
     onSuccess: () => {
       notifications.show({ title: '保存成功', color: 'green', message: undefined })
