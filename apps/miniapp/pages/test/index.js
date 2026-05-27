@@ -276,14 +276,7 @@ Page({
   _doSubmit() {
     this._stopDwell(); this._stopDial()
     wx.vibrateShort({ type: 'heavy' })
-    this.setData({ lf: true, lza: false, rza: false, pv: true })
-    var s = this
-    // Next submission: increment subIdx for direction reversal, keep same metric (or cycle)
-    setTimeout(function () {
-      s.setData({ lf: false })
-      s._loadForm(s.subIdx + 1, s.currentMetric)
-      s.setData({ pv: true })
-    }, 350)
+    this._loadForm(this.subIdx + 1, this.currentMetric)
   },
 
   _updateConnectors() {
