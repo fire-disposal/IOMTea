@@ -90,6 +90,10 @@ Page({
         chainFields[k].selLabel = String(chainFields[k].normal.toFixed(dec))
         chainFields[k].value = chainFields[k].normal
         this.cv = chainFields[k].normal
+      } else if (chainFields[k].type === 'picker' && chainFields[k].options && chainFields[k].options.length > 0) {
+        // Default picker selected option
+        chainFields[k].selIdx = 0
+        chainFields[k].selLabel = chainFields[k].options[0].l
       }
     }
     this._resetLocked(chainFields)
