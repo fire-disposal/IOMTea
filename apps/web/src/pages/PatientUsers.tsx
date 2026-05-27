@@ -17,8 +17,16 @@ import { StateEmpty, StateSkeleton } from '../components/StateComponents'
 import { parsePatientId } from '../lib/path'
 
 const PATIENT_RELATIONS = [
-  'primary', 'spouse', 'child', 'parent', 'sibling',
-  'caregiver', 'doctor', 'nurse', 'admin', 'other',
+  'primary',
+  'spouse',
+  'child',
+  'parent',
+  'sibling',
+  'caregiver',
+  'doctor',
+  'nurse',
+  'admin',
+  'other',
 ] as const
 
 interface LinkedUser {
@@ -75,7 +83,12 @@ export function PatientUsers() {
             if (!selectedUser) return
             addLink.mutate(
               { userId: selectedUser, relation: relation ?? undefined },
-              { onSuccess: () => { setSelectedUser(null); setRelation('caregiver') } },
+              {
+                onSuccess: () => {
+                  setSelectedUser(null)
+                  setRelation('caregiver')
+                },
+              },
             )
           }}
           disabled={!selectedUser}

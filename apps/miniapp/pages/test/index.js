@@ -86,7 +86,7 @@ Page({
       dp: 0, dbv: false,
       daz: '', dlv: false,
       lf: false, stl: 0,
-      pv: false, odd: odd, dv: '',
+      pv: false, odd: odd,
     })
   },
 
@@ -151,7 +151,7 @@ Page({
       f.selIdx = 1
       var dec = Number(f.min) % 1 !== 0 || Number(f.max) % 1 !== 0 ? 1 : 0
       f.selLabel = String(f.value.toFixed(dec))
-      this.setData({ chainFields: cf, stl: 1, dv: '' })
+      this.setData({ chainFields: cf, stl: 1 })
       var s = this
       setTimeout(function () { s.setData({ stl: 2 }) }, 400)
       setTimeout(function () { s.setData({ stl: 3 }) }, 700)
@@ -214,7 +214,7 @@ Page({
     var disp = v.toFixed(dec)
     f.selIdx = 1
     f.selLabel = disp
-    this.setData({ chainFields: cf, dv: disp })
+    this.setData({ chainFields: cf })
   },
 
   _stopDial() {
@@ -434,7 +434,7 @@ Page({
     this.setData({
       chainFields: cf,
       lza: false, rza: false,
-      ac: -1, dlv: false, daz: '', dv: '',
+      ac: -1, dlv: false, daz: '',
     })
     this._updateConnectors()
   },

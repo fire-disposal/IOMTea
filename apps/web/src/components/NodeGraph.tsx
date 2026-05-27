@@ -1,4 +1,5 @@
 import '@xyflow/react/dist/style.css'
+import dagre from '@dagrejs/dagre'
 import {
   ActionIcon,
   Badge,
@@ -14,9 +15,7 @@ import {
 import { notifications } from '@mantine/notifications'
 import { IconFilter } from '@tabler/icons-react'
 import { useNavigate } from '@tanstack/react-router'
-import dagre from '@dagrejs/dagre'
 import {
-  addEdge,
   Background,
   BackgroundVariant,
   type Connection,
@@ -27,6 +26,7 @@ import {
   type Node,
   Panel,
   ReactFlow,
+  addEdge,
   useEdgesState,
   useNodesState,
   useReactFlow,
@@ -36,8 +36,16 @@ import { http } from '../api/client'
 import { useGet } from '../api/hooks'
 
 const PATIENT_RELATIONS = [
-  'primary', 'spouse', 'child', 'parent', 'sibling',
-  'caregiver', 'doctor', 'nurse', 'admin', 'other',
+  'primary',
+  'spouse',
+  'child',
+  'parent',
+  'sibling',
+  'caregiver',
+  'doctor',
+  'nurse',
+  'admin',
+  'other',
 ] as const
 
 interface PatientNode {
@@ -167,24 +175,19 @@ export function NodeGraph() {
     setSelectedNode(node)
   }, [])
 
-  const onEdgesDelete = useCallback(
-    (deletedEdges: Edge[]) => {
-      for (const edge of deletedEdges) {
-        const patientId = edge.target.replace('pat-', '')
-        const userId = edge.source.replace('usr-', '')
-        http
-          .delete(`/patients/${patientId}/users/${userId}`)
-          .catch(() =>
-            notifications.show({
-              color: 'red',
-              title: '删除失败',
-              message: `关系 ${edge.label || ''} 删除失败，请重试`,
-            }),
-          )
-      }
-    },
-    [],
-  )
+  const onEdgesDelete = useCallback((deletedEdges: Edge[]) => {
+    for (const edge of deletedEdges) {
+      const patientId = edge.target.replace('pat-', '')
+      const userId = edge.source.replace('usr-', '')
+      http.delete(`/patients/${patientId}/users/${userId}`).catch(() =>
+        notifications.show({
+          color: 'red',
+          title: '删除失败',
+          message: `关系 ${edge.label || ''} 删除失败，请重试`,
+        }),
+      )
+    }
+  }, [])
 
   const onNodeContextMenu = useCallback((event: React.MouseEvent, node: Node) => {
     event.preventDefault()
@@ -196,19 +199,16 @@ export function NodeGraph() {
     setContextMenu({ x: event.clientX, y: event.clientY })
   }, [])
 
-  const onConnect = useCallback(
-    (connection: Connection) => {
-      if (!connection.source?.startsWith('usr-') || !connection.target?.startsWith('pat-')) return
-      setPendingLink({
-        source: connection.source,
-        target: connection.target,
-        userId: connection.source.replace('usr-', ''),
-        patientId: connection.target.replace('pat-', ''),
-      })
-      setLinkRelation('caregiver')
-    },
-    [],
-  )
+  const onConnect = useCallback((connection: Connection) => {
+    if (!connection.source?.startsWith('usr-') || !connection.target?.startsWith('pat-')) return
+    setPendingLink({
+      source: connection.source,
+      target: connection.target,
+      userId: connection.source.replace('usr-', ''),
+      patientId: connection.target.replace('pat-', ''),
+    })
+    setLinkRelation('caregiver')
+  }, [])
 
   const confirmLink = useCallback(async () => {
     if (!pendingLink) return
@@ -251,7 +251,10 @@ export function NodeGraph() {
     reactFlowInstance.setNodes(
       allNodes.map((node) => {
         const pos = g.node(node.id)
-        return { ...node, position: { x: pos.x - (node.width || 150) / 2, y: pos.y - (node.height || 80) / 2 } }
+        return {
+          ...node,
+          position: { x: pos.x - (node.width || 150) / 2, y: pos.y - (node.height || 80) / 2 },
+        }
       }),
     )
   }, [reactFlowInstance])
@@ -328,13 +331,7 @@ export function NodeGraph() {
           </Panel>
         </ReactFlow>
       </div>
-      <Modal
-        opened={!!pendingLink}
-        onClose={cancelLink}
-        title="选择关系类型"
-        size="auto"
-        centered
-      >
+      <Modal opened={!!pendingLink} onClose={cancelLink} title="选择关系类型" size="auto" centered>
         <Stack gap="sm">
           <Select
             placeholder="关系类型"
@@ -354,9 +351,17 @@ export function NodeGraph() {
       </Modal>
       {contextMenu && (
         <div
+          role="presentation"
+          tabIndex={-1}
           style={{ position: 'fixed', inset: 0, zIndex: 999 }}
           onClick={() => setContextMenu(null)}
-          onContextMenu={(e) => { e.preventDefault(); setContextMenu(null) }}
+          onContextMenu={(e) => {
+            e.preventDefault()
+            setContextMenu(null)
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') setContextMenu(null)
+          }}
         >
           <Paper
             style={{
@@ -373,18 +378,16 @@ export function NodeGraph() {
           >
             <Stack gap={2}>
               {contextMenu.node ? (
-                <>
-                  <Button
-                    size="compact-sm"
-                    variant="subtle"
-                    onClick={() => {
-                      setSelectedNode(contextMenu.node!)
-                      setContextMenu(null)
-                    }}
-                  >
-                    查看详情
-                  </Button>
-                </>
+                <Button
+                  size="compact-sm"
+                  variant="subtle"
+                  onClick={() => {
+                    setSelectedNode(contextMenu.node ?? null)
+                    setContextMenu(null)
+                  }}
+                >
+                  查看详情
+                </Button>
               ) : (
                 <>
                   <Button
