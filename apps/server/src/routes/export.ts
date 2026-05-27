@@ -1,4 +1,5 @@
-import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+﻿import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+import { HTTPException } from 'hono/http-exception'
 import { and, asc, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm'
 import { db } from '../core/db'
 import { events } from '../core/db/schema'
@@ -6,7 +7,7 @@ import type { AppEnv } from '../core/http/types'
 import { jwtAuth } from '../middleware/auth'
 import { requirePermission } from '../middleware/rbac'
 
-const exportApp = new OpenAPIHono<AppEnv>()
+const exportRouter = new OpenAPIHono<AppEnv>()
 
 const previewRoute = createRoute({
   method: 'get',
@@ -23,7 +24,7 @@ const previewRoute = createRoute({
   responses: { 200: { description: 'Data preview' } },
 })
 
-exportApp.openapi(previewRoute, async (c) => {
+exportRouter.openapi(previewRoute, async (c) => {
   const q = c.req.valid('query')
   const conditions = []
   if (q.patientId) conditions.push(eq(events.patientId, q.patientId))
@@ -80,7 +81,7 @@ const downloadRoute = createRoute({
   responses: { 200: { description: 'Export file (base64)' } },
 })
 
-exportApp.openapi(downloadRoute, async (c) => {
+exportRouter.openapi(downloadRoute, async (c) => {
   const input = c.req.valid('json')
   const conditions = []
   if (input.patientId) conditions.push(eq(events.patientId, input.patientId))
@@ -162,4 +163,4 @@ exportApp.openapi(downloadRoute, async (c) => {
   return c.json({ data: base64, filename, mime: 'text/csv;charset=utf-8' })
 })
 
-export { exportApp }
+export { exportRouter }

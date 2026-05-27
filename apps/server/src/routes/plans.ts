@@ -1,4 +1,5 @@
 ﻿import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+import { HTTPException } from 'hono/http-exception'
 import {
   planCompleteSchema,
   planCreateSchema,
@@ -14,7 +15,7 @@ import type { AppEnv } from '../core/http/types'
 import { jwtAuth } from '../middleware/auth'
 import { requirePermission } from '../middleware/rbac'
 
-const plansApp = new OpenAPIHono<AppEnv>()
+const plansRouter = new OpenAPIHono<AppEnv>()
 
 const listRoute = createRoute({
   method: 'get',
@@ -22,7 +23,7 @@ const listRoute = createRoute({
   middleware: [jwtAuth, requirePermission('/plans', 'read')] as const,
   responses: { 200: { description: 'All plans' } },
 })
-plansApp.openapi(listRoute, async (c) => {
+plansRouter.openapi(listRoute, async (c) => {
   const rows = await db.select().from(plans).orderBy(plans.createdAt)
   return c.json(rows)
 })
@@ -34,7 +35,7 @@ const createPlanRoute = createRoute({
   request: { body: { content: { 'application/json': { schema: planCreateSchema } } } },
   responses: { 201: { description: 'Created' } },
 })
-plansApp.openapi(createPlanRoute, async (c) => {
+plansRouter.openapi(createPlanRoute, async (c) => {
   const body = c.req.valid('json')
   const [row] = await db.insert(plans).values(body).returning()
   return c.json(row, 201)
@@ -47,14 +48,14 @@ const updateRoute = createRoute({
   request: { body: { content: { 'application/json': { schema: planUpdateSchema } } } },
   responses: { 200: { description: 'Updated' }, 404: { description: 'Not found' } },
 })
-plansApp.openapi(updateRoute, async (c) => {
+plansRouter.openapi(updateRoute, async (c) => {
   const id = c.req.param('id')
   const [row] = await db
     .update(plans)
     .set(c.req.valid('json') as any)
     .where(eq(plans.id, id))
     .returning()
-  if (!row) return c.json({ error: 'Not found' }, 404)
+  if (!row) throw new HTTPException(404)
   return c.json(row)
 })
 
@@ -64,7 +65,7 @@ const deleteRoute = createRoute({
   middleware: [jwtAuth, requirePermission('/plans', 'write')] as const,
   responses: { 200: { description: 'Archived' } },
 })
-plansApp.openapi(deleteRoute, async (c) => {
+plansRouter.openapi(deleteRoute, async (c) => {
   const id = c.req.param('id')
   await db
     .update(plans)
@@ -80,7 +81,7 @@ const todayRoute = createRoute({
   request: { query: z.object({ patientId: z.string().uuid() }) },
   responses: { 200: { description: 'Today plans' } },
 })
-plansApp.openapi(todayRoute, async (c) => {
+plansRouter.openapi(todayRoute, async (c) => {
   const { patientId } = c.req.valid('query')
   const allPlans = await db.select().from(plans).where(eq(plans.status, 'active'))
 
@@ -102,12 +103,12 @@ const completeRoute = createRoute({
   request: { body: { content: { 'application/json': { schema: planCompleteSchema } } } },
   responses: { 201: { description: 'Completed + credits earned' } },
 })
-plansApp.openapi(completeRoute, async (c) => {
+plansRouter.openapi(completeRoute, async (c) => {
   const planId = c.req.param('id')
   const body = c.req.valid('json')
 
   const [plan] = await db.select().from(plans).where(eq(plans.id, planId)).limit(1)
-  if (!plan) return c.json({ error: 'Not found' }, 404)
+  if (!plan) throw new HTTPException(404)
 
   const completion = await db.transaction(async (tx) => {
     const [row] = await tx
@@ -161,7 +162,7 @@ const completionsRoute = createRoute({
   request: { query: z.object({ patientId: z.string().uuid().optional() }) },
   responses: { 200: { description: 'Completion history' } },
 })
-plansApp.openapi(completionsRoute, async (c) => {
+plansRouter.openapi(completionsRoute, async (c) => {
   const planId = c.req.param('id')
   const { patientId } = c.req.valid('query')
   const conds = [eq(planCompletions.planId, planId)]
@@ -174,4 +175,4 @@ plansApp.openapi(completionsRoute, async (c) => {
   return c.json(rows)
 })
 
-export { plansApp }
+export { plansRouter }

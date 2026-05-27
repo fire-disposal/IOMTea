@@ -7,13 +7,15 @@ Page({
     activityData: {},
     calYear: new Date().getFullYear(),
     calMonth: new Date().getMonth() + 1,
-    calVisible: true,
+    calVisible: false,
     loaded: false,
     modules: [],
     monthLabel: '',
     weekDays: ['日', '一', '二', '三', '四', '五', '六'],
     calendarDays: [],
     activeDates: [],
+    totalToday: 0,
+    activeModules: 0,
   },
 
   onLoad() {
@@ -49,7 +51,14 @@ Page({
       if (activityData[date].indexOf(r.type) === -1) activityData[date].push(r.type)
     }
 
-    this.setData({ counts, activityData, modules, loaded: true })
+    let totalToday = 0
+    let activeModules = 0
+    for (const k of Object.keys(counts)) {
+      totalToday += counts[k]
+      if (counts[k] > 0) activeModules++
+    }
+
+    this.setData({ counts, activityData, modules, totalToday, activeModules, loaded: true })
     this.buildCalendar()
   },
 

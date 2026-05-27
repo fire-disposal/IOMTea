@@ -6,6 +6,7 @@ import { swaggerUI } from '@hono/swagger-ui'
 import { OpenAPIHono } from '@hono/zod-openapi'
 import { eq } from 'drizzle-orm'
 import { cors } from 'hono/cors'
+import { HTTPException } from 'hono/http-exception'
 import { logger as honoLogger } from 'hono/logger'
 import { WebSocketServer } from 'ws'
 import { db } from './core/db'
@@ -22,22 +23,22 @@ import { requestId } from './middleware/request-id'
 import { startMqttListener } from './mqtt-ingest'
 import './core/pipeline/registry'
 
-import { alertRulesApp } from './routes/alertRules'
-import { alertsApp } from './routes/alerts'
+import { alertRulesRouter } from './routes/alert-rules'
+import { alertsRouter } from './routes/alerts'
 // ── REST Route imports ──
 import { auth } from './routes/auth'
-import { creditsApp } from './routes/credits'
+import { creditsRouter } from './routes/credits'
 import { dashboard } from './routes/dashboard'
-import { dataApp } from './routes/data'
-import { emaApp } from './routes/ema'
-import { exportApp } from './routes/export'
-import { ingestApp } from './routes/ingest'
-import { patientsApp } from './routes/patients'
-import { pinsApp } from './routes/pins'
-import { plansApp } from './routes/plans'
-import { tagsApp } from './routes/tags'
-import { twinApp } from './routes/twin'
-import { usersApp } from './routes/users'
+import { dataRouter } from './routes/data'
+import { emaRouter } from './routes/ema'
+import { exportRouter } from './routes/export'
+import { ingestRouter } from './routes/ingest'
+import { patientsRouter } from './routes/patients'
+import { pinsRouter } from './routes/pins'
+import { plansRouter } from './routes/plans'
+import { tagsRouter } from './routes/tags'
+import { twinRouter } from './routes/twin'
+import { usersRouter } from './routes/users'
 
 function resolveCorsOrigins(rawCorsOrigin: string | undefined): string[] {
   if (!rawCorsOrigin) return ['http://localhost:5173']
@@ -81,22 +82,31 @@ app.use(
 // 请求ID中间件 (x-request-id)
 app.use('*', requestId)
 
+// 全局错误处理
+app.onError((err, c) => {
+  if (err instanceof HTTPException) {
+    return c.json({ error: err.message }, err.status)
+  }
+  logger.error({ err }, '未捕获异常')
+  return c.json({ error: 'Internal server error' }, 500)
+})
+
 // ── REST API routes ──
 app.route('/auth', auth)
-app.route('/users', usersApp)
+app.route('/users', usersRouter)
 app.route('/dashboard', dashboard)
-app.route('/pins', pinsApp)
-app.route('/tags', tagsApp)
-app.route('/patients', patientsApp)
-app.route('/alerts', alertsApp)
-app.route('/alert-rules', alertRulesApp)
-app.route('/ingest', ingestApp)
-app.route('/data', dataApp)
-app.route('/export', exportApp)
-app.route('/twin', twinApp)
-app.route('/plans', plansApp)
-app.route('/credits', creditsApp)
-app.route('/forms', emaApp)
+app.route('/pins', pinsRouter)
+app.route('/tags', tagsRouter)
+app.route('/patients', patientsRouter)
+app.route('/alerts', alertsRouter)
+app.route('/alert-rules', alertRulesRouter)
+app.route('/ingest', ingestRouter)
+app.route('/data', dataRouter)
+app.route('/export', exportRouter)
+app.route('/twin', twinRouter)
+app.route('/plans', plansRouter)
+app.route('/credits', creditsRouter)
+app.route('/ema', emaRouter)
 
 // OpenAPI spec (auto-collects from all mounted OpenAPIHono sub-apps)
 app.doc('/openapi.json', {
@@ -139,6 +149,9 @@ app.get('/', (c) =>
       ingest: '/ingest',
       export: '/export',
       twin: '/twin',
+      ema: '/ema',
+      plans: '/plans',
+      credits: '/credits',
     },
   }),
 )

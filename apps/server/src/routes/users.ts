@@ -1,4 +1,5 @@
 ﻿import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+import { HTTPException } from 'hono/http-exception'
 import { userResponseSchema } from '@iomtea/shared-types'
 import { eq } from 'drizzle-orm'
 import { db } from '../core/db'
@@ -7,7 +8,7 @@ import type { AppEnv } from '../core/http/types'
 import { jwtAuth } from '../middleware/auth'
 import { requirePermission } from '../middleware/rbac'
 
-const usersApp = new OpenAPIHono<AppEnv>()
+const usersRouter = new OpenAPIHono<AppEnv>()
 
 const listRoute = createRoute({
   method: 'get',
@@ -21,7 +22,7 @@ const listRoute = createRoute({
   },
 })
 
-usersApp.openapi(listRoute, async (c) => {
+usersRouter.openapi(listRoute, async (c) => {
   const rows = await db.select().from(users)
   const safe = rows.map(({ passwordHash, ...rest }) => rest)
   return c.json(safe)
@@ -40,10 +41,10 @@ const meRoute = createRoute({
   },
 })
 
-usersApp.openapi(meRoute, async (c) => {
+usersRouter.openapi(meRoute, async (c) => {
   const userId = c.var.userId
   const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1)
-  if (!user) return c.json({ error: 'Not found' }, 404)
+  if (!user) throw new HTTPException(404)
   const { passwordHash, ...safe } = user
   return c.json(safe)
 })
@@ -74,7 +75,7 @@ const updateRoute = createRoute({
   },
 })
 
-usersApp.openapi(updateRoute, async (c) => {
+usersRouter.openapi(updateRoute, async (c) => {
   const id = c.req.param('id')
   const body = c.req.valid('json')
   const [updated] = await db
@@ -82,7 +83,7 @@ usersApp.openapi(updateRoute, async (c) => {
     .set(body as any)
     .where(eq(users.id, id))
     .returning()
-  if (!updated) return c.json({ error: 'Not found' }, 404)
+  if (!updated) throw new HTTPException(404)
   const { passwordHash, ...safe } = updated
   return c.json(safe)
 })
@@ -94,7 +95,7 @@ const getUserRoute = createRoute({
   responses: { 200: { description: 'User detail' }, 404: { description: 'Not found' } },
 })
 
-usersApp.openapi(getUserRoute, async (c) => {
+usersRouter.openapi(getUserRoute, async (c) => {
   const id = c.req.param('id')
   const [user] = await db
     .select({
@@ -111,7 +112,7 @@ usersApp.openapi(getUserRoute, async (c) => {
     .from(users)
     .where(eq(users.id, id))
     .limit(1)
-  if (!user) return c.json({ error: 'Not found' }, 404)
+  if (!user) throw new HTTPException(404)
   return c.json(user)
 })
 
@@ -122,10 +123,10 @@ const deleteUserRoute = createRoute({
   responses: { 200: { description: 'Deleted' }, 404: { description: 'Not found' } },
 })
 
-usersApp.openapi(deleteUserRoute, async (c) => {
+usersRouter.openapi(deleteUserRoute, async (c) => {
   const id = c.req.param('id')
   const [existing] = await db.select({ id: users.id }).from(users).where(eq(users.id, id)).limit(1)
-  if (!existing) return c.json({ error: 'Not found' }, 404)
+  if (!existing) throw new HTTPException(404)
   await db.delete(users).where(eq(users.id, id))
   return c.json({ success: true })
 })
@@ -146,7 +147,7 @@ const updateRoleRoute = createRoute({
   responses: { 200: { description: 'Role updated' }, 404: { description: 'Not found' } },
 })
 
-usersApp.openapi(updateRoleRoute, async (c) => {
+usersRouter.openapi(updateRoleRoute, async (c) => {
   const id = c.req.param('id')
   const { role } = c.req.valid('json')
   const [user] = await db
@@ -154,8 +155,8 @@ usersApp.openapi(updateRoleRoute, async (c) => {
     .set({ role })
     .where(eq(users.id, id))
     .returning({ id: users.id, role: users.role })
-  if (!user) return c.json({ error: 'Not found' }, 404)
+  if (!user) throw new HTTPException(404)
   return c.json(user)
 })
 
-export { usersApp }
+export { usersRouter }

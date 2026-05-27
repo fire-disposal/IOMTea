@@ -1,4 +1,5 @@
 ﻿import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+import { HTTPException } from 'hono/http-exception'
 import {
   profileResponseSchema,
   simulationResponseSchema,
@@ -27,7 +28,7 @@ import {
   updateMetric,
 } from '../modules/twin'
 
-const twinApp = new OpenAPIHono<AppEnv>()
+const twinRouter = new OpenAPIHono<AppEnv>()
 
 const profListRoute = createRoute({
   method: 'get',
@@ -40,7 +41,7 @@ const profListRoute = createRoute({
     },
   },
 })
-twinApp.openapi(profListRoute, async (c) => c.json(listProfiles()))
+twinRouter.openapi(profListRoute, async (c) => c.json(listProfiles()))
 
 const profDetailRoute = createRoute({
   method: 'get',
@@ -54,9 +55,9 @@ const profDetailRoute = createRoute({
     404: { description: 'Not found' },
   },
 })
-twinApp.openapi(profDetailRoute, async (c) => {
+twinRouter.openapi(profDetailRoute, async (c) => {
   const config = getProfile(c.req.param('name'))
-  if (!config) return c.json({ error: 'Not found' }, 404)
+  if (!config) throw new HTTPException(404)
   return c.json(config)
 })
 
@@ -71,7 +72,7 @@ const simListRoute = createRoute({
     },
   },
 })
-twinApp.openapi(simListRoute, async (c) => c.json(getSimulations()))
+twinRouter.openapi(simListRoute, async (c) => c.json(getSimulations()))
 
 const simDetailRoute = createRoute({
   method: 'get',
@@ -85,9 +86,9 @@ const simDetailRoute = createRoute({
     404: { description: 'Not found' },
   },
 })
-twinApp.openapi(simDetailRoute, async (c) => {
+twinRouter.openapi(simDetailRoute, async (c) => {
   const sim = getSimulation(c.req.param('id'))
-  if (!sim) return c.json({ error: 'Not found' }, 404)
+  if (!sim) throw new HTTPException(404)
   return c.json(sim)
 })
 
@@ -115,7 +116,7 @@ const simCreateRoute = createRoute({
     500: { description: 'Creation failed' },
   },
 })
-twinApp.openapi(simCreateRoute, async (c) => {
+twinRouter.openapi(simCreateRoute, async (c) => {
   const body = c.req.valid('json')
   const sim = await createSimulation(db, {
     profileName: body.profile,
@@ -133,7 +134,7 @@ const simDeleteRoute = createRoute({
     200: { content: { 'application/json': { schema: successSchema } }, description: 'Deleted' },
   },
 })
-twinApp.openapi(simDeleteRoute, async (c) => {
+twinRouter.openapi(simDeleteRoute, async (c) => {
   await deleteSimulation(db, c.req.param('id'))
   return c.json({ success: true })
 })
@@ -157,7 +158,7 @@ const simToggleRoute = createRoute({
     200: { content: { 'application/json': { schema: successSchema } }, description: 'Toggled' },
   },
 })
-twinApp.openapi(simToggleRoute, async (c) => {
+twinRouter.openapi(simToggleRoute, async (c) => {
   const body = c.req.valid('json')
   await toggleSimulation(db, c.req.param('id'), body.running)
   return c.json({ success: true })
@@ -182,7 +183,7 @@ const simRenameRoute = createRoute({
     200: { content: { 'application/json': { schema: successSchema } }, description: 'Renamed' },
   },
 })
-twinApp.openapi(simRenameRoute, async (c) => {
+twinRouter.openapi(simRenameRoute, async (c) => {
   const body = c.req.valid('json')
   await renameSim(db, c.req.param('id'), body.name)
   return c.json({ success: true })
@@ -207,7 +208,7 @@ const simMetricToggleRoute = createRoute({
     200: { content: { 'application/json': { schema: successSchema } }, description: 'Toggled' },
   },
 })
-twinApp.openapi(simMetricToggleRoute, async (c) => {
+twinRouter.openapi(simMetricToggleRoute, async (c) => {
   const body = c.req.valid('json')
   await toggleMetric(db, c.req.param('id'), c.req.param('metricName'), body.enabled)
   return c.json({ success: true })
@@ -234,7 +235,7 @@ const simMetricUpdateRoute = createRoute({
     200: { content: { 'application/json': { schema: successSchema } }, description: 'Updated' },
   },
 })
-twinApp.openapi(simMetricUpdateRoute, async (c) => {
+twinRouter.openapi(simMetricUpdateRoute, async (c) => {
   const body = c.req.valid('json')
   await updateMetric(db, c.req.param('id'), c.req.param('metricName'), body)
   return c.json({ success: true })
@@ -259,7 +260,7 @@ const simAddPatientRoute = createRoute({
     201: { content: { 'application/json': { schema: successSchema } }, description: 'Added' },
   },
 })
-twinApp.openapi(simAddPatientRoute, async (c) => {
+twinRouter.openapi(simAddPatientRoute, async (c) => {
   const body = c.req.valid('json')
   const patientId = body.patientId
   const patientName =
@@ -277,7 +278,7 @@ const simRemovePatientRoute = createRoute({
     200: { content: { 'application/json': { schema: successSchema } }, description: 'Removed' },
   },
 })
-twinApp.openapi(simRemovePatientRoute, async (c) => {
+twinRouter.openapi(simRemovePatientRoute, async (c) => {
   await removePatient(db, c.req.param('id'), c.req.param('patientId'))
   return c.json({ success: true })
 })
@@ -304,7 +305,7 @@ const speedRoute = createRoute({
     },
   },
 })
-twinApp.openapi(speedRoute, async (c) => {
+twinRouter.openapi(speedRoute, async (c) => {
   const body = c.req.valid('json')
   setSpeed(body.speed)
   return c.json({ speed: body.speed })
@@ -332,10 +333,10 @@ const scenarioRoute = createRoute({
     },
   },
 })
-twinApp.openapi(scenarioRoute, async (c) => {
+twinRouter.openapi(scenarioRoute, async (c) => {
   const body = c.req.valid('json')
   await injectScenario(db, c.req.param('id'), c.req.param('patientId'), body.type)
   return c.json({ success: true })
 })
 
-export { twinApp }
+export { twinRouter }

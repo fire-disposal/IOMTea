@@ -12,8 +12,7 @@
     <text class="messages-page-empty-hint">健康提醒和通知将显示在这里</text>
   </view>
 
-  <scroll-view scroll-y style="max-height:calc(100vh - 200rpx)">
-    <view wx:for="{{alerts}}" wx:key="id" class="alert-item"
+  <view wx:for="{{alerts}}" wx:key="id" class="alert-item"
       style="border-left:6rpx solid {{item.severity === 'critical' ? '#e03131' : item.severity === 'warning' ? '#f08c00' : '#1971c2'}}"
       bind:tap="onAlertTap">
       <view class="alert-item-header">
@@ -30,5 +29,4 @@
         </text>
       </view>
     </view>
-  </scroll-view>
 </view>

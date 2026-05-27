@@ -1,4 +1,5 @@
 ﻿import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+import { HTTPException } from 'hono/http-exception'
 import { and, desc, eq, sql } from 'drizzle-orm'
 import { db } from '../core/db'
 import { users } from '../core/db/schema'
@@ -7,7 +8,7 @@ import type { AppEnv } from '../core/http/types'
 import { jwtAuth } from '../middleware/auth'
 import { requirePermission } from '../middleware/rbac'
 
-const creditsApp = new OpenAPIHono<AppEnv>()
+const creditsRouter = new OpenAPIHono<AppEnv>()
 
 const balanceRoute = createRoute({
   method: 'get',
@@ -21,7 +22,7 @@ const balanceRoute = createRoute({
   },
 })
 
-creditsApp.openapi(balanceRoute, async (c) => {
+creditsRouter.openapi(balanceRoute, async (c) => {
   const uid = c.var.userId
   const [user] = await db
     .select({ credit: users.credit })
@@ -53,7 +54,7 @@ const earnRoute = createRoute({
   responses: { 201: { description: 'Credits earned' } },
 })
 
-creditsApp.openapi(earnRoute, async (c) => {
+creditsRouter.openapi(earnRoute, async (c) => {
   const body = c.req.valid('json')
 
   await db.transaction(async (tx) => {
@@ -97,7 +98,7 @@ const spendRoute = createRoute({
   responses: { 201: { description: 'Credits spent' } },
 })
 
-creditsApp.openapi(spendRoute, async (c) => {
+creditsRouter.openapi(spendRoute, async (c) => {
   const body = c.req.valid('json')
 
   const [user] = await db
@@ -143,7 +144,7 @@ const transactionsRoute = createRoute({
   responses: { 200: { description: 'Credit transactions' } },
 })
 
-creditsApp.openapi(transactionsRoute, async (c) => {
+creditsRouter.openapi(transactionsRoute, async (c) => {
   const q = c.req.valid('query')
   const conds = []
   if (q.patientId) conds.push(eq(creditTransactions.patientId, q.patientId))
@@ -160,4 +161,4 @@ creditsApp.openapi(transactionsRoute, async (c) => {
   return c.json(rows)
 })
 
-export { creditsApp }
+export { creditsRouter }

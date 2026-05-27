@@ -1,4 +1,5 @@
 ﻿import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+import { HTTPException } from 'hono/http-exception'
 import { dashboardResponseSchema } from '@iomtea/shared-types'
 import { and, desc, eq, gte, sql } from 'drizzle-orm'
 import { db } from '../core/db'
@@ -92,7 +93,7 @@ dashboard.openapi(patientDashboardRoute, async (c) => {
     .where(eq(patients.id, patientId))
     .limit(1)
 
-  if (!patient) return c.json({ error: 'Not found' }, 404)
+  if (!patient) throw new HTTPException(404)
 
   const latestMetrics = await db
     .selectDistinctOn([events.metric], {

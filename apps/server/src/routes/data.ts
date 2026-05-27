@@ -1,4 +1,5 @@
-import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+﻿import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+import { HTTPException } from 'hono/http-exception'
 import { metricResponseSchema } from '@iomtea/shared-types'
 import { and, asc, desc, eq, gte, lte, sql } from 'drizzle-orm'
 import { db } from '../core/db'
@@ -9,7 +10,7 @@ import { getMetricOrDefault, listMetrics } from '../core/pipeline/registry'
 import { jwtAuth } from '../middleware/auth'
 import { requirePermission } from '../middleware/rbac'
 
-const dataApp = new OpenAPIHono<AppEnv>()
+const dataRouter = new OpenAPIHono<AppEnv>()
 
 const metricsRoute = createRoute({
   method: 'get',
@@ -23,7 +24,7 @@ const metricsRoute = createRoute({
   },
 })
 
-dataApp.openapi(metricsRoute, async (c) => {
+dataRouter.openapi(metricsRoute, async (c) => {
   return c.json(
     listMetrics().map((m) => ({
       metric: m.metric,
@@ -65,7 +66,7 @@ const rawRoute = createRoute({
   },
 })
 
-dataApp.openapi(rawRoute, async (c) => {
+dataRouter.openapi(rawRoute, async (c) => {
   const q = c.req.valid('query')
   const def = getMetricOrDefault(q.metric)
   const valExpr = valueExpression(def, q.fieldPath)
@@ -135,7 +136,7 @@ const aggregateRoute = createRoute({
   },
 })
 
-dataApp.openapi(aggregateRoute, async (c) => {
+dataRouter.openapi(aggregateRoute, async (c) => {
   const q = c.req.valid('query')
   const def = getMetricOrDefault(q.metric)
   const valExpr = valueExpression(def, q.fieldPath)
@@ -184,7 +185,7 @@ const latestRoute = createRoute({
   },
 })
 
-dataApp.openapi(latestRoute, async (c) => {
+dataRouter.openapi(latestRoute, async (c) => {
   const q = c.req.valid('query')
   const rows = await db
     .selectDistinctOn([events.metric], {
@@ -209,4 +210,4 @@ dataApp.openapi(latestRoute, async (c) => {
   )
 })
 
-export { dataApp }
+export { dataRouter }

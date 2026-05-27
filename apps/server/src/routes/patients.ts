@@ -1,4 +1,5 @@
 ﻿import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+import { HTTPException } from 'hono/http-exception'
 import { patientListSchema, patientResponseSchema, successSchema } from '@iomtea/shared-types'
 import { and, eq, ilike, or } from 'drizzle-orm'
 import { db } from '../core/db'
@@ -8,7 +9,7 @@ import type { AppEnv } from '../core/http/types'
 import { jwtAuth } from '../middleware/auth'
 import { requirePermission } from '../middleware/rbac'
 
-const patientsApp = new OpenAPIHono<AppEnv>()
+const patientsRouter = new OpenAPIHono<AppEnv>()
 
 const listPatRoute = createRoute({
   method: 'get',
@@ -30,7 +31,7 @@ const listPatRoute = createRoute({
   },
 })
 
-patientsApp.openapi(listPatRoute, async (c) => {
+patientsRouter.openapi(listPatRoute, async (c) => {
   const q = c.req.valid('query')
   const conditions = []
   if (q.status)
@@ -57,7 +58,7 @@ const myPatientsRoute = createRoute({
   middleware: [jwtAuth, requirePermission('/patients', 'read')] as const,
   responses: { 200: { description: 'My linked patients' } },
 })
-patientsApp.openapi(myPatientsRoute, async (c) => {
+patientsRouter.openapi(myPatientsRoute, async (c) => {
   const userId = c.var.userId
   const rows = await db
     .select({ id: patients.id, name: patients.name, status: patients.status })
@@ -99,7 +100,7 @@ const createPatRoute = createRoute({
   },
 })
 
-patientsApp.openapi(createPatRoute, async (c) => {
+patientsRouter.openapi(createPatRoute, async (c) => {
   const body = c.req.valid('json')
   const [row] = await db
     .insert(patients)
@@ -131,10 +132,10 @@ const detailPatRoute = createRoute({
   },
 })
 
-patientsApp.openapi(detailPatRoute, async (c) => {
+patientsRouter.openapi(detailPatRoute, async (c) => {
   const id = c.req.param('id')
   const [row] = await db.select().from(patients).where(eq(patients.id, id)).limit(1)
-  if (!row) return c.json({ error: 'Not found' }, 404)
+  if (!row) throw new HTTPException(404)
   return c.json(row)
 })
 
@@ -169,7 +170,7 @@ const updatePatRoute = createRoute({
   },
 })
 
-patientsApp.openapi(updatePatRoute, async (c) => {
+patientsRouter.openapi(updatePatRoute, async (c) => {
   const id = c.req.param('id')
   const body = c.req.valid('json')
   const [row] = await db
@@ -177,7 +178,7 @@ patientsApp.openapi(updatePatRoute, async (c) => {
     .set(body as any)
     .where(eq(patients.id, id))
     .returning()
-  if (!row) return c.json({ error: 'Not found' }, 404)
+  if (!row) throw new HTTPException(404)
   return c.json(row)
 })
 
@@ -191,10 +192,10 @@ const deletePatRoute = createRoute({
   },
 })
 
-patientsApp.openapi(deletePatRoute, async (c) => {
+patientsRouter.openapi(deletePatRoute, async (c) => {
   const id = c.req.param('id')
   const [existing] = await db.select({ id: patients.id }).from(patients).where(eq(patients.id, id)).limit(1)
-  if (!existing) return c.json({ error: 'Not found' }, 404)
+  if (!existing) throw new HTTPException(404)
   await db.delete(patients).where(eq(patients.id, id))
   return c.json({ success: true })
 })
@@ -220,7 +221,7 @@ const linkUserPatRoute = createRoute({
   },
 })
 
-patientsApp.openapi(linkUserPatRoute, async (c) => {
+patientsRouter.openapi(linkUserPatRoute, async (c) => {
   const patientId = c.req.param('id')
   const body = c.req.valid('json')
   await db.insert(userPatientLinks).values({
@@ -243,7 +244,7 @@ const unlinkUserPatRoute = createRoute({
   },
 })
 
-patientsApp.openapi(unlinkUserPatRoute, async (c) => {
+patientsRouter.openapi(unlinkUserPatRoute, async (c) => {
   const patientId = c.req.param('id')
   const userId = c.req.param('userId')
   await db
@@ -292,7 +293,7 @@ const bulkCreatePatRoute = createRoute({
   },
 })
 
-patientsApp.openapi(bulkCreatePatRoute, async (c) => {
+patientsRouter.openapi(bulkCreatePatRoute, async (c) => {
   const body = c.req.valid('json')
   let created = 0
   const errors: string[] = []
@@ -330,7 +331,7 @@ const listUsersPatRoute = createRoute({
   },
 })
 
-patientsApp.openapi(listUsersPatRoute, async (c) => {
+patientsRouter.openapi(listUsersPatRoute, async (c) => {
   const patientId = c.req.param('id')
   const rows = await db
     .select({ userId: userPatientLinks.userId, relation: userPatientLinks.relation })
@@ -339,4 +340,4 @@ patientsApp.openapi(listUsersPatRoute, async (c) => {
   return c.json(rows)
 })
 
-export { patientsApp }
+export { patientsRouter }

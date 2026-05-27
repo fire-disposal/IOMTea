@@ -1,4 +1,5 @@
-import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+﻿import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+import { HTTPException } from 'hono/http-exception'
 import { authResponseSchema } from '@iomtea/shared-types'
 import { and, eq, gt } from 'drizzle-orm'
 import { v4 as uuid } from 'uuid'
@@ -59,7 +60,7 @@ const registerRoute = createRoute({
 auth.openapi(registerRoute, async (c) => {
   const body = c.req.valid('json')
   const existing = await db.select().from(users).where(eq(users.username, body.username)).limit(1)
-  if (existing.length) return c.json({ error: 'Username already taken' }, 409)
+  if (existing.length) throw new HTTPException(409, { message: 'Username already taken' })
 
   const [user] = await db
     .insert(users)
@@ -126,21 +127,21 @@ auth.openapi(loginRoute, async (c) => {
   const failKey = `login:${body.username}`
   const failure = loginFailures.get(failKey)
   if (failure && failure.count >= 5 && Date.now() - failure.lastAttempt < 15 * 60 * 1000) {
-    return c.json({ error: 'Account temporarily locked', message: '请15分钟后重试' }, 429)
+    throw new HTTPException(429, { message: 'Account temporarily locked' })
   }
 
   const [user] = await db.select().from(users).where(eq(users.username, body.username)).limit(1)
   if (!user) {
     const failEntry = loginFailures.get(failKey) || { count: 0, lastAttempt: 0 }
     loginFailures.set(failKey, { count: failEntry.count + 1, lastAttempt: Date.now() })
-    return c.json({ error: 'Invalid credentials' }, 401)
+    throw new HTTPException(401, { message: 'Invalid credentials' })
   }
 
   const valid = await verifyPassword(user.passwordHash!, body.password)
   if (!valid) {
     const failEntry = loginFailures.get(failKey) || { count: 0, lastAttempt: 0 }
     loginFailures.set(failKey, { count: failEntry.count + 1, lastAttempt: Date.now() })
-    return c.json({ error: 'Invalid credentials' }, 401)
+    throw new HTTPException(401, { message: 'Invalid credentials' })
   }
 
   loginFailures.delete(failKey)
@@ -209,7 +210,7 @@ auth.openapi(refreshRoute, async (c) => {
       )
       .limit(1)
 
-    if (!stored) return c.json({ error: 'Invalid or expired refresh token' }, 401)
+    if (!stored) throw new HTTPException(401, { message: 'Invalid or expired refresh token' })
 
     await db.delete(refreshTokens).where(eq(refreshTokens.id, stored.id))
 
@@ -224,7 +225,7 @@ auth.openapi(refreshRoute, async (c) => {
 
     return c.json({ accessToken, refreshToken: newRefreshToken })
   } catch {
-    return c.json({ error: 'Invalid refresh token' }, 401)
+    throw new HTTPException(401, { message: 'Invalid refresh token' })
   }
 })
 

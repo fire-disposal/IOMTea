@@ -1,4 +1,5 @@
 ﻿import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+import { HTTPException } from 'hono/http-exception'
 import { pinListSchema, pinResponseSchema, successSchema } from '@iomtea/shared-types'
 import { eq } from 'drizzle-orm'
 import { db } from '../core/db'
@@ -7,7 +8,7 @@ import type { AppEnv } from '../core/http/types'
 import { jwtAuth } from '../middleware/auth'
 import { requirePermission } from '../middleware/rbac'
 
-const pinsApp = new OpenAPIHono<AppEnv>()
+const pinsRouter = new OpenAPIHono<AppEnv>()
 
 const listRoute = createRoute({
   method: 'get',
@@ -18,7 +19,7 @@ const listRoute = createRoute({
   },
 })
 
-pinsApp.openapi(listRoute, async (c) => {
+pinsRouter.openapi(listRoute, async (c) => {
   const rows = await db.select().from(usersPin).orderBy(usersPin.createdAt)
   return c.json(rows)
 })
@@ -46,7 +47,7 @@ const createPinRoute = createRoute({
   },
 })
 
-pinsApp.openapi(createPinRoute, async (c) => {
+pinsRouter.openapi(createPinRoute, async (c) => {
   const body = c.req.valid('json')
   const pin = body.pin || String(Math.floor(100000 + Math.random() * 900000))
   const [row] = await db
@@ -66,10 +67,10 @@ const revokePinRoute = createRoute({
   },
 })
 
-pinsApp.openapi(revokePinRoute, async (c) => {
+pinsRouter.openapi(revokePinRoute, async (c) => {
   const code = c.req.param('code')
   const [row] = await db.delete(usersPin).where(eq(usersPin.pin, code)).returning()
-  if (!row) return c.json({ error: 'Not found' }, 404)
+  if (!row) throw new HTTPException(404)
   return c.json({ success: true })
 })
 
@@ -80,10 +81,10 @@ const getPinRoute = createRoute({
   responses: { 200: { description: 'PIN detail' }, 404: { description: 'Not found' } },
 })
 
-pinsApp.openapi(getPinRoute, async (c) => {
+pinsRouter.openapi(getPinRoute, async (c) => {
   const code = c.req.param('code')
   const [pin] = await db.select().from(usersPin).where(eq(usersPin.pin, code)).limit(1)
-  if (!pin) return c.json({ error: 'Not found' }, 404)
+  if (!pin) throw new HTTPException(404)
   return c.json(pin)
 })
 
@@ -106,7 +107,7 @@ const updatePinRoute = createRoute({
   responses: { 200: { description: 'Updated' }, 404: { description: 'Not found' } },
 })
 
-pinsApp.openapi(updatePinRoute, async (c) => {
+pinsRouter.openapi(updatePinRoute, async (c) => {
   const code = c.req.param('code')
   const body = c.req.valid('json')
   const updateData: Record<string, unknown> = {}
@@ -117,8 +118,8 @@ pinsApp.openapi(updatePinRoute, async (c) => {
     .set(updateData as any)
     .where(eq(usersPin.pin, code))
     .returning()
-  if (!pin) return c.json({ error: 'Not found' }, 404)
+  if (!pin) throw new HTTPException(404)
   return c.json(pin)
 })
 
-export { pinsApp }
+export { pinsRouter }

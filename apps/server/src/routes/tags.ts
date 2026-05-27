@@ -1,4 +1,5 @@
 ﻿import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+import { HTTPException } from 'hono/http-exception'
 import { successSchema, tagListSchema, tagResponseSchema } from '@iomtea/shared-types'
 import { eq } from 'drizzle-orm'
 import { db } from '../core/db'
@@ -7,7 +8,7 @@ import type { AppEnv } from '../core/http/types'
 import { jwtAuth } from '../middleware/auth'
 import { requirePermission } from '../middleware/rbac'
 
-const tagsApp = new OpenAPIHono<AppEnv>()
+const tagsRouter = new OpenAPIHono<AppEnv>()
 
 const listRoute = createRoute({
   method: 'get',
@@ -18,7 +19,7 @@ const listRoute = createRoute({
   },
 })
 
-tagsApp.openapi(listRoute, async (c) => {
+tagsRouter.openapi(listRoute, async (c) => {
   const rows = await db.select().from(patientTags).orderBy(patientTags.createdAt)
   return c.json(rows)
 })
@@ -44,7 +45,7 @@ const createTagRoute = createRoute({
   },
 })
 
-tagsApp.openapi(createTagRoute, async (c) => {
+tagsRouter.openapi(createTagRoute, async (c) => {
   const body = c.req.valid('json')
   const [row] = await db
     .insert(patientTags)
@@ -63,11 +64,11 @@ const deleteTagRoute = createRoute({
   },
 })
 
-tagsApp.openapi(deleteTagRoute, async (c) => {
+tagsRouter.openapi(deleteTagRoute, async (c) => {
   const id = c.req.param('id')
   await db.delete(patientTagLinks).where(eq(patientTagLinks.tagId, id))
   const [row] = await db.delete(patientTags).where(eq(patientTags.id, id)).returning()
-  if (!row) return c.json({ error: 'Not found' }, 404)
+  if (!row) throw new HTTPException(404)
   return c.json({ success: true })
 })
 
@@ -78,10 +79,10 @@ const getTagRoute = createRoute({
   responses: { 200: { description: 'Tag detail' }, 404: { description: 'Not found' } },
 })
 
-tagsApp.openapi(getTagRoute, async (c) => {
+tagsRouter.openapi(getTagRoute, async (c) => {
   const id = c.req.param('id')
   const [tag] = await db.select().from(patientTags).where(eq(patientTags.id, id)).limit(1)
-  if (!tag) return c.json({ error: 'Not found' }, 404)
+  if (!tag) throw new HTTPException(404)
   return c.json(tag)
 })
 
@@ -107,7 +108,7 @@ const updateTagRoute = createRoute({
   responses: { 200: { description: 'Updated' }, 404: { description: 'Not found' } },
 })
 
-tagsApp.openapi(updateTagRoute, async (c) => {
+tagsRouter.openapi(updateTagRoute, async (c) => {
   const id = c.req.param('id')
   const body = c.req.valid('json')
   const [tag] = await db
@@ -115,8 +116,8 @@ tagsApp.openapi(updateTagRoute, async (c) => {
     .set(body as any)
     .where(eq(patientTags.id, id))
     .returning()
-  if (!tag) return c.json({ error: 'Not found' }, 404)
+  if (!tag) throw new HTTPException(404)
   return c.json(tag)
 })
 
-export { tagsApp }
+export { tagsRouter }

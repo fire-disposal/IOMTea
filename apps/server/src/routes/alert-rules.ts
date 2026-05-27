@@ -1,4 +1,5 @@
 ﻿import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+import { HTTPException } from 'hono/http-exception'
 import { successSchema } from '@iomtea/shared-types'
 import { eq } from 'drizzle-orm'
 import { db } from '../core/db'
@@ -30,7 +31,7 @@ alertRulesRouter.openapi(getRulesRoute, async (c) => {
     .where(eq(patients.id, patientId))
     .limit(1)
 
-  if (!patient) return c.json({ error: 'Not found' }, 404)
+  if (!patient) throw new HTTPException(404)
 
   const tags = (patient.tags as Record<string, unknown>) || {}
   const customThresholds = (tags.customThresholds as any[]) || []
@@ -76,7 +77,7 @@ alertRulesRouter.openapi(upsertRulesRoute, async (c) => {
     .where(eq(patients.id, patientId))
     .limit(1)
 
-  if (!patient) return c.json({ error: 'Not found' }, 404)
+  if (!patient) throw new HTTPException(404)
 
   const currentTags = (patient.tags as Record<string, unknown>) || {}
   const newTags = { ...currentTags, customThresholds: body.rules }

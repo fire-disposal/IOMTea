@@ -11,7 +11,7 @@
       <text class="credit-balance-num">{{balance}}</text>
     </view>
 
-    <scroll-view class="credit-list" scroll-y>
+    <view class="credit-list">
       <view wx:for="{{transactions}}" wx:key="id" class="credit-tx">
         <view class="credit-tx-left">
           <text class="credit-tx-icon">{{item.moduleKey ? (HEALTH_MODULE_META[item.moduleKey] ? HEALTH_MODULE_META[item.moduleKey].icon : '🎁') : '🎁'}}</text>
@@ -29,6 +29,6 @@
       <view wx:if="{{transactions.length === 0}}" class="credit-empty">
         <text>暂无积分记录</text>
       </view>
-    </scroll-view>
+    </view>
   </block>
 </view>

@@ -1,11 +1,12 @@
-import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+﻿import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+import { HTTPException } from 'hono/http-exception'
 import { db } from '../core/db'
 import { events, patients } from '../core/db/schema'
 import type { AppEnv } from '../core/http/types'
 import { jwtAuth } from '../middleware/auth'
 import { requirePermission } from '../middleware/rbac'
 
-const ingestApp = new OpenAPIHono<AppEnv>()
+const ingestRouter = new OpenAPIHono<AppEnv>()
 
 const singleRoute = createRoute({
   method: 'post',
@@ -37,7 +38,7 @@ const singleRoute = createRoute({
   responses: { 201: { description: 'Ingested' }, 400: { description: 'Validation failed' } },
 })
 
-ingestApp.openapi(singleRoute, async (c) => {
+ingestRouter.openapi(singleRoute, async (c) => {
   const input = c.req.valid('json')
   const def = getMetricOrDefault(input.metric)
   const parsed = def.valueSchema.safeParse(input.value)
@@ -99,7 +100,7 @@ const batchRoute = createRoute({
   responses: { 200: { description: 'Batch result' } },
 })
 
-ingestApp.openapi(batchRoute, async (c) => {
+ingestRouter.openapi(batchRoute, async (c) => {
   const input = c.req.valid('json')
   const results = { success: 0, failed: 0, skipped: 0, errors: [] as string[] }
 
@@ -136,4 +137,4 @@ ingestApp.openapi(batchRoute, async (c) => {
   return c.json(results)
 })
 
-export { ingestApp }
+export { ingestRouter }

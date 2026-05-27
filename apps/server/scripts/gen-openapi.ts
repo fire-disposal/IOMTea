@@ -2,37 +2,39 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { OpenAPIHono } from '@hono/zod-openapi'
 
-import { alertRulesApp } from '../src/routes/alertRules'
-import { alertsApp } from '../src/routes/alerts'
+import { alertRulesRouter } from '../src/routes/alert-rules'
+import { alertsRouter } from '../src/routes/alerts'
 import { auth } from '../src/routes/auth'
+import { creditsRouter } from '../src/routes/credits'
 import { dashboard } from '../src/routes/dashboard'
-import { dataApp } from '../src/routes/data'
-import { exportApp } from '../src/routes/export'
-import { ingestApp } from '../src/routes/ingest'
-import { patientsApp } from '../src/routes/patients'
-import { pinsApp } from '../src/routes/pins'
-import { tagsApp } from '../src/routes/tags'
-import { twinApp } from '../src/routes/twin'
-import { usersApp } from '../src/routes/users'
-import { plansApp } from '../src/routes/plans'
-import { creditsApp } from '../src/routes/credits'
+import { dataRouter } from '../src/routes/data'
+import { emaRouter } from '../src/routes/ema'
+import { exportRouter } from '../src/routes/export'
+import { ingestRouter } from '../src/routes/ingest'
+import { patientsRouter } from '../src/routes/patients'
+import { pinsRouter } from '../src/routes/pins'
+import { plansRouter } from '../src/routes/plans'
+import { tagsRouter } from '../src/routes/tags'
+import { twinRouter } from '../src/routes/twin'
+import { usersRouter } from '../src/routes/users'
 
 const app = new OpenAPIHono()
 
 app.route('/auth', auth)
-app.route('/users', usersApp)
+app.route('/users', usersRouter)
 app.route('/dashboard', dashboard)
-app.route('/pins', pinsApp)
-app.route('/tags', tagsApp)
-app.route('/patients', patientsApp)
-app.route('/alerts', alertsApp)
-app.route('/alert-rules', alertRulesApp)
-app.route('/ingest', ingestApp)
-app.route('/data', dataApp)
-app.route('/export', exportApp)
-app.route('/twin', twinApp)
-app.route('/plans', plansApp)
-app.route('/credits', creditsApp)
+app.route('/pins', pinsRouter)
+app.route('/tags', tagsRouter)
+app.route('/patients', patientsRouter)
+app.route('/alerts', alertsRouter)
+app.route('/alert-rules', alertRulesRouter)
+app.route('/ingest', ingestRouter)
+app.route('/data', dataRouter)
+app.route('/export', exportRouter)
+app.route('/twin', twinRouter)
+app.route('/plans', plansRouter)
+app.route('/credits', creditsRouter)
+app.route('/ema', emaRouter)
 
 const partialDoc = (app as any).getOpenAPIDocument()
 const doc = {

@@ -1,4 +1,5 @@
 ﻿import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+import { HTTPException } from 'hono/http-exception'
 import { alertListSchema, alertResponseSchema, successSchema } from '@iomtea/shared-types'
 import { and, desc, eq } from 'drizzle-orm'
 import { db } from '../core/db'
@@ -7,7 +8,7 @@ import type { AppEnv } from '../core/http/types'
 import { jwtAuth } from '../middleware/auth'
 import { requirePermission } from '../middleware/rbac'
 
-const alertsApp = new OpenAPIHono<AppEnv>()
+const alertsRouter = new OpenAPIHono<AppEnv>()
 
 const listAlertsRoute = createRoute({
   method: 'get',
@@ -30,7 +31,7 @@ const listAlertsRoute = createRoute({
   },
 })
 
-alertsApp.openapi(listAlertsRoute, async (c) => {
+alertsRouter.openapi(listAlertsRoute, async (c) => {
   const q = c.req.valid('query')
   const conditions = [eq(events.kind, 'alert')]
   if (q.patientId) conditions.push(eq(events.patientId, q.patientId))
@@ -61,14 +62,14 @@ const getAlertRoute = createRoute({
   },
 })
 
-alertsApp.openapi(getAlertRoute, async (c) => {
+alertsRouter.openapi(getAlertRoute, async (c) => {
   const id = c.req.param('id')
   const [row] = await db
     .select()
     .from(events)
     .where(and(eq(events.id, id), eq(events.kind, 'alert')))
     .limit(1)
-  if (!row) return c.json({ error: 'Not found' }, 404)
+  if (!row) throw new HTTPException(404)
   return c.json(row)
 })
 
@@ -94,7 +95,7 @@ const updateAlertRoute = createRoute({
   },
 })
 
-alertsApp.openapi(updateAlertRoute, async (c) => {
+alertsRouter.openapi(updateAlertRoute, async (c) => {
   const id = c.req.param('id')
   const body = c.req.valid('json')
 
@@ -103,7 +104,7 @@ alertsApp.openapi(updateAlertRoute, async (c) => {
     .from(events)
     .where(and(eq(events.id, id), eq(events.kind, 'alert')))
     .limit(1)
-  if (!alert) return c.json({ error: 'Not found' }, 404)
+  if (!alert) throw new HTTPException(404)
 
   const tags = { ...((alert.tags as Record<string, unknown>) || {}) }
   const updateData: Record<string, unknown> = {}
@@ -126,7 +127,7 @@ alertsApp.openapi(updateAlertRoute, async (c) => {
     .set(updateData as any)
     .where(and(eq(events.id, id), eq(events.kind, 'alert')))
     .returning()
-  if (!updated) return c.json({ error: 'Not found' }, 404)
+  if (!updated) throw new HTTPException(404)
   return c.json(updated)
 })
 
@@ -140,7 +141,7 @@ const closeAlertRoute = createRoute({
   },
 })
 
-alertsApp.openapi(closeAlertRoute, async (c) => {
+alertsRouter.openapi(closeAlertRoute, async (c) => {
   const id = c.req.param('id')
 
   const [alert] = await db
@@ -148,7 +149,7 @@ alertsApp.openapi(closeAlertRoute, async (c) => {
     .from(events)
     .where(and(eq(events.id, id), eq(events.kind, 'alert')))
     .limit(1)
-  if (!alert) return c.json({ error: 'Not found' }, 404)
+  if (!alert) throw new HTTPException(404)
 
   const tags = { ...((alert.tags as Record<string, unknown>) || {}) }
   tags.closed_at = new Date().toISOString()
@@ -158,8 +159,8 @@ alertsApp.openapi(closeAlertRoute, async (c) => {
     .set({ status: 'closed', tags } as any)
     .where(and(eq(events.id, id), eq(events.kind, 'alert')))
     .returning()
-  if (!updated) return c.json({ error: 'Not found' }, 404)
+  if (!updated) throw new HTTPException(404)
   return c.json(updated)
 })
 
-export { alertsApp }
+export { alertsRouter }
