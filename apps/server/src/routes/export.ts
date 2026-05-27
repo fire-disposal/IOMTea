@@ -1,11 +1,12 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
 import { and, asc, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm'
 import { db } from '../core/db'
-import { events, patients } from '../core/db/schema'
+import { events } from '../core/db/schema'
+import type { AppEnv } from '../core/http/types'
 import { jwtAuth } from '../middleware/auth'
 import { requirePermission } from '../middleware/rbac'
 
-const exportApp = new OpenAPIHono()
+const exportApp = new OpenAPIHono<AppEnv>()
 
 const previewRoute = createRoute({
   method: 'get',
@@ -16,7 +17,7 @@ const previewRoute = createRoute({
       patientId: z.string().uuid().optional(),
       from: z.string().datetime().optional(),
       to: z.string().datetime().optional(),
-      limit: z.coerce.number().default(50),
+      pageSize: z.coerce.number().min(1).max(200).default(50),
     }),
   },
   responses: { 200: { description: 'Data preview' } },
@@ -34,7 +35,7 @@ exportApp.openapi(previewRoute, async (c) => {
     .from(events)
     .where(conditions.length ? and(...conditions) : undefined)
     .orderBy(desc(events.recordedAt))
-    .limit(q.limit)
+    .limit(q.pageSize)
 
   const [countResult] = await db
     .select({ total: sql`count(*)::int`.mapWith(Number) })

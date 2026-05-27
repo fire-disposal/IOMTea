@@ -116,7 +116,7 @@ app.get('/health', async (c) => {
     await db.execute('SELECT 1')
     return c.json({ status: 'ok', db: 'connected' })
   } catch {
-    return c.json({ status: 'degraded', db: 'disconnected' } as any, 503)
+    return c.json({ status: 'degraded', db: 'disconnected' }, 503)
   }
 })
 

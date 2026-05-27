@@ -5,13 +5,14 @@ import { v4 as uuid } from 'uuid'
 import { db } from '../core/db'
 import { refreshTokens, users } from '../core/db/schema'
 import { wechatAccounts } from '../core/db/schema/auth-ext'
+import type { AppEnv } from '../core/http/types'
 import { hashToken, signAccessToken, signRefreshToken, verifyToken } from '../core/lib/jwt'
 import { hashPassword, verifyPassword } from '../core/lib/password'
 import { code2session } from '../core/lib/wechat'
 import { rateLimit } from '../middleware/rate-limit'
 import { createChildLogger } from '../core/lib/logger'
 
-const auth = new OpenAPIHono()
+const auth = new OpenAPIHono<AppEnv>()
 const logger = createChildLogger('auth')
 
 const loginFailures = new Map<string, { count: number; lastAttempt: number }>()
@@ -58,7 +59,7 @@ const registerRoute = createRoute({
 auth.openapi(registerRoute, async (c) => {
   const body = c.req.valid('json')
   const existing = await db.select().from(users).where(eq(users.username, body.username)).limit(1)
-  if (existing.length) return c.json({ error: 'Username already taken' }, 409 as any)
+  if (existing.length) return c.json({ error: 'Username already taken' }, 409)
 
   const [user] = await db
     .insert(users)
@@ -90,7 +91,7 @@ auth.openapi(registerRoute, async (c) => {
         displayName: user.displayName,
       },
     },
-    201 as any,
+    201,
   )
 })
 
@@ -125,21 +126,21 @@ auth.openapi(loginRoute, async (c) => {
   const failKey = `login:${body.username}`
   const failure = loginFailures.get(failKey)
   if (failure && failure.count >= 5 && Date.now() - failure.lastAttempt < 15 * 60 * 1000) {
-    return c.json({ error: 'Account temporarily locked', message: '请15分钟后重试' }, 429 as any)
+    return c.json({ error: 'Account temporarily locked', message: '请15分钟后重试' }, 429)
   }
 
   const [user] = await db.select().from(users).where(eq(users.username, body.username)).limit(1)
   if (!user) {
     const failEntry = loginFailures.get(failKey) || { count: 0, lastAttempt: 0 }
     loginFailures.set(failKey, { count: failEntry.count + 1, lastAttempt: Date.now() })
-    return c.json({ error: 'Invalid credentials' }, 401 as any)
+    return c.json({ error: 'Invalid credentials' }, 401)
   }
 
   const valid = await verifyPassword(user.passwordHash!, body.password)
   if (!valid) {
     const failEntry = loginFailures.get(failKey) || { count: 0, lastAttempt: 0 }
     loginFailures.set(failKey, { count: failEntry.count + 1, lastAttempt: Date.now() })
-    return c.json({ error: 'Invalid credentials' }, 401 as any)
+    return c.json({ error: 'Invalid credentials' }, 401)
   }
 
   loginFailures.delete(failKey)
@@ -208,7 +209,7 @@ auth.openapi(refreshRoute, async (c) => {
       )
       .limit(1)
 
-    if (!stored) return c.json({ error: 'Invalid or expired refresh token' }, 401 as any)
+    if (!stored) return c.json({ error: 'Invalid or expired refresh token' }, 401)
 
     await db.delete(refreshTokens).where(eq(refreshTokens.id, stored.id))
 
@@ -223,7 +224,7 @@ auth.openapi(refreshRoute, async (c) => {
 
     return c.json({ accessToken, refreshToken: newRefreshToken })
   } catch {
-    return c.json({ error: 'Invalid refresh token' }, 401 as any)
+    return c.json({ error: 'Invalid refresh token' }, 401)
   }
 })
 
@@ -245,7 +246,7 @@ auth.openapi(wechatLoginRoute, async (c) => {
   try {
     session = await code2session(body.code)
   } catch {
-    return c.json({ error: 'WeChat failed' } as any, 400)
+    return c.json({ error: 'WeChat failed' }, 400)
   }
 
   const [account] = await db

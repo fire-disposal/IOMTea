@@ -124,48 +124,7 @@ Page({
       trendData: getTrendData(type, type === 'period' ? 30 : 7),
       dateStr: new Date().toISOString().slice(0, 10)
     })
-  },
-
-  onBack() {
-    wx.navigateBack()
-  },
-
-  onInput(e) {
-    var id = e.currentTarget.dataset.id
-    var values = this.data.values
-    values[id] = e.detail.value
-    this.setData({ values: Object.assign({}, values) })
-  },
-
-  onBlur(e) {
-    var id = e.currentTarget.dataset.id
-    var values = this.data.values
-    values[id] = e.detail.value
-    this.setData({ values: Object.assign({}, values) })
-  },
-
-  onSegmentTap(e) {
-    var key = e.currentTarget.dataset.key
-    var value = e.currentTarget.dataset.value
-    var segments = this.data.segments
-    segments[key] = value
-    this.setData({ segments: Object.assign({}, segments) })
-  },
-
-  onChipTap(e) {
-    var value = e.currentTarget.dataset.value
-    var config = this.data.config
-    if (!config.chips) return
-    var chips = this.data.chips
-    if (!chips[config.chips.key]) chips[config.chips.key] = []
-    var arr = chips[config.chips.key]
-    var idx = arr.indexOf(value)
-    if (idx > -1) { arr.splice(idx, 1) } else { arr.push(value) }
-    chips[config.chips.key] = arr.slice()
-
-    var map = {}
-    for (var i = 0; i < arr.length; i++) { map[arr[i]] = true }
-    this.setData({ chips: Object.assign({}, chips), chipMap: map })
+    wx.setNavigationBarTitle({ title: (meta.label || config.title) + '记录' })
   },
 
   handleSave() {

@@ -1,13 +1,11 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
 import { db } from '../core/db'
-import { events } from '../core/db/schema'
-import { createChildLogger } from '../core/lib/logger'
-import { getMetricOrDefault } from '../core/pipeline/registry'
+import { events, patients } from '../core/db/schema'
+import type { AppEnv } from '../core/http/types'
 import { jwtAuth } from '../middleware/auth'
 import { requirePermission } from '../middleware/rbac'
 
-const logger = createChildLogger('ingest')
-const ingestApp = new OpenAPIHono()
+const ingestApp = new OpenAPIHono<AppEnv>()
 
 const singleRoute = createRoute({
   method: 'post',
@@ -45,7 +43,7 @@ ingestApp.openapi(singleRoute, async (c) => {
   const parsed = def.valueSchema.safeParse(input.value)
   if (!parsed.success) {
     logger.warn({ metric: input.metric, errors: parsed.error.issues }, 'ingest validation failed')
-    return c.json({ error: `Value validation failed: ${parsed.error.message}` }, 400 as any)
+    return c.json({ error: `Value validation failed: ${parsed.error.message}` }, 400)
   }
 
   const [row] = await db
@@ -64,7 +62,7 @@ ingestApp.openapi(singleRoute, async (c) => {
     } as any)
     .returning()
 
-  return c.json(row, 201 as any)
+  return c.json(row, 201)
 })
 
 const batchRoute = createRoute({

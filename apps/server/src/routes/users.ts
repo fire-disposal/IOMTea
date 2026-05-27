@@ -1,19 +1,13 @@
-import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+﻿import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
 import { userResponseSchema } from '@iomtea/shared-types'
 import { eq } from 'drizzle-orm'
 import { db } from '../core/db'
 import { users } from '../core/db/schema'
+import type { AppEnv } from '../core/http/types'
 import { jwtAuth } from '../middleware/auth'
 import { requirePermission } from '../middleware/rbac'
 
-type Env = {
-  Variables: {
-    userId: string
-    userRole: string
-  }
-}
-
-const usersApp = new OpenAPIHono<Env>()
+const usersApp = new OpenAPIHono<AppEnv>()
 
 const listRoute = createRoute({
   method: 'get',
@@ -47,9 +41,9 @@ const meRoute = createRoute({
 })
 
 usersApp.openapi(meRoute, async (c) => {
-  const userId = c.get('userId')
+  const userId = c.var.userId
   const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1)
-  if (!user) return c.json({ error: 'Not found' }, 404 as any)
+  if (!user) return c.json({ error: 'Not found' }, 404)
   const { passwordHash, ...safe } = user
   return c.json(safe)
 })
@@ -88,7 +82,7 @@ usersApp.openapi(updateRoute, async (c) => {
     .set(body as any)
     .where(eq(users.id, id))
     .returning()
-  if (!updated) return c.json({ error: 'Not found' }, 404 as any)
+  if (!updated) return c.json({ error: 'Not found' }, 404)
   const { passwordHash, ...safe } = updated
   return c.json(safe)
 })
@@ -117,7 +111,7 @@ usersApp.openapi(getUserRoute, async (c) => {
     .from(users)
     .where(eq(users.id, id))
     .limit(1)
-  if (!user) return c.json({ error: 'Not found' }, 404 as any)
+  if (!user) return c.json({ error: 'Not found' }, 404)
   return c.json(user)
 })
 
@@ -131,7 +125,7 @@ const deleteUserRoute = createRoute({
 usersApp.openapi(deleteUserRoute, async (c) => {
   const id = c.req.param('id')
   const [existing] = await db.select({ id: users.id }).from(users).where(eq(users.id, id)).limit(1)
-  if (!existing) return c.json({ error: 'Not found' }, 404 as any)
+  if (!existing) return c.json({ error: 'Not found' }, 404)
   await db.delete(users).where(eq(users.id, id))
   return c.json({ success: true })
 })
@@ -160,7 +154,7 @@ usersApp.openapi(updateRoleRoute, async (c) => {
     .set({ role })
     .where(eq(users.id, id))
     .returning({ id: users.id, role: users.role })
-  if (!user) return c.json({ error: 'Not found' }, 404 as any)
+  if (!user) return c.json({ error: 'Not found' }, 404)
   return c.json(user)
 })
 

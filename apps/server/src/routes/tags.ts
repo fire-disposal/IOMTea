@@ -1,12 +1,13 @@
-import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+﻿import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
 import { successSchema, tagListSchema, tagResponseSchema } from '@iomtea/shared-types'
 import { eq } from 'drizzle-orm'
 import { db } from '../core/db'
-import { patientTagLinks, patientTags } from '../core/db/schema/tag'
+import { patientTags, patientTagLinks } from '../core/db/schema/tag'
+import type { AppEnv } from '../core/http/types'
 import { jwtAuth } from '../middleware/auth'
 import { requirePermission } from '../middleware/rbac'
 
-const tagsApp = new OpenAPIHono()
+const tagsApp = new OpenAPIHono<AppEnv>()
 
 const listRoute = createRoute({
   method: 'get',
@@ -49,7 +50,7 @@ tagsApp.openapi(createTagRoute, async (c) => {
     .insert(patientTags)
     .values({ name: body.name, color: body.color ?? '#868e96' } as any)
     .returning()
-  return c.json(row, 201 as any)
+  return c.json(row, 201)
 })
 
 const deleteTagRoute = createRoute({
@@ -66,7 +67,7 @@ tagsApp.openapi(deleteTagRoute, async (c) => {
   const id = c.req.param('id')
   await db.delete(patientTagLinks).where(eq(patientTagLinks.tagId, id))
   const [row] = await db.delete(patientTags).where(eq(patientTags.id, id)).returning()
-  if (!row) return c.json({ error: 'Not found' }, 404 as any)
+  if (!row) return c.json({ error: 'Not found' }, 404)
   return c.json({ success: true })
 })
 
@@ -80,7 +81,7 @@ const getTagRoute = createRoute({
 tagsApp.openapi(getTagRoute, async (c) => {
   const id = c.req.param('id')
   const [tag] = await db.select().from(patientTags).where(eq(patientTags.id, id)).limit(1)
-  if (!tag) return c.json({ error: 'Not found' }, 404 as any)
+  if (!tag) return c.json({ error: 'Not found' }, 404)
   return c.json(tag)
 })
 
@@ -114,7 +115,7 @@ tagsApp.openapi(updateTagRoute, async (c) => {
     .set(body as any)
     .where(eq(patientTags.id, id))
     .returning()
-  if (!tag) return c.json({ error: 'Not found' }, 404 as any)
+  if (!tag) return c.json({ error: 'Not found' }, 404)
   return c.json(tag)
 })
 

@@ -1,12 +1,13 @@
-import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+﻿import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
 import { pinListSchema, pinResponseSchema, successSchema } from '@iomtea/shared-types'
 import { eq } from 'drizzle-orm'
 import { db } from '../core/db'
 import { usersPin } from '../core/db/schema/pin'
+import type { AppEnv } from '../core/http/types'
 import { jwtAuth } from '../middleware/auth'
 import { requirePermission } from '../middleware/rbac'
 
-const pinsApp = new OpenAPIHono()
+const pinsApp = new OpenAPIHono<AppEnv>()
 
 const listRoute = createRoute({
   method: 'get',
@@ -52,7 +53,7 @@ pinsApp.openapi(createPinRoute, async (c) => {
     .insert(usersPin)
     .values({ pin, userId: body.userId, type: body.type, label: body.label ?? null } as any)
     .returning()
-  return c.json(row, 201 as any)
+  return c.json(row, 201)
 })
 
 const revokePinRoute = createRoute({
@@ -68,7 +69,7 @@ const revokePinRoute = createRoute({
 pinsApp.openapi(revokePinRoute, async (c) => {
   const code = c.req.param('code')
   const [row] = await db.delete(usersPin).where(eq(usersPin.pin, code)).returning()
-  if (!row) return c.json({ error: 'Not found' }, 404 as any)
+  if (!row) return c.json({ error: 'Not found' }, 404)
   return c.json({ success: true })
 })
 
@@ -82,7 +83,7 @@ const getPinRoute = createRoute({
 pinsApp.openapi(getPinRoute, async (c) => {
   const code = c.req.param('code')
   const [pin] = await db.select().from(usersPin).where(eq(usersPin.pin, code)).limit(1)
-  if (!pin) return c.json({ error: 'Not found' }, 404 as any)
+  if (!pin) return c.json({ error: 'Not found' }, 404)
   return c.json(pin)
 })
 
@@ -116,7 +117,7 @@ pinsApp.openapi(updatePinRoute, async (c) => {
     .set(updateData as any)
     .where(eq(usersPin.pin, code))
     .returning()
-  if (!pin) return c.json({ error: 'Not found' }, 404 as any)
+  if (!pin) return c.json({ error: 'Not found' }, 404)
   return c.json(pin)
 })
 

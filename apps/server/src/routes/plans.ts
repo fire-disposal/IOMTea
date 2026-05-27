@@ -1,4 +1,4 @@
-import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+﻿import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
 import {
   planCompleteSchema,
   planCreateSchema,
@@ -10,17 +10,11 @@ import { and, eq, sql } from 'drizzle-orm'
 import { db } from '../core/db'
 import { events, users } from '../core/db/schema'
 import { creditTransactions, planCompletions, plans } from '../core/db/schema/plan'
+import type { AppEnv } from '../core/http/types'
 import { jwtAuth } from '../middleware/auth'
 import { requirePermission } from '../middleware/rbac'
 
-type Env = {
-  Variables: {
-    userId: string
-    userRole: string
-  }
-}
-
-const plansApp = new OpenAPIHono<Env>()
+const plansApp = new OpenAPIHono<AppEnv>()
 
 const listRoute = createRoute({
   method: 'get',
@@ -43,7 +37,7 @@ const createPlanRoute = createRoute({
 plansApp.openapi(createPlanRoute, async (c) => {
   const body = c.req.valid('json')
   const [row] = await db.insert(plans).values(body).returning()
-  return c.json(row, 201 as any)
+  return c.json(row, 201)
 })
 
 const updateRoute = createRoute({
@@ -60,7 +54,7 @@ plansApp.openapi(updateRoute, async (c) => {
     .set(c.req.valid('json') as any)
     .where(eq(plans.id, id))
     .returning()
-  if (!row) return c.json({ error: 'Not found' } as any, 404)
+  if (!row) return c.json({ error: 'Not found' }, 404)
   return c.json(row)
 })
 
@@ -113,7 +107,7 @@ plansApp.openapi(completeRoute, async (c) => {
   const body = c.req.valid('json')
 
   const [plan] = await db.select().from(plans).where(eq(plans.id, planId)).limit(1)
-  if (!plan) return c.json({ error: 'Not found' } as any, 404)
+  if (!plan) return c.json({ error: 'Not found' }, 404)
 
   const completion = await db.transaction(async (tx) => {
     const [row] = await tx
@@ -121,7 +115,7 @@ plansApp.openapi(completeRoute, async (c) => {
       .values({
         planId,
         patientId: body.patientId,
-        userId: c.get('userId') || null,
+        userId: c.var.userId || null,
         responses: body.responses ?? null,
         creditsEarned: plan.rewardCredits,
       })
@@ -157,7 +151,7 @@ plansApp.openapi(completeRoute, async (c) => {
     return row
   })
 
-  return c.json(completion, 201 as any)
+  return c.json(completion, 201)
 })
 
 const completionsRoute = createRoute({

@@ -1,7 +1,8 @@
 import { createMiddleware } from 'hono/factory'
+import type { AppEnv } from '../core/http/types'
 import { verifyToken } from '../core/lib/jwt'
 
-export const jwtAuth = createMiddleware(async (c, next) => {
+export const jwtAuth = createMiddleware<AppEnv>(async (c, next) => {
   const header = c.req.header('Authorization')
   if (!header?.startsWith('Bearer ')) {
     return c.json({ error: 'Unauthorized', message: 'Missing or invalid token' }, 401)

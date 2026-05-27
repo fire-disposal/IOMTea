@@ -1,4 +1,4 @@
-import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+﻿import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
 import {
   profileResponseSchema,
   simulationResponseSchema,
@@ -7,6 +7,7 @@ import {
 import { eq } from 'drizzle-orm'
 import { db } from '../core/db'
 import { patients } from '../core/db/schema'
+import type { AppEnv } from '../core/http/types'
 import { jwtAuth } from '../middleware/auth'
 import { requirePermission } from '../middleware/rbac'
 import {
@@ -26,7 +27,7 @@ import {
   updateMetric,
 } from '../modules/twin'
 
-const twinApp = new OpenAPIHono()
+const twinApp = new OpenAPIHono<AppEnv>()
 
 const profListRoute = createRoute({
   method: 'get',
@@ -55,7 +56,7 @@ const profDetailRoute = createRoute({
 })
 twinApp.openapi(profDetailRoute, async (c) => {
   const config = getProfile(c.req.param('name'))
-  if (!config) return c.json({ error: 'Not found' }, 404 as any)
+  if (!config) return c.json({ error: 'Not found' }, 404)
   return c.json(config)
 })
 
@@ -86,7 +87,7 @@ const simDetailRoute = createRoute({
 })
 twinApp.openapi(simDetailRoute, async (c) => {
   const sim = getSimulation(c.req.param('id'))
-  if (!sim) return c.json({ error: 'Not found' }, 404 as any)
+  if (!sim) return c.json({ error: 'Not found' }, 404)
   return c.json(sim)
 })
 
@@ -120,8 +121,8 @@ twinApp.openapi(simCreateRoute, async (c) => {
     profileName: body.profile,
     name: body.name ?? body.profile,
   })
-  if (!sim) return c.json({ error: 'Failed to create simulation' }, 500 as any)
-  return c.json(sim, 201 as any)
+  if (!sim) return c.json({ error: 'Failed to create simulation' }, 500)
+  return c.json(sim, 201)
 })
 
 const simDeleteRoute = createRoute({
@@ -265,7 +266,7 @@ twinApp.openapi(simAddPatientRoute, async (c) => {
     (await db.select().from(patients).where(eq(patients.id, patientId)).limit(1))[0]?.name ??
     patientId
   await addPatient(db, c.req.param('id'), { id: patientId, name: patientName })
-  return c.json({ success: true }, 201 as any)
+  return c.json({ success: true }, 201)
 })
 
 const simRemovePatientRoute = createRoute({

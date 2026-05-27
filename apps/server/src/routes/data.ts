@@ -3,12 +3,13 @@ import { metricResponseSchema } from '@iomtea/shared-types'
 import { and, asc, desc, eq, gte, lte, sql } from 'drizzle-orm'
 import { db } from '../core/db'
 import { events } from '../core/db/schema'
+import type { AppEnv } from '../core/http/types'
 import { truncExpr, valueExpression } from '../core/pipeline/query-helpers'
 import { getMetricOrDefault, listMetrics } from '../core/pipeline/registry'
 import { jwtAuth } from '../middleware/auth'
 import { requirePermission } from '../middleware/rbac'
 
-const dataApp = new OpenAPIHono()
+const dataApp = new OpenAPIHono<AppEnv>()
 
 const metricsRoute = createRoute({
   method: 'get',
@@ -48,8 +49,8 @@ const rawRoute = createRoute({
       fieldPath: z.string().optional(),
       from: z.string().datetime(),
       to: z.string().datetime().optional(),
-      limit: z.coerce.number().min(1).max(10000).default(200),
-      offset: z.coerce.number().min(0).default(0),
+      page: z.coerce.number().min(1).default(1),
+      pageSize: z.coerce.number().min(1).max(200).default(50),
     }),
   },
   responses: {
@@ -88,8 +89,8 @@ dataApp.openapi(rawRoute, async (c) => {
     .from(events)
     .where(and(...conditions))
     .orderBy(desc(events.recordedAt))
-    .limit(q.limit)
-    .offset(q.offset)
+    .limit(q.pageSize)
+    .offset((q.page - 1) * q.pageSize)
 
   return c.json({
     metric: q.metric,

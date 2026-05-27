@@ -3,9 +3,7 @@
 
   <block wx:if="{{!loading}}">
     <view class="credit-header">
-      <text class="credit-back" bind:tap="onBack">← 返回</text>
       <text class="credit-title">积分明细</text>
-      <view style="width:48rpx"></view>
     </view>
 
     <view class="credit-balance">

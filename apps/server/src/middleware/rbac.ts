@@ -1,9 +1,10 @@
 import { createMiddleware } from 'hono/factory'
+import type { AppEnv } from '../core/http/types'
 import { getEnforcer } from '../core/casbin/enforcer'
 
 export function requirePermission(obj: string, act: string) {
-  return createMiddleware(async (c, next) => {
-    const role = c.get('userRole') as string | undefined
+  return createMiddleware<AppEnv>(async (c, next) => {
+    const role = c.var.userRole
     if (!role) return c.json({ error: 'Forbidden', message: '缺少用户角色' }, 403)
     if (role === 'super_admin') return await next()
 

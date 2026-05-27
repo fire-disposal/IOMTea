@@ -1,19 +1,13 @@
-import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
+﻿import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
 import { and, desc, eq, sql } from 'drizzle-orm'
 import { db } from '../core/db'
 import { users } from '../core/db/schema'
 import { creditTransactions } from '../core/db/schema/plan'
+import type { AppEnv } from '../core/http/types'
 import { jwtAuth } from '../middleware/auth'
 import { requirePermission } from '../middleware/rbac'
 
-type Env = {
-  Variables: {
-    userId: string
-    userRole: string
-  }
-}
-
-const creditsApp = new OpenAPIHono<Env>()
+const creditsApp = new OpenAPIHono<AppEnv>()
 
 const balanceRoute = createRoute({
   method: 'get',
@@ -28,7 +22,7 @@ const balanceRoute = createRoute({
 })
 
 creditsApp.openapi(balanceRoute, async (c) => {
-  const uid = c.get('userId')
+  const uid = c.var.userId
   const [user] = await db
     .select({ credit: users.credit })
     .from(users)
@@ -78,7 +72,7 @@ creditsApp.openapi(earnRoute, async (c) => {
       .where(eq(users.id, body.userId))
   })
 
-  return c.json({ success: true }, 201 as any)
+  return c.json({ success: true }, 201)
 })
 
 const spendRoute = createRoute({
@@ -112,7 +106,7 @@ creditsApp.openapi(spendRoute, async (c) => {
     .where(eq(users.id, body.userId))
     .limit(1)
   if (!user || (user.credit ?? 0) < body.amount) {
-    return c.json({ error: 'Insufficient credits' }, 400 as any)
+    return c.json({ error: 'Insufficient credits' }, 400)
   }
 
   await db.transaction(async (tx) => {
@@ -131,7 +125,7 @@ creditsApp.openapi(spendRoute, async (c) => {
       .where(eq(users.id, body.userId))
   })
 
-  return c.json({ success: true }, 201 as any)
+  return c.json({ success: true }, 201)
 })
 
 const transactionsRoute = createRoute({

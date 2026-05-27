@@ -1,19 +1,13 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
-import { FormDefinitionSchema, FormFieldSchema } from '@iomtea/shared-types'
+import { FormDefinitionSchema } from '@iomtea/shared-types'
 import { and, eq } from 'drizzle-orm'
 import { db } from '../core/db'
 import { formDefinitions, formResponses } from '../core/db/schema/ema'
+import type { AppEnv } from '../core/http/types'
 import { jwtAuth } from '../middleware/auth'
 import { requirePermission } from '../middleware/rbac'
 
-type Env = {
-  Variables: {
-    userId: string
-    userRole: string
-  }
-}
-
-const emaApp = new OpenAPIHono<Env>()
+const emaApp = new OpenAPIHono<AppEnv>()
 
 const listFormsRoute = createRoute({
   method: 'get',
@@ -46,7 +40,7 @@ emaApp.openapi(createFormRoute, async (c) => {
       status: 'draft',
     })
     .returning()
-  return c.json(row, 201 as any)
+  return c.json(row, 201)
 })
 
 const getFormRoute = createRoute({
@@ -62,7 +56,7 @@ emaApp.openapi(getFormRoute, async (c) => {
     .from(formDefinitions)
     .where(eq(formDefinitions.code, code))
     .limit(1)
-  if (!form) return c.json({ error: 'Not found' }, 404 as any)
+  if (!form) return c.json({ error: 'Not found' }, 404)
   return c.json(form)
 })
 
@@ -88,7 +82,7 @@ emaApp.openapi(updateFormRoute, async (c) => {
     .set(updateData as any)
     .where(eq(formDefinitions.code, code))
     .returning()
-  if (!row) return c.json({ error: 'Not found' }, 404 as any)
+  if (!row) return c.json({ error: 'Not found' }, 404)
   return c.json(row)
 })
 
@@ -105,7 +99,7 @@ emaApp.openapi(publishFormRoute, async (c) => {
     .set({ status: 'published' } as any)
     .where(eq(formDefinitions.code, code))
     .returning()
-  if (!form) return c.json({ error: 'Not found' }, 404 as any)
+  if (!form) return c.json({ error: 'Not found' }, 404)
   return c.json({ success: true, form })
 })
 
@@ -122,7 +116,7 @@ emaApp.openapi(unpublishRoute, async (c) => {
     .set({ status: 'draft' } as any)
     .where(eq(formDefinitions.code, code))
     .returning()
-  if (!form) return c.json({ error: 'Not found' }, 404 as any)
+  if (!form) return c.json({ error: 'Not found' }, 404)
   return c.json({ success: true })
 })
 
@@ -147,14 +141,14 @@ const respondRoute = createRoute({
 emaApp.openapi(respondRoute, async (c) => {
   const code = c.req.param('code')
   const body = c.req.valid('json')
-  const userId = c.get('userId') as string
+  const userId = c.var.userId
 
   const [form] = await db
     .select()
     .from(formDefinitions)
     .where(eq(formDefinitions.code, code))
     .limit(1)
-  if (!form) return c.json({ error: 'Form not found' }, 404 as any)
+  if (!form) return c.json({ error: 'Form not found' }, 404)
 
   const [resp] = await db
     .insert(formResponses)
@@ -166,7 +160,7 @@ emaApp.openapi(respondRoute, async (c) => {
     })
     .returning()
 
-  return c.json(resp, 201 as any)
+  return c.json(resp, 201)
 })
 
 const listResponsesRoute = createRoute({
