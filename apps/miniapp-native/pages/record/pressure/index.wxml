@@ -1,0 +1,38 @@
+<view class="form-shell">
+  <view class="form-shell-header">
+    <text class="form-shell-back" bind:tap="onBack">‹ 返回</text>
+    <text class="form-shell-title">记录血压</text>
+    <view style="width:80rpx"></view>
+  </view>
+
+  <view class="form-shell-body">
+    <view class="pressure-grid">
+      <view class="pressure-field">
+        <input type="digit" class="form-number-input pressure-input" value="{{systolic}}" placeholder="120"
+          bindinput="onSystolicInput" />
+        <text class="pressure-label">收缩压</text>
+      </view>
+      <view class="pressure-field">
+        <input type="digit" class="form-number-input pressure-input" value="{{diastolic}}" placeholder="80"
+          bindinput="onDiastolicInput" />
+        <text class="pressure-label">舒张压</text>
+      </view>
+    </view>
+    <view class="pressure-hr">
+      <input type="digit" class="form-number-input pressure-input" value="{{heartRate}}" placeholder="72"
+        bindinput="onHeartRateInput" />
+      <text class="pressure-label">心率 (bpm)</text>
+    </view>
+  </view>
+
+  <view class="form-shell-footer">
+    <view wx:if="{{trendData.length}}" class="trend-bar">
+      <text class="trend-label">最近7天: </text>
+      <text wx:for="{{trendData}}" wx:key="date" class="trend-val">{{item.value}}</text>
+    </view>
+    <button class="save-btn {{saving ? 'save-btn--loading' : ''}} {{saved ? 'save-btn--saved' : ''}}"
+      bind:tap="handleSave" disabled="{{saving}}">
+      {{saving ? '保存中...' : saved ? '已保存' : '保存'}}
+    </button>
+  </view>
+</view>

@@ -1,0 +1,32 @@
+<view class="med-page">
+  <view class="med-header">
+    <text class="med-title">今日用药</text>
+  </view>
+  <scroll-view class="med-list" scroll-y>
+    <text wx:if="{{loading}}">加载中...</text>
+    <view wx:if="{{!loading && meds.length === 0}}" class="med-empty">
+      <text>暂无用药计划</text>
+      <text class="med-empty-hint">请通过 Web 端添加用药方案</text>
+    </view>
+    <view wx:for="{{meds}}" wx:key="id" wx:for-index="idx"
+      class="med-item {{item.taken ? 'med-item--taken' : ''}} {{item.skipped ? 'med-item--skipped' : ''}}">
+      <view class="med-info">
+        <text class="med-drug">{{item.drug}}</text>
+        <text class="med-dosage">{{item.dosage}}</text>
+        <text class="med-time">{{item.scheduled_time}}</text>
+      </view>
+      <view class="med-actions">
+        <block wx:if="{{!item.taken && !item.skipped}}">
+          <view class="med-btn med-btn--take" data-id="{{item.id}}" data-index="{{idx}}" bind:tap="handleTake">
+            <text>已服用</text>
+          </view>
+          <view class="med-btn med-btn--skip" data-id="{{item.id}}" data-index="{{idx}}" bind:tap="handleSkip">
+            <text>跳过</text>
+          </view>
+        </block>
+        <text wx:if="{{item.taken}}" class="med-status med-status--taken">已服用</text>
+        <text wx:if="{{item.skipped}}" class="med-status med-status--skipped">已跳过</text>
+      </view>
+    </view>
+  </scroll-view>
+</view>
