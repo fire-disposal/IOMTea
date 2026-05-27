@@ -1,50 +1,61 @@
 <view class="test-page">
-  <view class="test-header">
-    <text class="test-title">一笔画录入</text>
-    <text class="test-step">{{currentStep}}/{{totalSteps}}</text>
-  </view>
+  <text class="test-title">一笔填写</text>
+  <text class="test-hint">从左到右一笔画 · 左侧取消区 · 右侧提交区</text>
 
-  <!-- Progress bar -->
-  <view class="test-progress">
-    <view class="test-progress-bar" style="width:{{(currentStep/totalSteps)*100}}%"></view>
-  </view>
+  <view class="test-canvas"
+    bindtouchstart="onStart"
+    bindtouchmove="onMove"
+    bindtouchend="onEnd">
 
-  <!-- Drag zone -->
-  <view class="test-drag-zone"
-    bindtouchstart="onTouchStart"
-    bindtouchmove="onTouchMove"
-    bindtouchend="onTouchEnd">
-
-    <!-- Left: drag indicator + current value -->
-    <view class="test-left">
-      <text class="test-field-label">{{fields[currentStep-1].label}}</text>
-      <text class="test-field-value">{{currentValue || '—'}}</text>
-      <text class="test-drag-hint">{{touchActive ? '松手确认' : '← 向右拖动选择'}}</text>
+    <!-- Cancel zone (left edge) -->
+    <view class="test-zone test-zone--cancel {{inCancelZone ? 'test-zone--active' : ''}}">
+      <text>← 松手取消</text>
     </view>
 
-    <!-- Right: option column -->
-    <view class="test-options">
-      <view wx:for="{{currentOptions}}" wx:key="value" class="test-option {{item.value === highlighted ? 'test-option--active' : ''}} {{item.value === currentValue ? 'test-option--selected' : ''}}"
-        style="transform:translateY({{item.value === highlighted ? '-4rpx' : '0'}})">
-        <text class="test-option-label">{{item.label}}</text>
-        <text class="test-option-check">{{item.value === currentValue ? '✓' : ''}}</text>
+    <!-- Columns -->
+    <view class="test-columns">
+      <view wx:for="{{columns}}" wx:key="id" wx:for-item="col" wx:for-index="ci"
+        class="test-column {{col.active ? 'test-column--active' : ''}} {{col.done ? 'test-column--done' : ''}} {{col.revisiting ? 'test-column--revisit' : ''}}">
+        <text class="test-column-label">{{col.label}}</text>
+        <view wx:for="{{col.options}}" wx:key="value" wx:for-item="opt" wx:for-index="oi"
+          class="test-opt {{col.active && col.highlightIdx === oi ? 'test-opt--highlight' : ''}} {{col.selectedIdx === oi ? 'test-opt--picked' : ''}}">
+          <text class="test-opt-label">{{opt.label}}</text>
+          <text wx:if="{{col.selectedIdx === oi}}" class="test-opt-check">●</text>
+        </view>
       </view>
     </view>
-  </view>
 
-  <!-- Action buttons -->
-  <view class="test-actions">
-    <button wx:if="{{currentStep > 1}}" class="test-btn test-btn--back" bind:tap="onPrev">上一步</button>
-    <button class="test-btn test-btn--done" bind:tap="onDone" disabled="{{currentStep < totalSteps}}">完成</button>
-  </view>
-
-  <!-- Result summary -->
-  <view wx:if="{{done}}" class="test-result anim-fade-up">
-    <text class="test-result-title">填写结果</text>
-    <view wx:for="{{fields}}" wx:key="id" class="test-result-item">
-      <text class="test-result-label">{{item.label}}</text>
-      <text class="test-result-value">{{item.value}}</text>
+    <!-- Submit zone (right edge) -->
+    <view class="test-zone test-zone--submit {{inSubmitZone ? 'test-zone--active' : ''}}">
+      <text>松手提交 →</text>
     </view>
-    <button class="test-btn test-btn--reset" bind:tap="onReset">重新开始</button>
+
+    <!-- Path trace dots -->
+    <view wx:for="{{path}}" wx:key="i" class="test-dot"
+      style="left:{{item.x}}px;top:{{item.y}}px;opacity:{{item.opacity}}">
+    </view>
+  </view>
+
+  <!-- Info bar -->
+  <view class="test-info">
+    <text wx:if="{{inCancelZone}}" class="test-info-warn">松手将取消</text>
+    <text wx:elif="{{inSubmitZone}}" class="test-info-ok">松手提交全部选择</text>
+    <text wx:elif="{{activeColumn >= 0}}" class="test-info-normal">正在选择: {{columns[activeColumn].label}}</text>
+    <text wx:else class="test-info-dim">向右拖动开始</text>
+  </view>
+
+  <!-- Result -->
+  <view wx:if="{{done}}" class="test-result anim-fade-up">
+    <text class="test-result-title">✓ 提交成功</text>
+    <view wx:for="{{columns}}" wx:key="id" class="test-result-item">
+      <text class="test-result-label">{{item.label}}</text>
+      <text class="test-result-value">{{item.selectedLabel || '—'}}</text>
+    </view>
+    <button class="test-reset-btn" bind:tap="onReset">再来一次</button>
+  </view>
+
+  <view wx:if="{{cancelled}}" class="test-cancelled anim-fade-up">
+    <text class="test-cancelled-text">已取消</text>
+    <button class="test-reset-btn" bind:tap="onReset">重新开始</button>
   </view>
 </view>
