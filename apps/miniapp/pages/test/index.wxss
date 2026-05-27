@@ -1,58 +1,76 @@
 .test-page { height: 100vh; display: flex; flex-direction: column; background: var(--bg-page); overflow: hidden; }
 
-/* Top bar */
-.test-top { padding: 32rpx 32rpx 16rpx; text-align: center; }
-.test-field-name { font-size: 32rpx; font-weight: 700; color: var(--text-primary); display: block; margin-bottom: 12rpx; }
-.test-progress-dots { display: flex; justify-content: center; gap: 12rpx; margin-bottom: 8rpx; }
-.test-dot-indicator { width: 12rpx; height: 12rpx; border-radius: 50%; background: #e0e0e0; transition: all 0.3s; }
-.test-dot-indicator--done { background: var(--brand-500); }
-.test-dot-indicator--current { background: var(--brand-500); width: 16rpx; height: 16rpx; transform: scale(1.3); }
+.test-top { padding: 32rpx 32rpx 16rpx; text-align: center; flex-shrink: 0; }
+.test-form-label { font-size: 36rpx; font-weight: 700; color: var(--text-primary); display: block; margin-bottom: 6rpx; }
 .test-hint-text { font-size: 22rpx; color: var(--text-secondary); display: block; }
 
 /* Canvas */
-.test-canvas { position: relative; display: flex; flex: 1; min-height: 0; }
+.test-canvas { position: relative; display: flex; flex: 1; min-height: 0; border-top: 2rpx solid rgba(0,0,0,0.04); }
+
+/* Dwell progress bar */
+.test-dwell-bar {
+  position: absolute; top: -2rpx; left: 0; height: 3rpx;
+  background: var(--brand-500);
+  border-radius: 0 2rpx 2rpx 0;
+  opacity: 0; transition: opacity 0.15s;
+}
+.test-dwell-bar--on { opacity: 1; }
 
 /* Edge zones */
-.test-edge { width: 80rpx; display: flex; align-items: center; justify-content: center; writing-mode: vertical-rl; transition: background 0.2s, width 0.2s; flex-shrink: 0; }
+.test-edge { width: 80rpx; display: flex; flex-direction: column; align-items: center; justify-content: center; writing-mode: vertical-rl; transition: background 0.2s, width 0.2s; flex-shrink: 0; position: relative; }
 .test-edge--active { width: 120rpx; }
+.test-edge--active.test-edge--left { background: rgba(107,165,57,0.12); }
+.test-edge--active.test-edge--right { background: rgba(107,165,57,0.12); }
 .test-edge-text { font-size: 22rpx; color: #bbb; }
-.test-edge--active .test-edge-text { font-weight: 600; }
+.test-edge--active .test-edge-text { font-weight: 600; color: #666; }
 
-/* Center area */
-.test-center { flex: 1; display: flex; align-items: center; justify-content: center; }
+.test-dwell-ring {
+  position: absolute; inset: 8rpx; border-radius: 16rpx; border: 3rpx solid var(--brand-500);
+  animation: dwellPulse 1s linear forwards; pointer-events: none;
+}
+@keyframes dwellPulse {
+  0%   { border-width: 1rpx; opacity: 0.3; }
+  60%  { opacity: 0.8; }
+  100% { border-width: 5rpx; opacity: 1; transform: scale(0.94); }
+}
 
-/* Picker — horizontal option bar */
-.test-picker { display: flex; gap: 16rpx; padding: 0 16rpx; flex-wrap: wrap; justify-content: center; }
-.test-pick { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 140rpx; height: 120rpx; border-radius: 16rpx; background: var(--bg-card); transition: all 0.15s; position: relative; }
-.test-pick--hl { background: rgba(107,165,57,0.12); transform: scale(1.08); box-shadow: 0 4rpx 16rpx rgba(107,165,57,0.15); }
-.test-pick--locked { background: rgba(107,165,57,0.08); border: 2rpx solid var(--brand-500); }
-.test-pick-label { font-size: 28rpx; font-weight: 500; }
-.test-pick--hl .test-pick-label { color: var(--brand-500); font-weight: 700; }
-.test-pick-lock { position: absolute; top: 4rpx; right: 8rpx; font-size: 18rpx; color: var(--brand-500); }
+/* Columns row */
+.test-cols { flex: 1; display: flex; }
 
-/* Dial */
-.test-dial-wrap { display: flex; flex-direction: column; align-items: center; gap: 16rpx; height: 100%; padding: 16rpx 0; }
-.test-dial-zone-bar { display: flex; flex-direction: column; flex: 1; width: 80rpx; border-radius: 12rpx; overflow: hidden; }
+.test-col { flex: 1; display: flex; flex-direction: column; padding: 8rpx 12rpx; border-right: 1rpx solid rgba(0,0,0,0.03); transition: background 0.2s; }
+.test-col--active { background: rgba(107,165,57,0.04); }
+.test-col--done { background: rgba(107,165,57,0.02); }
+.test-col-label { text-align: center; font-size: 22rpx; color: var(--text-secondary); padding: 8rpx 0; margin-bottom: 4rpx; border-bottom: 1rpx solid #f0f0e8; flex-shrink: 0; }
+
+/* Picker column */
+.test-picker-col { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 4rpx; }
+.test-opt { display: flex; align-items: center; justify-content: space-between; padding: 16rpx 12rpx; border-radius: 10rpx; transition: all 0.1s; }
+.test-opt--hl { background: rgba(107,165,57,0.12); }
+.test-opt--locked { background: rgba(107,165,57,0.06); border: 1rpx solid var(--brand-500); }
+.test-opt-label { font-size: 26rpx; font-weight: 500; }
+.test-opt--hl .test-opt-label { color: var(--brand-500); font-weight: 700; }
+.test-opt-check { font-size: 20rpx; color: var(--brand-500); }
+
+/* Dial column */
+.test-dial-col { flex: 1; display: flex; align-items: center; gap: 12rpx; padding: 8rpx 0; }
+.test-dial-zone-bar { width: 40rpx; flex-shrink: 0; display: flex; flex-direction: column; flex: 1; border-radius: 8rpx; overflow: hidden; }
 .test-dial-zone-seg { flex: 1; transition: opacity 0.2s; }
-.test-dial-display { text-align: center; }
-.test-dial-val { font-size: 88rpx; font-weight: 700; color: var(--text-primary); display: block; transition: color 0.3s; }
+.test-dial-display { flex: 1; text-align: center; }
+.test-dial-val { font-size: 48rpx; font-weight: 700; color: var(--text-primary); display: block; transition: color 0.3s; }
 .test-dial-val--live { color: var(--brand-500); }
-.test-dial-unit { font-size: 26rpx; color: var(--text-secondary); display: block; }
-.test-dial-limits { display: flex; justify-content: space-between; width: 100%; padding: 0 32rpx; font-size: 22rpx; color: #ccc; }
+.test-dial-unit { font-size: 22rpx; color: var(--text-secondary); display: block; }
+.test-dial-limits { display: flex; justify-content: space-between; font-size: 18rpx; color: #ccc; padding: 0 4rpx; }
 
 /* Pointer */
-.test-pointer { position: fixed; width: 40rpx; height: 40rpx; border-radius: 50%; background: rgba(107,165,57,0.2); pointer-events: none; z-index: 999; }
+.test-pointer { position: fixed; width: 40rpx; height: 40rpx; border-radius: 50%; background: rgba(107,165,57,0.18); pointer-events: none; z-index: 999; }
 
 /* Trail */
 .test-trail-dot { position: absolute; border-radius: 50%; background: var(--brand-500); pointer-events: none; }
 
 /* Lock flash */
-.test-lock-flash { position: fixed; inset: 0; background: rgba(107,165,57,0.08); z-index: 99; pointer-events: none; }
+.test-lock-flash { position: fixed; inset: 0; background: rgba(107,165,57,0.06); z-index: 99; pointer-events: none; }
 
 /* Result */
-.test-result { padding: 32rpx; }
-.test-result-title { font-size: 36rpx; font-weight: 700; margin-bottom: 24rpx; }
-.test-result-row { display: flex; justify-content: space-between; padding: 24rpx; background: var(--bg-card); border-radius: 14rpx; margin-bottom: 12rpx; }
-.test-result-label { font-size: 28rpx; color: var(--text-secondary); }
-.test-result-value { font-size: 28rpx; font-weight: 600; color: var(--brand-500); }
+.test-result { padding: 32rpx; text-align: center; }
+.test-result-title { font-size: 40rpx; font-weight: 700; margin-bottom: 24rpx; }
 .test-reset-btn { width: 100%; background: var(--brand-500); color: #fff; border: none; border-radius: 14rpx; padding: 24rpx; font-size: 30rpx; font-weight: 600; text-align: center; margin-top: 24rpx; }
