@@ -58,7 +58,7 @@ Page({data:{},fi:0,cr:null,dt:null,cv:0,dwt:null,dwa:false,dws:0,cc:-1,pc:-1,loc
         if(z < this.cc){this.locked[z]=false;cf[z].done=false}else if(this.cc>=0&&this.cc<cf.length&&!this.locked[this.cc]){cf=this._lock(this.cc,cf)}
         if(this.cc>=0&&this.cc<cf.length)cf[this.cc].hlIdx=-1;this.pc=this.cc;this.cc=z}
       this.setData({ac:z});var f=cf[z];if(!f||!this.canAccess(z))return
-      if(f.type==='picker'){var idx=this._pick(z,t.pageY);if(idx>=0&&f.hlIdx!==idx){f.hlIdx=idx;f.selLabel=f.options[idx].l;this.setData({chainFields:cf})}}
+      if(f.type==='picker'){var idx=this._pick(z,t.pageY);if(idx>=0&&f.hlIdx!==idx){f.hlIdx=idx;f.selIdx=idx;f.selLabel=f.options[idx].l;this.setData({chainFields:cf})}}
       if(f.type==='dial')this._dm(t,z)}
     var tr=this.data.trail.slice();if(tr.length>50)tr.shift();tr.push({x:t.pageX-4,y:t.pageY-4,o:1,w:10});for(var i=0;i<tr.length-1;i++){tr[i].o=(i+1)/tr.length;tr[i].w=4+6*(i/tr.length)}
     this.setData({px:t.pageX-20,py:t.pageY-20,trail:tr})},
