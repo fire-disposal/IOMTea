@@ -41,9 +41,11 @@
         </view>
 
         <view wx:if="{{item.type === 'dial'}}" class="test-dial-col">
-          <view class="test-dial-zone-bar">
-            <view wx:for="{{dz}}" wx:key="name" class="test-dial-zone-seg"
-              style="opacity:{{ac === ci && daz === item.name ? 0.5 : 0.08}};background:{{item.c}}">
+          <view class="test-dial-zones">
+            <view wx:for="{{dz}}" wx:key="name" wx:for-index="zi"
+              class="test-dial-zone {{ac === ci && daz === item.name ? 'test-dial-zone--on' : ''}}"
+              style="background:{{item.c}};opacity:{{ac === ci && daz === item.name ? 0.35 : 0.06}}">
+              <text class="test-dial-zone-label {{ac === ci && daz === item.name ? 'test-dial-zone-label--on' : ''}}">{{item.name}}</text>
             </view>
           </view>
           <view class="test-dial-display">
