@@ -1,8 +1,6 @@
 <view class="plan-page">
   <view class="plan-header">
-    <text class="plan-back" bind:tap="onBack">← 返回</text>
     <text class="plan-title">我的健康计划</text>
-    <view style="width:48rpx"></view>
   </view>
 
   <view class="plan-list">

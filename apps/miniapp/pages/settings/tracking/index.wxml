@@ -1,6 +1,5 @@
 <view class="tracking-page">
   <view class="tracking-header">
-    <text class="tracking-back" bind:tap="onBack">← 返回</text>
     <text class="tracking-title">记录项目设置</text>
   </view>
   <view wx:for="{{modules}}" wx:key="key" class="tracking-item">

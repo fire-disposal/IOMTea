@@ -1,8 +1,6 @@
 <view class="plan-detail">
   <view class="plan-detail-header">
-    <text class="plan-detail-back" bind:tap="onBack">← 返回</text>
     <text class="plan-detail-title">{{meta.label}} · 提醒设置</text>
-    <view style="width:48rpx"></view>
   </view>
 
   <view class="plan-detail-section">

@@ -1,8 +1,6 @@
 <view class="records-page">
   <view class="records-header">
-    <text class="records-back" bind:tap="onBack">← 返回</text>
     <text class="records-title">{{label}}历史</text>
-    <view style="width:48rpx"></view>
   </view>
 
   <view wx:if="{{loading}}" class="records-skeleton">

@@ -1,6 +1,5 @@
 <view class="goals-page">
   <view class="goals-header">
-    <text class="goals-back" bind:tap="onBack">← 返回</text>
     <text class="goals-title">健康目标</text>
   </view>
 
