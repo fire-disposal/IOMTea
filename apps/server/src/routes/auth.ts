@@ -9,8 +9,10 @@ import { hashToken, signAccessToken, signRefreshToken, verifyToken } from '../co
 import { hashPassword, verifyPassword } from '../core/lib/password'
 import { code2session } from '../core/lib/wechat'
 import { rateLimit } from '../middleware/rate-limit'
+import { createChildLogger } from '../core/lib/logger'
 
 const auth = new OpenAPIHono()
+const logger = createChildLogger('auth')
 
 const loginFailures = new Map<string, { count: number; lastAttempt: number }>()
 
@@ -230,6 +232,7 @@ auth.openapi(refreshRoute, async (c) => {
 const wechatLoginRoute = createRoute({
   method: 'post',
   path: '/wechat-login',
+  middleware: [rateLimit(20, 60000)] as const,
   request: {
     body: { content: { 'application/json': { schema: z.object({ code: z.string().min(1) }) } } },
   },
@@ -311,7 +314,9 @@ auth.openapi(logoutRoute, async (c) => {
   try {
     const hash = await hashToken(refreshToken)
     await db.delete(refreshTokens).where(eq(refreshTokens.tokenHash, hash))
-  } catch {}
+  } catch (err) {
+    logger.warn({ err }, 'logout token delete failed')
+  }
   return c.json({ success: true })
 })
 

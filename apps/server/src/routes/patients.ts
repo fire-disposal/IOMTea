@@ -188,11 +188,14 @@ const deletePatRoute = createRoute({
   middleware: [jwtAuth, requirePermission('/patients', 'delete')] as const,
   responses: {
     200: { content: { 'application/json': { schema: successSchema } }, description: 'Deleted' },
+    404: { description: 'Not found' },
   },
 })
 
 patientsApp.openapi(deletePatRoute, async (c) => {
   const id = c.req.param('id')
+  const [existing] = await db.select({ id: patients.id }).from(patients).where(eq(patients.id, id)).limit(1)
+  if (!existing) return c.json({ error: 'Not found' }, 404 as any)
   await db.delete(patients).where(eq(patients.id, id))
   return c.json({ success: true })
 })

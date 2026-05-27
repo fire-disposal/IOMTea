@@ -66,6 +66,7 @@ export type EventKind =
   | 'location'
   | 'ema_response'
   | 'batch_record'
+  | 'plan_earn'
 
 export type UserStatus = 'active' | 'disabled' | 'pending'
 export type Gender = 'male' | 'female' | 'other'
