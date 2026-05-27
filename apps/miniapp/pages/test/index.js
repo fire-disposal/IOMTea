@@ -4,7 +4,7 @@ var SPEED=[{name:'fastUp',f:0,t:0.2,s:4,c:'#2E7D32'},{name:'slowUp',f:0.2,t:0.4,
 function mf(f){return{id:f.id,label:f.label,type:f.type,options:f.options,def:f.def,min:f.min,max:f.max,unit:f.unit,step:f.step,dec:f.dec,ranges:f.ranges,selIdx:f.selIdx||-1,selLabel:f.selLabel||'',hlIdx:-1,done:false}}
 
 Page({data:{},fi:0,cr:null,dt:null,cv:0,dwt:null,dwa:false,dws:0,cc:-1,pc:-1,
-  onLoad(){var s=this;wx.createSelectorQuery().select('.test-canvas').boundingClientRect().exec(function(r){if(r[0])s.cr=r[0]});this._lf(0)},
+  onLoad(){var s=this;wx.createSelectorQuery().select('.test-canvas').boundingClientRect().exec(function(r){if(r[0])s.cr=r[0]});this._pxr=wx.getSystemInfoSync().screenWidth/750;this._lf(0)},
 
   _lf(idx,kp){if(idx>=FORMS.length){this.setData({ad:true,pv:false});return}
     this._sd();this._sdia();this.cc=-1;this.pc=-1;this.fi=idx
@@ -17,13 +17,13 @@ Page({data:{},fi:0,cr:null,dt:null,cv:0,dwt:null,dwa:false,dws:0,cc:-1,pc:-1,
   },
 
   /** Query rects for hit-testing */
-  _qr(){var s=this;wx.createSelectorQuery().selectAll('.test-col').boundingClientRect().exec(function(r){if(r[0])s.colsRects=r[0]});wx.createSelectorQuery().selectAll('.test-opt').boundingClientRect().exec(function(r){if(r[0])s.optRects=r[0];s._uc()})},
+  _qr(){var s=this;wx.createSelectorQuery().selectAll('.test-col').boundingClientRect().exec(function(r){if(r[0]){s.colsRects=r[0];s._uc()}})},
 
   /** Find option index by finger Y within column ci */
-  _pick(ci,y){var or=this.optRects,cf=this.data.chainFields;if(!or||!cf||!cf[ci])return-1;var n=cf[ci].options.length;if(!n)return-1;var start=0;for(var j=0;j<ci;j++){if(cf[j]&&cf[j].options)start+=cf[j].options.length}var best=-1,bestD=9999;for(var i=start;i<Math.min(start+n,or.length);i++){var d=Math.abs(y-(or[i].top+or[i].height/2));if(d<bestD){bestD=d;best=i}}if(best<0)return-1;return best-start},
+  _pick(ci,y){var cs=this.colsRects,cf=this.data.chainFields;if(!cs||!cs[ci]||!cf||!cf[ci])return-1;var n=cf[ci].options.length;if(!n)return-1;var cr=cs[ci];var labelPx=Math.round(48*this._pxr);var av=cr.height-labelPx-12;var ph=Math.max(20,av/n);var idx=Math.floor((y-cr.top-labelPx-12)/ph);if(idx<0)idx=0;if(idx>=n)idx=n-1;return idx},
 
   /** Connector lines between locked options */
-  _uc(){var crs=this.colsRects,cf=this.data.chainFields,or=this.optRects;if(!crs||!cf||!or)return;var cons=[];for(var i=0;i<cf.length-1;i++){if(cf[i].done&&cf[i+1].done&&cf[i].selIdx>=0&&cf[i+1].selIdx>=0){var si1=0;for(var j=0;j<i;j++){if(cf[j]&&cf[j].options)si1+=cf[j].options.length};var si2=si1+cf[i].options.length;var idx1=si1+cf[i].selIdx,idx2=si2+cf[i+1].selIdx;if(or[idx1]&&or[idx2]){var y1=or[idx1].top+or[idx1].height/2;var y2=or[idx2].top+or[idx2].height/2;var midY=(y1+y2)/2;var x1=or[idx1].left+or[idx1].width;var x2=or[idx2].left;cons.push({x1:x1,y:midY,w:x2-x1})}}}this.setData({connectors:cons})},
+  _uc(){var cs=this.colsRects,cf=this.data.chainFields;if(!cs||!cf)return;var labelPx=Math.round(48*this._pxr);var cons=[];for(var i=0;i<cf.length-1;i++){if(cf[i].done&&cf[i+1].done&&cs[i]&&cs[i+1]&&cf[i].selIdx>=0&&cf[i+1].selIdx>=0){var av1=cs[i].height-labelPx-12,av2=cs[i+1].height-labelPx-12;var n1=cf[i].options.length,n2=cf[i+1].options.length;var ph1=Math.max(20,av1/n1),ph2=Math.max(20,av2/n2);var y1=cs[i].top+labelPx+12+(cf[i].selIdx+0.5)*ph1;var y2=cs[i+1].top+labelPx+12+(cf[i+1].selIdx+0.5)*ph2;var midY=(y1+y2)/2;cons.push({x1:cs[i].left+cs[i].width,y:midY,w:cs[i+1].left-(cs[i].left+cs[i].width)})}}this.setData({connectors:cons})},
 
   onMetricTap(e){var idx=Number(e.currentTarget.dataset.idx);if(isNaN(idx))return;var m=this.data.metric;m.selIdx=idx;m.selLabel=m.options[idx].l;var mk=m.options[idx].v;var cf=this.data.chainFields.slice();for(var i=0;i<cf.length;i++){if(cf[i].type==='dial'&&cf[i].ranges&&cf[i].ranges[mk]){var r=cf[i].ranges[mk];cf[i].min=r.min;cf[i].max=r.max;cf[i].unit=r.unit;cf[i].step=r.step;cf[i].dec=r.dec}}wx.vibrateShort({type:'light'});this.setData({metric:m,chainFields:cf})},
 

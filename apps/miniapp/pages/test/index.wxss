@@ -56,13 +56,17 @@
 .test-col-label { text-align: center; font-size: 22rpx; color: var(--text-secondary); padding: 8rpx 0; margin-bottom: 4rpx; border-bottom: 1rpx solid #f0f0e8; flex-shrink: 0; }
 
 /* Picker column */
-.test-picker-col { flex: 1; display: flex; flex-direction: column; padding-top: 12rpx; }
-.test-opt { display: flex; align-items: center; justify-content: space-between; padding: 16rpx 12rpx; border-radius: 10rpx; transition: all 0.1s; }
-.test-opt--hl { background: rgba(107,165,57,0.15); transform: scale(1.03); box-shadow: inset 4rpx 0 0 var(--brand-500); }
-.test-opt--locked { background: rgba(107,165,57,0.06); border: 1rpx solid var(--brand-500); }
-.test-opt-label { font-size: 26rpx; font-weight: 500; }
+.test-picker-col { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.test-opt { flex: 1; display: flex; align-items: center; justify-content: center; border-radius: 10rpx; transition: all 0.15s; margin: 2rpx 8rpx; gap: 6rpx; position: relative; }
+.test-opt--hl { background: rgba(107,165,57,0.12); transform: scale(1.02); box-shadow: inset 4rpx 0 0 var(--brand-500); }
+.test-opt--active { background: rgba(107,165,57,0.18); transform: scale(1.04); box-shadow: inset 4rpx 0 0 var(--brand-500), 0 0 20rpx rgba(107,165,57,0.15); }
+.test-opt--locked { background: rgba(107,165,57,0.08); border: 1rpx solid var(--brand-500); }
+.test-opt-label { font-size: 26rpx; font-weight: 500; z-index: 1; }
 .test-opt--hl .test-opt-label { color: var(--brand-500); font-weight: 700; }
-.test-opt-check { font-size: 20rpx; color: var(--brand-500); }
+.test-opt-check { font-size: 20rpx; color: var(--brand-500); z-index: 1; }
+.test-opt-divider { position: absolute; bottom: -3rpx; left: 12rpx; right: 12rpx; height: 1rpx; background: rgba(0,0,0,0.05); pointer-events: none; }
+.animate-glow { animation: glowPulse 2s ease-in-out infinite; }
+@keyframes glowPulse { 0%,100% { box-shadow: 0 0 8rpx rgba(107,165,57,0.1); } 50% { box-shadow: 0 0 24rpx rgba(107,165,57,0.25); } }
 
 /* Dial column */
 .test-dial-col { flex: 1; display: flex; align-items: center; gap: 12rpx; padding: 8rpx 0; }
