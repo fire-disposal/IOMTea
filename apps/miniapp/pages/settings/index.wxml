@@ -1,9 +1,18 @@
 <view class="page">
-  <view class="form-group">
-    <text class="label">服务器地址</text>
-    <input value="{{serverUrl}}" bindinput="onUrlInput" placeholder="http://localhost:3000" />
-  </view>
-  <button class="btn" bind:tap="save">保存</button>
-  <button class="btn" bind:tap="testConn">测试连接</button>
-  <button class="btn btn-logout" bind:tap="logout">退出登录</button>
+  <mp-cells title="服务器设置">
+    <mp-cell>
+      <view slot="body">
+        <input class="settings-input" placeholder="http://..." value="{{serverUrl}}" bindinput="onUrlInput" />
+      </view>
+    </mp-cell>
+  </mp-cells>
+
+  <mp-cells>
+    <mp-cell title="测试连接" bind:tap="testConn"></mp-cell>
+    <mp-cell title="保存" bind:tap="save"></mp-cell>
+  </mp-cells>
+
+  <mp-cells>
+    <mp-cell title="退出登录" class="cell-logout" bind:tap="logout"></mp-cell>
+  </mp-cells>
 </view>

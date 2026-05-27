@@ -4,6 +4,7 @@ const { STORAGE_KEYS } = require('../../constants/storage-keys')
 Page({
   data: {
     credit: 0,
+    loading: true,
     user: { displayName: null, username: '' },
     recordCount: 0,
   },
@@ -14,11 +15,16 @@ Page({
         if (me) {
           this.setData({
             credit: me.credit || 0,
+            loading: false,
             user: { displayName: me.displayName, username: me.username },
           })
+        } else {
+          this.setData({ loading: false })
         }
       })
-      .catch(() => {})
+      .catch(() => {
+        this.setData({ loading: false })
+      })
     const records = wx.getStorageSync(STORAGE_KEYS.RECORDS) || []
     this.setData({ recordCount: records.length })
   },

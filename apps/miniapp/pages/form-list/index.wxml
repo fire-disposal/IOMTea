@@ -1,9 +1,13 @@
 <view class="page">
-  <text class="title">健康量表</text>
-  <view wx:for="{{forms}}" wx:key="code" class="form-card" data-code="{{item.code}}" bind:tap="onFormTap">
-    <text class="form-card-title">{{item.title}}</text>
-    <text wx:if="{{item.description}}" class="form-card-desc">{{item.description}}</text>
-    <text class="form-card-meta">{{item.fields ? item.fields.length : 0}} 个问题</text>
+  <mp-loading type="circle" show="{{loading}}"></mp-loading>
+
+  <view wx:if="{{!loading}}">
+    <text class="title">健康量表</text>
+    <view wx:for="{{forms}}" wx:key="code" class="form-card" data-code="{{item.code}}" bind:tap="onFormTap">
+      <text class="form-card-title">{{item.title}}</text>
+      <text wx:if="{{item.description}}" class="form-card-desc">{{item.description}}</text>
+      <text class="form-card-meta">{{item.fields ? item.fields.length : 0}} 个问题</text>
+    </view>
+    <text wx:if="{{forms.length === 0}}" class="empty">暂无可用量表</text>
   </view>
-  <text wx:if="{{forms.length === 0}}" class="empty">暂无可用量表</text>
 </view>

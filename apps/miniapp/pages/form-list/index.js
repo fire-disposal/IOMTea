@@ -3,15 +3,18 @@ const { api } = require('../../utils/api')
 Page({
   data: {
     forms: [],
+    loading: true,
   },
 
   onLoad() {
     api.get('/forms')
       .then(function (r) {
         var forms = (r || []).filter(function (f) { return f.status === 'published' })
-        this.setData({ forms: forms })
+        this.setData({ forms: forms, loading: false })
       }.bind(this))
-      .catch(function () {})
+      .catch(function () {
+        this.setData({ loading: false })
+      }.bind(this))
   },
 
   onFormTap(e) {

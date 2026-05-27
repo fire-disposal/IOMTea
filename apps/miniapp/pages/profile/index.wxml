@@ -1,9 +1,11 @@
 <view class="profile-page">
-  <view class="profile-header">
+  <mp-loading type="circle" show="{{loading}}"></mp-loading>
+
+  <view wx:if="{{!loading}}" class="profile-header">
     <text class="profile-name">{{user.displayName || user.username}}</text>
   </view>
 
-  <view class="profile-stats">
+  <view wx:if="{{!loading}}" class="profile-stats">
     <view class="profile-stat" data-url="/pages/credit/index" bind:tap="onNavigate">
       <text class="profile-stat-num">{{credit}}</text>
       <text class="profile-stat-label">积分</text>
@@ -14,30 +16,19 @@
     </view>
   </view>
 
-  <view class="profile-menu">
-    <view class="profile-menu-item" data-url="/pages/credit/index" bind:tap="onNavigate">
-      <text>积分明细</text>
-    </view>
-    <view class="profile-menu-item" data-url="/pages/plan/index" bind:tap="onNavigate">
-      <text>健康计划</text>
-    </view>
-    <view class="profile-menu-item" data-url="/pages/alerts/index" bind:tap="onNavigate">
-      <text>告警中心</text>
-    </view>
-    <view class="profile-menu-item" data-url="/pages/settings/index" bind:tap="onNavigate">
-      <text>系统设置</text>
-    </view>
-    <view class="profile-menu-item" data-url="/pages/patient-select/index" bind:tap="onNavigate">
-      <text>切换患者</text>
-    </view>
-    <view class="profile-menu-item" data-url="/pages/pin-overview/index" bind:tap="onNavigate">
-      <text>设备连接</text>
-    </view>
-    <view class="profile-menu-item" bind:tap="handleSync">
-      <text>同步数据</text>
-    </view>
-    <view class="profile-menu-item" bind:tap="handleLogout">
-      <text style="color:#e03131">退出登录</text>
-    </view>
+  <view wx:if="{{!loading}}" class="profile-menu">
+    <mp-cells title="功能">
+      <mp-cell title="积分明细" link data-url="/pages/credit/index" bind:tap="onNavigate"></mp-cell>
+      <mp-cell title="健康计划" link data-url="/pages/plan/index" bind:tap="onNavigate"></mp-cell>
+      <mp-cell title="告警中心" link data-url="/pages/alerts/index" bind:tap="onNavigate"></mp-cell>
+      <mp-cell title="系统设置" link data-url="/pages/settings/index" bind:tap="onNavigate"></mp-cell>
+      <mp-cell title="切换患者" link data-url="/pages/patient-select/index" bind:tap="onNavigate"></mp-cell>
+      <mp-cell title="设备连接" link data-url="/pages/pin-overview/index" bind:tap="onNavigate"></mp-cell>
+    </mp-cells>
+
+    <mp-cells>
+      <mp-cell title="同步数据" bind:tap="handleSync"></mp-cell>
+      <mp-cell title="退出登录" class="cell-logout" bind:tap="handleLogout"></mp-cell>
+    </mp-cells>
   </view>
 </view>

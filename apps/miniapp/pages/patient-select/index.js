@@ -4,15 +4,18 @@ Page({
   data: {
     patients: [],
     currentId: '',
+    loading: true,
   },
 
   onLoad() {
     this.setData({ currentId: wx.getStorageSync('patient_id') || '' })
     api.get('/patients/mine')
       .then(function (patients) {
-        this.setData({ patients: patients || [] })
+        this.setData({ patients: patients || [], loading: false })
       }.bind(this))
-      .catch(function () {})
+      .catch(function () {
+        this.setData({ loading: false })
+      }.bind(this))
   },
 
   onSelect(e) {

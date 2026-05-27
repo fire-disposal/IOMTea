@@ -1,32 +1,36 @@
 <view class="credit-page">
-  <view class="credit-header">
-    <text class="credit-back" bind:tap="onBack">← 返回</text>
-    <text class="credit-title">积分明细</text>
-    <view style="width:48rpx"></view>
-  </view>
+  <mp-loading type="circle" show="{{loading}}"></mp-loading>
 
-  <view class="credit-balance">
-    <text class="credit-balance-icon">🪙</text>
-    <text class="credit-balance-num">{{balance}}</text>
-  </view>
+  <block wx:if="{{!loading}}">
+    <view class="credit-header">
+      <text class="credit-back" bind:tap="onBack">← 返回</text>
+      <text class="credit-title">积分明细</text>
+      <view style="width:48rpx"></view>
+    </view>
 
-  <scroll-view class="credit-list" scroll-y>
-    <view wx:for="{{transactions}}" wx:key="id" class="credit-tx">
-      <view class="credit-tx-left">
-        <text class="credit-tx-icon">{{item.moduleKey ? (HEALTH_MODULE_META[item.moduleKey] ? HEALTH_MODULE_META[item.moduleKey].icon : '🎁') : '🎁'}}</text>
-        <view class="credit-tx-info">
-          <text class="credit-tx-label">{{item.moduleKey ? (HEALTH_MODULE_META[item.moduleKey] ? HEALTH_MODULE_META[item.moduleKey].label : item.moduleKey) : '系统'}}</text>
-          <text class="credit-tx-date">
-            {{item.createdAt ? item.createdAt.slice(0, 10) : ''}}
-            {{item.streakDay ? ' · 连击 Day ' + item.streakDay : ''}}
-          </text>
+    <view class="credit-balance">
+      <text class="credit-balance-icon">🪙</text>
+      <text class="credit-balance-num">{{balance}}</text>
+    </view>
+
+    <scroll-view class="credit-list" scroll-y>
+      <view wx:for="{{transactions}}" wx:key="id" class="credit-tx">
+        <view class="credit-tx-left">
+          <text class="credit-tx-icon">{{item.moduleKey ? (HEALTH_MODULE_META[item.moduleKey] ? HEALTH_MODULE_META[item.moduleKey].icon : '🎁') : '🎁'}}</text>
+          <view class="credit-tx-info">
+            <text class="credit-tx-label">{{item.moduleKey ? (HEALTH_MODULE_META[item.moduleKey] ? HEALTH_MODULE_META[item.moduleKey].label : item.moduleKey) : '系统'}}</text>
+            <text class="credit-tx-date">
+              {{item.createdAt ? item.createdAt.slice(0, 10) : ''}}
+              {{item.streakDay ? ' · 连击 Day ' + item.streakDay : ''}}
+            </text>
+          </view>
         </view>
+        <text class="credit-tx-amount">+{{item.amount}}</text>
       </view>
-      <text class="credit-tx-amount">+{{item.amount}}</text>
-    </view>
 
-    <view wx:if="{{transactions.length === 0}}" class="credit-empty">
-      <text>暂无积分记录</text>
-    </view>
-  </scroll-view>
+      <view wx:if="{{transactions.length === 0}}" class="credit-empty">
+        <text>暂无积分记录</text>
+      </view>
+    </scroll-view>
+  </block>
 </view>

@@ -1,11 +1,15 @@
 <view class="page">
-  <text class="title">选择患者</text>
-  <view wx:for="{{patients}}" wx:key="id"
-    class="patient-item {{item.id === currentId ? 'patient-item--active' : ''}}"
-    data-id="{{item.id}}" bind:tap="onSelect">
-    <text class="patient-name">{{item.name}}</text>
-    <text class="patient-status">{{item.status}}</text>
-    <text wx:if="{{item.id === currentId}}" class="current-badge">当前</text>
+  <mp-loading type="circle" show="{{loading}}"></mp-loading>
+
+  <view wx:if="{{!loading}}">
+    <text class="title">选择患者</text>
+    <view wx:for="{{patients}}" wx:key="id"
+      class="patient-item {{item.id === currentId ? 'patient-item--active' : ''}}"
+      data-id="{{item.id}}" bind:tap="onSelect">
+      <text class="patient-name">{{item.name}}</text>
+      <text class="patient-status">{{item.status}}</text>
+      <text wx:if="{{item.id === currentId}}" class="current-badge">当前</text>
+    </view>
+    <text wx:if="{{patients.length === 0}}" class="empty">暂无患者数据</text>
   </view>
-  <text wx:if="{{patients.length === 0}}" class="empty">暂无患者数据</text>
 </view>
