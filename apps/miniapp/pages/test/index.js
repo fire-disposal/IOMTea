@@ -349,6 +349,7 @@ Page({
     this.setData({ lza: false, rza: false })
 
     if (z !== this.cc) {
+      if (z < this.cc) return  // backward: ignore entirely, stay at current column
       this._stopDial()
       if (this.cc >= 0) {
         this._lockColumn(this.cc)
