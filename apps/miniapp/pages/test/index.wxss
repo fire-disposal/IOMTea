@@ -95,11 +95,12 @@
 .test-result-title { font-size: 40rpx; font-weight: 700; margin-bottom: 24rpx; }
 .test-reset-btn { width: 100%; background: var(--brand-500); color: #fff; border: none; border-radius: 14rpx; padding: 24rpx; font-size: 30rpx; font-weight: 600; text-align: center; margin-top: 24rpx; }
 
-/* Step dots */
-.test-steps { display: flex; justify-content: center; gap: 32rpx; padding: 20rpx 0; flex-shrink: 0; }
-.test-step-dot { width: 10rpx; height: 10rpx; border-radius: 50%; background: #e0e0e0; transition: all 0.3s; }
-.test-step-dot--done { background: var(--brand-500); }
-.test-step-dot--cur { background: var(--brand-500); width: 16rpx; height: 16rpx; box-shadow: 0 0 8rpx rgba(107,165,57,0.4); }
+/* Selection preview row */
+.test-preview { display: flex; padding: 12rpx 80rpx; gap: 0; flex-shrink: 0; background: rgba(0,0,0,0.01); }
+.test-preview-col { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 4rpx 0; opacity: 0.35; transition: opacity 0.3s; }
+.test-preview-col--done { opacity: 1; }
+.test-preview-label { font-size: 18rpx; color: var(--text-secondary); }
+.test-preview-value { font-size: 22rpx; color: var(--brand-500); font-weight: 600; margin-top: 2rpx; }
 
 /* Chain bar */
 .test-chain { position: absolute; bottom: 0; left: 80rpx; right: 80rpx; height: 40rpx; display: flex; align-items: center; justify-content: center; gap: 0; pointer-events: none; }

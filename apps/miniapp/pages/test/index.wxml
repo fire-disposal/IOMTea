@@ -73,10 +73,13 @@
     <view wx:for="{{trail}}" wx:key="i" class="test-trail-dot" style="left:{{item.x}}px;top:{{item.y}}px;opacity:{{item.o}};width:{{item.w}}rpx;height:{{item.w}}rpx"></view>
   </view>
 
-  <!-- Progress indicator below canvas -->
-  <view class="test-steps">
+  <!-- Selection preview row -->
+  <view wx:if="{{!ad}}" class="test-preview">
     <view wx:for="{{chainFields}}" wx:key="id" wx:for-index="si"
-      class="test-step-dot {{item.done ? 'test-step-dot--done' : ''}} {{ac === si ? 'test-step-dot--cur' : ''}}"></view>
+      class="test-preview-col {{item.done ? 'test-preview-col--done' : ''}}">
+      <text class="test-preview-label">{{item.label}}</text>
+      <text class="test-preview-value">{{item.selLabel || '—'}}</text>
+    </view>
   </view>
 
   <view wx:if="{{lf}}" class="test-lock-flash"></view>
