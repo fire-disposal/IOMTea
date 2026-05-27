@@ -1,7 +1,9 @@
 <view class="login-page">
-  <view class="login-bg-circle login-bg-circle--1"></view>
-  <view class="login-bg-circle login-bg-circle--2"></view>
-  <view class="login-bg-circle login-bg-circle--3"></view>
+  <view class="login-bar login-bar--1"></view>
+  <view class="login-bar login-bar--2"></view>
+  <view class="login-bar login-bar--3"></view>
+  <view class="login-bar login-bar--4"></view>
+  <view class="login-bar login-bar--5"></view>
 
   <view class="login-content anim-fade-up">
     <view class="login-icon {{iconBounce ? 'login-icon--bounce' : ''}}" bind:tap="onIconTap">🍵</view>
