@@ -47,10 +47,10 @@
 .test-col--locked { }
 .test-col--gray { opacity: 0.45; pointer-events: none; }
 .test-col-bar { height: 6rpx; flex-shrink: 0; margin-bottom: 8rpx; border-radius: 0 0 4rpx 4rpx; transition: background 0.25s; }
-.test-col-bar--idle { background: #e0e0e0; }
-.test-col-bar--active { background: var(--brand-500); box-shadow: 0 0 10rpx rgba(107,165,57,0.3); }
-.test-col-bar--done { background: var(--brand-500); opacity: 0.9; }
-.test-col-bar--gray { background: #d0d0d0; opacity: 0.3; }
+.test-col-bar--idle { background: #E53935; opacity: 0.7; }
+.test-col-bar--active { background: #1E88E5; box-shadow: 0 0 10rpx rgba(30,136,229,0.3); }
+.test-col-bar--done { background: var(--brand-500); opacity: 1; }
+.test-col-bar--gray { background: #bdbdbd; opacity: 0.35; }
 .test-col-lock { text-align: center; font-size: 16rpx; color: var(--brand-500); padding-top: 6rpx; padding-bottom: 2rpx; }
 
 /* Dial settle animation */
