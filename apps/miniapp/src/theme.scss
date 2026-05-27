@@ -59,15 +59,31 @@ page {
 .anim-scale-in { animation: scaleIn 0.3s ease-out both; }
 .anim-pulse { animation: pulse 1.5s ease-in-out infinite; }
 
-// Stagger children
-.anim-stagger > *:nth-child(1) { animation-delay: 0ms; }
-.anim-stagger > *:nth-child(2) { animation-delay: 50ms; }
-.anim-stagger > *:nth-child(3) { animation-delay: 100ms; }
-.anim-stagger > *:nth-child(4) { animation-delay: 150ms; }
-.anim-stagger > *:nth-child(5) { animation-delay: 200ms; }
-.anim-stagger > *:nth-child(6) { animation-delay: 250ms; }
-.anim-stagger > *:nth-child(7) { animation-delay: 300ms; }
-.anim-stagger > *:nth-child(8) { animation-delay: 350ms; }
+// Stagger children — use class-based to avoid WXSS * selector restriction
+.anim-stagger > .anim-fade-up:nth-child(1),
+.anim-stagger > .anim-slide-right:nth-child(1),
+.anim-stagger > .anim-scale-in:nth-child(1) { animation-delay: 0ms; }
+.anim-stagger > .anim-fade-up:nth-child(2),
+.anim-stagger > .anim-slide-right:nth-child(2),
+.anim-stagger > .anim-scale-in:nth-child(2) { animation-delay: 50ms; }
+.anim-stagger > .anim-fade-up:nth-child(3),
+.anim-stagger > .anim-slide-right:nth-child(3),
+.anim-stagger > .anim-scale-in:nth-child(3) { animation-delay: 100ms; }
+.anim-stagger > .anim-fade-up:nth-child(4),
+.anim-stagger > .anim-slide-right:nth-child(4),
+.anim-stagger > .anim-scale-in:nth-child(4) { animation-delay: 150ms; }
+.anim-stagger > .anim-fade-up:nth-child(5),
+.anim-stagger > .anim-slide-right:nth-child(5),
+.anim-stagger > .anim-scale-in:nth-child(5) { animation-delay: 200ms; }
+.anim-stagger > .anim-fade-up:nth-child(6),
+.anim-stagger > .anim-slide-right:nth-child(6),
+.anim-stagger > .anim-scale-in:nth-child(6) { animation-delay: 250ms; }
+.anim-stagger > .anim-fade-up:nth-child(7),
+.anim-stagger > .anim-slide-right:nth-child(7),
+.anim-stagger > .anim-scale-in:nth-child(7) { animation-delay: 300ms; }
+.anim-stagger > .anim-fade-up:nth-child(8),
+.anim-stagger > .anim-slide-right:nth-child(8),
+.anim-stagger > .anim-scale-in:nth-child(8) { animation-delay: 350ms; }
 
 @keyframes creditFloat {
   0%   { opacity: 1; transform: scale(0.5) translateY(0); }

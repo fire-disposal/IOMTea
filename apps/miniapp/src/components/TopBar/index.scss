@@ -1,63 +1,43 @@
 .top-bar {
-  position: relative;
-  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: var(--bg-card);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
 
-  &__bg {
-    position: absolute;
-    inset: 0;
-    height: 200px;
-    background: linear-gradient(160deg, var(--brand-500) 0%, #8EC15B 50%, #AAD184 100%);
-    border-radius: 0 0 40px 40px;
-    opacity: 0.12;
-  }
-
-  &__content {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 20px 20px 16px;
-  }
-
-  &__left {
+  &__main {
     display: flex;
     align-items: center;
     gap: 12px;
   }
 
   &__avatar {
-    width: 44px;
-    height: 44px;
+    width: 42px;
+    height: 42px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     flex-shrink: 0;
   }
 
   &__avatar-text {
     color: #fff;
-    font-size: 18px;
+    font-size: 17px;
     font-weight: 700;
     line-height: 1;
   }
 
-  &__greeting {
+  &__info {
     display: flex;
     flex-direction: column;
     gap: 2px;
   }
 
-  &__greeting-text {
-    font-size: 13px;
-    color: var(--text-secondary);
-    font-weight: 400;
-  }
-
   &__name {
-    font-size: 17px;
-    font-weight: 700;
+    font-size: 16px;
+    font-weight: 600;
     color: var(--text-primary);
   }
 
@@ -65,14 +45,14 @@
     display: flex;
     align-items: center;
     gap: 4px;
-    background: rgba(107, 165, 57, 0.08);
+    background: rgba(107, 165, 57, 0.06);
     padding: 6px 14px;
     border-radius: 20px;
-    transition: transform 0.2s;
-  }
+    transition: transform 0.15s;
 
-  &__credit:active {
-    transform: scale(0.95);
+    &:active {
+      transform: scale(0.95);
+    }
   }
 
   &__credit-num {
