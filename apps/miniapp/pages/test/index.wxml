@@ -29,9 +29,9 @@
         <text class="test-col-label">{{item.label}}</text>
 
         <view wx:if="{{item.type === 'picker'}}" class="test-picker-col">
-          <view wx:for="{{item.options}}" wx:key="v" wx:for-index="oi"
+          <view wx:for="{{item.options}}" wx:key="v" wx:for-index="oi" wx:for-item="opt"
             class="test-opt {{item.selIdx === oi ? 'test-opt--locked' : ''}}">
-            <text class="test-opt-label">{{item.l}}</text>
+            <text class="test-opt-label">{{opt.l}}</text>
             <text wx:if="{{item.selIdx === oi}}" class="test-opt-check">✓</text>
             <view wx:if="{{oi < item.options.length - 1}}" class="test-opt-divider"></view>
           </view>

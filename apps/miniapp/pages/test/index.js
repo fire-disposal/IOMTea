@@ -24,54 +24,14 @@ function initField(f){
 }
 
 Page({
-  data: {
-    dz: SPEED,
-    chain: [],
-    chainLinks: [],
-    trail: [],
-    connectors: [],
-    pv: false,
-    ad: false,
-  },
-
-  fi: 0,
-  cr: null,
-  _pxr: 1,
-  cc: -1,
-  pc: -1,
-  locked: [],
-  cv: 0,
-  dwa: false,
-  dws: 0,
-  dwt: null,
-  dt: null,
-  _dialSpeed: 0,
-  stroke: false,
-
-  onLoad() {
-    var s = this
-    wx.createSelectorQuery()
-      .select('.test-canvas')
-      .boundingClientRect()
-      .exec(function (r) { if (r[0]) s.cr = r[0] })
-    this._pxr = wx.getSystemInfoSync().screenWidth / 750
-    this._loadForm(0)
-  },
-
-  onUnload() {
-    this._stopDwell()
-    this._stopDial()
-    this.dwt = null
-    this.dt = null
-  },
-
-  
-  subIdx: 0,
-  currentMetric: null,
+  data: { dz: SPEED, trail: [], connectors: [], pv: false, ad: false },
+  fi: 0, cr: null, _pxr: 1, cc: -1, pc: -1, locked: [], cv: 0,
+  dwa: false, dws: 0, dwt: null, dt: null, _dialSpeed: 0,
+  subIdx: 0, currentMetric: null, _submitLock: false,
   
   _loadForm(subIdx, metricKey) {
     this._stopDwell(); this._stopDial()
-    this.cc = -1; this.pc = -1; this.subIdx = subIdx; this.locked = []; this.stroke = false
+    this.cc = -1; this.pc = -1; this.subIdx = subIdx; this.locked = []; this._submitLock = true
 
     var mk = metricKey || METRIC_KEYS[0]
     var meta = METRICS[mk]
@@ -325,14 +285,9 @@ Page({
   },
 
   onStart(e) {
+    this._submitLock = false
     var t = e.touches[0]
-    this.stroke = true
-    this.setData({
-      pv: true,
-      px: t.pageX - 20,
-      py: t.pageY - 20,
-      trail: [{ x: t.pageX - 4, y: t.pageY - 4, o: 1, w: 12 }],
-    })
+    this.setData({ pv: true, px: t.pageX - 20, py: t.pageY - 20, trail: [{ x: t.pageX - 4, y: t.pageY - 4, o: 1, w: 12 }] })
   },
 
   onMove(e) {
@@ -343,7 +298,7 @@ Page({
     var nx = (t.pageX - cr.left) / cr.width
     var z = this._resolveZone(nx)
     var cf = this.data.chainFields
-    if (!cf) return
+    if (!cf || this._submitLock) return
 
     var tr = this.data.trail.slice()
     if (tr.length > 50) tr.shift()
@@ -415,8 +370,6 @@ Page({
     var t = e.changedTouches[0]
     var cr = this.cr
     if (!cr) return
-
-    this.stroke = false
 
     var nx = (t.pageX - cr.left) / cr.width
     var z = this._resolveZone(nx)
