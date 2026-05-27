@@ -25,9 +25,9 @@
       <view wx:for="{{fields}}" wx:key="id" wx:for-index="ci"
         class="test-col {{activeCol === ci ? 'test-col--active' : ''}} {{item.done ? 'test-col--locked' : ''}}">
 
-        <!-- Lock indicator -->
-        <view wx:if="{{item.done}}" class="test-col-lock">◇</view>
-        <view wx:else class="test-col-dot {{activeCol === ci ? 'test-col-dot--live' : ''}}"></view>
+        <!-- Lock indicator — only for data columns, not metric selector -->
+        <view wx:if="{{item.done && item.id !== 'metric'}}" class="test-col-lock">◇</view>
+        <view wx:elif="{{item.id !== 'metric'}}" class="test-col-dot {{activeCol === ci ? 'test-col-dot--live' : ''}}"></view>
 
         <text class="test-col-label">{{item.label}}</text>
 

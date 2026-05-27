@@ -57,21 +57,22 @@ function makeFields(fdef) {
   })
 }
 
-/** Build chain data respecting current flow direction */
+/** Build chain data — only data columns (not metric selector) */
 function buildChain(fields, activeCol, odd) {
-  var nodes = [], links = []
+  // Filter to data columns only (exclude 'metric' id)
+  var chainFields = []
   for (var i = 0; i < fields.length; i++) {
-    var locked = fields[i].done
-    var active = (i === activeCol)
-    nodes.push({ locked: locked, active: active, label: locked ? fields[i].selLabel : '' })
-    if (i < fields.length - 1) {
-      // A link is "active" if the column before it is locked (chain has grown past this point)
-      var orderI = odd ? (fields.length - 1 - i) : i
-      var prevLocked = fields[orderI] ? fields[orderI].done : false
-      links.push({ active: prevLocked })
+    if (fields[i].id !== 'metric') chainFields.push(fields[i])
+  }
+  var nodes = [], links = []
+  for (var j = 0; j < chainFields.length; j++) {
+    var locked = chainFields[j].done
+    var active = (activeCol >= 0 && fields[activeCol] && fields[activeCol].id === chainFields[j].id)
+    nodes.push({ locked: locked, active: active, label: locked ? chainFields[j].selLabel : '' })
+    if (j < chainFields.length - 1) {
+      links.push({ active: locked })
     }
   }
-  // If R→L, reverse the visual order
   if (odd) { nodes.reverse(); links.reverse() }
   return { nodes: nodes, links: links }
 }
@@ -97,7 +98,8 @@ Page({
     for (var i = 0; i < fields.length; i++) {
       if (fields[i].type === 'dial' && fields[i].def !== undefined) {
         this.currentVal = fields[i].def
-        fields[i].selIdx = 1; fields[i].selLabel = String(fields[i].def.toFixed(fields[i].dec || 0)); fields[i].done = true
+        fields[i].selIdx = 1; fields[i].selLabel = String(fields[i].def.toFixed(fields[i].dec || 0))
+        // Don't pre-lock dial — user must interact to confirm
       }
     }
 
@@ -165,7 +167,7 @@ Page({
     var fields = makeFields(FORMS[this.formIdx].fields)
     for (var i = 0; i < fields.length; i++) {
       if (fields[i].type === 'dial' && fields[i].def !== undefined) {
-        fields[i].selIdx = 1; fields[i].selLabel = String(fields[i].def.toFixed(fields[i].dec || 0)); fields[i].done = true
+        fields[i].selIdx = 1; fields[i].selLabel = String(fields[i].def.toFixed(fields[i].dec || 0))
         this.currentVal = fields[i].def
       }
     }
