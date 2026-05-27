@@ -30,6 +30,8 @@ Page({data:{},fi:0,cr:null,dt:null,cv:0,dwt:null,dwa:false,dws:0,cc:-1,pc:-1,loc
     else if(f.type==='picker'&&f.hlIdx>=0){f.selIdx=f.hlIdx;f.selLabel=f.options[f.hlIdx].l;f.hlIdx=-1;f.done=true;wx.vibrateShort({type:'light'})}
     this.setData({chainFields:cf})},
 
+  canAccess(ci){if(ci===0)return true;return this.locked[0]===true},
+
   onMetricTap(e){var idx=Number(e.currentTarget.dataset.idx);if(isNaN(idx))return;var m=this.data.metric;m.selIdx=idx;m.selLabel=m.options[idx].l;var mk=m.options[idx].v;var cf=this.data.chainFields.slice();for(var i=0;i<cf.length;i++){if(cf[i].type==='dial'&&cf[i].ranges&&cf[i].ranges[mk]){var r=cf[i].ranges[mk];cf[i].min=r.min;cf[i].max=r.max;cf[i].unit=r.unit;var dec=Number(r.min)%1!==0||Number(r.max)%1!==0?1:0;this.cv=r.normal;cf[i].selLabel=String(r.normal.toFixed(dec))}}wx.vibrateShort({type:'light'});this.setData({metric:m,chainFields:cf})},
 
   _z(fx){var odd=this.fi%2===0,e=0.08,cf=this.data.chainFields,n=cf?cf.length:2;if(odd){if(fx>1-e)return'submit'}else{if(fx<e)return'submit'};if(odd){if(fx<e)return'guide'}else{if(fx>1-e)return'guide'};var ci=Math.floor((fx-e)/(1-2*e)*n);if(ci<0)ci=0;if(ci>=n)ci=n-1;return ci},
@@ -40,11 +42,11 @@ Page({data:{},fi:0,cr:null,dt:null,cv:0,dwt:null,dwa:false,dws:0,cc:-1,pc:-1,loc
   _od(){this.dwa=false;this.setData({dp:0,dbv:false});this._sf()},
   _sf(){this._sd();this._sdia();wx.vibrateShort({type:'heavy'});this.setData({lf:true,lza:false,rza:false,pv:true});var s=this;setTimeout(function(){s.setData({lf:false});s._lf(s.fi+1,true)},350)},
 
-  _dm(t,ci){if(this.locked[ci])return;var s=this;var crs=this.colsRects;if(crs&&crs[ci])this.dr=crs[ci];if(!this.dr)return;var frac=(t.pageY-this.dr.top)/this.dr.height;if(frac<0)frac=0;if(frac>1)frac=1;var zn=null;for(var i=0;i<SPEED.length;i++){if(frac>=SPEED[i].f&&frac<=SPEED[i].t){zn=SPEED[i];break}}if(!zn)return;this.setData({daz:zn.name,dlv:zn.s!==0});this._sdia();if(zn.s!==0){this.dt=setInterval(function(){s._dtk(zn.s)},100)}},
+  _dm(t,ci){if(!this.canAccess(ci)||this.locked[ci])return;var s=this;var crs=this.colsRects;if(crs&&crs[ci])this.dr=crs[ci];if(!this.dr)return;var frac=(t.pageY-this.dr.top)/this.dr.height;if(frac<0)frac=0;if(frac>1)frac=1;var zn=null;for(var i=0;i<SPEED.length;i++){if(frac>=SPEED[i].f&&frac<=SPEED[i].t){zn=SPEED[i];break}}if(!zn)return;this.setData({daz:zn.name,dlv:zn.s!==0});this._sdia();if(zn.s!==0){this.dt=setInterval(function(){s._dtk(zn.s)},100)}},
   _dtk(speed){var cf=this.data.chainFields.slice();var f=cf[this.data.ac];if(!f||!f.ranges)return;var rng=Object.values(f.ranges)[0];if(!rng)return;var range=rng.max-rng.min;var pct=speed*0.01;var inc=range*pct;if(!this.cv||isNaN(this.cv))this.cv=rng.normal;var v=Number(this.cv)+inc;if(v<f.min)v=f.min;if(v>f.max)v=f.max;var dec=Number(f.min)%1!==0||Number(f.max)%1!==0?1:0;this.cv=v;var disp=v.toFixed(dec);f.selIdx=1;f.selLabel=disp;this.setData({chainFields:cf,dv:disp})},
   _sdia(){if(this.dt){clearInterval(this.dt);this.dt=null}},
 
-  onStart(e){var t=e.touches[0];this.setData({pv:true,px:t.pageX-20,py:t.pageY-20,trail:[{x:t.pageX-4,y:t.pageY-4,o:1,w:12}]})},
+  onStart(e){this.locked=[];var t=e.touches[0];this.setData({pv:true,px:t.pageX-20,py:t.pageY-20,trail:[{x:t.pageX-4,y:t.pageY-4,o:1,w:12}]})},
   onMove(e){var t=e.touches[0],r=this.cr;if(!r)return;var z=this._z((t.pageX-r.left)/r.width),odd=this.fi%2===0;var cf=this.data.chainFields.slice();if(!cf)return
     if(z==='guide'){this._sd();this._sdia();this.setData({lza:odd,rza:!odd})}
     else if(z==='submit'){this._sdia();var as=cf.every(function(f){return f.selIdx>=0});if(as){this.setData({lza:!odd,rza:odd});if(!this.dwa)this._sda()}}
@@ -60,12 +62,10 @@ Page({data:{},fi:0,cr:null,dt:null,cv:0,dwt:null,dwa:false,dws:0,cc:-1,pc:-1,loc
     this.setData({px:t.pageX-20,py:t.pageY-20,trail:tr})},
 
   onEnd(e){var t=e.changedTouches[0],r=this.cr;if(!r)return;var z=this._z((t.pageX-r.left)/r.width),cf=this.data.chainFields.slice();if(!cf)return;this._sd();this._sdia()
-    if(z==='submit'&&cf.every(function(f){return f.selIdx>=0})){// Lock last column before submit
-      if(this.cc>=0&&this.cc<cf.length&&!this.locked[this.cc])this._lock(this.cc)
-      this._sf();return}
-    // Lock current column on release when hovering an option
+    if(z==='submit'&&cf.every(function(f){return f.selIdx>=0})){if(this.cc>=0&&this.cc<cf.length&&!this.locked[this.cc])this._lock(this.cc);this._sf();return}
     if(typeof z==='number'){var f=cf[z];if(f&&!this.locked[z]){if(f.type==='picker'&&f.hlIdx>=0){this._lock(z)}else if(f.type==='dial'){this._lock(z)}}}
-    this.setData({chainFields:cf,lza:false,rza:false,ac:-1,dlv:false,daz:''});this.cc=-1;this.pc=-1
-    this._uc()},
+    // Finger released: unlock all, clear picks, keep dial values
+    for(var i=0;i<cf.length;i++){if(cf[i].type==='picker'){cf[i].selIdx=-1;cf[i].selLabel='';cf[i].done=false;cf[i].hlIdx=-1}}
+    this.locked=[];this.setData({chainFields:cf,lza:false,rza:false,ac:-1,dlv:false,daz:''});this.cc=-1;this.pc=-1;this._uc()},
   reset(){this._sdia();this._sd();this.setData({pv:false,trail:[]});this._lf(0)},
 })
