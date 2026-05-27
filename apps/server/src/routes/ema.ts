@@ -5,6 +5,7 @@ import { HTTPException } from 'hono/http-exception'
 import { db } from '../core/db'
 import { formDefinitions, formResponses } from '../core/db/schema/ema'
 import type { AppEnv } from '../core/http/types'
+import { cronMatchesToday } from '../core/lib/cron'
 import { jwtAuth } from '../middleware/auth'
 import { requirePermission } from '../middleware/rbac'
 
@@ -13,8 +14,8 @@ const emaRouter = new OpenAPIHono<AppEnv>()
 const listFormsRoute = createRoute({
   method: 'get',
   path: '/',
-  tags: ['EMA'],
-  middleware: [jwtAuth, requirePermission('/ema', 'read')] as const,
+  tags: ['Forms'],
+  middleware: [jwtAuth, requirePermission('/forms', 'read')] as const,
   responses: { 200: { description: 'All form definitions' } },
 })
 emaRouter.openapi(listFormsRoute, async (c) => {
@@ -26,7 +27,7 @@ const createFormRoute = createRoute({
   method: 'post',
   path: '/',
   tags: ['EMA'],
-  middleware: [jwtAuth, requirePermission('/ema', 'write')] as const,
+  middleware: [jwtAuth, requirePermission('/forms', 'write')] as const,
   request: { body: { content: { 'application/json': { schema: FormDefinitionSchema } } } },
   responses: { 201: { description: 'Form created' } },
 })
@@ -50,7 +51,7 @@ const getFormRoute = createRoute({
   method: 'get',
   path: '/:code',
   tags: ['EMA'],
-  middleware: [jwtAuth, requirePermission('/ema', 'read')] as const,
+  middleware: [jwtAuth, requirePermission('/forms', 'read')] as const,
   responses: { 200: { description: 'Form definition' }, 404: { description: 'Not found' } },
 })
 emaRouter.openapi(getFormRoute, async (c) => {
@@ -68,7 +69,7 @@ const updateFormRoute = createRoute({
   method: 'patch',
   path: '/:code',
   tags: ['EMA'],
-  middleware: [jwtAuth, requirePermission('/ema', 'write')] as const,
+  middleware: [jwtAuth, requirePermission('/forms', 'write')] as const,
   request: {
     body: { content: { 'application/json': { schema: FormDefinitionSchema.partial() } } },
   },
@@ -95,7 +96,7 @@ const publishFormRoute = createRoute({
   method: 'post',
   path: '/:code/publish',
   tags: ['EMA'],
-  middleware: [jwtAuth, requirePermission('/ema', 'write')] as const,
+  middleware: [jwtAuth, requirePermission('/forms', 'write')] as const,
   responses: { 200: { description: 'Published' } },
 })
 emaRouter.openapi(publishFormRoute, async (c) => {
@@ -113,7 +114,7 @@ const unpublishRoute = createRoute({
   method: 'post',
   path: '/:code/unpublish',
   tags: ['EMA'],
-  middleware: [jwtAuth, requirePermission('/ema', 'write')] as const,
+  middleware: [jwtAuth, requirePermission('/forms', 'write')] as const,
   responses: { 200: { description: 'Unpublished' } },
 })
 emaRouter.openapi(unpublishRoute, async (c) => {
@@ -131,7 +132,7 @@ const respondRoute = createRoute({
   method: 'post',
   path: '/:code/respond',
   tags: ['EMA'],
-  middleware: [jwtAuth, requirePermission('/ema', 'read')] as const,
+  middleware: [jwtAuth, requirePermission('/forms', 'read')] as const,
   request: {
     body: {
       content: {
@@ -171,11 +172,30 @@ emaRouter.openapi(respondRoute, async (c) => {
   return c.json(resp, 201)
 })
 
+const deleteFormRoute = createRoute({
+  method: 'delete',
+  path: '/:code',
+  tags: ['Forms'],
+  middleware: [jwtAuth, requirePermission('/forms', 'write')] as const,
+  responses: { 200: { description: 'Deleted' }, 404: { description: 'Not found' } },
+})
+emaRouter.openapi(deleteFormRoute, async (c) => {
+  const code = c.req.param('code')
+  const [existing] = await db
+    .select({ id: formDefinitions.id })
+    .from(formDefinitions)
+    .where(eq(formDefinitions.code, code))
+    .limit(1)
+  if (!existing) throw new HTTPException(404)
+  await db.delete(formDefinitions).where(eq(formDefinitions.code, code))
+  return c.json({ success: true })
+})
+
 const listResponsesRoute = createRoute({
   method: 'get',
   path: '/:code/responses',
   tags: ['EMA'],
-  middleware: [jwtAuth, requirePermission('/ema', 'read')] as const,
+  middleware: [jwtAuth, requirePermission('/forms', 'read')] as const,
   request: { query: z.object({ patientId: z.string().uuid().optional() }) },
   responses: { 200: { description: 'Form responses' } },
 })
@@ -190,6 +210,32 @@ emaRouter.openapi(listResponsesRoute, async (c) => {
     .where(and(...conds))
     .orderBy(formResponses.submittedAt)
   return c.json(rows)
+})
+
+const todayFormsRoute = createRoute({
+  method: 'get',
+  path: '/today',
+  tags: ['Forms'],
+  middleware: [jwtAuth, requirePermission('/forms', 'read')] as const,
+  request: { query: z.object({ patientId: z.string().uuid() }) },
+  responses: { 200: { description: 'Today forms' } },
+})
+emaRouter.openapi(todayFormsRoute, async (c) => {
+  const { patientId } = c.req.valid('query')
+  const allForms = await db
+    .select()
+    .from(formDefinitions)
+    .where(eq(formDefinitions.status, 'published'))
+  const doneCodes = (
+    await db
+      .select({ formCode: formResponses.formCode })
+      .from(formResponses)
+      .where(eq(formResponses.patientId, patientId))
+  ).map((r) => r.formCode)
+  const pending = allForms.filter(
+    (f) => cronMatchesToday(f.cron) && !doneCodes.includes(f.code),
+  )
+  return c.json(pending)
 })
 
 export { emaRouter }

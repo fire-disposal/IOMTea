@@ -12,6 +12,7 @@ import { db } from '../core/db'
 import { events, users } from '../core/db/schema'
 import { creditTransactions, planCompletions, plans } from '../core/db/schema/plan'
 import type { AppEnv } from '../core/http/types'
+import { cronMatchesToday } from '../core/lib/cron'
 import { jwtAuth } from '../middleware/auth'
 import { requirePermission } from '../middleware/rbac'
 
@@ -97,7 +98,9 @@ plansRouter.openapi(todayRoute, async (c) => {
       .where(eq(planCompletions.patientId, patientId))
   ).map((r) => r.planId)
 
-  const pending = allPlans.filter((p) => !doneIds.includes(p.id))
+  const pending = allPlans.filter(
+    (p) => cronMatchesToday(p.cron) && !doneIds.includes(p.id),
+  )
   return c.json(pending)
 })
 

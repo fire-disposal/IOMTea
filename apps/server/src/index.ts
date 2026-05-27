@@ -106,7 +106,7 @@ app.route('/export', exportRouter)
 app.route('/twin', twinRouter)
 app.route('/plans', plansRouter)
 app.route('/credits', creditsRouter)
-app.route('/ema', emaRouter)
+app.route('/forms', emaRouter)
 
 // OpenAPI spec (auto-collects from all mounted OpenAPIHono sub-apps)
 app.doc('/openapi.json', {

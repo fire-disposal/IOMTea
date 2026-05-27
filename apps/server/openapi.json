@@ -3935,10 +3935,10 @@
         }
       }
     },
-    "/ema": {
+    "/forms": {
       "get": {
         "tags": [
-          "EMA"
+          "Forms"
         ],
         "responses": {
           "200": {
@@ -4244,7 +4244,7 @@
         }
       }
     },
-    "/ema/:code": {
+    "/forms/:code": {
       "get": {
         "tags": [
           "EMA"
@@ -4552,9 +4552,22 @@
             "description": "Not found"
           }
         }
+      },
+      "delete": {
+        "tags": [
+          "Forms"
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
       }
     },
-    "/ema/:code/publish": {
+    "/forms/:code/publish": {
       "post": {
         "tags": [
           "EMA"
@@ -4566,7 +4579,7 @@
         }
       }
     },
-    "/ema/:code/unpublish": {
+    "/forms/:code/unpublish": {
       "post": {
         "tags": [
           "EMA"
@@ -4578,7 +4591,7 @@
         }
       }
     },
-    "/ema/:code/respond": {
+    "/forms/:code/respond": {
       "post": {
         "tags": [
           "EMA"
@@ -4615,7 +4628,7 @@
         }
       }
     },
-    "/ema/:code/responses": {
+    "/forms/:code/responses": {
       "get": {
         "tags": [
           "EMA"
@@ -4634,6 +4647,29 @@
         "responses": {
           "200": {
             "description": "Form responses"
+          }
+        }
+      }
+    },
+    "/forms/today": {
+      "get": {
+        "tags": [
+          "Forms"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "patientId",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Today forms"
           }
         }
       }

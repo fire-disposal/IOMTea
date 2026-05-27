@@ -3,6 +3,7 @@ import {
   IconActivity,
   IconAlertTriangle,
   IconChartLine,
+  IconClipboardText,
   IconLink,
   IconSettings,
   IconUser,
@@ -78,7 +79,9 @@ export function PatientDetailShell() {
           ? 'users'
           : pathname.includes('/health-timeline')
             ? 'timeline'
-            : 'overview'
+            : pathname.includes('/forms')
+              ? 'forms'
+              : 'overview'
 
   if (pLoading || !patient) return <StateSkeleton lines={5} />
 
@@ -125,6 +128,7 @@ export function PatientDetailShell() {
             rules: `/patients/${pid}/alert-rules`,
             timeline: `/patients/${pid}/health-timeline`,
             users: `/patients/${pid}/users`,
+            forms: `/patients/${pid}/forms`,
           }
           navigate({ to: map[v] || `/patients/${pid}` })
         }}
@@ -146,9 +150,12 @@ export function PatientDetailShell() {
             时间线
           </Tabs.Tab>
           <Tabs.Tab value="users" leftSection={<IconLink size={14} />}>
-            关联用户
-          </Tabs.Tab>
-        </Tabs.List>
+             关联用户
+           </Tabs.Tab>
+           <Tabs.Tab value="forms" leftSection={<IconClipboardText size={14} />}>
+             健康表单
+           </Tabs.Tab>
+         </Tabs.List>
       </Tabs>
       {tab === 'overview' ? <PatientOverview patientId={pid} latest={mergedLatest} /> : <Outlet />}
     </Container>

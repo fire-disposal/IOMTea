@@ -27,7 +27,7 @@ Page({
   data: { dz: SPEED, trail: [], connectors: [], pv: false, ad: false, colGray: [] },
   fi: 0, cr: null, _pxr: 1, cc: -1, pc: -1, traversed: [],
   dwa: false, dws: 0, dwt: null, dt: null, _dialSpeed: 0,
-  subIdx: 0, currentMetric: null, _submitLock: false,
+  subIdx: 0, currentMetric: null, _submitLock: false, _dwellCD: 0,
 
   onLoad() {
     var s = this
@@ -88,6 +88,8 @@ Page({
       lf: false, stl: 0,
       pv: false, odd: odd, colGray: [],
     })
+    var s = this
+    setTimeout(function () { s._submitLock = false; s._dwellCD = Date.now() + 500 }, 50)
   },
 
   _resolveZone(nx) {
@@ -339,7 +341,7 @@ Page({
       var odd = this.subIdx % 2 === 0
       this.setData({ lza: !odd, rza: odd })
       var allDone = cf.every(function (f) { return f.selIdx >= 0 })
-      if (allDone && !this.dwa) {
+      if (allDone && !this.dwa && Date.now() > this._dwellCD) {
         this._startDwell()
       }
       return
