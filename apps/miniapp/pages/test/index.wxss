@@ -15,9 +15,9 @@
 
 /* Dwell progress bar */
 .test-dwell-bar {
-  position: absolute; top: -2rpx; left: 0; height: 3rpx;
-  background: var(--brand-500);
-  border-radius: 0 2rpx 2rpx 0;
+  position: absolute; top: 0; left: 0; height: 8rpx;
+  background: linear-gradient(90deg, var(--brand-500), #8EC15B);
+  border-radius: 0 4rpx 4rpx 0;
   opacity: 0; transition: opacity 0.15s;
 }
 .test-dwell-bar--on { opacity: 1; }
