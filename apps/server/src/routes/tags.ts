@@ -13,6 +13,7 @@ const tagsRouter = new OpenAPIHono<AppEnv>()
 const listRoute = createRoute({
   method: 'get',
   path: '/',
+  tags: ['Tags'],
   middleware: [jwtAuth, requirePermission('/tags', 'read')] as const,
   responses: {
     200: { content: { 'application/json': { schema: tagListSchema } }, description: 'Tag list' },
@@ -27,6 +28,7 @@ tagsRouter.openapi(listRoute, async (c) => {
 const createTagRoute = createRoute({
   method: 'post',
   path: '/',
+  tags: ['Tags'],
   middleware: [jwtAuth, requirePermission('/tags', 'write')] as const,
   request: {
     body: {
@@ -57,6 +59,7 @@ tagsRouter.openapi(createTagRoute, async (c) => {
 const deleteTagRoute = createRoute({
   method: 'delete',
   path: '/:id',
+  tags: ['Tags'],
   middleware: [jwtAuth, requirePermission('/tags', 'write')] as const,
   responses: {
     200: { content: { 'application/json': { schema: successSchema } }, description: 'Deleted' },
@@ -75,6 +78,7 @@ tagsRouter.openapi(deleteTagRoute, async (c) => {
 const getTagRoute = createRoute({
   method: 'get',
   path: '/:id',
+  tags: ['Tags'],
   middleware: [jwtAuth, requirePermission('/tags', 'read')] as const,
   responses: { 200: { description: 'Tag detail' }, 404: { description: 'Not found' } },
 })
@@ -89,6 +93,7 @@ tagsRouter.openapi(getTagRoute, async (c) => {
 const updateTagRoute = createRoute({
   method: 'patch',
   path: '/:id',
+  tags: ['Tags'],
   middleware: [jwtAuth, requirePermission('/tags', 'write')] as const,
   request: {
     body: {

@@ -20,6 +20,7 @@ const plansRouter = new OpenAPIHono<AppEnv>()
 const listRoute = createRoute({
   method: 'get',
   path: '/',
+  tags: ['Plans'],
   middleware: [jwtAuth, requirePermission('/plans', 'read')] as const,
   responses: { 200: { description: 'All plans' } },
 })
@@ -31,6 +32,7 @@ plansRouter.openapi(listRoute, async (c) => {
 const createPlanRoute = createRoute({
   method: 'post',
   path: '/',
+  tags: ['Plans'],
   middleware: [jwtAuth, requirePermission('/plans', 'write')] as const,
   request: { body: { content: { 'application/json': { schema: planCreateSchema } } } },
   responses: { 201: { description: 'Created' } },
@@ -44,6 +46,7 @@ plansRouter.openapi(createPlanRoute, async (c) => {
 const updateRoute = createRoute({
   method: 'patch',
   path: '/:id',
+  tags: ['Plans'],
   middleware: [jwtAuth, requirePermission('/plans', 'write')] as const,
   request: { body: { content: { 'application/json': { schema: planUpdateSchema } } } },
   responses: { 200: { description: 'Updated' }, 404: { description: 'Not found' } },
@@ -62,6 +65,7 @@ plansRouter.openapi(updateRoute, async (c) => {
 const deleteRoute = createRoute({
   method: 'delete',
   path: '/:id',
+  tags: ['Plans'],
   middleware: [jwtAuth, requirePermission('/plans', 'write')] as const,
   responses: { 200: { description: 'Archived' } },
 })
@@ -77,6 +81,7 @@ plansRouter.openapi(deleteRoute, async (c) => {
 const todayRoute = createRoute({
   method: 'get',
   path: '/today',
+  tags: ['Plans'],
   middleware: [jwtAuth, requirePermission('/plans', 'read')] as const,
   request: { query: z.object({ patientId: z.string().uuid() }) },
   responses: { 200: { description: 'Today plans' } },
@@ -99,6 +104,7 @@ plansRouter.openapi(todayRoute, async (c) => {
 const completeRoute = createRoute({
   method: 'post',
   path: '/:id/complete',
+  tags: ['Plans'],
   middleware: [jwtAuth, requirePermission('/plans', 'write')] as const,
   request: { body: { content: { 'application/json': { schema: planCompleteSchema } } } },
   responses: { 201: { description: 'Completed + credits earned' } },
@@ -158,6 +164,7 @@ plansRouter.openapi(completeRoute, async (c) => {
 const completionsRoute = createRoute({
   method: 'get',
   path: '/:id/completions',
+  tags: ['Plans'],
   middleware: [jwtAuth, requirePermission('/plans', 'read')] as const,
   request: { query: z.object({ patientId: z.string().uuid().optional() }) },
   responses: { 200: { description: 'Completion history' } },

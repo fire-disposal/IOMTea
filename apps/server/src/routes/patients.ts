@@ -14,6 +14,7 @@ const patientsRouter = new OpenAPIHono<AppEnv>()
 const listPatRoute = createRoute({
   method: 'get',
   path: '/',
+  tags: ['Patients'],
   middleware: [jwtAuth, requirePermission('/patients', 'read')] as const,
   request: {
     query: z.object({
@@ -55,6 +56,7 @@ patientsRouter.openapi(listPatRoute, async (c) => {
 const myPatientsRoute = createRoute({
   method: 'get',
   path: '/mine',
+  tags: ['Patients'],
   middleware: [jwtAuth, requirePermission('/patients', 'read')] as const,
   responses: { 200: { description: 'My linked patients' } },
 })
@@ -72,6 +74,7 @@ patientsRouter.openapi(myPatientsRoute, async (c) => {
 const createPatRoute = createRoute({
   method: 'post',
   path: '/',
+  tags: ['Patients'],
   middleware: [jwtAuth, requirePermission('/patients', 'write')] as const,
   request: {
     body: {
@@ -122,6 +125,7 @@ patientsRouter.openapi(createPatRoute, async (c) => {
 const detailPatRoute = createRoute({
   method: 'get',
   path: '/:id',
+  tags: ['Patients'],
   middleware: [jwtAuth, requirePermission('/patients', 'read')] as const,
   responses: {
     200: {
@@ -142,6 +146,7 @@ patientsRouter.openapi(detailPatRoute, async (c) => {
 const updatePatRoute = createRoute({
   method: 'patch',
   path: '/:id',
+  tags: ['Patients'],
   middleware: [jwtAuth, requirePermission('/patients', 'write')] as const,
   request: {
     body: {
@@ -185,6 +190,7 @@ patientsRouter.openapi(updatePatRoute, async (c) => {
 const deletePatRoute = createRoute({
   method: 'delete',
   path: '/:id',
+  tags: ['Patients'],
   middleware: [jwtAuth, requirePermission('/patients', 'delete')] as const,
   responses: {
     200: { content: { 'application/json': { schema: successSchema } }, description: 'Deleted' },
@@ -207,6 +213,7 @@ patientsRouter.openapi(deletePatRoute, async (c) => {
 const linkUserPatRoute = createRoute({
   method: 'post',
   path: '/:id/users',
+  tags: ['Patients'],
   middleware: [jwtAuth, requirePermission('/patients', 'write')] as const,
   request: {
     body: {
@@ -239,6 +246,7 @@ patientsRouter.openapi(linkUserPatRoute, async (c) => {
 const unlinkUserPatRoute = createRoute({
   method: 'delete',
   path: '/:id/users/:userId',
+  tags: ['Patients'],
   middleware: [jwtAuth, requirePermission('/patients', 'write')] as const,
   responses: {
     200: {
@@ -262,6 +270,7 @@ patientsRouter.openapi(unlinkUserPatRoute, async (c) => {
 const bulkCreatePatRoute = createRoute({
   method: 'post',
   path: '/bulk',
+  tags: ['Patients'],
   middleware: [jwtAuth, requirePermission('/patients', 'write')] as const,
   request: {
     body: {
@@ -322,6 +331,7 @@ patientsRouter.openapi(bulkCreatePatRoute, async (c) => {
 const listUsersPatRoute = createRoute({
   method: 'get',
   path: '/:id/users',
+  tags: ['Patients'],
   middleware: [jwtAuth, requirePermission('/patients', 'read')] as const,
   responses: {
     200: {

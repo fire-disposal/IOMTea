@@ -32,6 +32,7 @@ function getDefaultThresholds() {
 const getRulesRoute = createRoute({
   method: 'get',
   path: '/patients/:id/alert-rules',
+  tags: ['Alert Rules'],
   middleware: [jwtAuth, requirePermission('/alert-rules', 'read')] as const,
   responses: {
     200: {
@@ -68,6 +69,7 @@ alertRulesRouter.openapi(getRulesRoute, async (c) => {
 const upsertRulesRoute = createRoute({
   method: 'put',
   path: '/patients/:id/alert-rules',
+  tags: ['Alert Rules'],
   middleware: [jwtAuth, requirePermission('/alert-rules', 'write')] as const,
   request: {
     body: {

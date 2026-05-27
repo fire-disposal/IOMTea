@@ -13,6 +13,7 @@ const creditsRouter = new OpenAPIHono<AppEnv>()
 const balanceRoute = createRoute({
   method: 'get',
   path: '/balance',
+  tags: ['Credits'],
   middleware: [jwtAuth, requirePermission('/credits', 'read')] as const,
   responses: {
     200: {
@@ -35,6 +36,7 @@ creditsRouter.openapi(balanceRoute, async (c) => {
 const earnRoute = createRoute({
   method: 'post',
   path: '/earn',
+  tags: ['Credits'],
   middleware: [jwtAuth, requirePermission('/credits', 'write')] as const,
   request: {
     body: {
@@ -79,6 +81,7 @@ creditsRouter.openapi(earnRoute, async (c) => {
 const spendRoute = createRoute({
   method: 'post',
   path: '/spend',
+  tags: ['Credits'],
   middleware: [jwtAuth, requirePermission('/credits', 'write')] as const,
   request: {
     body: {
@@ -132,6 +135,7 @@ creditsRouter.openapi(spendRoute, async (c) => {
 const transactionsRoute = createRoute({
   method: 'get',
   path: '/transactions',
+  tags: ['Credits'],
   middleware: [jwtAuth, requirePermission('/credits', 'read')] as const,
   request: {
     query: z.object({

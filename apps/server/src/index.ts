@@ -2,7 +2,7 @@ import 'dotenv/config'
 import fs from 'node:fs'
 import path from 'node:path'
 import { serve } from '@hono/node-server'
-import { swaggerUI } from '@hono/swagger-ui'
+import { apiReference } from '@scalar/hono-api-reference'
 import { OpenAPIHono } from '@hono/zod-openapi'
 import { eq } from 'drizzle-orm'
 import { cors } from 'hono/cors'
@@ -116,10 +116,17 @@ app.doc('/openapi.json', {
     version: '2.0.0',
     description: 'Home health IoT monitoring platform — REST API',
   },
+  servers: [{ url: `http://localhost:${env.PORT}`, description: 'Local dev server' }],
 })
 
-// Swagger UI
-app.get('/docs', swaggerUI({ url: '/openapi.json' }))
+app.get(
+  '/docs',
+  apiReference({
+    url: '/openapi.json',
+    pageTitle: 'IOMTea API Docs',
+    theme: 'purple',
+  }),
+)
 
 app.get('/health', async (c) => {
   try {

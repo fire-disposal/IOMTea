@@ -14,6 +14,7 @@ const ingestRouter = new OpenAPIHono<AppEnv>()
 const singleRoute = createRoute({
   method: 'post',
   path: '/single',
+  tags: ['Ingest'],
   middleware: [jwtAuth, requirePermission('/ingest', 'write')] as const,
   request: {
     body: {
@@ -72,6 +73,7 @@ ingestRouter.openapi(singleRoute, async (c) => {
 const batchRoute = createRoute({
   method: 'post',
   path: '/batch',
+  tags: ['Ingest'],
   middleware: [jwtAuth, requirePermission('/ingest', 'write')] as const,
   request: {
     body: {

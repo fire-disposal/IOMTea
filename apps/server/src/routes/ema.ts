@@ -13,6 +13,7 @@ const emaRouter = new OpenAPIHono<AppEnv>()
 const listFormsRoute = createRoute({
   method: 'get',
   path: '/',
+  tags: ['EMA'],
   middleware: [jwtAuth, requirePermission('/ema', 'read')] as const,
   responses: { 200: { description: 'All form definitions' } },
 })
@@ -24,6 +25,7 @@ emaRouter.openapi(listFormsRoute, async (c) => {
 const createFormRoute = createRoute({
   method: 'post',
   path: '/',
+  tags: ['EMA'],
   middleware: [jwtAuth, requirePermission('/ema', 'write')] as const,
   request: { body: { content: { 'application/json': { schema: FormDefinitionSchema } } } },
   responses: { 201: { description: 'Form created' } },
@@ -47,6 +49,7 @@ emaRouter.openapi(createFormRoute, async (c) => {
 const getFormRoute = createRoute({
   method: 'get',
   path: '/:code',
+  tags: ['EMA'],
   middleware: [jwtAuth, requirePermission('/ema', 'read')] as const,
   responses: { 200: { description: 'Form definition' }, 404: { description: 'Not found' } },
 })
@@ -64,6 +67,7 @@ emaRouter.openapi(getFormRoute, async (c) => {
 const updateFormRoute = createRoute({
   method: 'patch',
   path: '/:code',
+  tags: ['EMA'],
   middleware: [jwtAuth, requirePermission('/ema', 'write')] as const,
   request: {
     body: { content: { 'application/json': { schema: FormDefinitionSchema.partial() } } },
@@ -90,6 +94,7 @@ emaRouter.openapi(updateFormRoute, async (c) => {
 const publishFormRoute = createRoute({
   method: 'post',
   path: '/:code/publish',
+  tags: ['EMA'],
   middleware: [jwtAuth, requirePermission('/ema', 'write')] as const,
   responses: { 200: { description: 'Published' } },
 })
@@ -107,6 +112,7 @@ emaRouter.openapi(publishFormRoute, async (c) => {
 const unpublishRoute = createRoute({
   method: 'post',
   path: '/:code/unpublish',
+  tags: ['EMA'],
   middleware: [jwtAuth, requirePermission('/ema', 'write')] as const,
   responses: { 200: { description: 'Unpublished' } },
 })
@@ -124,6 +130,7 @@ emaRouter.openapi(unpublishRoute, async (c) => {
 const respondRoute = createRoute({
   method: 'post',
   path: '/:code/respond',
+  tags: ['EMA'],
   middleware: [jwtAuth, requirePermission('/ema', 'read')] as const,
   request: {
     body: {
@@ -167,6 +174,7 @@ emaRouter.openapi(respondRoute, async (c) => {
 const listResponsesRoute = createRoute({
   method: 'get',
   path: '/:code/responses',
+  tags: ['EMA'],
   middleware: [jwtAuth, requirePermission('/ema', 'read')] as const,
   request: { query: z.object({ patientId: z.string().uuid().optional() }) },
   responses: { 200: { description: 'Form responses' } },

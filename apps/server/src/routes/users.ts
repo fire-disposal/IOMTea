@@ -13,6 +13,7 @@ const usersRouter = new OpenAPIHono<AppEnv>()
 const listRoute = createRoute({
   method: 'get',
   path: '/',
+  tags: ['Users'],
   middleware: [jwtAuth, requirePermission('/users', 'read')] as const,
   responses: {
     200: {
@@ -31,6 +32,7 @@ usersRouter.openapi(listRoute, async (c) => {
 const meRoute = createRoute({
   method: 'get',
   path: '/me',
+  tags: ['Users'],
   middleware: [jwtAuth, requirePermission('/users', 'read')] as const,
   responses: {
     200: {
@@ -52,6 +54,7 @@ usersRouter.openapi(meRoute, async (c) => {
 const updateRoute = createRoute({
   method: 'patch',
   path: '/:id',
+  tags: ['Users'],
   middleware: [jwtAuth, requirePermission('/users', 'write')] as const,
   request: {
     body: {
@@ -91,6 +94,7 @@ usersRouter.openapi(updateRoute, async (c) => {
 const getUserRoute = createRoute({
   method: 'get',
   path: '/:id',
+  tags: ['Users'],
   middleware: [jwtAuth, requirePermission('/users', 'read')] as const,
   responses: { 200: { description: 'User detail' }, 404: { description: 'Not found' } },
 })
@@ -119,6 +123,7 @@ usersRouter.openapi(getUserRoute, async (c) => {
 const deleteUserRoute = createRoute({
   method: 'delete',
   path: '/:id',
+  tags: ['Users'],
   middleware: [jwtAuth, requirePermission('/users', 'delete')] as const,
   responses: { 200: { description: 'Deleted' }, 404: { description: 'Not found' } },
 })
@@ -134,6 +139,7 @@ usersRouter.openapi(deleteUserRoute, async (c) => {
 const updateRoleRoute = createRoute({
   method: 'patch',
   path: '/:id/role',
+  tags: ['Users'],
   middleware: [jwtAuth, requirePermission('/users', 'write')] as const,
   request: {
     body: {

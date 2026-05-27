@@ -33,6 +33,7 @@ const twinRouter = new OpenAPIHono<AppEnv>()
 const profListRoute = createRoute({
   method: 'get',
   path: '/profiles',
+  tags: ['Twin'],
   middleware: [jwtAuth, requirePermission('/twin', 'read')] as const,
   responses: {
     200: {
@@ -46,6 +47,7 @@ twinRouter.openapi(profListRoute, async (c) => c.json(listProfiles()))
 const profDetailRoute = createRoute({
   method: 'get',
   path: '/profiles/:name',
+  tags: ['Twin'],
   middleware: [jwtAuth, requirePermission('/twin', 'read')] as const,
   responses: {
     200: {
@@ -64,6 +66,7 @@ twinRouter.openapi(profDetailRoute, async (c) => {
 const simListRoute = createRoute({
   method: 'get',
   path: '/simulations',
+  tags: ['Twin'],
   middleware: [jwtAuth, requirePermission('/twin', 'read')] as const,
   responses: {
     200: {
@@ -77,6 +80,7 @@ twinRouter.openapi(simListRoute, async (c) => c.json(getSimulations()))
 const simDetailRoute = createRoute({
   method: 'get',
   path: '/simulations/:id',
+  tags: ['Twin'],
   middleware: [jwtAuth, requirePermission('/twin', 'read')] as const,
   responses: {
     200: {
@@ -95,6 +99,7 @@ twinRouter.openapi(simDetailRoute, async (c) => {
 const simCreateRoute = createRoute({
   method: 'post',
   path: '/simulations',
+  tags: ['Twin'],
   middleware: [jwtAuth, requirePermission('/twin', 'write')] as const,
   request: {
     body: {
@@ -129,6 +134,7 @@ twinRouter.openapi(simCreateRoute, async (c) => {
 const simDeleteRoute = createRoute({
   method: 'delete',
   path: '/simulations/:id',
+  tags: ['Twin'],
   middleware: [jwtAuth, requirePermission('/twin', 'write')] as const,
   responses: {
     200: { content: { 'application/json': { schema: successSchema } }, description: 'Deleted' },
@@ -142,6 +148,7 @@ twinRouter.openapi(simDeleteRoute, async (c) => {
 const simToggleRoute = createRoute({
   method: 'post',
   path: '/simulations/:id/toggle',
+  tags: ['Twin'],
   middleware: [jwtAuth, requirePermission('/twin', 'write')] as const,
   request: {
     body: {
@@ -167,6 +174,7 @@ twinRouter.openapi(simToggleRoute, async (c) => {
 const simRenameRoute = createRoute({
   method: 'patch',
   path: '/simulations/:id/rename',
+  tags: ['Twin'],
   middleware: [jwtAuth, requirePermission('/twin', 'write')] as const,
   request: {
     body: {
@@ -192,6 +200,7 @@ twinRouter.openapi(simRenameRoute, async (c) => {
 const simMetricToggleRoute = createRoute({
   method: 'post',
   path: '/simulations/:id/metrics/:metricName/toggle',
+  tags: ['Twin'],
   middleware: [jwtAuth, requirePermission('/twin', 'write')] as const,
   request: {
     body: {
@@ -217,6 +226,7 @@ twinRouter.openapi(simMetricToggleRoute, async (c) => {
 const simMetricUpdateRoute = createRoute({
   method: 'patch',
   path: '/simulations/:id/metrics/:metricName',
+  tags: ['Twin'],
   middleware: [jwtAuth, requirePermission('/twin', 'write')] as const,
   request: {
     body: {
@@ -244,6 +254,7 @@ twinRouter.openapi(simMetricUpdateRoute, async (c) => {
 const simAddPatientRoute = createRoute({
   method: 'post',
   path: '/simulations/:id/patients',
+  tags: ['Twin'],
   middleware: [jwtAuth, requirePermission('/twin', 'write')] as const,
   request: {
     body: {
@@ -273,6 +284,7 @@ twinRouter.openapi(simAddPatientRoute, async (c) => {
 const simRemovePatientRoute = createRoute({
   method: 'delete',
   path: '/simulations/:id/patients/:patientId',
+  tags: ['Twin'],
   middleware: [jwtAuth, requirePermission('/twin', 'write')] as const,
   responses: {
     200: { content: { 'application/json': { schema: successSchema } }, description: 'Removed' },
@@ -286,6 +298,7 @@ twinRouter.openapi(simRemovePatientRoute, async (c) => {
 const speedRoute = createRoute({
   method: 'patch',
   path: '/speed',
+  tags: ['Twin'],
   middleware: [jwtAuth, requirePermission('/twin', 'write')] as const,
   request: {
     body: {
@@ -314,6 +327,7 @@ twinRouter.openapi(speedRoute, async (c) => {
 const scenarioRoute = createRoute({
   method: 'post',
   path: '/simulations/:id/patients/:patientId/scenario',
+  tags: ['Twin'],
   middleware: [jwtAuth, requirePermission('/twin', 'write')] as const,
   request: {
     body: {

@@ -13,6 +13,7 @@ const alertsRouter = new OpenAPIHono<AppEnv>()
 const listAlertsRoute = createRoute({
   method: 'get',
   path: '/',
+  tags: ['Alerts'],
   middleware: [jwtAuth, requirePermission('/alerts', 'read')] as const,
   request: {
     query: z.object({
@@ -52,6 +53,7 @@ alertsRouter.openapi(listAlertsRoute, async (c) => {
 const getAlertRoute = createRoute({
   method: 'get',
   path: '/:id',
+  tags: ['Alerts'],
   middleware: [jwtAuth, requirePermission('/alerts', 'read')] as const,
   responses: {
     200: {
@@ -76,6 +78,7 @@ alertsRouter.openapi(getAlertRoute, async (c) => {
 const updateAlertRoute = createRoute({
   method: 'patch',
   path: '/:id',
+  tags: ['Alerts'],
   middleware: [jwtAuth, requirePermission('/alerts', 'write')] as const,
   request: {
     body: {
@@ -134,6 +137,7 @@ alertsRouter.openapi(updateAlertRoute, async (c) => {
 const closeAlertRoute = createRoute({
   method: 'post',
   path: '/:id/close',
+  tags: ['Alerts'],
   middleware: [jwtAuth, requirePermission('/alerts', 'write')] as const,
   responses: {
     200: { content: { 'application/json': { schema: successSchema } }, description: 'Closed' },

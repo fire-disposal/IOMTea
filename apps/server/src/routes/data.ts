@@ -15,6 +15,7 @@ const dataRouter = new OpenAPIHono<AppEnv>()
 const metricsRoute = createRoute({
   method: 'get',
   path: '/metrics',
+  tags: ['Data'],
   middleware: [jwtAuth, requirePermission('/data', 'read')] as const,
   responses: {
     200: {
@@ -42,6 +43,7 @@ dataRouter.openapi(metricsRoute, async (c) => {
 const rawRoute = createRoute({
   method: 'get',
   path: '/raw',
+  tags: ['Data'],
   middleware: [jwtAuth, requirePermission('/data', 'read')] as const,
   request: {
     query: z.object({
@@ -112,6 +114,7 @@ dataRouter.openapi(rawRoute, async (c) => {
 const aggregateRoute = createRoute({
   method: 'get',
   path: '/aggregate',
+  tags: ['Data'],
   middleware: [jwtAuth, requirePermission('/data', 'read')] as const,
   request: {
     query: z.object({
@@ -175,6 +178,7 @@ dataRouter.openapi(aggregateRoute, async (c) => {
 const latestRoute = createRoute({
   method: 'get',
   path: '/latest',
+  tags: ['Data'],
   middleware: [jwtAuth, requirePermission('/data', 'read')] as const,
   request: { query: z.object({ patientId: z.string().uuid() }) },
   responses: {

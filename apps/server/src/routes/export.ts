@@ -12,6 +12,7 @@ const exportRouter = new OpenAPIHono<AppEnv>()
 const previewRoute = createRoute({
   method: 'get',
   path: '/preview',
+  tags: ['Export'],
   middleware: [jwtAuth, requirePermission('/export', 'read')] as const,
   request: {
     query: z.object({
@@ -62,6 +63,7 @@ exportRouter.openapi(previewRoute, async (c) => {
 const downloadRoute = createRoute({
   method: 'post',
   path: '/download',
+  tags: ['Export'],
   middleware: [jwtAuth, requirePermission('/export', 'read')] as const,
   request: {
     body: {

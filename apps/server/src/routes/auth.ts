@@ -28,6 +28,7 @@ setInterval(() => {
 const registerRoute = createRoute({
   method: 'post',
   path: '/register',
+  tags: ['Auth'],
   middleware: [rateLimit(20, 60000)] as const,
   request: {
     body: {
@@ -99,6 +100,7 @@ auth.openapi(registerRoute, async (c) => {
 const loginRoute = createRoute({
   method: 'post',
   path: '/login',
+  tags: ['Auth'],
   middleware: [rateLimit(20, 60000)] as const,
   request: {
     body: {
@@ -170,6 +172,7 @@ auth.openapi(loginRoute, async (c) => {
 const refreshRoute = createRoute({
   method: 'post',
   path: '/refresh',
+  tags: ['Auth'],
   middleware: [rateLimit(10, 60000)] as const,
   request: {
     body: {
@@ -234,6 +237,7 @@ auth.openapi(refreshRoute, async (c) => {
 const wechatLoginRoute = createRoute({
   method: 'post',
   path: '/wechat-login',
+  tags: ['Auth'],
   middleware: [rateLimit(20, 60000)] as const,
   request: {
     body: { content: { 'application/json': { schema: z.object({ code: z.string().min(1) }) } } },
@@ -299,6 +303,7 @@ auth.openapi(wechatLoginRoute, async (c) => {
 const logoutRoute = createRoute({
   method: 'post',
   path: '/logout',
+  tags: ['Auth'],
   request: {
     body: {
       content: {

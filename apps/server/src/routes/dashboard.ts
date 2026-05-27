@@ -13,6 +13,7 @@ const dashboard = new OpenAPIHono<AppEnv>()
 const summaryRoute = createRoute({
   method: 'get',
   path: '/summary',
+  tags: ['Dashboard'],
   middleware: [jwtAuth, requirePermission('/dashboard', 'read')] as const,
   responses: {
     200: {
@@ -48,6 +49,7 @@ dashboard.openapi(summaryRoute, async (c) => {
 const trendsRoute = createRoute({
   method: 'get',
   path: '/trends',
+  tags: ['Dashboard'],
   middleware: [jwtAuth, requirePermission('/dashboard', 'read')] as const,
   request: {
     query: z.object({
@@ -77,6 +79,7 @@ dashboard.openapi(trendsRoute, async (c) => {
 const patientDashboardRoute = createRoute({
   method: 'get',
   path: '/patient/:id',
+  tags: ['Dashboard'],
   middleware: [jwtAuth, requirePermission('/dashboard', 'read')] as const,
   responses: {
     200: { description: 'Patient dashboard overview' },

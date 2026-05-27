@@ -13,6 +13,7 @@ const pinsRouter = new OpenAPIHono<AppEnv>()
 const listRoute = createRoute({
   method: 'get',
   path: '/',
+  tags: ['Pins'],
   middleware: [jwtAuth, requirePermission('/pins', 'read')] as const,
   responses: {
     200: { content: { 'application/json': { schema: pinListSchema } }, description: 'PIN list' },
@@ -27,6 +28,7 @@ pinsRouter.openapi(listRoute, async (c) => {
 const createPinRoute = createRoute({
   method: 'post',
   path: '/',
+  tags: ['Pins'],
   middleware: [jwtAuth, requirePermission('/pins', 'write')] as const,
   request: {
     body: {
@@ -60,6 +62,7 @@ pinsRouter.openapi(createPinRoute, async (c) => {
 const revokePinRoute = createRoute({
   method: 'delete',
   path: '/:code',
+  tags: ['Pins'],
   middleware: [jwtAuth, requirePermission('/pins', 'write')] as const,
   responses: {
     200: { content: { 'application/json': { schema: successSchema } }, description: 'Revoked' },
@@ -77,6 +80,7 @@ pinsRouter.openapi(revokePinRoute, async (c) => {
 const getPinRoute = createRoute({
   method: 'get',
   path: '/:code',
+  tags: ['Pins'],
   middleware: [jwtAuth, requirePermission('/pins', 'read')] as const,
   responses: { 200: { description: 'PIN detail' }, 404: { description: 'Not found' } },
 })
@@ -91,6 +95,7 @@ pinsRouter.openapi(getPinRoute, async (c) => {
 const updatePinRoute = createRoute({
   method: 'patch',
   path: '/:code',
+  tags: ['Pins'],
   middleware: [jwtAuth, requirePermission('/pins', 'write')] as const,
   request: {
     body: {
