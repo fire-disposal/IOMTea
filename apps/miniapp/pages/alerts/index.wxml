@@ -1,6 +1,6 @@
 <view class="page">
-  <text wx:if="{{loading}}" class="empty">加载中...</text>
-  <text wx:if="{{!loading && alerts.length === 0}}" class="empty">无告警记录</text>
+  <mp-loading wx:if="{{loading}}" type="circle" show="{{loading}}"></mp-loading>
+  <view wx:if="{{!loading && alerts.length === 0}}" class="empty">无告警记录</view>
   <view wx:for="{{alerts}}" wx:key="id" class="alert-item"
     style="border-left-color:{{item.severity === 'critical' ? '#e03131' : item.severity === 'warning' ? '#f08c00' : '#1971c2'}}">
     <text class="alert-type">{{item.metric}}</text>
