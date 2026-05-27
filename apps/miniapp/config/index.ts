@@ -13,7 +13,10 @@ export default defineConfig({
   outputRoot: 'dist',
   plugins: ['@tarojs/plugin-framework-react'],
   framework: 'react',
-  compiler: 'webpack5',
+  compiler: {
+    type: 'webpack5',
+    prebundle: { enable: false },
+  },
   defineConstants: {
     API_BASE_URL: JSON.stringify('http://localhost:3000'),
   },
