@@ -25,7 +25,7 @@ function initField(f){
 
 Page({
   data: { dz: SPEED, trail: [], connectors: [], pv: false, ad: false },
-  fi: 0, cr: null, _pxr: 1, cc: -1, pc: -1, locked: [], cv: 0,
+  fi: 0, cr: null, _pxr: 1, cc: -1, pc: -1, locked: [],
   dwa: false, dws: 0, dwt: null, dt: null, _dialSpeed: 0,
   subIdx: 0, currentMetric: null, _submitLock: false,
 
@@ -66,7 +66,6 @@ Page({
         var dec = Number(chainFields[k].min) % 1 !== 0 || Number(chainFields[k].max) % 1 !== 0 ? 1 : 0
         chainFields[k].selLabel = String(chainFields[k].normal.toFixed(dec))
         chainFields[k].value = chainFields[k].normal
-        this.cv = chainFields[k].normal
       } else if (chainFields[k].type === 'picker' && chainFields[k].options && chainFields[k].options.length > 0) {
         // Default picker selected option
         chainFields[k].selIdx = 0
@@ -151,7 +150,7 @@ Page({
       f.done = true
       f.selIdx = 1
       var dec = Number(f.min) % 1 !== 0 || Number(f.max) % 1 !== 0 ? 1 : 0
-      f.selLabel = String(this.cv.toFixed(dec))
+      f.selLabel = String(f.value.toFixed(dec))
       this.setData({ chainFields: cf, stl: 1, dv: '' })
       var s = this
       setTimeout(function () { s.setData({ stl: 2 }) }, 400)
@@ -206,11 +205,11 @@ Page({
 
     var range = f.max - f.min
     var inc = range * speed * 0.01
-    if (!this.cv || isNaN(this.cv)) this.cv = f.normal || (f.min + f.max) / 2
-    var v = Number(this.cv) + inc
+    if (!f.value || isNaN(f.value)) f.value = f.normal || (f.min + f.max) / 2
+    var v = Number(f.value) + inc
     if (v < f.min) v = f.min
     if (v > f.max) v = f.max
-    this.cv = v
+    f.value = v
     var dec = Number(f.min) % 1 !== 0 || Number(f.max) % 1 !== 0 ? 1 : 0
     var disp = v.toFixed(dec)
     f.selIdx = 1
@@ -257,7 +256,11 @@ Page({
   _doSubmit() {
     this._stopDwell(); this._stopDial()
     wx.vibrateShort({ type: 'heavy' })
-    this._loadForm(this.subIdx + 1, this.currentMetric)
+    // Cycle to next metric after submission
+    var keys = METRIC_KEYS
+    var ci = this.currentMetric ? keys.indexOf(this.currentMetric) : -1
+    var nextMetric = keys[(ci + 1) % keys.length]
+    this._loadForm(this.subIdx + 1, nextMetric)
   },
 
   _updateConnectors() {

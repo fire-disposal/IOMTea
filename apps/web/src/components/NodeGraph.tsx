@@ -4,6 +4,7 @@ import {
   Badge,
   Button,
   Group,
+  Modal,
   Paper,
   Select,
   Stack,
@@ -13,9 +14,12 @@ import {
 import { notifications } from '@mantine/notifications'
 import { IconFilter } from '@tabler/icons-react'
 import { useNavigate } from '@tanstack/react-router'
+import dagre from '@dagrejs/dagre'
 import {
+  addEdge,
   Background,
   BackgroundVariant,
+  type Connection,
   Controls,
   type Edge,
   MarkerType,
@@ -25,10 +29,16 @@ import {
   ReactFlow,
   useEdgesState,
   useNodesState,
+  useReactFlow,
 } from '@xyflow/react'
 import { useCallback, useEffect, useState } from 'react'
 import { http } from '../api/client'
 import { useGet } from '../api/hooks'
+
+const PATIENT_RELATIONS = [
+  'primary', 'spouse', 'child', 'parent', 'sibling',
+  'caregiver', 'doctor', 'nurse', 'admin', 'other',
+] as const
 
 interface PatientNode {
   id: string
@@ -57,6 +67,14 @@ export function NodeGraph() {
   const [edges, setEdges, onEdgesChange] = useEdgesState([] as Edge[])
   const [selectedNode, setSelectedNode] = useState<Node | null>(null)
   const [filter, setFilter] = useState<'all' | 'patients' | 'users'>('all')
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; node?: Node } | null>(null)
+  const [pendingLink, setPendingLink] = useState<{
+    source: string
+    target: string
+    userId: string
+    patientId: string
+  } | null>(null)
+  const [linkRelation, setLinkRelation] = useState<string | null>('caregiver')
   const [relationMap, setRelationMap] = useState<
     Record<string, { userId: string; relation: string | null }[]>
   >({})
@@ -168,6 +186,76 @@ export function NodeGraph() {
     [],
   )
 
+  const onNodeContextMenu = useCallback((event: React.MouseEvent, node: Node) => {
+    event.preventDefault()
+    setContextMenu({ x: event.clientX, y: event.clientY, node })
+  }, [])
+
+  const onPaneContextMenu = useCallback((event: MouseEvent | React.MouseEvent) => {
+    event.preventDefault()
+    setContextMenu({ x: event.clientX, y: event.clientY })
+  }, [])
+
+  const onConnect = useCallback(
+    (connection: Connection) => {
+      if (!connection.source?.startsWith('usr-') || !connection.target?.startsWith('pat-')) return
+      setPendingLink({
+        source: connection.source,
+        target: connection.target,
+        userId: connection.source.replace('usr-', ''),
+        patientId: connection.target.replace('pat-', ''),
+      })
+      setLinkRelation('caregiver')
+    },
+    [],
+  )
+
+  const confirmLink = useCallback(async () => {
+    if (!pendingLink) return
+    const { userId, patientId, source, target } = pendingLink
+    const relation = linkRelation ?? undefined
+    try {
+      await http.post(`/patients/${patientId}/users`, { userId, relation })
+      const newEdge: Edge = {
+        id: `edge-${patientId}-${userId}-${Date.now()}`,
+        source,
+        target,
+        label: relation || '',
+        labelStyle: { fontSize: 10, fill: '#868e96' },
+        style: { stroke: '#868e96', strokeWidth: 1.5, strokeDasharray: '4 2' },
+        markerEnd: { type: MarkerType.ArrowClosed, width: 12, height: 12, color: '#868e96' },
+      }
+      setEdges((eds) => addEdge(newEdge, eds))
+      setPendingLink(null)
+      notifications.show({ color: 'green', title: '关联成功', message: '' })
+    } catch {
+      notifications.show({ color: 'red', title: '关联失败', message: '请重试' })
+      setPendingLink(null)
+    }
+  }, [pendingLink, linkRelation, setEdges])
+
+  const cancelLink = useCallback(() => setPendingLink(null), [])
+
+  const reactFlowInstance = useReactFlow()
+
+  const autoLayout = useCallback(() => {
+    const g = new dagre.graphlib.Graph()
+    g.setDefaultEdgeLabel(() => ({}))
+    g.setGraph({ rankdir: 'TB', nodesep: 50, ranksep: 100 })
+    const allNodes = reactFlowInstance.getNodes()
+    const allEdges = reactFlowInstance.getEdges()
+    for (const node of allNodes)
+      g.setNode(node.id, { width: node.width || 150, height: node.height || 80 })
+    for (const edge of allEdges) g.setEdge(edge.source, edge.target)
+    dagre.layout(g)
+    reactFlowInstance.setNodes(
+      allNodes.map((node) => {
+        const pos = g.node(node.id)
+        return { ...node, position: { x: pos.x - (node.width || 150) / 2, y: pos.y - (node.height || 80) / 2 } }
+      }),
+    )
+  }, [reactFlowInstance])
+
   const filteredNodes =
     filter === 'all'
       ? nodes
@@ -183,6 +271,10 @@ export function NodeGraph() {
           onEdgesChange={onEdgesChange}
           onNodeClick={onNodeClick}
           onEdgesDelete={onEdgesDelete}
+          onConnect={onConnect}
+          onNodeContextMenu={onNodeContextMenu}
+          onPaneContextMenu={onPaneContextMenu}
+          onPaneClick={() => setContextMenu(null)}
           nodeTypes={nodeTypes}
           fitView
           deleteKeyCode={['Backspace', 'Delete']}
@@ -223,10 +315,112 @@ export function NodeGraph() {
               >
                 用户
               </Badge>
+              <Badge
+                size="xs"
+                color="gray"
+                style={{ cursor: 'pointer' }}
+                variant="outline"
+                onClick={() => autoLayout()}
+              >
+                自动布局
+              </Badge>
             </Group>
           </Panel>
         </ReactFlow>
       </div>
+      <Modal
+        opened={!!pendingLink}
+        onClose={cancelLink}
+        title="选择关系类型"
+        size="auto"
+        centered
+      >
+        <Stack gap="sm">
+          <Select
+            placeholder="关系类型"
+            data={PATIENT_RELATIONS.map((r) => ({ value: r, label: r }))}
+            value={linkRelation}
+            onChange={setLinkRelation}
+          />
+          <Group justify="flex-end" gap="xs">
+            <Button size="xs" variant="light" onClick={cancelLink}>
+              取消
+            </Button>
+            <Button size="xs" onClick={confirmLink}>
+              确认关联
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+      {contextMenu && (
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 999 }}
+          onClick={() => setContextMenu(null)}
+          onContextMenu={(e) => { e.preventDefault(); setContextMenu(null) }}
+        >
+          <Paper
+            style={{
+              position: 'fixed',
+              left: contextMenu.x,
+              top: contextMenu.y,
+              minWidth: 120,
+              zIndex: 1000,
+            }}
+            shadow="md"
+            withBorder
+            p={4}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Stack gap={2}>
+              {contextMenu.node ? (
+                <>
+                  <Button
+                    size="compact-sm"
+                    variant="subtle"
+                    onClick={() => {
+                      setSelectedNode(contextMenu.node!)
+                      setContextMenu(null)
+                    }}
+                  >
+                    查看详情
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    size="compact-sm"
+                    variant="subtle"
+                    onClick={() => {
+                      autoLayout()
+                      setContextMenu(null)
+                    }}
+                  >
+                    自动布局
+                  </Button>
+                  <Button
+                    size="compact-sm"
+                    variant="subtle"
+                    onClick={() => {
+                      reactFlowInstance.fitView()
+                      setContextMenu(null)
+                    }}
+                  >
+                    重置视图
+                  </Button>
+                </>
+              )}
+              <Button
+                size="compact-sm"
+                variant="subtle"
+                color="gray"
+                onClick={() => setContextMenu(null)}
+              >
+                取消
+              </Button>
+            </Stack>
+          </Paper>
+        </div>
+      )}
       {selectedNode && (
         <Paper p="sm" withBorder style={{ width: 220, overflow: 'auto' }}>
           <Stack gap="xs">
