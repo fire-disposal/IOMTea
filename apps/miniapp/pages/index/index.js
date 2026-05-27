@@ -47,9 +47,10 @@ Page({
   },
 
   onPlanTap(e) {
-    const recordPage = e.currentTarget.dataset.page
+    const { page, planid } = e.currentTarget.dataset
+    const recordPage = getRecordPage(page)
     if (recordPage) {
-      wx.navigateTo({ url: recordPage })
+      wx.navigateTo({ url: `${recordPage}?planId=${planid}` })
     }
   },
 

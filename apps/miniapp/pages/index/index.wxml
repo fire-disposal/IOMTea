@@ -13,7 +13,7 @@
     <view wx:if="{{loading}}" wx:for="{{[1,2,3]}}" wx:key="*this" class="card-skeleton anim-pulse"></view>
 
     <view wx:if="{{!loading && plans.length > 0}}" wx:for="{{plans}}" wx:key="id" class="checklist-card anim-fade-up"
-      data-page="{{item.code}}" bind:tap="onPlanTap">
+      data-page="{{item.code}}" data-planid="{{item.id}}" bind:tap="onPlanTap">
       <view class="checklist-card-left">
         <text class="checklist-card-icon">📋</text>
         <view class="checklist-card-info">
