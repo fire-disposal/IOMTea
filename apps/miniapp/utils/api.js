@@ -3,7 +3,7 @@ const STORAGE_KEYS = require('../constants/storage-keys').STORAGE_KEYS
 function getBase() {
   const customUrl = wx.getStorageSync(STORAGE_KEYS.SERVER_URL)
   if (customUrl) return customUrl
-  if (typeof API_BASE_URL !== 'undefined') return API_BASE_URL
+  // 修改此处为生产环境地址后再发布
   return 'http://localhost:3000'
 }
 
