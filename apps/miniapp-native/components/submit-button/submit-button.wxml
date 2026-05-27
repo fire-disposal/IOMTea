@@ -1,0 +1,5 @@
+<view class="submit-btn {{loading ? 'submit-btn--loading' : ''}} {{saved ? 'submit-btn--saved' : ''}}" bindtap="handleTap">
+  <text wx:if="{{loading}}">保存中...</text>
+  <text wx:elif="{{saved}}">✓ 已保存</text>
+  <text wx:else>{{label}}</text>
+</view>

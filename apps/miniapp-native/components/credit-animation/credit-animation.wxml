@@ -1,0 +1,3 @@
+<view wx:if="{{visible}}" class="credit-anim" style="{{posStyle}}">
+  <text class="credit-anim__text anim-credit-float">+{{amount}}</text>
+</view>

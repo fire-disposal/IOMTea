@@ -1,0 +1,69 @@
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: var(--bg-card, #fff);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.top-bar__main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.top-bar__avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.top-bar__avatar-text {
+  color: #fff;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.top-bar__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.top-bar__name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary, #3C3C3C);
+}
+
+.top-bar__credit {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(107, 165, 57, 0.06);
+  padding: 6px 14px;
+  border-radius: 20px;
+  transition: transform 0.15s;
+}
+
+.top-bar__credit:active {
+  transform: scale(0.95);
+}
+
+.top-bar__credit-icon {
+  font-size: 16px;
+  display: inline-block;
+  line-height: 16px;
+}
+
+.top-bar__credit-num {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--brand-500, #6BA539);
+}

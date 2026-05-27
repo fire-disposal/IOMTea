@@ -1,0 +1,10 @@
+<view class="mini-trend-wrapper">
+  <block wx:if="{{!showEmpty}}">
+    <view class="mini-trend-label">
+      <text class="mini-trend-value" style="color: {{valueColor}};">{{displayValue}}</text>
+      <text wx:if="{{unitLabel}}" class="mini-trend-unit">{{unitLabel}}</text>
+    </view>
+    <canvas type="2d" id="mini-trend-canvas" class="mini-trend" style="width: {{width}}px; height: {{height}}px;"></canvas>
+  </block>
+  <text wx:else class="mini-trend__empty">最近7天暂无数据</text>
+</view>

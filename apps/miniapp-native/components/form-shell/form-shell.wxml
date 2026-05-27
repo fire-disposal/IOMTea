@@ -1,0 +1,15 @@
+<view class="form-shell animation-fade">
+  <view class="form-shell__header">
+    <text class="form-shell__title">{{title}}</text>
+    <text class="form-shell__unit">{{unit}}</text>
+  </view>
+  <view class="form-shell__body">
+    <slot></slot>
+  </view>
+  <view wx:if="{{recentData.length > 0}}" class="form-shell__trend">
+    <mini-trend data="{{recentData}}"></mini-trend>
+  </view>
+  <view class="form-shell__footer">
+    <submit-button loading="{{saving}}" saved="{{saved}}" bindtap="onSave"></submit-button>
+  </view>
+</view>

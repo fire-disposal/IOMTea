@@ -1,0 +1,33 @@
+<view class="number-input">
+  <view class="number-input__display">
+    <text class="number-input__value">{{value || placeholder || '0'}}</text>
+    <text wx:if="{{!value && showHint}}" class="number-input__hint">点击任意键开始输入</text>
+  </view>
+  <view class="number-input__keypad">
+    <view class="number-input__row">
+      <view class="number-input__key" data-digit="1" bindtap="handleDigit"><text>1</text></view>
+      <view class="number-input__key" data-digit="2" bindtap="handleDigit"><text>2</text></view>
+      <view class="number-input__key" data-digit="3" bindtap="handleDigit"><text>3</text></view>
+    </view>
+    <view class="number-input__row">
+      <view class="number-input__key" data-digit="4" bindtap="handleDigit"><text>4</text></view>
+      <view class="number-input__key" data-digit="5" bindtap="handleDigit"><text>5</text></view>
+      <view class="number-input__key" data-digit="6" bindtap="handleDigit"><text>6</text></view>
+    </view>
+    <view class="number-input__row">
+      <view class="number-input__key" data-digit="7" bindtap="handleDigit"><text>7</text></view>
+      <view class="number-input__key" data-digit="8" bindtap="handleDigit"><text>8</text></view>
+      <view class="number-input__key" data-digit="9" bindtap="handleDigit"><text>9</text></view>
+    </view>
+    <view class="number-input__row">
+      <block wx:if="{{decimal}}">
+        <view class="number-input__key" data-digit="." bindtap="handleDigit"><text>.</text></view>
+      </block>
+      <block wx:else>
+        <view class="number-input__key number-input__key--empty"></view>
+      </block>
+      <view class="number-input__key" data-digit="0" bindtap="handleDigit"><text>0</text></view>
+      <view class="number-input__key" data-digit="back" bindtap="handleDigit"><text>⌫</text></view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,27 @@
+<view class="calendar">
+  <view class="calendar__header">
+    <text class="calendar__nav" bindtap="prevMonth">◀</text>
+    <text class="calendar__title">{{titleText}}</text>
+    <text class="calendar__nav" bindtap="nextMonth">▶</text>
+  </view>
+  <view class="calendar__weekdays">
+    <text wx:for="{{weekdays}}" wx:key="*this" class="calendar__weekday">{{item}}</text>
+  </view>
+  <view class="calendar__grid">
+    <view
+      wx:for="{{days}}"
+      wx:key="index"
+      class="calendar__day {{item.isEmpty ? 'calendar__day--empty' : ''}} {{item.isToday ? 'calendar__day--today' : ''}}"
+      data-date="{{item.date}}"
+      bindtap="handleDay"
+    >
+      <block wx:if="{{!item.isEmpty}}">
+        <text class="calendar__day-num">{{item.day}}</text>
+        <view wx:if="{{item.records.length > 0}}" class="calendar__dots">
+          <view wx:for="{{item.records}}" wx:for-item="r" wx:key="*this" wx:if="{{index < 3}}" class="calendar__dot"></view>
+          <text wx:if="{{item.records.length > 3}}" class="calendar__dot-more">+{{item.records.length - 3}}</text>
+        </view>
+      </block>
+    </view>
+  </view>
+</view>

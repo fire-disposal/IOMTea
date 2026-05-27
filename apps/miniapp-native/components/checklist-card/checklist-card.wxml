@@ -1,0 +1,18 @@
+<view class="checklist-card checklist-card--{{status}} {{animDone ? 'anim-card-done' : ''}}" bindtap="handleTap">
+  <view class="checklist-card__accent"></view>
+  <view class="checklist-card__body">
+    <view class="checklist-card__icon-wrap">
+      <text class="checklist-card__icon">{{icon}}</text>
+    </view>
+    <view class="checklist-card__info">
+      <text class="checklist-card__label">{{label}}</text>
+      <text wx:if="{{status === 'pending'}}" class="checklist-card__hint">今日尚未记录</text>
+    </view>
+    <view class="checklist-card__status">
+      <text wx:if="{{status === 'done'}}" class="checklist-card__check">✓</text>
+      <view wx:if="{{status === 'pending'}}" class="checklist-card__circle"></view>
+      <text wx:if="{{status === 'skipped'}}" class="checklist-card__skip">—</text>
+      <text wx:if="{{earnedCredits > 0 && animCredit}}" class="checklist-card__credit anim-credit-float">+{{earnedCredits}}</text>
+    </view>
+  </view>
+</view>

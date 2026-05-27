@@ -1,0 +1,14 @@
+<view class="top-bar">
+  <view class="top-bar__main" bindtap="goProfile">
+    <view class="top-bar__avatar" style="background: {{avatarGradient}};">
+      <text class="top-bar__avatar-text">{{avatarChar}}</text>
+    </view>
+    <view class="top-bar__info">
+      <text class="top-bar__name">{{displayName}}</text>
+    </view>
+  </view>
+  <view class="top-bar__credit" bindtap="goCredit">
+    <text class="top-bar__credit-icon">🪙</text>
+    <text class="top-bar__credit-num">{{credit}}</text>
+  </view>
+</view>
