@@ -39,6 +39,6 @@ export async function syncUnsyncedRecords(): Promise<void> {
   Taro.setStorageSync(STORAGE_KEYS.RECORDS, records)
 }
 
-export function startAutoSync(): void {
-  setInterval(syncUnsyncedRecords, 5 * 60 * 1000)
+export function startAutoSync(): ReturnType<typeof setInterval> {
+  return setInterval(syncUnsyncedRecords, 5 * 60 * 1000)
 }

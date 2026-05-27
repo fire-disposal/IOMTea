@@ -5,7 +5,8 @@ import { startAutoSync } from './utils/sync'
 
 function App({ children }: PropsWithChildren) {
   useEffect(() => {
-    startAutoSync()
+    const id = startAutoSync()
+    return () => clearInterval(id)
   }, [])
 
   return <>{children}</>

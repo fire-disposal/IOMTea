@@ -38,8 +38,11 @@
   color: var(--brand-500);
 }
 
-.tab-bar__item:not(.tab-bar__item--active) .tab-bar__icon {
+.tab-bar__item .tab-bar__icon {
   opacity: 0.5;
+}
+.tab-bar__item--active .tab-bar__icon {
+  opacity: 1;
 }
 
 .tab-bar__item--active::after {
