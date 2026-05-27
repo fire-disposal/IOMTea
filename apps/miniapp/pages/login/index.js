@@ -2,19 +2,40 @@ const { api } = require('../../utils/api')
 const { STORAGE_KEYS } = require('../../constants/storage-keys')
 
 Page({
-  data: { loading: false, iconBounce: false },
+  data: { loading: false, iconBounce: false, tapCount: 0 },
 
   onLoad() {
-    // Trigger initial bounce
     setTimeout(() => this.setData({ iconBounce: true }), 300)
     setTimeout(() => this.setData({ iconBounce: false }), 1600)
   },
 
   onIconTap() {
-    // Re-trigger bounce by briefly toggling the class
     this.setData({ iconBounce: false })
     setTimeout(() => this.setData({ iconBounce: true }), 50)
     setTimeout(() => this.setData({ iconBounce: false }), 1300)
+
+    var count = this.data.tapCount + 1
+    if (count >= 5) {
+      this.setData({ tapCount: 0 })
+      wx.setStorageSync('dev_mode', true)
+      wx.setStorageSync('token', 'dev-token')
+      wx.setStorageSync('user_name', '开发者')
+      wx.setStorageSync('user_id', 'dev-user-001')
+      wx.setStorageSync('patient_id', 'dev-patient-001')
+      wx.showModal({
+        title: '开发者模式已激活',
+        content: '所有数据均为本地模拟，不会发送至服务器。可在首页顶部退出。',
+        showCancel: false,
+        confirmText: '进入',
+        success: function () {
+          wx.redirectTo({ url: '/pages/index/index' })
+        }
+      })
+      return
+    }
+    this.setData({ tapCount: count })
+    clearTimeout(this._tapTimer)
+    this._tapTimer = setTimeout(function () { this.setData({ tapCount: 0 }) }.bind(this), 3000)
   },
 
   handleWechatLogin() {

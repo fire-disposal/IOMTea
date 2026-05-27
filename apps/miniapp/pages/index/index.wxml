@@ -9,6 +9,11 @@
     </view>
   </view>
 
+  <view wx:if="{{devMode}}" class="dev-bar">
+    <text class="dev-bar__text">⚙️ 开发者模式 · 数据本地模拟</text>
+    <text class="dev-bar__exit" bind:tap="onExitDev">退出</text>
+  </view>
+
   <view class="home-checklist">
     <view wx:if="{{loading}}" wx:for="{{[1,2,3]}}" wx:key="*this" class="card-skeleton anim-pulse"></view>
 

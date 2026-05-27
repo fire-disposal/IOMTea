@@ -1,16 +1,20 @@
 const { syncUnsyncedRecords, startAutoSync } = require('./utils/sync')
 
 App({
-  globalData: { syncTimer: null },
+  globalData: { syncTimer: null, devMode: false },
 
   onLaunch() {
+    this.globalData.devMode = wx.getStorageSync('dev_mode') === true
+
     const token = wx.getStorageSync('token')
     if (!token) {
       wx.reLaunch({ url: '/pages/login/index' })
       return
     }
-    this.globalData.syncTimer = startAutoSync()
-    syncUnsyncedRecords()
+    if (!this.globalData.devMode) {
+      this.globalData.syncTimer = startAutoSync()
+      syncUnsyncedRecords()
+    }
   },
 
   onHide() {
@@ -20,7 +24,9 @@ App({
   },
 
   onShow() {
-    syncUnsyncedRecords()
-    this.globalData.syncTimer = startAutoSync()
+    if (!this.globalData.devMode) {
+      syncUnsyncedRecords()
+      this.globalData.syncTimer = startAutoSync()
+    }
   }
 })

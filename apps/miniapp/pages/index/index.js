@@ -8,9 +8,11 @@ Page({
     credit: 0,
     loading: true,
     userName: '',
+    devMode: false,
   },
 
   onLoad() {
+    this.setData({ devMode: getApp().globalData.devMode || false })
     const token = wx.getStorageSync(STORAGE_KEYS.TOKEN)
     if (!token) {
       wx.redirectTo({ url: '/pages/login/index' })
@@ -56,5 +58,12 @@ Page({
 
   onGoPlan() {
     wx.navigateTo({ url: '/pages/plan/index' })
+  },
+
+  onExitDev() {
+    wx.removeStorageSync('dev_mode')
+    wx.removeStorageSync('token')
+    getApp().globalData.devMode = false
+    wx.reLaunch({ url: '/pages/login/index' })
   },
 })
