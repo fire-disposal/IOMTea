@@ -136,10 +136,17 @@ Page({
   _updateColGray() {
     var g = []
     var cf = this.data.chainFields
-    if (cf) for (var i = 0; i < cf.length; i++) g.push(i > 0 && !this.traversed[i - 1])
+    if (cf) for (var i = 0; i < cf.length; i++) {
+      // Gray = not yet reachable (prev column not traversed)
+      // Red = reachable, pending interaction
+      // Blue = currently active
+      // Green = done (locked with confirmed value)
+      g.push(i > 0 && !this.traversed[i - 1])
+    }
     this.setData({ colGray: g })
   },
   _canAccess(ci) {
+    // Column 0 always accessible; column N only if column N-1 has been traversed
     if (ci <= 0) return true
     return this.traversed[ci - 1] === true
   },
