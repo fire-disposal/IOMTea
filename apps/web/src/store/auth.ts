@@ -31,7 +31,10 @@ function getInitialAuth() {
   if (!token) return { token: null, refreshToken: null, expiresAt: null, role: null }
 
   if (isTokenExpired(token)) {
-    // Token expired — axios interceptor handles 401 redirect
+    localStorage.removeItem('token')
+    localStorage.removeItem('refreshToken')
+    localStorage.removeItem('expiresAt')
+    return { token: null, refreshToken: null, expiresAt: null, role: null }
   }
 
   const decoded = decodeJwtPayload(token)

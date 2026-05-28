@@ -1,4 +1,5 @@
 import {
+  Accordion,
   Badge,
   Button,
   Container,
@@ -17,6 +18,7 @@ import { notifications } from '@mantine/notifications'
 import { useState } from 'react'
 import { http } from '../api/client'
 import { useGet } from '../api/hooks'
+import { StateEmpty } from '../components/StateComponents'
 import { parsePatientId } from '../lib/path'
 
 interface FormDef {
@@ -49,12 +51,43 @@ interface FormResponse {
   submittedAt: string
 }
 
+function ResponseViewer({ response, fields }: { response: FormResponse; fields: FormField[] }) {
+  return (
+    <Stack gap="xs">
+      <Text size="xs" c="dimmed">
+        提交时间: {new Date(response.submittedAt).toLocaleString('zh-CN')}
+      </Text>
+      {fields.map((f) => {
+        const val = response.responses[f.id]
+        let display = String(val ?? '-')
+        if (f.type === 'choice' && f.options) {
+          const opt = f.options.find((o) => o.value === val)
+          if (opt) display = opt.label
+        }
+        if (f.type === 'multi' && f.options && Array.isArray(val)) {
+          display = val.map((v) => f.options?.find((o) => o.value === v)?.label || v).join(', ')
+        }
+        if (f.type === 'number' && f.unit) display = `${val} ${f.unit}`
+        return (
+          <Text key={f.id} size="sm">
+            <Text span fw={500}>
+              {f.label}:
+            </Text>{' '}
+            {display}
+          </Text>
+        )
+      })}
+    </Stack>
+  )
+}
+
 export function PatientFormsTab() {
   const pid = parsePatientId()
   const { data: forms } = useGet<FormDef[]>('/forms')
   const [selectedCode, setSelectedCode] = useState<string | null>(null)
   const [answers, setAnswers] = useState<Record<string, unknown>>({})
   const [submitting, setSubmitting] = useState(false)
+  const [viewMode, setViewMode] = useState<'fill' | 'history'>('fill')
 
   const published = (forms ?? []).filter((f) => f.status === 'published')
   const form = published.find((f) => f.code === selectedCode)
@@ -86,11 +119,28 @@ export function PatientFormsTab() {
   }
 
   if (form) {
+    if (viewMode === 'history') {
+      return (
+        <FormHistoryView
+          form={form}
+          pid={pid}
+          onBack={() => {
+            setSelectedCode(null)
+            setViewMode('fill')
+          }}
+        />
+      )
+    }
     return (
       <Container py="md">
-        <Button variant="subtle" size="xs" mb="md" onClick={() => setSelectedCode(null)}>
-          ← 返回列表
-        </Button>
+        <Group mb="md">
+          <Button variant="subtle" size="xs" onClick={() => setSelectedCode(null)}>
+            ← 返回列表
+          </Button>
+          <Button variant="light" size="xs" onClick={() => setViewMode('history')}>
+            历史记录
+          </Button>
+        </Group>
         <Title order={3} mb="xs">
           {form.title}
         </Title>
@@ -153,7 +203,13 @@ export function PatientFormsTab() {
                 >
                   <Group gap="xs" wrap="nowrap">
                     {field.labels.map((l) => (
-                      <Radio key={l} value={l} label={l} size="xs" style={{ flexDirection: 'column', alignItems: 'center' }} />
+                      <Radio
+                        key={l}
+                        value={l}
+                        label={l}
+                        size="xs"
+                        style={{ flexDirection: 'column', alignItems: 'center' }}
+                      />
                     ))}
                   </Group>
                 </Radio.Group>
@@ -215,7 +271,7 @@ export function PatientFormsTab() {
         健康表单
       </Title>
       <Text size="sm" c="dimmed" mb="md">
-        请选择一份表单开始填写
+        填写健康问卷或查看历史提交
       </Text>
       <Table striped>
         <Table.Thead>
@@ -238,21 +294,75 @@ export function PatientFormsTab() {
               </Table.Td>
               <Table.Td>{f.fields.length}</Table.Td>
               <Table.Td>
-                <Button
-                  size="compact-sm"
-                  variant="light"
-                  onClick={() => {
-                    setSelectedCode(f.code)
-                    setAnswers({})
-                  }}
-                >
-                  填写
-                </Button>
+                <Group gap="xs">
+                  <Button
+                    size="compact-sm"
+                    variant="light"
+                    onClick={() => {
+                      setSelectedCode(f.code)
+                      setAnswers({})
+                      setViewMode('fill')
+                    }}
+                  >
+                    填写
+                  </Button>
+                  <Button
+                    size="compact-sm"
+                    variant="subtle"
+                    onClick={() => {
+                      setSelectedCode(f.code)
+                      setViewMode('history')
+                    }}
+                  >
+                    历史
+                  </Button>
+                </Group>
               </Table.Td>
             </Table.Tr>
           ))}
         </Table.Tbody>
       </Table>
+    </Container>
+  )
+}
+
+function FormHistoryView({
+  form,
+  pid,
+  onBack,
+}: { form: FormDef; pid: string; onBack: () => void }) {
+  const { data: responses, isLoading } = useGet<FormResponse[]>(
+    `/forms/${form.code}/responses`,
+    { patientId: pid },
+    [`forms/${form.code}/responses`],
+  )
+
+  return (
+    <Container py="md">
+      <Group mb="md">
+        <Button variant="subtle" size="xs" onClick={onBack}>
+          ← 返回
+        </Button>
+      </Group>
+      <Title order={4} mb="md">
+        {form.title} - 历史记录
+      </Title>
+      {!responses || responses.length === 0 ? (
+        <StateEmpty message="暂无提交记录" />
+      ) : (
+        <Accordion>
+          {responses.map((r) => (
+            <Accordion.Item key={r.id} value={r.id}>
+              <Accordion.Control>
+                <Text size="sm">{new Date(r.submittedAt).toLocaleString('zh-CN')}</Text>
+              </Accordion.Control>
+              <Accordion.Panel>
+                <ResponseViewer response={r} fields={form.fields} />
+              </Accordion.Panel>
+            </Accordion.Item>
+          ))}
+        </Accordion>
+      )}
     </Container>
   )
 }

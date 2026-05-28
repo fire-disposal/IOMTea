@@ -55,6 +55,7 @@ export const FormDefinitionSchema = z.object({
   description: z.string().optional(),
   cron: z.string().optional(),
   fields: z.array(FormFieldSchema).min(1).max(50),
+  yamlFields: z.string().optional(),
 })
 
 export type FormDefinition = z.infer<typeof FormDefinitionSchema>

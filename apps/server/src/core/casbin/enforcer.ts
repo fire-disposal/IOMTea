@@ -1,11 +1,15 @@
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { type Enforcer, newEnforcer } from 'casbin'
-import PostgresAdapter from 'casbin-pg-adapter'
+import { createRequire } from 'node:module'
 import { env } from '../../env'
 import { logger } from '../lib/logger'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const _require = createRequire(import.meta.url)
+const { default: PostgresAdapter } = _require('casbin-pg-adapter') as {
+  default: { newAdapter: (opts: Record<string, unknown>) => Promise<unknown> }
+}
 
 let _enforcer: Enforcer | null = null
 let _initPromise: Promise<Enforcer> | null = null

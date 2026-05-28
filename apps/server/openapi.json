@@ -4226,6 +4226,9 @@
                     },
                     "minItems": 1,
                     "maxItems": 50
+                  },
+                  "yamlFields": {
+                    "type": "string"
                   }
                 },
                 "required": [
@@ -4538,6 +4541,9 @@
                     },
                     "minItems": 1,
                     "maxItems": 50
+                  },
+                  "yamlFields": {
+                    "type": "string"
                   }
                 }
               }

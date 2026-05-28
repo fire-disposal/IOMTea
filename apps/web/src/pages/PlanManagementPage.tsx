@@ -17,6 +17,7 @@ import {
 import { IconEdit, IconPlus, IconTrash } from '@tabler/icons-react'
 import { useState } from 'react'
 import { useDelete, useGet, usePatch, usePost } from '../api/hooks'
+import { CronInput, describeCron } from '../components/CronInput'
 import { confirmDelete } from '../lib/confirm-delete'
 
 interface Plan {
@@ -127,7 +128,9 @@ export function PlanManagementPage() {
               <Table.Td>{p.rewardCredits}</Table.Td>
               <Table.Td>{(p.fields || []).length}</Table.Td>
               <Table.Td>
-                <span style={{ fontSize: 11 }}>{p.cron || '-'}</span>
+                <span style={{ fontSize: 11 }} title={p.cron || ''}>
+                  {p.cron ? describeCron(p.cron) : '-'}
+                </span>
               </Table.Td>
               <Table.Td>
                 <Badge size="xs" color={p.status === 'active' ? 'green' : 'gray'}>
@@ -199,12 +202,7 @@ export function PlanManagementPage() {
             value={form.rewardCredits}
             onChange={(v) => setForm({ ...form, rewardCredits: Number(v) || 0 })}
           />
-          <TextInput
-            label="Cron"
-            value={form.cron}
-            onChange={(e) => setForm({ ...form, cron: e.currentTarget.value })}
-            placeholder="0 8,20 * * *"
-          />
+          <CronInput value={form.cron} onChange={(v) => setForm({ ...form, cron: v })} />
           <Group justify="flex-end">
             <Button onClick={save}>保存</Button>
           </Group>

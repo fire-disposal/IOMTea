@@ -15,6 +15,7 @@ import {
 import { notifications } from '@mantine/notifications'
 import { IconFilter } from '@tabler/icons-react'
 import { useNavigate } from '@tanstack/react-router'
+import type { FitViewOptions } from '@xyflow/react'
 import {
   Background,
   BackgroundVariant,
@@ -29,9 +30,8 @@ import {
   addEdge,
   useEdgesState,
   useNodesState,
-  useReactFlow,
 } from '@xyflow/react'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { http } from '../api/client'
 import { useGet } from '../api/hooks'
 
@@ -236,28 +236,23 @@ export function NodeGraph() {
 
   const cancelLink = useCallback(() => setPendingLink(null), [])
 
-  const reactFlowInstance = useReactFlow()
+  const rfInstanceRef = useRef<{ fitView: (opts?: FitViewOptions) => void } | null>(null)
 
   const autoLayout = useCallback(() => {
     const g = new dagre.graphlib.Graph()
     g.setDefaultEdgeLabel(() => ({}))
     g.setGraph({ rankdir: 'TB', nodesep: 50, ranksep: 100 })
-    const allNodes = reactFlowInstance.getNodes()
-    const allEdges = reactFlowInstance.getEdges()
-    for (const node of allNodes)
-      g.setNode(node.id, { width: node.width || 150, height: node.height || 80 })
-    for (const edge of allEdges) g.setEdge(edge.source, edge.target)
+    for (const node of nodes)
+      g.setNode(node.id, { width: (node.style?.width as number) || 150, height: (node.style?.height as number) || 80 })
+    for (const edge of edges) g.setEdge(edge.source, edge.target)
     dagre.layout(g)
-    reactFlowInstance.setNodes(
-      allNodes.map((node) => {
+    setNodes(
+      nodes.map((node) => {
         const pos = g.node(node.id)
-        return {
-          ...node,
-          position: { x: pos.x - (node.width || 150) / 2, y: pos.y - (node.height || 80) / 2 },
-        }
+        return { ...node, position: { x: pos.x - ((node.style?.width as number) || 150) / 2, y: pos.y - ((node.style?.height as number) || 80) / 2 } }
       }),
     )
-  }, [reactFlowInstance])
+  }, [nodes, edges, setNodes])
 
   const filteredNodes =
     filter === 'all'
@@ -278,6 +273,7 @@ export function NodeGraph() {
           onNodeContextMenu={onNodeContextMenu}
           onPaneContextMenu={onPaneContextMenu}
           onPaneClick={() => setContextMenu(null)}
+          onInit={(instance) => { rfInstanceRef.current = instance }}
           nodeTypes={nodeTypes}
           fitView
           deleteKeyCode={['Backspace', 'Delete']}
@@ -404,7 +400,7 @@ export function NodeGraph() {
                     size="compact-sm"
                     variant="subtle"
                     onClick={() => {
-                      reactFlowInstance.fitView()
+                      rfInstanceRef.current?.fitView()
                       setContextMenu(null)
                     }}
                   >

@@ -7,6 +7,7 @@ export const formDefinitions = pgTable('form_definitions', {
   description: text('description'),
   cron: text('cron'),
   fields: jsonb('fields').notNull(),
+  yamlFields: text('yaml_fields'),
   status: text('status').default('draft').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),

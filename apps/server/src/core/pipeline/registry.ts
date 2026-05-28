@@ -171,6 +171,25 @@ registerMetric({
 })
 
 registerMetric({
+  metric: 'ema_response',
+  displayName: '表单响应',
+  unit: '',
+  valueSchema: z.object({
+    formCode: z.string(),
+    title: z.string().optional(),
+    fieldCount: z.number(),
+  }),
+  valueType: 'object',
+  fields: [
+    { path: 'formCode', label: '表单代码', type: 'text' },
+    { path: 'title', label: '表单标题', type: 'text' },
+    { path: 'fieldCount', label: '字段数', type: 'number' },
+  ],
+  defaultChart: 'bar',
+  category: 'ema',
+})
+
+registerMetric({
   metric: 'bed_status',
   displayName: '卧床状态',
   unit: '',

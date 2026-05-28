@@ -3,6 +3,7 @@ import { FormDefinitionSchema } from '@iomtea/shared-types'
 import { and, eq } from 'drizzle-orm'
 import { HTTPException } from 'hono/http-exception'
 import { db } from '../core/db'
+import { events } from '../core/db/schema'
 import { formDefinitions, formResponses } from '../core/db/schema/ema'
 import type { AppEnv } from '../core/http/types'
 import { cronMatchesToday } from '../core/lib/cron'
@@ -41,6 +42,7 @@ emaRouter.openapi(createFormRoute, async (c) => {
       description: body.description,
       cron: body.cron,
       fields: body.fields as any,
+      yamlFields: body.yamlFields ?? null,
       status: 'draft',
     })
     .returning()
@@ -83,6 +85,7 @@ emaRouter.openapi(updateFormRoute, async (c) => {
   if (body.description !== undefined) updateData.description = body.description
   if (body.cron !== undefined) updateData.cron = body.cron
   if (body.fields !== undefined) updateData.fields = body.fields
+  if (body.yamlFields !== undefined) updateData.yamlFields = body.yamlFields
   const [row] = await db
     .update(formDefinitions)
     .set(updateData as any)
@@ -168,6 +171,15 @@ emaRouter.openapi(respondRoute, async (c) => {
       responses: body.responses as any,
     })
     .returning()
+
+  await db.insert(events).values({
+    patientId: body.patientId,
+    kind: 'ema_response',
+    metric: 'ema_response',
+    value: { formCode: code, title: form.title, fieldCount: (form.fields as any[])?.length ?? 0 },
+    source: 'form',
+    recordedAt: new Date(),
+  } as any)
 
   return c.json(resp, 201)
 })

@@ -36,6 +36,13 @@
       "when": 1779699259122,
       "tag": "0004_casbin_rbac_cleanup",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1779700000000,
+      "tag": "0005_ema_forms",
+      "breakpoints": true
     }
   ]
 }
