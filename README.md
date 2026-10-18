@@ -1,194 +1,102 @@
-# IOMTea — 居家健康物联网监控平台
+# IOMTea
 
-> Internet of Medical Things Architecture — 居家/病区健康数据实时监控数字孪生系统
+给居家养老和慢病管理做的健康数据平台：设备数据进来，仿真和真实记录落到同一张事件表，家属、护理员、机构管理者看同一份数据。
 
-## 愿景
+**状态**：Server 85% / Web 75% / 微信小程序 45% / Flutter 实验工具 30%；**入口**：本地运行，`http://localhost:5173`，演示账号由 seed 生成；**仓库**：[fire-disposal/IOMTea](https://github.com/fire-disposal/IOMTea)
 
-构建一套**可独立部署、端到端闭环**的居家健康监控系统：从传感设备数据接入 → 实时孪生仿真 → 异常告警处置 → 用药/随访管理，覆盖 Web 管理端、微信小程序用户端、Flutter 调试工具三端。目标用户为**居家养老/慢病管理场景**下的家庭成员、护理人员和机构管理者。
+## 本质
 
----
+把 MQTT 设备与仿真画像写成同一张事件表的居家/病区健康数据平台。
 
-## 技术栈
+## 选型
 
-| 层 | 技术 |
-|---|------|
-| 后端 | Node.js + Hono + tRPC v11 + Drizzle ORM + PostgreSQL |
-| Web 前端 | React 19 + Vite 6 + Mantine v8 + React Three Fiber + react-router-dom |
-| 微信小程序 | Taro 4 + React 18 |
-| 实验工具 | Flutter 3.27 + Dart 3.6 |
-| 协议网关 | MQTT 设备接入 (mqtt-ingest) |
-| 共享契约 | Zod schemas + TypeScript types (`@iomtea/shared-types`) |
-| 基础设施 | pnpm monorepo + Turborepo + Docker Compose + Biome |
+基于 Hono + React 的 pnpm monorepo，前端 React + Mantine，后端 Hono + OpenAPI，数据 PostgreSQL + Drizzle，部署 Docker Compose。
 
----
+- 前端
+  - React 19
+    - Vite
+    - TanStack Query
+    - TanStack Router
+    - TanStack Table
+    - TanStack Form
+    - Mantine 8
+    - Recharts
+    - @xyflow/react
+    - Zustand
+  - 小程序
+    - Taro 4
+      - React 18
+      - NutUI
+  - Flutter
+    - mqtt_client
+    - sensors_plus
+- 后端
+  - Hono
+    - @hono/zod-openapi
+    - openapi-typescript
+    - jose
+    - @node-rs/argon2
+    - ws
+    - mqtt
+- 数据
+  - PostgreSQL 16
+    - Drizzle ORM
+      - drizzle-kit
+  - Mosquitto
+- 共享
+  - Zod
+  - @iomtea/shared-types
+  - @iomtea/avatar-core
+- 工程
+  - pnpm
+  - Turborepo
+  - Biome
+- 部署
+  - Docker Compose
+  - GHCR
 
-## 各端完成度
+## 功能
 
-### Server（后端）— 完成度 85%
+- Server 14 组路由：auth / users / dashboard / pins / tags / patients / alerts / alert-rules / ingest / data / export / twin / plans / credits
+- RBAC 3 角色 × 14 权限；告警状态机 new → assigned → acknowledged → handled → resolved → closed，处置记录写 `events.tags`
+- 数字孪生：5 种生理画像、每种 10 个指标、8 种场景注入；仿真状态只在内存
+- 接入：MQTT 订阅 `users/+/+/+`、`users/+/admin/+`、`iomtea/device/+/events`，另有 `POST /ingest/single`；WebSocket `/ws` 按患者订阅
+- 计划即问卷模板（choice / multi / likert / vas / number / text），完成后按 `rewardCredits` 记积分
+- Web 15 个页面组件：Dashboard、患者列表与详情、告警看板与规则、健康时间线、数据看板与导出、模拟工厂、PIN、计划、用户
+- 小程序：登录、8 类健康记录、历史、日历热图、CSV 导出、目标与提醒、积分；`sync.ts` 未连服务端
+- Flutter：PIN 锁屏、MQTT、IMU 波形、YOLO 跌倒检测；BLE 未实现，无 `android/`、`ios/` 目录
 
-| 能力 | 状态 | 备注 |
-|------|------|------|
-| JWT 认证 + 刷新令牌轮换 | ✅ | register/login/refresh/wechatLogin |
-| RBAC 权限体系 (6 角色 × 16 权限) | ✅ | requirePermission 全覆盖 7 个子路由 |
-| 患者 CRUD + 设备 CRUD | ✅ | 含分页、搜索、状态过滤 |
-| 告警全生命周期 (指派→确认→处理→结案) | ✅ | 操作记录存入 events.tags |
-| 用药管理 + 服药依从追踪 | ✅ | markTaken/markMissed + schedule |
-| 预约/随访管理 | ✅ | CRUD + 状态机 |
-| 数字孪生引擎 (5 种生理画像) | ✅ | 12 种生理指标实时仿真 |
-| A* 寻路 + 行为规则引擎 | ✅ | 时间表驱动智能体移动 |
-| 2D 居家地图系统 + 编辑器 | ✅ | Canvas 渲染 + Wall/Floor/Door 编辑 |
-| 场景注入 (9 种临床场景) | ✅ | 一键触发异常模拟 |
-| MQTT 设备数据接入 | ✅ | PIN 认证 + mattress 协议解析 |
-| WebSocket 实时推送 | ✅ | JWT 鉴权, per-ward/per-map 订阅 |
-| 批量查询优化 (listAll 端点) | ✅ | 消除 Global 页面的 N+1 查询 |
-| 引擎状态持久化 | ❌ | 纯内存 Map, 重启丢失 |
-
-### Web（管理端）— 完成度 75%
-
-| 能力 | 状态 | 备注 |
-|------|------|------|
-| 工作台 (Dashboard) | ✅ | 统计卡片 + 最近告警列表 |
-| 患者列表 + 创建/删除 | ✅ | 卡片视图 + 搜索 + 模态创建 |
-| 患者详情 (概览/告警/用药/预约/档案/地图) | ✅ | 6 标签页 + 生命体征实时栏 |
-| 数字孪生查看器 (Canvas 2D) | ✅ | 播放/暂停/倍速/场景注入/全屏 |
-| 地图编辑器 | ✅ | 画笔工具绘制墙/门/地板 |
-| 全局告警看板 (待处理/处理中/已完成) | ✅ | 三栏 Kanban + 指派下拉 |
-| 全局用药/预约管理 | ✅ | 批量列表 + 患者链接 |
-| 设备管理 + PIN 管理 | ✅ | CRUD + 复制/重置 |
-| 健康趋势页 | ✅ | 患者选择 + 指标 × 时间范围图表 |
-| 共享组件 (StatsBar, QueryGate) | ✅ | 消除模板代码 ~120 行 |
-| 角色感知 UI (isAdmin) | ✅ | JWT 解码 → 侧边栏菜单动态显示 |
-| 路由层类型安全 | ❌ | react-router-dom 路径字符串无类型检查 |
-| 表单类型安全 | ❌ | Mantine useForm 依赖运行时验证 |
-
-### 微信小程序（用户端）— 完成度 45%
-
-| 能力 | 状态 | 备注 |
-|------|------|------|
-| 微信登录 + 演示登录 | ✅ | OAuth code2session |
-| PIN 绑定/管理 | ✅ | 查看/复制/编辑昵称 |
-| 首页 (问候 + 今日记录 + 本周动态) | ✅ | 快速记录入口 (血糖/血压/体重/用药) |
-| 健康记录 (8 种指标) | ✅ | FormShell + NumberInput + SegmentPicker |
-| 记录历史查看 | ✅ | 按类型过滤, 时间倒序 |
-| 日历热力图 | ✅ | 月份导航 + 每日记录点 |
-| 数据导出 CSV | ✅ | 多选模块 → 分享文件 |
-| 健康目标设置 | ✅ | 血糖/体重/血压目标值 |
-| 记录模块开关 + 提醒 | ✅ | 8 模块 toggle + 早晚睡前提醒 |
-| 底部导航栏 (首页/健康/消息/我的) | ✅ | 自定义 TabBar 组件 |
-| matchaGreen 主题统一 | ✅ | CSS 变量全部对齐品牌色 |
-| 服务端数据同步 | ❌ | 仅本地存储, sync.ts 未连接 |
-| 告警查看 | ⚠️ | 只读列表, 无处置操作 |
-| 设备列表 | ⚠️ | 只读展示, 无绑定操作 |
-| TypeScript 编译 | ⚠️ | 38 个预先存在的模块解析错误 |
-| 消息页 | ❌ | 空占位页 "暂无消息" |
-
-### Flutter（实验工具）— 完成度 30%
-
-| 能力 | 状态 | 备注 |
-|------|------|------|
-| PIN 锁屏 + 本地验证 | ✅ | 安全漏洞已修复 |
-| MQTT 设置 + 连接/发布 | ✅ | 连接前状态检查 |
-| IMU 运动监测 (加速度计+陀螺仪) | ✅ | 实时波形渲染 |
-| YOLO 视觉跌倒检测 | ✅ | 模型预检 + 错误提示 |
-| 设置页 (更换/清除 PIN) | ✅ | 旧 PIN 校验 |
-| matchaGreen 主题 | ✅ | Flutter ThemeData 统一 |
-| BLE 调试 | ❌ | 声明但未实现 |
-| 平台构建产物 | ❌ | 无 android/ios/ 目录 |
-
----
-
-## 架构概览
-
-采用 DDD-Lite 领域驱动设计，三个有界上下文：
-
-1. **Core** — 用户认证、患者/设备 CRUD、事件存储、PIN 管理
-2. **Twin** — 数字孪生引擎，生理仿真，A* 寻路，智能体行为
-3. **MQTT-Ingest** — MQTT 设备数据接入
-
-Context 间通过 Domain Event (`events` 表) 或 tRPC 调用通信，禁止跨 Context import 内部实现。
-
-`@iomtea/shared-types` 作为跨端共享契约层 —— Zod schema 作为 single source of truth，server 端用于 tRPC input 校验，web/miniapp 端用于表单校验和类型推导。
-
-详细说明见 [ARCHITECTURE.md](./docs/ARCHITECTURE.md)，代码导航见 [CODE_MAP.md](./docs/CODE_MAP.md)。
-
----
-
-## 项目结构
-
-```
-iomtea/
-├── apps/
-│   ├── server/         # Hono + tRPC 后端
-│   │   └── src/
-│   │       ├── core/          # 核心上下文 (DB, Auth, CRUD)
-│   │       ├── twin/          # 数字孪生引擎
-│   │       └── mqtt-ingest/   # MQTT 设备数据接入
-│   ├── web/            # Web 仪表盘 + 2D/3D 数字孪生
-│   ├── miniapp/        # 微信小程序 (Taro)
-│   └── flutter/        # Flutter 实验工具
-├── packages/
-│   └── shared-types/   # Zod 共享类型 + 居家地图引擎
-└── docs/               # 架构规范 + 代码地图 + 审查报告
-```
-
----
-
-## 快速开始
-
-### 前置条件
-- Node.js >= 22, pnpm >= 9
-- PostgreSQL 16 (本地或 Docker)
-- (可选) Docker Compose, Flutter SDK 3.27+
-
-### 本地开发
+## 启动流程
 
 ```bash
-git clone https://github.com/fire-disposal/IOMTea.git && cd iomtea
+git clone https://github.com/fire-disposal/IOMTea.git && cd IOMTea
 pnpm install
-cp .env.example .env
-# 编辑 .env 设置 JWT_SECRET (>=16字符)
+cp .env.example .env          # JWT_SECRET 改成 >=16 位随机串
 pnpm --filter @iomtea/server db:migrate
-pnpm dev
-# Web: http://localhost:5173  账号: demo / demo123
-```
+pnpm dev                      # web 5173 + server 3000
 
-### 常用命令
-
-```bash
-pnpm dev                    # 启动全部开发服务
-pnpm typecheck              # 全项目类型检查
-pnpm lint                   # 代码检查 (Biome)
-pnpm format                 # 代码格式化 (Biome)
-
-# 选启动
-pnpm --filter @iomtea/server dev
-pnpm --filter @iomtea/web dev
-pnpm --filter @iomtea/miniapp dev:weapp
+pnpm --filter @iomtea/miniapp dev:weapp    # 产物导入微信开发者工具
 cd apps/flutter && flutter run
+
+docker compose up -d          # postgres + mosquitto + server + web
 ```
 
----
+需要 Node 24、pnpm 9.15.9、PostgreSQL 16；OpenAPI 文档在 `http://localhost:3000/docs`。
 
-## 关键环境变量
+## 边界与已知问题
 
-| 变量 | 说明 | 默认值 |
-|------|------|--------|
-| `DATABASE_URL` | PostgreSQL 连接串 | `postgresql://127.0.0.1:5432/iomtea` |
-| `JWT_SECRET` | JWT 签名密钥 (≥16字符) | 必填 |
-| `JWT_EXPIRES_IN` | 访问令牌有效期 | `2h` |
-| `JWT_REFRESH_EXPIRES_IN` | 刷新令牌有效期 | `7d` |
-| `MQTT_ENABLED` | 启用 MQTT 设备接入 | `false` |
-| `CORS_ORIGIN` | 允许的前端域名 | `http://localhost:5173` |
-| `PORT` | 服务端口 | `3000` |
+- 仿真引擎是内存 Map，进程重启后所有 simulation 消失
+- `devices` 表已删除，设备统一用 `users_pin` 的 PIN 标识；旧 README 的“设备 CRUD”不再成立
+- 文档与代码不一致（以代码为准）：文档写的 tRPC、React Three Fiber、6 角色 × 16 权限、12 种生理指标、用药/随访模块、A* 寻路与地图编辑器，都没有对应实现，指标实际 10 个、角色 3 个
+- `TCP_INGEST_PORT` 只在 `env.ts` 与 compose 中声明，没有 TCP 监听，5858 实际空着
+- Web 路由与 Mantine 表单靠运行时校验，类型安全只到 API 层
+- 小程序 TypeScript 编译有模块解析错误，消息页是空占位
+- `.github/workflows/README.md` 描述的 `ci.yml`、`deploy-miniapp.yml` 已不存在
+- 超级管理员初始口令只能本地用，部署前必须覆盖
 
----
+## 文档索引
 
-## 部署
-
-`.github/workflows/` 包含 CI/CD 流水线（server / web / miniapp）。
-
----
-
-## License
-
-Private
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — 架构
+- [docs/CODE_MAP.md](docs/CODE_MAP.md) — 代码地图
+- [docs/UX_GAP_ANALYSIS.md](docs/UX_GAP_ANALYSIS.md) — 体验差距
+- [SCRIPTS.md](SCRIPTS.md) — 脚本
